@@ -1,0 +1,55 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isStaff } from "@/lib/auth-server/roles";
+import { checkCanSuspendUser } from "@/lib/user-suspension";
+import { writeAuditLog } from "@/lib/audit-log";
+import { sendAccountSuspendedEmail } from "@/lib/account-suspension-email";
+
+const bodySchema = z.object({ reason: z.string().trim().min(1).max(500) });
+
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser();
+  if (!user || !isStaff(user.role)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  const { id } = await params;
+  const body = await request.json().catch(() => null);
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "validation" }, { status: 400 });
+  }
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  const eligibility = checkCanSuspendUser({
+    isSelf: target.id === user.id,
+    targetIsStaff: isStaff(target.role),
+  });
+  if (!eligibility.ok) {
+    return NextResponse.json({ error: eligibility.error }, { status: 400 });
+  }
+
+  const reason = parsed.data.reason.trim();
+  await prisma.user.update({
+    where: { id },
+    data: { suspendedAt: new Date(), suspensionReason: reason },
+  });
+
+  await writeAuditLog({
+    adminId: user.id,
+    action: "user.suspend",
+    targetType: "User",
+    targetId: id,
+    details: { reason },
+  });
+
+  await sendAccountSuspendedEmail(id, reason);
+
+  return NextResponse.json({ ok: true });
+}

@@ -1,0 +1,502 @@
+// Lot 1 — Comptes & référentiel wilayas.
+// Dev local en SQLite ; cible staging/production PostgreSQL + PostGIS (cf. docs/ARCHITECTURE.md §06).
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PARTICULIER
+  PROFESSIONNEL
+  MODERATEUR
+  ADMIN
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  phone           String?   @unique
+  passwordHash    String
+  role            Role      @default(PARTICULIER)
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+  identityVerifiedAt DateTime?
+  locale          String    @default("fr")
+  createdAt       DateTime  @default(now())
+  // Suspension de compte (Lot 31) — manuelle (back-office) ou automatique
+  // après seuil de signalements confirmés, même principe que Listing.status
+  // SUSPENDUE (Lot 21) mais un simple horodatage suffit ici : aucun autre état
+  // intermédiaire n'existe pour un compte (pas de file de modération).
+  suspendedAt      DateTime?
+  suspensionReason String?
+  profile         Profile?
+  listings        Listing[]
+  favorites       Favorite[]
+  auditLogs       AuditLog[]
+  conversationsAsBuyer  Conversation[] @relation("BuyerConversations")
+  conversationsAsSeller Conversation[] @relation("SellerConversations")
+  messages              Message[]
+  blocksInitiated       Block[]        @relation("BlockerRelation")
+  blocksReceived        Block[]        @relation("BlockedRelation")
+  reports               Report[]       @relation("ReportAuthor")
+  reportsReceived       Report[]       @relation("ReportedUser")
+  reviewsReceived       Review[]       @relation("SellerReviews")
+  reviewsWritten        Review[]       @relation("AuthorReviews")
+  emailVerificationTokens EmailVerificationToken[]
+  emailChangeRequests     EmailChangeRequest[]
+  phoneVerificationCodes  PhoneVerificationCode[]
+  professionalAccount     ProfessionalAccount?
+  proCollaborations       ProCollaborator[]
+  identityVerificationRequests IdentityVerificationRequest[] @relation("IdentityRequester")
+  identityReviewsPerformed     IdentityVerificationRequest[] @relation("IdentityReviewer")
+}
+
+model Profile {
+  userId      String   @id
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  wilayaId    Int?
+  wilaya      Wilaya?  @relation(fields: [wilayaId], references: [id])
+  bio         String?
+  avatarUrl   String?
+}
+
+model Wilaya {
+  id       Int       @id
+  code     String    @unique
+  nomFr    String
+  nomAr    String
+  profiles Profile[]
+  listings Listing[]
+  professionalAccounts ProfessionalAccount[]
+}
+
+// --- Lot 2 — Catalogue véhicules & annonces ---
+// Schéma volontairement plat (pas de generation/version/engine pour l'instant) :
+// on ne modélise que ce qui est vérifiable (marque, modèle) ; les caractéristiques
+// mécaniques sont déclarées par le vendeur directement sur l'annonce plutôt que
+// rattachées à une fiche technique qui serait fabriquée sans source fiable.
+
+model Brand {
+  id     Int     @id @default(autoincrement())
+  slug   String  @unique
+  name   String
+  models Model[]
+  listings Listing[]
+}
+
+model Model {
+  id      Int     @id @default(autoincrement())
+  brandId Int
+  brand   Brand   @relation(fields: [brandId], references: [id])
+  slug    String
+  name    String
+  listings Listing[]
+
+  @@unique([brandId, slug])
+}
+
+enum ListingCategory {
+  VOITURE
+  UTILITAIRE
+  POIDS_LOURD
+  DEUX_ROUES
+  AUTRE
+}
+
+enum FuelType {
+  ESSENCE
+  DIESEL
+  GPL
+  HYBRIDE
+  ELECTRIQUE
+}
+
+enum Gearbox {
+  MANUELLE
+  AUTOMATIQUE
+}
+
+enum Transmission {
+  QUATRE_X_DEUX
+  QUATRE_X_QUATRE
+}
+
+enum ListingCondition {
+  NEUF
+  OCCASION
+}
+
+enum ListingStatus {
+  BROUILLON
+  EN_ATTENTE
+  PUBLIEE
+  SUSPENDUE
+  REFUSEE
+  VENDUE
+  EXPIREE
+}
+
+enum ListingFormula {
+  STANDARD
+  PREMIUM
+  PREMIUM_PLUS
+}
+
+model Listing {
+  id           String           @id @default(cuid())
+  sellerId     String
+  seller       User             @relation(fields: [sellerId], references: [id])
+  category     ListingCategory
+  brandId      Int?
+  brand        Brand?           @relation(fields: [brandId], references: [id])
+  modelId      Int?
+  model        Model?           @relation(fields: [modelId], references: [id])
+  // Repli texte libre quand le véhicule n'est pas dans le catalogue (ex: motos,
+  // marques non encore référencées) — jamais de fiche catalogue fabriquée pour compenser.
+  brandFreeText String?
+  modelFreeText String?
+  title        String
+  description  String
+  price        Int // DZD
+  year         Int
+  mileage      Int
+  fuelType     FuelType
+  gearbox      Gearbox
+  transmission Transmission?
+  color        String?
+  doors        Int?
+  seats        Int?
+  powerHp      Int?
+  condition    ListingCondition
+  firstHand    Boolean          @default(false)
+  accidented   Boolean          @default(false)
+  wilayaId     Int
+  wilaya       Wilaya           @relation(fields: [wilayaId], references: [id])
+  formula      ListingFormula   @default(STANDARD)
+  status       ListingStatus    @default(BROUILLON)
+  // Motif affiché au vendeur quand le statut est REFUSEE ou SUSPENDUE (§39).
+  moderationNote String?
+  views        Int              @default(0)
+  photos       ListingPhoto[]
+  favoritedBy  Favorite[]
+  conversations Conversation[]
+  reports      Report[]
+  createdAt    DateTime         @default(now())
+  publishedAt  DateTime?
+  // Fixée à publishedAt + LISTING_VALIDITY_DAYS lors de la publication ou du
+  // renouvellement (cf. src/lib/listing-lifecycle.ts) — permet l'expiration
+  // automatique (§ ancien Lot 2) sans planificateur dédié, cf. sweepExpiredListings().
+  expiresAt    DateTime?
+
+  @@index([status, category, wilayaId])
+  @@index([sellerId])
+  @@index([status, expiresAt])
+}
+
+// --- Lot 5 — Favoris ---
+// Uniquement les véhicules favoris pour l'instant : « vendeur favori » suppose une
+// page vitrine publique (pas encore construite) et « recherche favorite » recoupe
+// les alertes (§27), qui nécessitent une infra de notification non encore en place.
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId])
+}
+
+// --- Lot 7 — Back-office & modération ---
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String // ex: "listing.approve", "listing.reject", "listing.suspend", "user.role_change"
+  targetType String // "Listing" | "User"
+  targetId   String
+  details    String? // JSON libre (motif, ancien/nouveau statut, etc.)
+  createdAt  DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([adminId])
+}
+
+// --- Lot 8 — Messagerie interne (§19) ---
+// Une conversation par (annonce, acheteur) — le vendeur y répond ; pas de fil
+// générique acheteur/vendeur indépendant d'une annonce, pour rester simple et
+// toujours contextualisé au véhicule concerné.
+model Conversation {
+  id        String    @id @default(cuid())
+  listingId String
+  listing   Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId   String
+  buyer     User      @relation("BuyerConversations", fields: [buyerId], references: [id])
+  sellerId  String
+  seller    User      @relation("SellerConversations", fields: [sellerId], references: [id])
+  createdAt DateTime  @default(now())
+  messages  Message[]
+  // Suppression = masquage par utilisateur, jamais une destruction des messages
+  // de l'autre partie (cf. Lot 26) — un nouveau message efface les deux
+  // horodatages, ce qui fait réapparaître la conversation pour tout le monde.
+  hiddenByBuyerAt  DateTime?
+  hiddenBySellerAt DateTime?
+
+  @@unique([listingId, buyerId])
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  content        String
+  // Pièce jointe image optionnelle (Lot 39) — un message peut contenir du
+  // texte, une image, ou les deux (jamais ni l'un ni l'autre : cf.
+  // checkMessageHasContent). Effacée (mise à null) comme le contenu au
+  // moment d'une suppression (Lot 38) ; le fichier reste sur disque, comme
+  // les photos d'annonce supprimées (Lot 36).
+  attachmentUrl  String?
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+  // Suppression « pour tout le monde » (Lot 38) — seul l'expéditeur peut
+  // supprimer son propre message. Le contenu original est réellement effacé
+  // (pas juste masqué), remplacé par une chaîne vide ; deletedAt pilote
+  // l'affichage du tombstone « Message supprimé » côté UI.
+  deletedAt      DateTime?
+
+  @@index([conversationId])
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("BlockerRelation", fields: [blockerId], references: [id])
+  blockedId String
+  blocked   User     @relation("BlockedRelation", fields: [blockedId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+// --- Lot 9 — Signalement d'annonce (§25) ---
+// Un signalement par (annonce, auteur) — évite le spam d'un même utilisateur sur
+// la même annonce sans empêcher plusieurs utilisateurs différents de signaler.
+// Signalement d'utilisateur (hors annonce) volontairement hors périmètre : le
+// cahier d'architecture (§41) le prévoit avec un user_id_signale nullable, mais
+// rien ne le consomme encore (pas de vitrine profil public) — à étendre le jour
+// où ce besoin devient réel plutôt que d'ajouter une colonne inutilisée aujourd'hui.
+enum ReportReason {
+  PRIX_SUSPECT
+  FRAUDE_SUSPECTEE
+  VEHICULE_VOLE
+  DOUBLON
+  CONTENU_INAPPROPRIE
+  // --- Lot 19 — motifs propres au signalement d'utilisateur ---
+  COMPORTEMENT_FRAUDULEUX
+  MESSAGES_ABUSIFS
+  USURPATION_IDENTITE
+  AUTRE
+}
+
+enum ReportStatus {
+  OUVERT
+  TRAITE
+  REJETE
+}
+
+// Cible soit une annonce (listingId), soit un utilisateur (reportedUserId) —
+// jamais les deux, jamais aucun des deux ; invariant vérifié en application
+// (pas de CHECK constraint portable ajouté), cf. src/lib/reports.ts. Les deux
+// contraintes d'unicité ci-dessous cohabitent sans conflit : SQLite (comme
+// Postgres) ne considère jamais deux NULL comme égaux dans un index unique.
+model Report {
+  id             String       @id @default(cuid())
+  listingId      String?
+  listing        Listing?     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reportedUserId String?
+  reportedUser   User?        @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  authorId       String
+  author         User         @relation("ReportAuthor", fields: [authorId], references: [id])
+  reason         ReportReason
+  comment        String?
+  status         ReportStatus @default(OUVERT)
+  // Note interne du modérateur qui traite/rejette (jamais visible par l'auteur du signalement).
+  resolutionNote String?
+  createdAt      DateTime     @default(now())
+  resolvedAt     DateTime?
+
+  @@unique([listingId, authorId])
+  @@unique([reportedUserId, authorId])
+  @@index([status])
+}
+
+// --- Lot 10 — Avis vendeur (§26/§42) ; étendu au Lot 19 pour cibler aussi un
+// compte professionnel (professionalAccountId) maintenant que la vitrine pro
+// existe (Lot 13) — un avis cible soit un vendeur individuel, soit une
+// entreprise, jamais les deux (même traitement NULL-safe que Report
+// ci-dessus). Un avis professionnel reste éligible sur la même preuve
+// d'interaction qu'un avis individuel (conversation sur une annonce du
+// propriétaire du compte) : toutes les annonces d'une entreprise restent
+// rattachées à l'utilisateur propriétaire, pas à un collaborateur distinct.
+model Review {
+  id                     String               @id @default(cuid())
+  sellerId               String?
+  seller                 User?                @relation("SellerReviews", fields: [sellerId], references: [id], onDelete: Cascade)
+  professionalAccountId  String?
+  professionalAccount    ProfessionalAccount? @relation(fields: [professionalAccountId], references: [id], onDelete: Cascade)
+  authorId               String
+  author                 User                 @relation("AuthorReviews", fields: [authorId], references: [id])
+  rating                 Int
+  comment                String?
+  createdAt              DateTime             @default(now())
+  // Réponse du vendeur/de l'entreprise évaluée (Lot 27) — un seul propriétaire
+  // possible par avis (le vendeur lui-même, ou le propriétaire/gestionnaire du
+  // compte professionnel), jamais l'auteur de l'avis.
+  reply                  String?
+  repliedAt              DateTime?
+
+  @@unique([sellerId, authorId])
+  @@unique([professionalAccountId, authorId])
+  @@index([sellerId])
+  @@index([professionalAccountId])
+}
+
+// --- Lot 11 — Vérification email/téléphone (prérequis honnête du score de
+// confiance §26 : emailVerifiedAt/phoneVerifiedAt existent sur User depuis le
+// Lot 1 mais rien ne les renseignait jusqu'ici) ---
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// --- Lot 33 — Édition d'email avec confirmation par lien ---
+// Modèle distinct d'EmailVerificationToken : celui-ci confirme la POSSESSION
+// d'une NOUVELLE adresse avant de l'activer, jamais une simple revérification
+// de l'adresse actuelle. Le lien part vers la nouvelle adresse, jamais
+// l'ancienne — seule la preuve de réception à la nouvelle adresse compte.
+model EmailChangeRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newEmail  String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PhoneVerificationCode {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// --- Lot 13 — Comptes professionnels, fondations (§9/§26 du cahier
+// d'architecture) ---
+// Un seul palier fonctionnel (pas d'abonnement Starter/Business/Pro/Premium
+// payant, cf. §11 §104-110) : le paiement reste bloqué en attente
+// d'identifiants réels, même arbitrage que les formules Premium/Premium+ des
+// annonces (Lot 2). `badgeVerifie` reste un simple bouton admin (aucun KYC
+// registre de commerce automatisé construit) — un vrai signal, pas fabriqué,
+// simplement vérifié manuellement par un humain plutôt qu'une machine.
+model ProfessionalAccount {
+  id            String            @id @default(cuid())
+  userId        String            @unique
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nomCommercial String
+  presentation  String?
+  horaires      String?
+  wilayaId      Int?
+  wilaya        Wilaya?           @relation(fields: [wilayaId], references: [id])
+  badgeVerifie  Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  collaborators ProCollaborator[]
+  reviews       Review[]
+
+  @@index([wilayaId])
+}
+
+model ProCollaborator {
+  id                    String              @id @default(cuid())
+  professionalAccountId String
+  professionalAccount   ProfessionalAccount @relation(fields: [professionalAccountId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Permissions plus fines (Lot 42) — remplace le rôle binaire
+  // GESTIONNAIRE/LECTURE_SEULE d'origine (Lot 13) par un JSON libre
+  // (encodé en texte, cf. src/lib/pro-permissions.ts) : chaque capacité
+  // (gestion des annonces, réponse aux avis) devient indépendamment
+  // accordable plutôt qu'un seul bloc tout-ou-rien.
+  permissions           String              @default("{\"gererAnnonces\":false,\"repondreAvis\":false}")
+  createdAt             DateTime            @default(now())
+
+  @@unique([professionalAccountId, userId])
+  @@index([userId])
+}
+
+// --- Lot 14 — Vérification d'identité (§26, KYC léger manuel) ---
+// Aucune API KYC tierce réelle (Onfido/Jumio/Veriff) intégrée — même blocage
+// que le paiement (identifiants réels non disponibles). Traitement honnête :
+// un humain (modérateur/admin) examine la pièce uploadée et approuve/refuse,
+// jamais une vérification automatisée fabriquée. Le fichier uploadé est
+// supprimé du disque dès la décision prise (approuvée ou refusée) — on ne
+// conserve indéfiniment aucune copie de pièce d'identité une fois la revue
+// terminée, seule la décision (statut + note) reste en base.
+enum IdentityVerificationStatus {
+  EN_ATTENTE
+  APPROUVEE
+  REFUSEE
+}
+
+model IdentityVerificationRequest {
+  id           String                     @id @default(cuid())
+  userId       String
+  user         User                       @relation("IdentityRequester", fields: [userId], references: [id], onDelete: Cascade)
+  documentPath String?
+  documentMime String?
+  status       IdentityVerificationStatus @default(EN_ATTENTE)
+  reviewedById String?
+  reviewedBy   User?                      @relation("IdentityReviewer", fields: [reviewedById], references: [id])
+  reviewNote   String?
+  createdAt    DateTime                   @default(now())
+  reviewedAt   DateTime?
+
+  @@index([status])
+  @@index([userId])
+}
+
+model ListingPhoto {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  path      String
+  position  Int
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+}

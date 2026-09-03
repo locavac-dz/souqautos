@@ -1,0 +1,88 @@
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import { LocaleSwitcher } from "./LocaleSwitcher";
+import { LogoutButton } from "./LogoutButton";
+import { isStaff } from "@/lib/auth-server/roles";
+import type { Role } from "@prisma/client";
+
+export async function SiteHeader({
+  user,
+  unreadMessagesCount = 0,
+}: {
+  user: { email: string; displayName: string | null; role: Role } | null;
+  unreadMessagesCount?: number;
+}) {
+  const tBrand = await getTranslations("Brand");
+  const tNav = await getTranslations("Nav");
+  const tAdmin = await getTranslations("Admin");
+  const tMessages = await getTranslations("Messages");
+
+  return (
+    <header className="border-b border-slate-200">
+      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
+        <Link href="/" className="font-semibold text-lg tracking-tight text-slate-900">
+          {tBrand("name")}
+        </Link>
+
+        <nav className="flex items-center gap-4 text-sm">
+          <Link href="/recherche" className="text-slate-700 hover:text-slate-900">
+            {tNav("search")}
+          </Link>
+          <Link href="/cote-souq-auto" className="text-slate-700 hover:text-slate-900 hidden sm:inline">
+            {tNav("estimate")}
+          </Link>
+          {user ? (
+            <>
+              <Link href="/vendre" className="text-slate-700 hover:text-slate-900">
+                {tNav("sell")}
+              </Link>
+              <Link href="/compte/mes-annonces" className="text-slate-700 hover:text-slate-900">
+                {tNav("myListings")}
+              </Link>
+              <Link
+                href="/compte/messages"
+                className="relative text-slate-700 hover:text-slate-900"
+              >
+                {tMessages("navLabel")}
+                {unreadMessagesCount > 0 && (
+                  <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">
+                    {unreadMessagesCount}
+                  </span>
+                )}
+              </Link>
+              <Link
+                href="/compte/favoris"
+                className="text-slate-700 hover:text-slate-900 hidden sm:inline"
+              >
+                {tNav("favorites")}
+              </Link>
+              <Link href="/compte/tableau-de-bord" className="text-slate-700 hover:text-slate-900">
+                {tNav("dashboard")}
+              </Link>
+              {isStaff(user.role) && (
+                <Link href="/admin" className="text-slate-700 hover:text-slate-900 hidden sm:inline">
+                  {tAdmin("navLabel")}
+                </Link>
+              )}
+              <span className="text-slate-400 hidden sm:inline">{user.displayName ?? user.email}</span>
+              <LogoutButton label={tNav("logout")} />
+            </>
+          ) : (
+            <>
+              <Link href="/connexion" className="text-slate-700 hover:text-slate-900">
+                {tNav("login")}
+              </Link>
+              <Link
+                href="/inscription"
+                className="rounded-md bg-slate-900 px-3 py-1.5 text-white hover:bg-slate-700"
+              >
+                {tNav("register")}
+              </Link>
+            </>
+          )}
+          <LocaleSwitcher />
+        </nav>
+      </div>
+    </header>
+  );
+}

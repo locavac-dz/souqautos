@@ -1,0 +1,54 @@
+export function buildBreadcrumbJsonLd(items: { name: string; url: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+}
+
+export type VehicleJsonLdInput = {
+  title: string;
+  description: string;
+  url: string;
+  images: string[];
+  price: number;
+  brandName?: string;
+  modelName?: string;
+  year: number;
+  mileage: number;
+  fuelTypeLabel: string;
+  gearboxLabel: string;
+};
+
+export function buildVehicleJsonLd(input: VehicleJsonLdInput) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Vehicle",
+    name: input.title,
+    description: input.description,
+    url: input.url,
+    image: input.images,
+    ...(input.brandName ? { brand: { "@type": "Brand", name: input.brandName } } : {}),
+    ...(input.modelName ? { model: input.modelName } : {}),
+    vehicleModelDate: String(input.year),
+    mileageFromOdometer: {
+      "@type": "QuantitativeValue",
+      value: input.mileage,
+      unitCode: "KMT",
+    },
+    fuelType: input.fuelTypeLabel,
+    vehicleTransmission: input.gearboxLabel,
+    offers: {
+      "@type": "Offer",
+      price: input.price,
+      priceCurrency: "DZD",
+      availability: "https://schema.org/InStock",
+      url: input.url,
+    },
+  };
+}

@@ -1,0 +1,50 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { checkCanSubmitIdentityRequest } from "@/lib/identity-verification";
+import { saveIdentityDocument, DocumentValidationError } from "@/lib/identity-uploads";
+
+export async function POST(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  }
+
+  if (!checkRateLimit(`identity-request:${user.id}`, { limit: 3, windowMs: 24 * 60 * 60 * 1000 })) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
+  const pendingRequest = await prisma.identityVerificationRequest.findFirst({
+    where: { userId: user.id, status: "EN_ATTENTE" },
+  });
+  const eligibility = checkCanSubmitIdentityRequest({
+    alreadyVerified: Boolean(user.identityVerifiedAt),
+    hasPendingRequest: Boolean(pendingRequest),
+  });
+  if (!eligibility.ok) {
+    return NextResponse.json({ error: eligibility.error }, { status: 400 });
+  }
+
+  const formData = await request.formData();
+  const documentFile = formData.get("document");
+  if (!(documentFile instanceof File) || documentFile.size === 0) {
+    return NextResponse.json({ error: "document_required" }, { status: 400 });
+  }
+
+  let saved;
+  try {
+    saved = await saveIdentityDocument(documentFile);
+  } catch (error) {
+    if (error instanceof DocumentValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    throw error;
+  }
+
+  await prisma.identityVerificationRequest.create({
+    data: { userId: user.id, documentPath: saved.filename, documentMime: saved.mime },
+  });
+
+  return NextResponse.json({ ok: true }, { status: 201 });
+}
