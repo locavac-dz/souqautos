@@ -48,6 +48,9 @@ export async function SiteHeader({
           <Link href="/compte/favoris" className="text-slate-700 hover:text-slate-900">
             {tNav("favorites")}
           </Link>
+          <Link href="/compte/alertes" className="text-slate-700 hover:text-slate-900">
+            {tNav("alerts")}
+          </Link>
           <Link href="/compte/tableau-de-bord" className="text-slate-700 hover:text-slate-900">
             {tNav("dashboard")}
           </Link>

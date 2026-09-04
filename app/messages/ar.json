@@ -12,6 +12,7 @@
     "dashboard": "حسابي",
     "myListings": "إعلاناتي",
     "favorites": "المفضلة لدي",
+    "alerts": "تنبيهاتي",
     "logout": "تسجيل الخروج",
     "menu": "القائمة"
   },
@@ -668,7 +669,24 @@
     "accountSuspendedBody": "تم تعليق حسابك على سوق أوتو. السبب: {reason}. إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع فريقنا.",
     "expiryReminderSubject": "إعلانك سينتهي قريبًا — سوق أوتو",
     "expiryReminderBody": "سينتهي إعلانك « {title} » في {date}. جدده من مساحة «إعلاناتي» ليبقى ظاهرًا.",
-    "expiryReminderLink": "عرض إعلاني على سوق أوتو"
+    "expiryReminderLink": "عرض إعلاني على سوق أوتو",
+    "searchAlertMatchSubject": "إعلان جديد يطابق تنبيهك — سوق أوتو",
+    "searchAlertMatchBody": "إعلان جديد يطابق تنبيهك « {alertLabel} »: « {title} »، {price} دج.",
+    "searchAlertMatchLink": "عرض الإعلان على سوق أوتو"
+  },
+  "Alerts": {
+    "title": "تنبيهاتي",
+    "subtitle": "احصل على بريد إلكتروني فور نشر إعلان جديد يطابق إحدى عمليات البحث المحفوظة لديك.",
+    "empty": "لم تحفظ أي تنبيه حتى الآن.",
+    "browseSearch": "البحث عن سيارة",
+    "delete": "حذف",
+    "confirmDelete": "تأكيد الحذف؟",
+    "saveSearch": "حفظ هذا البحث كتنبيه",
+    "saveSearchAction": "حفظ",
+    "saveSearchDone": "تم حفظ التنبيه.",
+    "saveSearchError": "تعذر حفظ هذا التنبيه. حاول مرة أخرى.",
+    "labelPlaceholder": "اسم التنبيه (مثال: كليو في الجزائر العاصمة)",
+    "cancel": "إلغاء"
   },
   "AdminCatalogue": {
     "title": "الماركات والموديلات",

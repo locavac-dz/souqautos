@@ -6,6 +6,7 @@ import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder
 import { searchParamsSchema, PAGE_SIZE } from "@/lib/validation/search";
 import { buildListingWhere, buildListingOrderBy, currentPage, paginationOffset, totalPages as computeTotalPages } from "@/lib/search";
 import { SearchFilters } from "@/components/search/SearchFilters";
+import { SaveSearchAlertForm } from "@/components/search/SaveSearchAlertForm";
 import { SortSelect } from "@/components/search/SortSelect";
 import { ListingCard } from "@/components/search/ListingCard";
 import { Pagination } from "@/components/search/Pagination";
@@ -103,6 +104,11 @@ export default async function SearchPage({
             condition: flatParams.condition,
           }}
         />
+        {currentUser && (
+          <div className="mt-4">
+            <SaveSearchAlertForm filters={flatParams} />
+          </div>
+        )}
       </aside>
 
       <div>

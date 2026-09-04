@@ -61,6 +61,7 @@ model User {
   identityVerificationRequests IdentityVerificationRequest[] @relation("IdentityRequester")
   identityReviewsPerformed     IdentityVerificationRequest[] @relation("IdentityReviewer")
   listingDraft                 ListingDraft?
+  searchAlerts                 SearchAlert[]
 }
 
 model Profile {
@@ -196,6 +197,7 @@ model Listing {
   reports      Report[]
   priceHistory ListingPriceHistory[]
   renewals     ListingRenewal[]
+  searchAlertNotifications SearchAlertNotification[]
   createdAt    DateTime         @default(now())
   publishedAt  DateTime?
   // Fixée à publishedAt + LISTING_VALIDITY_DAYS lors de la publication ou du
@@ -587,5 +589,41 @@ model ListingPhoto {
   position  Int
   createdAt DateTime @default(now())
 
+  @@index([listingId])
+}
+
+// --- Lot 56 — Alertes de recherche sauvegardée (§27/§33 du cahier
+// d'architecture, jamais construites jusqu'ici) : contrairement au rappel
+// d'expiration (Lot 48), pas de balayage paresseux ici — le déclencheur est
+// un vrai événement métier (une annonce devient PUBLIEE via la modération),
+// pas le simple écoulement du temps, donc pas besoin de simuler un
+// planificateur absent. `filters` stocke le même format que les paramètres de
+// /recherche (validés par searchParamsSchema au moment de la comparaison),
+// jamais interprété autrement qu'en le repassant par buildListingWhere — une
+// seule source de vérité pour "qu'est-ce qui correspond à cette recherche",
+// partagée avec la page de recherche elle-même.
+model SearchAlert {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  filters   String
+  createdAt DateTime @default(now())
+  notifications SearchAlertNotification[]
+
+  @@index([userId])
+}
+
+// Empêche une même annonce de redéclencher un email pour la même alerte
+// (ex: annonce suspendue puis ré-approuvée) — cf. index unique.
+model SearchAlertNotification {
+  id        String      @id @default(cuid())
+  alertId   String
+  alert     SearchAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sentAt    DateTime    @default(now())
+
+  @@unique([alertId, listingId])
   @@index([listingId])
 }

@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import { computeModerationTransition, type ModerationAction } from "@/lib/moderation";
 import { writeAuditLog } from "@/lib/audit-log";
+import { notifyMatchingSearchAlerts } from "@/lib/search-alerts";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject", "suspend"]),
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const isApproval = action === "approve";
-  await prisma.listing.update({
+  const updatedListing = await prisma.listing.update({
     where: { id },
     data: {
       status: transition.newStatus,
@@ -44,6 +45,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       publishedAt: isApproval && !listing.publishedAt ? new Date() : listing.publishedAt,
     },
   });
+
+  if (isApproval) {
+    await notifyMatchingSearchAlerts(updatedListing);
+  }
 
   await writeAuditLog({
     adminId: user.id,

@@ -12,6 +12,7 @@
     "dashboard": "Mon compte",
     "myListings": "Mes annonces",
     "favorites": "Mes favoris",
+    "alerts": "Mes alertes",
     "logout": "Déconnexion",
     "menu": "Menu"
   },
@@ -668,7 +669,24 @@
     "accountSuspendedBody": "Votre compte Souq Auto a été suspendu. Motif : {reason}. Si vous pensez qu'il s'agit d'une erreur, contactez notre équipe.",
     "expiryReminderSubject": "Votre annonce expire bientôt — Souq Auto",
     "expiryReminderBody": "Votre annonce « {title} » expirera le {date}. Renouvelez-la depuis votre espace « Mes annonces » pour qu'elle reste visible.",
-    "expiryReminderLink": "Voir mon annonce sur Souq Auto"
+    "expiryReminderLink": "Voir mon annonce sur Souq Auto",
+    "searchAlertMatchSubject": "Une nouvelle annonce correspond à votre alerte — Souq Auto",
+    "searchAlertMatchBody": "Une nouvelle annonce correspond à votre alerte « {alertLabel} » : « {title} », {price} DA.",
+    "searchAlertMatchLink": "Voir l'annonce sur Souq Auto"
+  },
+  "Alerts": {
+    "title": "Mes alertes",
+    "subtitle": "Recevez un email dès qu'une nouvelle annonce correspond à l'une de vos recherches sauvegardées.",
+    "empty": "Vous n'avez enregistré aucune alerte pour le moment.",
+    "browseSearch": "Rechercher un véhicule",
+    "delete": "Supprimer",
+    "confirmDelete": "Confirmer la suppression ?",
+    "saveSearch": "Enregistrer cette recherche comme alerte",
+    "saveSearchAction": "Enregistrer",
+    "saveSearchDone": "Alerte enregistrée.",
+    "saveSearchError": "Impossible d'enregistrer cette alerte. Réessayez.",
+    "labelPlaceholder": "Nom de l'alerte (ex : Clio à Alger)",
+    "cancel": "Annuler"
   },
   "AdminCatalogue": {
     "title": "Marques & modèles",

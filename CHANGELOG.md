@@ -1108,3 +1108,18 @@ Choisi en complément direct du droit à l'oubli (Lot 51, suppression de compte)
 - Vérification de bout en bout en conditions réelles : export de Sara Hamdi (compte pro, 1 conversation) confirmant la bonne attribution des messages (« moi » / « autre_partie »), export d'Amine Benali confirmant le téléphone correctement déchiffré (`0555123456`, preuve croisée que l'extension Prisma du Lot 54 fonctionne aussi via cette nouvelle route) et 8 annonces exportées ; lien vérifié présent avec le bon `href` en FR et en AR (RTL).
 
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
+
+## Lot 56 — Alertes de recherche sauvegardée (2026-09-04)
+
+Choisi en reprenant une fonctionnalité documentée dès le cahier d'architecture (§27/§33, route `/compte/alertes` explicitement prévue en phase V2 aux côtés du comparateur et des vitrines pro, tous deux déjà construits) mais jamais implémentée — le blocage d'origine (« nécessite une infra de notification non encore en place ») ne tenait plus depuis que l'envoi d'email réel existe dans l'application (Lot 11/18/21/32/37/48).
+
+**Livré**
+- Modèles `SearchAlert` (une recherche sauvegardée : libellé + critères, même format que `/recherche`) et `SearchAlertNotification` (empêche un double envoi pour la même annonce, ex : suspension puis ré-approbation) — migration `20260904070000_search_alerts`.
+- **Déclencheur événementiel, pas un balayage paresseux** (contrairement au rappel d'expiration du Lot 48) : `notifyMatchingSearchAlerts()` (`src/lib/search-alerts.ts`) s'exécute une seule fois, au moment précis où une annonce devient `PUBLIEE` via `/api/admin/listings/[id]/moderate` — un vrai événement métier, pas l'écoulement du temps. Réutilise `buildListingWhere()` (déjà utilisé par `/recherche`) comme unique source de vérité pour « qu'est-ce qui correspond à cette recherche », jamais une logique de correspondance dupliquée.
+- `POST /api/alerts` (créer, max 10 alertes/utilisateur, rate limité 10/h, refuse une alerte sans aucun critère — correspondrait à toute nouvelle annonce) et `DELETE /api/alerts/[id]` (ownership vérifié).
+- Formulaire « Enregistrer cette recherche comme alerte » sur `/recherche` (visible aux utilisateurs connectés uniquement) ; page `/compte/alertes` (liste + suppression, résumé lisible des critères — marque/modèle résolus par nom, pas par id) ; lien « Mes alertes » ajouté à la navigation (desktop + menu mobile, cf. Lot 53).
+- Email de correspondance (`Notifications.searchAlertMatch*`, FR/AR) sur le même modèle que le rappel d'expiration/la baisse de prix déjà existants.
+- 9 nouveaux tests unitaires (`tests/search-alert.test.ts`) sur les fonctions pures (nettoyage des filtres, rejet d'une alerte vide, validation du schéma). 287/287 tests au vert au total.
+- Vérification de bout en bout en conditions réelles (pas seulement unitaire) : alerte enregistrée avec un critère de prix, annonce de test créée puis approuvée par un admin → email reçu et lu via la source Ethereal brute (destinataire, sujet, libellé de l'alerte, titre et prix de l'annonce, lien tous corrects) ; annonce suspendue puis ré-approuvée → **aucun second email envoyé** (index unique confirmé en base, une seule ligne `SearchAlertNotification`) ; suppression de l'alerte testée via l'interface (double clic de confirmation) ; lien « Mes alertes » confirmé présent en mobile sans régression de débordement (cf. Lot 53).
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente (nécessitent des décisions/identifiants non fournis à ce jour).
