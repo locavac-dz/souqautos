@@ -898,3 +898,20 @@ Choisi selon la logique de continuation : le plus vieux écart encore ouvert et 
 - Note de vérification : plusieurs clics automatisés sur le bouton « Suivant » ont échoué silencieusement pendant les tests (coordonnées obsolètes après un défilement/redimensionnement de la page) — un artefact connu de l'outillage de test navigateur, sans rapport avec le code livré ; contourné en ciblant l'élément réel via script plutôt que des coordonnées figées.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
+
+## Lot 45 — Historique des prix d'une annonce (2026-09-04)
+
+Choisi selon la logique de continuation : le plus vieil écart encore ouvert et non bloqué (documenté depuis le Lot 4, Cote Souq Auto — « historique des prix, prise en compte des équipements dans l'estimation »). Seul le premier des deux volets est traité ici : « équipements dans l'estimation » nécessiterait d'inventer une taxonomie d'équipements sans aucune indication du cahier des charges sur les catégories pertinentes — laissé ouvert plutôt que fabriqué arbitrairement.
+
+**Livré**
+- `ListingPriceHistory` (nouveau modèle, migration appliquée) : une entrée par prix réellement pratiqué, jamais interprétée au-delà de l'affichage brut (prix + date).
+- `POST /api/listings` : une première entrée créée avec le prix initial, au moment même de la publication.
+- `PATCH .../update-price` (Lot 23) : une nouvelle entrée à chaque changement de prix — **jamais si le nouveau montant est identique à l'ancien** (un vendeur qui « modifie » sans changer la valeur ne pollue pas l'historique d'une entrée dupliquée).
+- Affichage sur la page publique de l'annonce (`/annonce/[id]`), section « Historique du prix » — masquée tant qu'il n'existe qu'une seule entrée ou aucune (une entrée unique n'est pas un historique, juste le prix actuel ; les annonces créées avant ce lot ou par import de masse, Lot 41, n'ont donc pas de section tant que leur prix n'a jamais changé pour de vrai).
+- Aucun nouveau test unitaire (aucune nouvelle logique pure — une création Prisma imbriquée conditionnelle, non testée par convention comme les autres wrappers impurs du projet) ; 245/245 toujours au vert.
+- Vérification de bout en bout avec une vraie annonce d'Amine (créée avant ce lot, donc sans historique) : aucune section affichée initialement (0 entrée) ; deux changements de prix réels via l'API réelle → section apparue avec les deux entrées, plus récente en premier ; une troisième requête remettant exactement le même prix confirmée sans créer de troisième entrée (2 lignes en base, pas 3). Rendu RTL arabe confirmé (« سجل الأسعار », dates et montants). Annonce restaurée à son prix d'origine et historique de test supprimé après vérification.
+
+**Reporté à un lot ultérieur**
+- Prise en compte des équipements dans l'estimation de prix (second volet du même écart du Lot 4) — nécessite une taxonomie d'équipements à définir avec le porteur de projet avant tout code.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.

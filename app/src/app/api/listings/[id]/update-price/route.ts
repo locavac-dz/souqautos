@@ -45,7 +45,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const oldPrice = listing.price;
   const newPrice = parsed.data.price;
 
-  await prisma.listing.update({ where: { id }, data: { price: newPrice } });
+  // Historique des prix (Lot 45) : une entrée par changement réel — jamais si
+  // le vendeur "modifie" pour remettre exactement le même montant.
+  await prisma.listing.update({
+    where: { id },
+    data: {
+      price: newPrice,
+      ...(newPrice !== oldPrice ? { priceHistory: { create: [{ price: newPrice }] } } : {}),
+    },
+  });
 
   // Alerte de baisse de prix aux favoris — comblement du second écart du Lot 5
   // (le premier, l'expiration/renouvellement, a été traité au Lot 22). Envoi

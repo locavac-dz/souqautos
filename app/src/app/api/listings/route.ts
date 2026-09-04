@@ -115,6 +115,10 @@ export async function POST(request: NextRequest) {
       photos: {
         create: savedPaths.map((path, index) => ({ path, position: index })),
       },
+      // Historique des prix (Lot 45) : première entrée dès la création.
+      priceHistory: {
+        create: [{ price: data.price }],
+      },
     },
     select: { id: true },
   });

@@ -98,6 +98,7 @@ export default async function ListingDetailPage({
         model: true,
         wilaya: true,
         seller: { include: { profile: true, professionalAccount: true } },
+        priceHistory: { orderBy: { recordedAt: "desc" } },
       },
     }),
     getCurrentUser(),
@@ -408,6 +409,23 @@ export default async function ListingDetailPage({
                 )}
               </div>
               <p className="mt-2 text-xs text-slate-400">{tEstimate("disclaimer")}</p>
+            </div>
+          )}
+
+          {listing.priceHistory.length > 1 && (
+            <div className="mt-6">
+              <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("priceHistoryTitle")}</h2>
+              <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+                {listing.priceHistory.map((entry) => (
+                  <DetailRow
+                    key={entry.id}
+                    label={new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
+                      dateStyle: "long",
+                    }).format(entry.recordedAt)}
+                    value={`${entry.price.toLocaleString()} DA`}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>

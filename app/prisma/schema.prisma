@@ -187,6 +187,7 @@ model Listing {
   favoritedBy  Favorite[]
   conversations Conversation[]
   reports      Report[]
+  priceHistory ListingPriceHistory[]
   createdAt    DateTime         @default(now())
   publishedAt  DateTime?
   // Fixée à publishedAt + LISTING_VALIDITY_DAYS lors de la publication ou du
@@ -197,6 +198,24 @@ model Listing {
   @@index([status, category, wilayaId])
   @@index([sellerId])
   @@index([status, expiresAt])
+}
+
+// Lot 45 — historique des prix (écart documenté depuis le Lot 4). Une entrée
+// à la création (prix initial) et une à chaque changement réel de prix via
+// PATCH .../update-price (Lot 23) — jamais sur une édition de contenu, qui ne
+// touche jamais au prix (§ Lot 30). Les annonces créées par import de masse
+// (Lot 41, prisma.listing.createMany) n'ont pas d'entrée initiale — limitation
+// assumée pour ne pas remplacer le createMany par des créations une par une
+// sur un import pouvant atteindre 500 lignes ; leur historique démarre au
+// premier changement de prix réel, comme toute annonce.
+model ListingPriceHistory {
+  id         String   @id @default(cuid())
+  listingId  String
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  price      Int
+  recordedAt DateTime @default(now())
+
+  @@index([listingId])
 }
 
 // Lot 44 — brouillon persistant de l'assistant de publication, indépendant du
