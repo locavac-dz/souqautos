@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
-import { identityDocumentAbsolutePath } from "@/lib/identity-uploads";
+import { readIdentityDocument } from "@/lib/identity-uploads";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -17,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const buffer = await readFile(identityDocumentAbsolutePath(identityRequest.documentPath)).catch(() => null);
+  const buffer = await readIdentityDocument(identityRequest.documentPath);
   if (!buffer) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }

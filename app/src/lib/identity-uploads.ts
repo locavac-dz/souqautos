@@ -3,6 +3,7 @@ import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { fileTypeFromBuffer } from "file-type";
+import { encryptBuffer, decryptBuffer } from "./crypto/at-rest";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const MAX_BYTES = 8 * 1024 * 1024; // 8 Mo
@@ -31,25 +32,39 @@ export async function saveIdentityDocument(file: File): Promise<{ filename: stri
 
   await mkdir(UPLOAD_DIR, { recursive: true });
 
+  // Chiffré au repos (cf. docs/ARCHITECTURE.md §47) : le fichier écrit sur
+  // disque n'est jamais la pièce d'identité en clair, même si le dossier
+  // private-uploads/ venait à fuiter (sauvegarde, accès disque direct).
   if (detected.mime === "application/pdf") {
     const filename = `${randomUUID()}.pdf`;
     const fs = await import("node:fs/promises");
-    await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
+    await fs.writeFile(path.join(UPLOAD_DIR, filename), encryptBuffer(buffer));
     return { filename, mime: "application/pdf" };
   }
 
   const filename = `${randomUUID()}.jpg`;
-  await sharp(buffer)
+  const jpegBuffer = await sharp(buffer)
     .rotate() // applique l'orientation EXIF puis la retire
     .resize({ width: MAX_WIDTH, withoutEnlargement: true })
     .jpeg({ quality: 85 })
-    .toFile(path.join(UPLOAD_DIR, filename));
+    .toBuffer();
+  const fs = await import("node:fs/promises");
+  await fs.writeFile(path.join(UPLOAD_DIR, filename), encryptBuffer(jpegBuffer));
 
   return { filename, mime: "image/jpeg" };
 }
 
 export function identityDocumentAbsolutePath(filename: string): string {
   return path.join(UPLOAD_DIR, filename);
+}
+
+// Déchiffre un document lu depuis private-uploads/identity — miroir de
+// l'écriture chiffrée dans saveIdentityDocument ci-dessus.
+export async function readIdentityDocument(filename: string): Promise<Buffer | null> {
+  const { readFile } = await import("node:fs/promises");
+  const encrypted = await readFile(identityDocumentAbsolutePath(filename)).catch(() => null);
+  if (!encrypted) return null;
+  return decryptBuffer(encrypted);
 }
 
 // Supprimé du disque une fois la décision de review prise (approuvée ou

@@ -1073,3 +1073,24 @@ Choisi à la demande du porteur de projet (« qu'est-ce que tu propose pour amé
 - Vérification navigateur réelle : menu mobile testé en FR et AR (0px de débordement, tous les liens atteignables) ; association label→champ confirmée par simulation de clic (`document.activeElement.id` pointe bien vers le champ mot de passe après clic sur son label).
 
 Prochain lot proposé : à définir avec le porteur de projet — mêmes chantiers en attente qu'au Lot 52 (politique de confidentialité/CGU, paiement réel).
+
+## Lot 54 — Chiffrement au repos (téléphone + documents d'identité) (2026-09-04)
+
+Choisi en reprenant une exigence documentée dès le cahier d'architecture ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §47 : « chiffrement des données sensibles au repos (téléphone, documents de vérification) ») mais jamais implémentée — `User.phone` était en clair en base depuis le Lot 1, et les pièces d'identité uploadées (Lot 12) étaient déjà hors de `/public` (accès restreint à une route API authentifiée réservée au staff) mais stockées en clair sur disque.
+
+**Livré**
+- [`src/lib/crypto/at-rest.ts`](app/src/lib/crypto/at-rest.ts) (nouveau) : AES-256-GCM natif (`node:crypto`, aucune dépendance ajoutée), clé maîtresse `ENCRYPTION_KEY` (32 octets base64, nouvelle variable d'env), sous-clés dérivées par HMAC-SHA256 pour chaque usage. Deux constructions distinctes :
+  - `encryptDeterministic`/`decryptDeterministic` — IV synthétique dérivé du texte en clair (jamais aléatoire) : un même numéro produit toujours le même chiffré, ce qui préserve la contrainte `@unique` et les recherches par égalité sur `User.phone` sans jamais stocker le numéro en clair.
+  - `encryptBuffer`/`decryptBuffer` — IV aléatoire à chaque appel, pour les documents d'identité (aucune contrainte d'unicité recherchée dessus).
+- **Téléphone** : chiffrement rendu totalement transparent au reste de l'application via une extension du client Prisma ([`src/lib/prisma.ts`](app/src/lib/prisma.ts), `$extends` sur le modèle `User`) — chiffre `data.phone`/`where.phone` avant chaque requête, déchiffre `phone` dans chaque résultat. Aucune route applicative n'a eu besoin d'être modifiée (16 fichiers touchent `.phone`, aucun n'a changé) : impossible d'oublier un point d'entrée puisque tout passe par le même client.
+- **Documents d'identité** : chiffrés dans [`src/lib/identity-uploads.ts`](app/src/lib/identity-uploads.ts) avant écriture sur disque (`saveIdentityDocument`), déchiffrés à la lecture (nouvelle fonction `readIdentityDocument`, utilisée par la route admin `/api/admin/identity-requests/[id]/document`).
+- Migration ponctuelle des données existantes : le seul numéro déjà en clair en base (compte de test `amine.benali@example.dz`) a été chiffré en place avant l'activation de l'extension — vérifié en relisant la ligne brute (chiffré) puis via l'application (déchiffré correctement, `0555123456` toujours affiché sur la page profil).
+- Nouvelle variable d'environnement `ENCRYPTION_KEY` documentée dans `.env.example` avec la même limite de bootstrap honnêtement assumée que `JWT_SECRET` : clé en clair dans `.env`, aucun coffre-fort externe (Vault/KMS) — protège contre l'exfiltration de la base ou d'une sauvegarde, pas contre une compromission du serveur applicatif.
+- 7 nouveaux tests unitaires (`tests/at-rest.test.ts`) : aller-retour chiffrement/déchiffrement, déterminisme (même texte → même chiffré), non-déterminisme des documents, échec de déchiffrement sur contenu altéré (authentification GCM). 278/278 tests au vert au total.
+- Vérification de bout en bout en conditions réelles (pas seulement unitaire) :
+  - téléphone d'`amine.benali` toujours affiché correctement après migration (page profil) ;
+  - tentative de reprise du même numéro depuis un autre compte → `phone_taken` (409, la contrainte d'unicité fonctionne toujours sur le chiffré) ;
+  - nouveau numéro enregistré puis relu correctement (aller-retour écriture/lecture réel) ;
+  - document d'identité de test uploadé, fichier sur disque confirmé non lisible (`file` le détecte comme « data » brute, pas une image) ; document redemandé via la route admin → déchiffré correctement (en-tête JPEG valide `ff d8 ff`).
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente (nécessitent des décisions/identifiants non fournis à ce jour).
