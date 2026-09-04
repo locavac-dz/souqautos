@@ -2,6 +2,7 @@
 
 import { useRouter } from "@/i18n/navigation";
 import { WIZARD_STEPS, type WizardStepPath } from "./types";
+import { useWizard } from "./WizardContext";
 
 export function StepShell({
   step,
@@ -23,6 +24,7 @@ export function StepShell({
   hideNext?: boolean;
 }) {
   const router = useRouter();
+  const { syncDraft } = useWizard();
   const total = WIZARD_STEPS.length;
   const prevPath: WizardStepPath | null = step > 1 ? WIZARD_STEPS[step - 2] : null;
   const nextPath: WizardStepPath | null = step < total ? WIZARD_STEPS[step] : null;
@@ -30,6 +32,9 @@ export function StepShell({
   function handleNext() {
     const proceed = onNext ? onNext() : true;
     if (proceed === false) return;
+    // Lot 44 — checkpoint du brouillon serveur à chaque étape validée, jamais
+    // à chaque frappe (cf. WizardContext.syncDraft).
+    syncDraft();
     if (nextPath) router.push(`/publier/${nextPath}`);
   }
 

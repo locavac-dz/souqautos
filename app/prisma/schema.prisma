@@ -53,6 +53,7 @@ model User {
   proCollaborations       ProCollaborator[]
   identityVerificationRequests IdentityVerificationRequest[] @relation("IdentityRequester")
   identityReviewsPerformed     IdentityVerificationRequest[] @relation("IdentityReviewer")
+  listingDraft                 ListingDraft?
 }
 
 model Profile {
@@ -196,6 +197,25 @@ model Listing {
   @@index([status, category, wilayaId])
   @@index([sellerId])
   @@index([status, expiresAt])
+}
+
+// Lot 44 — brouillon persistant de l'assistant de publication, indépendant du
+// modèle Listing (dont les champs obligatoires — title/price/year/etc. — ne
+// sont tous réunis qu'à l'avant-dernière étape). Un JSON libre (le même
+// WizardData sérialisé côté client), jamais interprété ni validé côté serveur
+// au-delà de sa taille : il n'est restitué qu'au même assistant, qui refait
+// sa propre validation étape par étape avant toute publication réelle. Un
+// seul brouillon actif par utilisateur (userId unique) — démarrer un nouveau
+// brouillon écrase simplement l'ancien, pas d'historique à conserver. Les
+// photos (objets File) ne sont volontairement jamais incluses : limitation
+// assumée, documentée à l'utilisateur (cf. Décisions/notes du Lot 44).
+model ListingDraft {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }
 
 // --- Lot 5 — Favoris ---
