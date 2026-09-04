@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { DeleteConversationButton } from "./DeleteConversationButton";
+import { ReportUserButton } from "@/components/ReportUserButton";
 
 type SentMessage = {
   id: string;
@@ -18,12 +19,14 @@ export function MessageThread({
   otherUserId,
   initialBlocked,
   blockedByOther,
+  initialAlreadyReported,
   onSent,
 }: {
   conversationId: string;
   otherUserId: string;
   initialBlocked: boolean;
   blockedByOther: boolean;
+  initialAlreadyReported: boolean;
   onSent?: (message: SentMessage) => void;
 }) {
   const t = useTranslations("Messages");
@@ -111,6 +114,7 @@ export function MessageThread({
         <button type="button" onClick={toggleBlock} className="text-xs text-slate-400 hover:text-red-600">
           {blocked ? t("unblockUser") : t("blockUser")}
         </button>
+        <ReportUserButton userId={otherUserId} isLoggedIn initialAlreadyReported={initialAlreadyReported} />
       </div>
 
       {!canSend ? (

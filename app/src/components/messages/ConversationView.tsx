@@ -28,6 +28,7 @@ export function ConversationView({
   otherUserId,
   initialBlocked,
   blockedByOther,
+  initialAlreadyReported,
 }: {
   conversationId: string;
   initialMessages: MessageRow[];
@@ -35,6 +36,7 @@ export function ConversationView({
   otherUserId: string;
   initialBlocked: boolean;
   blockedByOther: boolean;
+  initialAlreadyReported: boolean;
 }) {
   const [messages, setMessages] = useState<MessageRow[]>(initialMessages);
 
@@ -95,6 +97,7 @@ export function ConversationView({
         otherUserId={otherUserId}
         initialBlocked={initialBlocked}
         blockedByOther={blockedByOther}
+        initialAlreadyReported={initialAlreadyReported}
         onSent={handleSent}
       />
     </>

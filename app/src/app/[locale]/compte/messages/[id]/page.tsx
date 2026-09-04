@@ -41,12 +41,16 @@ export default async function ConversationPage({
 
   const otherUser = conversation.buyerId === user.id ? conversation.seller : conversation.buyer;
 
-  const [blockedByMe, blockedByOther] = await Promise.all([
+  const [blockedByMe, blockedByOther, existingReport] = await Promise.all([
     prisma.block.findUnique({
       where: { blockerId_blockedId: { blockerId: user.id, blockedId: otherUser.id } },
     }),
     prisma.block.findUnique({
       where: { blockerId_blockedId: { blockerId: otherUser.id, blockedId: user.id } },
+    }),
+    // Lot 46 — signalement d'utilisateur depuis la messagerie (écart du Lot 8).
+    prisma.report.findUnique({
+      where: { reportedUserId_authorId: { reportedUserId: otherUser.id, authorId: user.id } },
     }),
   ]);
 
@@ -80,6 +84,7 @@ export default async function ConversationPage({
         otherUserId={otherUser.id}
         initialBlocked={Boolean(blockedByMe)}
         blockedByOther={Boolean(blockedByOther)}
+        initialAlreadyReported={Boolean(existingReport)}
       />
     </div>
   );

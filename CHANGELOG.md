@@ -915,3 +915,16 @@ Choisi selon la logique de continuation : le plus vieil écart encore ouvert et 
 - Prise en compte des équipements dans l'estimation de prix (second volet du même écart du Lot 4) — nécessite une taxonomie d'équipements à définir avec le porteur de projet avant tout code.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
+
+## Lot 46 — Signalement d'un utilisateur depuis la messagerie (2026-09-04)
+
+Choisi selon la logique de continuation : le plus vieil écart encore ouvert et non bloqué, documenté depuis le Lot 8 (« signalement d'un utilisateur depuis la messagerie »). Le signalement d'utilisateur existait déjà depuis le Lot 19, mais uniquement depuis la page vitrine vendeur (`/vendeur/[id]`) — jamais depuis la messagerie elle-même, là où un comportement abusif se manifeste le plus souvent en premier.
+
+**Livré**
+- `ReportUserButton` (Lot 19, inchangé) réutilisé tel quel dans `MessageThread` — aucune duplication de logique de signalement, juste un nouveau point d'entrée vers l'infrastructure existante (`POST /api/users/[id]/report`, `checkCanReportUser`/`validateReportSubmission`).
+- Affiché à côté de « Bloquer cet utilisateur », dans le même bandeau d'actions de la conversation.
+- Le statut « déjà signalé » est calculé côté serveur (`prisma.report.findUnique`, même requête que sur la page vitrine) et transmis en cascade `page → ConversationView → MessageThread`, cohérent que le signalement provienne de la messagerie ou de la vitrine vendeur — un signalement déjà déposé depuis l'une des deux pages est reconnu depuis l'autre.
+- Aucun nouveau test unitaire (aucune nouvelle logique — réutilisation intégrale du Lot 19, déjà testé) ; 245/245 toujours au vert.
+- Vérification de bout en bout sur la conversation réelle Sara/Amine : signalement réel d'Amine contre Sara depuis la messagerie (motif « Messages abusifs » + commentaire) → confirmé en base (`status: OUVERT`) → bouton devenu « Vous avez déjà signalé cet utilisateur » après rechargement, cohérent entre la messagerie et la vitrine vendeur. Rendu RTL arabe confirmé (« لقد أبلغت بالفعل عن هذا المستخدم »). Signalement de test supprimé après vérification.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
