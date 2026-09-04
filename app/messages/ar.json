@@ -631,7 +631,10 @@
     "reviewReplyBody": "رد {name} على التقييم الذي تركته: « {reply} »",
     "reviewReplyLink": "عرض الرد على سوق أوتو",
     "accountSuspendedSubject": "تم تعليق حسابك — سوق أوتو",
-    "accountSuspendedBody": "تم تعليق حسابك على سوق أوتو. السبب: {reason}. إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع فريقنا."
+    "accountSuspendedBody": "تم تعليق حسابك على سوق أوتو. السبب: {reason}. إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع فريقنا.",
+    "expiryReminderSubject": "إعلانك سينتهي قريبًا — سوق أوتو",
+    "expiryReminderBody": "سينتهي إعلانك « {title} » في {date}. جدده من مساحة «إعلاناتي» ليبقى ظاهرًا.",
+    "expiryReminderLink": "عرض إعلاني على سوق أوتو"
   },
   "AdminCatalogue": {
     "title": "الماركات والموديلات",

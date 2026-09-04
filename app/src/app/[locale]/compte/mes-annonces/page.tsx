@@ -4,6 +4,7 @@ import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
+import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
 import {
   checkListingRenewable,
   checkListingCanBeMarkedSold,
@@ -28,6 +29,7 @@ export default async function MyListingsPage() {
   const tListing = await getTranslations("Listing");
 
   await sweepExpiredListings();
+  await sweepExpiringListingsForReminders();
 
   // Lot 43 — comble l'écart signalé au Lot 41 : les annonces d'un compte
   // professionnel appartiennent toujours à sellerId = ProfessionalAccount.userId,

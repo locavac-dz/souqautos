@@ -61,6 +61,28 @@ export function checkListingContentEditable(status: ListingStatus): ListingActio
     : { ok: false, error: "invalid_status" };
 }
 
+// Lot 48 — rappel email avant expiration, balayé paresseusement comme
+// l'expiration elle-même (aucun scheduler dans cette application, cf.
+// sweepExpiredListings). Fenêtre en jours avant expiresAt pendant laquelle un
+// rappel doit être envoyé, une seule fois par cycle (reminderSentAt).
+export const EXPIRY_REMINDER_WINDOW_DAYS = 3;
+
+export function shouldSendExpiryReminder({
+  expiresAt,
+  reminderSentAt,
+  now = new Date(),
+}: {
+  expiresAt: Date | null;
+  reminderSentAt: Date | null;
+  now?: Date;
+}): boolean {
+  if (!expiresAt || reminderSentAt) return false;
+  if (now.getTime() >= expiresAt.getTime()) return false; // déjà expirée : sweepExpiredListings s'en charge
+  const windowStart = new Date(expiresAt);
+  windowStart.setDate(windowStart.getDate() - EXPIRY_REMINDER_WINDOW_DAYS);
+  return now.getTime() >= windowStart.getTime();
+}
+
 // Comblement du second écart documenté du Lot 5 : les favoris n'ont jamais
 // notifié leurs auteurs d'une baisse de prix, faute d'infra de notification —
 // l'email réel existe depuis le Lot 11/18/21, il ne restait qu'à détecter la

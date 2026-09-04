@@ -944,3 +944,22 @@ Choisi selon la logique de continuation : le plus vieil écart encore ouvert et 
 - Vérification de bout en bout avec le compte administrateur réel : seuil des annonces passé de 3 à 5 via l'interface réelle → confirmé en base + dans l'audit log (avant/après) ; garde-fou `invalid_threshold` vérifié (seuil à 0) ; accès en lecture seule confirmé pour un modérateur réel (Amine), tentative de modification via l'API directe refusée (403). **Preuve définitive que le seuil configuré est réellement utilisé et non plus la constante 3 d'origine** : une annonce jetable avec exactement 4 signalements confirmés n'a **pas** été suspendue (aurait été suspendue à ce stade avec l'ancien seuil figé à 3) ; un 5ᵉ signalement résolu via l'API réelle a déclenché la suspension automatique exactement au seuil configuré (5), jamais avant. Rendu RTL arabe confirmé. Toutes les données de test (annonce, signalements, comptes jetables, entrée d'audit) supprimées et seuils remis à 3/3 après vérification.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
+
+## Lot 48 — Rappel email avant expiration d'annonce (2026-09-04)
+
+Choisi selon la logique de continuation : le dernier écart encore ouvert et non bloqué du Lot 22 (le second, historique des renouvellements, reste ouvert — moins prioritaire, purement informatif). « Rappel avant expiration » avait été noté comme nécessitant un planificateur (cron), qui n'existe pas dans cette application — la solution retenue réutilise plutôt le même principe de balayage paresseux déjà en place pour l'expiration elle-même (`sweepExpiredListings`, Lot 22) : un rappel est envoyé à la prochaine visite d'une page à fort trafic, pas sur un job périodique.
+
+**Livré**
+- `Listing.expiryReminderSentAt` (nouveau champ, migration appliquée) : horodatage du rappel déjà envoyé pour le cycle d'expiration courant, remis à `null` à chaque renouvellement (`POST .../renew`) pour permettre un nouveau rappel au prochain cycle.
+- `shouldSendExpiryReminder()` (`src/lib/listing-lifecycle.ts`, fonction pure testée) : fenêtre de 3 jours avant `expiresAt`, jamais si déjà envoyé pour ce cycle, jamais si déjà expirée (`sweepExpiredListings` prend le relais à ce stade).
+- `sweepExpiringListingsForReminders()` (`src/lib/listing-expiry-reminder-sweep.ts`) : appelée aux 3 mêmes points d'entrée que `sweepExpiredListings` (résultats de recherche, détail d'annonce, « Mes annonces »). Marquage atomique avant l'envoi (`updateMany` conditionné sur `expiryReminderSentAt: null`) : si deux visites concurrentes déclenchent le balayage sur la même annonce, une seule "gagne la course" et envoie réellement l'email — jamais de double envoi. Bornée à 50 annonces par balayage (défense contre un pic de trafic).
+- 6 nouveaux tests unitaires sur `shouldSendExpiryReminder` (dans la fenêtre, hors fenêtre, déjà envoyé, déjà expirée, pas de date d'expiration, limite exacte de la fenêtre) ; 259/259 toujours au vert.
+- Vérification de bout en bout avec une vraie annonce jetable (expirant dans 2 jours, donc dans la fenêtre) : visite réelle de la page de l'annonce → email réellement envoyé, **contenu source lu intégralement sur Ethereal** (bon destinataire, bon sujet, bon titre d'annonce, date d'expiration correctement formatée, bon lien) ; une seconde visite n'envoie pas de second email (`expiryReminderSentAt` déjà renseigné) ; renouvellement réel via l'API → `expiryReminderSentAt` remis à `null` et `expiresAt` repoussée de 30 jours → nouvelle visite ne renvoie **pas** d'email (hors fenêtre après renouvellement), confirmant que le nouveau cycle repart bien à zéro sans déclencher immédiatement un rappel prématuré. Annonce de test supprimée après vérification.
+
+**Décisions/notes**
+- Limite assumée du balayage paresseux (déjà vraie pour l'expiration elle-même depuis le Lot 22) : une annonce dont plus personne ne visite jamais aucune des 3 pages concernées avant son expiration ne recevra pas de rappel. Un vrai planificateur (cron) éliminerait cette limite mais n'existe pas dans cette application.
+
+**Reporté à un lot ultérieur**
+- Historique des renouvellements d'une annonce (second volet du même écart du Lot 22, purement informatif — moins prioritaire).
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.

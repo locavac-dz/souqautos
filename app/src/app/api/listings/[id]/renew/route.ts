@@ -32,7 +32,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const now = new Date();
   await prisma.listing.update({
     where: { id },
-    data: { status: "PUBLIEE", expiresAt: computeExpiryDate(now), publishedAt: now },
+    data: {
+      status: "PUBLIEE",
+      expiresAt: computeExpiryDate(now),
+      publishedAt: now,
+      // Nouveau cycle d'expiration (Lot 48) : le rappel doit pouvoir repartir.
+      expiryReminderSentAt: null,
+    },
   });
 
   return NextResponse.json({ status: "PUBLIEE" });

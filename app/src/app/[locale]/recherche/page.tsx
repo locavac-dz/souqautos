@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
+import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
 import { searchParamsSchema, PAGE_SIZE } from "@/lib/validation/search";
 import { buildListingWhere, buildListingOrderBy, currentPage, paginationOffset, totalPages as computeTotalPages } from "@/lib/search";
 import { SearchFilters } from "@/components/search/SearchFilters";
@@ -28,6 +29,7 @@ export default async function SearchPage({
   const t = await getTranslations("Search");
 
   await sweepExpiredListings();
+  await sweepExpiringListingsForReminders();
 
   const where = buildListingWhere(params);
   const orderBy = buildListingOrderBy(params.sort);

@@ -194,6 +194,10 @@ model Listing {
   // renouvellement (cf. src/lib/listing-lifecycle.ts) — permet l'expiration
   // automatique (§ ancien Lot 2) sans planificateur dédié, cf. sweepExpiredListings().
   expiresAt    DateTime?
+  // Lot 48 — rappel email avant expiration, balayé paresseusement comme
+  // l'expiration elle-même (aucun scheduler dans cette application). Remis à
+  // null à chaque renouvellement (nouveau cycle d'expiration, cf. route renew).
+  expiryReminderSentAt DateTime?
 
   @@index([status, category, wilayaId])
   @@index([sellerId])

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { computeAverageRating } from "@/lib/reviews";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
+import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
 import {
   checkListingRenewable,
   checkListingCanBeMarkedSold,
@@ -88,6 +89,7 @@ export default async function ListingDetailPage({
   const tEstimate = await getTranslations("Estimate");
 
   await sweepExpiredListings();
+  await sweepExpiringListingsForReminders();
 
   const [listing, currentUser] = await Promise.all([
     prisma.listing.findUnique({

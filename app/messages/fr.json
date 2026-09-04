@@ -631,7 +631,10 @@
     "reviewReplyBody": "{name} a répondu à l'avis que vous avez laissé : « {reply} »",
     "reviewReplyLink": "Voir la réponse sur Souq Auto",
     "accountSuspendedSubject": "Votre compte a été suspendu — Souq Auto",
-    "accountSuspendedBody": "Votre compte Souq Auto a été suspendu. Motif : {reason}. Si vous pensez qu'il s'agit d'une erreur, contactez notre équipe."
+    "accountSuspendedBody": "Votre compte Souq Auto a été suspendu. Motif : {reason}. Si vous pensez qu'il s'agit d'une erreur, contactez notre équipe.",
+    "expiryReminderSubject": "Votre annonce expire bientôt — Souq Auto",
+    "expiryReminderBody": "Votre annonce « {title} » expirera le {date}. Renouvelez-la depuis votre espace « Mes annonces » pour qu'elle reste visible.",
+    "expiryReminderLink": "Voir mon annonce sur Souq Auto"
   },
   "AdminCatalogue": {
     "title": "Marques & modèles",

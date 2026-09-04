@@ -8,6 +8,7 @@ import {
   computeExpiryDate,
   isListingExpired,
   isPriceDrop,
+  shouldSendExpiryReminder,
 } from "@/lib/listing-lifecycle";
 
 describe("computeExpiryDate", () => {
@@ -114,5 +115,40 @@ describe("isPriceDrop", () => {
 
   it("is not a drop when the new price is higher", () => {
     expect(isPriceDrop(2_000_000, 2_200_000)).toBe(false);
+  });
+});
+
+describe("shouldSendExpiryReminder", () => {
+  const now = new Date("2026-09-10T00:00:00.000Z");
+
+  it("sends a reminder when within the window and not yet sent", () => {
+    const expiresAt = new Date("2026-09-12T00:00:00.000Z"); // dans 2 jours
+    expect(shouldSendExpiryReminder({ expiresAt, reminderSentAt: null, now })).toBe(true);
+  });
+
+  it("does not send outside the window (too early)", () => {
+    const expiresAt = new Date("2026-09-20T00:00:00.000Z"); // dans 10 jours
+    expect(shouldSendExpiryReminder({ expiresAt, reminderSentAt: null, now })).toBe(false);
+  });
+
+  it("does not send once a reminder was already sent for this cycle", () => {
+    const expiresAt = new Date("2026-09-12T00:00:00.000Z");
+    expect(
+      shouldSendExpiryReminder({ expiresAt, reminderSentAt: new Date("2026-09-09T00:00:00.000Z"), now })
+    ).toBe(false);
+  });
+
+  it("does not send once already expired (sweepExpiredListings takes over)", () => {
+    const expiresAt = new Date("2026-09-09T00:00:00.000Z"); // hier
+    expect(shouldSendExpiryReminder({ expiresAt, reminderSentAt: null, now })).toBe(false);
+  });
+
+  it("does not send when there is no expiry date at all", () => {
+    expect(shouldSendExpiryReminder({ expiresAt: null, reminderSentAt: null, now })).toBe(false);
+  });
+
+  it("sends exactly at the window boundary", () => {
+    const expiresAt = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    expect(shouldSendExpiryReminder({ expiresAt, reminderSentAt: null, now })).toBe(true);
   });
 });
