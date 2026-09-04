@@ -32,21 +32,31 @@ export default async function AdminUsersPage() {
             <div>
               <p className="font-medium text-slate-900">{user.profile?.displayName ?? user.email}</p>
               <p className="text-slate-400 text-xs">{user.email}</p>
-              {user.suspendedAt && (
-                <p className="mt-0.5 text-xs text-red-600">
-                  {t("suspendedLabel")}
-                  {user.suspensionReason && ` — ${t("suspensionReasonLabel", { reason: user.suspensionReason })}`}
-                </p>
+              {user.deletedAt ? (
+                <p className="mt-0.5 text-xs text-slate-400">{t("deletedLabel")}</p>
+              ) : (
+                user.suspendedAt && (
+                  <p className="mt-0.5 text-xs text-red-600">
+                    {t("suspendedLabel")}
+                    {user.suspensionReason && ` — ${t("suspensionReasonLabel", { reason: user.suspensionReason })}`}
+                  </p>
+                )
               )}
             </div>
             <div className="flex items-center gap-3">
-              {canChangeRoles ? (
-                <RoleSelect userId={user.id} currentRole={user.role} disabled={user.id === currentUser?.id} />
+              {user.deletedAt ? (
+                <span className="text-slate-400">{t(ROLE_KEY[user.role])}</span>
               ) : (
-                <span className="text-slate-600">{t(ROLE_KEY[user.role])}</span>
-              )}
-              {canSuspend && !isStaff(user.role) && user.id !== currentUser?.id && (
-                <SuspendUserButton userId={user.id} suspended={Boolean(user.suspendedAt)} />
+                <>
+                  {canChangeRoles ? (
+                    <RoleSelect userId={user.id} currentRole={user.role} disabled={user.id === currentUser?.id} />
+                  ) : (
+                    <span className="text-slate-600">{t(ROLE_KEY[user.role])}</span>
+                  )}
+                  {canSuspend && !isStaff(user.role) && user.id !== currentUser?.id && (
+                    <SuspendUserButton userId={user.id} suspended={Boolean(user.suspendedAt)} />
+                  )}
+                </>
               )}
             </div>
           </div>

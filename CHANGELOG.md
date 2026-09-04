@@ -1015,3 +1015,23 @@ Choisi explicitement par le porteur de projet (« faire audit complet et corrige
 - `ListingPhoto` sans `@@unique([listingId, position])` : déjà géré correctement en transaction côté application (Lot 36), garde-fou DB optionnel de faible priorité.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
+
+## Lot 51 — Suppression de compte utilisateur (2026-09-04)
+
+Choisi explicitement par le porteur de projet, suite à la piste identifiée lors de l'audit du Lot 50 : la plupart des relations vers `User` sont en `RESTRICT`, une vraie suppression de la ligne casserait l'historique de modération/avis/signalements dont d'autres utilisateurs ont besoin. Solution retenue : **anonymisation**, jamais une suppression physique — même principe que documenté dans l'audit.
+
+**Livré**
+- `User.deletedAt` (nouveau champ, migration appliquée) — distinct de `suspendedAt` (Lot 31, décision de modération, réversible) : irréversible, déclenché par le titulaire du compte lui-même, jamais par un admin.
+- `POST /api/profile/delete-account` : exige la ré-saisie du mot de passe (vérifié par `bcrypt.compare`, jamais un simple double-clic vu l'irréversibilité) ; anonymise en une seule transaction : email remplacé par une adresse jamais réutilisable dérivée de l'id (`src/lib/account-deletion.ts`, fonction pure testée), mot de passe remplacé par un hash inutilisable, téléphone/dates de vérification remis à `null`, nom affiché remplacé par « Utilisateur supprimé », wilaya/présentation/avatar effacés du profil. Retire immédiatement du marché toute annonce encore active (`BROUILLON`/`EN_ATTENTE`/`PUBLIEE` → `SUSPENDUE`, réutilise le statut existant plutôt que d'en créer un nouveau pour un cas qui n'est pas une décision de modération) — un compte supprimé ne peut plus jamais répondre à un acheteur ni compléter un brouillon. Session immédiatement invalidée (cookie effacé).
+- `getCurrentUser()` traite désormais un compte supprimé exactement comme un compte suspendu (chokepoint unique, Lot 31) — une session déjà active au moment de la suppression ne reste pas utilisable jusqu'à expiration du cookie.
+- Messages, avis et signalements déjà émis par ce compte restent visibles pour les autres utilisateurs (jamais rétroactivement effacés) — seule l'identité personnelle est anonymisée, pas l'historique dont d'autres ont besoin (cohérent avec la décision de l'audit Lot 50 de ne jamais toucher aux relations `RESTRICT`).
+- `/compte/profil` : nouvelle section « Zone dangereuse », avertissement explicite avant toute action, confirmation en deux temps (bouton → formulaire mot de passe → confirmation finale).
+- `/admin/utilisateurs` : un compte supprimé affiche « Compte supprimé » à la place du statut de suspension, rôle en lecture seule, aucune action de suspension/changement de rôle proposée (n'aurait aucun effet réel sur un compte déjà inaccessible).
+- 3 nouveaux tests unitaires sur `generateAnonymizedEmail` ; 271/271 toujours au vert.
+- Vérification de bout en bout avec un compte jetable créé pour l'occasion (jamais un des comptes de test persistants de la session) et une vraie annonce publiée : garde-fou `wrong_password` vérifié via l'interface réelle (formulaire, message d'erreur affiché, compte inchangé en base) ; suppression réelle via l'API réelle → email/mot de passe/téléphone anonymisés confirmés en base, annonce passée en `SUSPENDUE` avec le bon motif ; `GET /api/auth/me` confirmé à 401 juste après (session invalidée) ; tentative de connexion avec les identifiants d'origine refusée (401 `invalid_credentials`) ; back-office confirmé affichant « Compte supprimé » sans aucune action proposée. Rendu RTL arabe confirmé (« حساب محذوف »). Compte et annonce de test entièrement supprimés de la base après vérification (contrairement à un compte réel anonymisé, un compte 100 % jetable créé pour un seul test reste éligible à une suppression physique complète).
+
+**Décisions/notes**
+- Aucun nouveau statut d'annonce créé pour ce cas — `SUSPENDUE` (déjà utilisé pour les décisions de modération) est réutilisé avec un `moderationNote` explicite, pour ne pas complexifier `ListingStatus` pour un scénario qui n'est pas à proprement parler une modération.
+- Les fichiers avatar déjà uploadés ne sont pas supprimés du disque à l'anonymisation — cohérent avec la décision déjà prise au Lot 36 (photos d'annonces supprimées également laissées sur disque), un sujet séparé si l'espace disque devient un problème réel.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.

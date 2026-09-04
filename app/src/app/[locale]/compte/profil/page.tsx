@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { EditProfileForm } from "@/components/EditProfileForm";
 import { EmailChangeForm } from "@/components/EmailChangeForm";
 import { AvatarUpload } from "@/components/AvatarUpload";
+import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 
 export default async function EditProfilePage() {
   const locale = await getLocale();
@@ -35,6 +36,9 @@ export default async function EditProfilePage() {
         initialBio={user.profile?.bio ?? null}
         phoneVerified={Boolean(user.phoneVerifiedAt)}
       />
+      <div className="mt-10">
+        <DeleteAccountForm />
+      </div>
     </div>
   );
 }

@@ -33,6 +33,13 @@ model User {
   // intermédiaire n'existe pour un compte (pas de file de modération).
   suspendedAt      DateTime?
   suspensionReason String?
+  // Suppression de compte à la demande du titulaire (Lot 51) — anonymisation,
+  // jamais une suppression physique de la ligne : la plupart des relations
+  // vers User sont en RESTRICT (cf. audit Lot 50), une vraie suppression
+  // casserait l'historique de modération/avis/signalements. Distinct de
+  // suspendedAt (Lot 31, décision de modération, réversible) : irréversible,
+  // déclenché par le titulaire lui-même, jamais par un admin.
+  deletedAt        DateTime?
   profile         Profile?
   listings        Listing[]
   favorites       Favorite[]

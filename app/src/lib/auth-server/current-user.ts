@@ -15,5 +15,10 @@ export async function getCurrentUser() {
   // vérification dans chaque route/page, cohérent avec le blocage à la connexion.
   if (user?.suspendedAt) return null;
 
+  // Même principe pour un compte supprimé par son titulaire (Lot 51) — une
+  // session déjà active au moment de la suppression ne doit pas rester
+  // utilisable jusqu'à expiration du cookie.
+  if (user?.deletedAt) return null;
+
   return user;
 }

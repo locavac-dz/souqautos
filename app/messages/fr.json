@@ -336,6 +336,7 @@
     "suspendAction": "Suspendre",
     "unsuspendAction": "Réactiver",
     "suspendedLabel": "Suspendu",
+    "deletedLabel": "Compte supprimé",
     "suspensionReasonLabel": "Motif : {reason}",
     "suspensionReasonPlaceholder": "Motif de la suspension",
     "confirmAction": "Confirmer",
@@ -618,7 +619,16 @@
     "avatarUploading": "Envoi en cours…",
     "avatarErrorTooLarge": "L'image dépasse 4 Mo.",
     "avatarErrorInvalidType": "Format d'image non pris en charge (JPEG, PNG ou WebP uniquement).",
-    "avatarErrorGeneric": "Une erreur est survenue. Réessayez."
+    "avatarErrorGeneric": "Une erreur est survenue. Réessayez.",
+    "cancel": "Annuler",
+    "deleteAccountTitle": "Zone dangereuse",
+    "deleteAccountWarning": "Supprimer votre compte est définitif : votre email et votre mot de passe seront irrémédiablement perdus, votre nom sera remplacé par « Utilisateur supprimé », et vos annonces encore actives seront retirées de la vente. Vos messages, avis et signalements déjà existants restent visibles pour les autres utilisateurs (jamais réversible).",
+    "deleteAccountAction": "Supprimer mon compte",
+    "deleteAccountPasswordLabel": "Confirmez avec votre mot de passe",
+    "deleteAccountConfirm": "Supprimer définitivement mon compte",
+    "deleteAccountPending": "Suppression en cours…",
+    "deleteAccountWrongPassword": "Mot de passe incorrect.",
+    "deleteAccountDone": "Votre compte a été supprimé. Redirection…"
   },
   "Notifications": {
     "greeting": "Bonjour,",
