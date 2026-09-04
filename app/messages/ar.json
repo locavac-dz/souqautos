@@ -12,7 +12,8 @@
     "dashboard": "حسابي",
     "myListings": "إعلاناتي",
     "favorites": "المفضلة لدي",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "menu": "القائمة"
   },
   "Home": {
     "heroTitle": "عن ماذا تبحث؟",
@@ -705,6 +706,9 @@
     "resubmissionNotice": "أي تعديل يعيد الإعلان إلى قائمة الانتظار للمراجعة من طرف فريقنا قبل أن يصبح مرئيًا للعموم مجددًا.",
     "submit": "حفظ وإرسال للمراجعة",
     "photosSectionTitle": "الصور",
+    "photoNumber": "الصورة {n}",
+    "photoMoveUp": "تقديم الصورة",
+    "photoMoveDown": "تأخير الصورة",
     "errorValidation": "بعض الحقول غير صالحة. تحقق من النموذج.",
     "errorAtLeastOnePhoto": "أضف صورة واحدة على الأقل (10 كحد أقصى).",
     "errorTooManyPhotos": "10 صور كحد أقصى.",

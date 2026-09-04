@@ -26,8 +26,11 @@ export default function Step7Page() {
   return (
     <StepShell step={7} title={t("step7Title")} nextLabel={t("next")} onNext={handleNext}>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("title")}</label>
+        <label htmlFor="wizard-title" className="block text-sm font-medium text-slate-700 mb-1">
+          {t("title")}
+        </label>
         <input
+          id="wizard-title"
           type="text"
           placeholder={t("titlePlaceholder")}
           value={data.title ?? ""}
@@ -38,8 +41,11 @@ export default function Step7Page() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("description")}</label>
+        <label htmlFor="wizard-description" className="block text-sm font-medium text-slate-700 mb-1">
+          {t("description")}
+        </label>
         <textarea
+          id="wizard-description"
           placeholder={t("descriptionPlaceholder")}
           value={data.description ?? ""}
           onChange={(e) => setData({ description: e.target.value })}

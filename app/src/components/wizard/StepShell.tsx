@@ -49,7 +49,7 @@ export function StepShell({
             style={{ width: `${(step / total) * 100}%` }}
           />
         </div>
-        <p className="mt-2 text-xs font-medium text-slate-400">
+        <p className="mt-2 text-xs font-medium text-slate-500">
           {step} / {total}
         </p>
       </div>

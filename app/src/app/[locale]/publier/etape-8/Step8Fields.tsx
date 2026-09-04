@@ -37,8 +37,11 @@ export function Step8Fields({
   return (
     <StepShell step={8} title={t("step8Title")} nextLabel={t("next")} onNext={handleNext}>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("wilaya")}</label>
+        <label htmlFor="wizard-wilaya" className="block text-sm font-medium text-slate-700 mb-1">
+          {t("wilaya")}
+        </label>
         <select
+          id="wizard-wilaya"
           value={data.wilayaId ?? ""}
           onChange={(e) => {
             const wilaya = wilayas.find((w) => w.id === Number(e.target.value));
@@ -61,27 +64,31 @@ export function Step8Fields({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("phone")}</label>
+        <label htmlFor="wizard-phone" className="block text-sm font-medium text-slate-700 mb-1">
+          {t("phone")}
+        </label>
         {userPhone ? (
           <>
             <input
+              id="wizard-phone"
               type="tel"
               value={userPhone}
               disabled
               className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-500"
             />
-            <p className="mt-1 text-xs text-slate-400">{t("phoneAlreadySet")}</p>
+            <p className="mt-1 text-xs text-slate-500">{t("phoneAlreadySet")}</p>
           </>
         ) : (
           <>
             <input
+              id="wizard-phone"
               type="tel"
               value={data.phone ?? ""}
               onChange={(e) => setData({ phone: e.target.value })}
               placeholder="0555123456"
               className="w-full rounded-md border border-slate-300 px-3 py-2"
             />
-            <p className="mt-1 text-xs text-slate-400">{t("phoneHint")}</p>
+            <p className="mt-1 text-xs text-slate-500">{t("phoneHint")}</p>
           </>
         )}
       </div>

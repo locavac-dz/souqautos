@@ -16,6 +16,7 @@ export function CompareToggle({ listingId, label }: { listingId: string; label: 
       }}
       disabled={!selected && atMax}
       aria-pressed={selected}
+      aria-label={label}
       title={label}
       className={`flex items-center justify-center h-9 w-9 rounded-full border shadow-sm disabled:opacity-40 ${
         selected

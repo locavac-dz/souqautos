@@ -171,8 +171,11 @@ export function ListingEditForm({
       </p>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("category")}</label>
+        <label htmlFor="edit-category" className="block text-sm font-medium text-slate-700 mb-1">
+          {tWizard("category")}
+        </label>
         <select
+          id="edit-category"
           value={category}
           onChange={(e) => setCategory(e.target.value as ListingCategory)}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
@@ -186,8 +189,11 @@ export function ListingEditForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("brand")}</label>
+        <label htmlFor="edit-brand" className="block text-sm font-medium text-slate-700 mb-1">
+          {tWizard("brand")}
+        </label>
         <select
+          id="edit-brand"
           value={brandOther ? "__other__" : (brandId ?? "")}
           onChange={(e) => {
             if (e.target.value === "__other__") {
@@ -218,8 +224,11 @@ export function ListingEditForm({
 
       {brandOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("brandFreeText")}</label>
+          <label htmlFor="edit-brand-free" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("brandFreeText")}
+          </label>
           <input
+            id="edit-brand-free"
             type="text"
             value={brandFreeText}
             onChange={(e) => setBrandFreeText(e.target.value)}
@@ -230,8 +239,11 @@ export function ListingEditForm({
 
       {!brandOther && selectedBrand && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("model")}</label>
+          <label htmlFor="edit-model" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("model")}
+          </label>
           <select
+            id="edit-model"
             value={modelOther ? "__other__" : (modelId ?? "")}
             onChange={(e) => {
               if (e.target.value === "__other__") {
@@ -259,8 +271,11 @@ export function ListingEditForm({
 
       {(brandOther || modelOther) && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("modelFreeText")}</label>
+          <label htmlFor="edit-model-free" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("modelFreeText")}
+          </label>
           <input
+            id="edit-model-free"
             type="text"
             value={modelFreeText}
             onChange={(e) => setModelFreeText(e.target.value)}
@@ -270,8 +285,11 @@ export function ListingEditForm({
       )}
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("title")}</label>
+        <label htmlFor="edit-title" className="block text-sm font-medium text-slate-700 mb-1">
+          {tWizard("title")}
+        </label>
         <input
+          id="edit-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -281,8 +299,11 @@ export function ListingEditForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("description")}</label>
+        <label htmlFor="edit-description" className="block text-sm font-medium text-slate-700 mb-1">
+          {tWizard("description")}
+        </label>
         <textarea
+          id="edit-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           maxLength={5000}
@@ -293,8 +314,11 @@ export function ListingEditForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("year")}</label>
+          <label htmlFor="edit-year" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("year")}
+          </label>
           <input
+            id="edit-year"
             type="number"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
@@ -302,8 +326,11 @@ export function ListingEditForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("mileage")}</label>
+          <label htmlFor="edit-mileage" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("mileage")}
+          </label>
           <input
+            id="edit-mileage"
             type="number"
             min={0}
             value={mileage}
@@ -315,8 +342,11 @@ export function ListingEditForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("fuelType")}</label>
+          <label htmlFor="edit-fuel" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("fuelType")}
+          </label>
           <select
+            id="edit-fuel"
             value={fuelType}
             onChange={(e) => setFuelType(e.target.value as FuelType)}
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
@@ -329,8 +359,11 @@ export function ListingEditForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("gearbox")}</label>
+          <label htmlFor="edit-gearbox" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("gearbox")}
+          </label>
           <select
+            id="edit-gearbox"
             value={gearbox}
             onChange={(e) => setGearbox(e.target.value as Gearbox)}
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
@@ -342,8 +375,11 @@ export function ListingEditForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("transmission")}</label>
+        <label htmlFor="edit-transmission" className="block text-sm font-medium text-slate-700 mb-1">
+          {tWizard("transmission")}
+        </label>
         <select
+          id="edit-transmission"
           value={transmission}
           onChange={(e) => setTransmission(e.target.value as Transmission | "")}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
@@ -356,8 +392,11 @@ export function ListingEditForm({
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("color")}</label>
+          <label htmlFor="edit-color" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("color")}
+          </label>
           <input
+            id="edit-color"
             type="text"
             value={color}
             onChange={(e) => setColor(e.target.value)}
@@ -365,8 +404,11 @@ export function ListingEditForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("doors")}</label>
+          <label htmlFor="edit-doors" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("doors")}
+          </label>
           <input
+            id="edit-doors"
             type="number"
             min={1}
             max={7}
@@ -376,8 +418,11 @@ export function ListingEditForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("seats")}</label>
+          <label htmlFor="edit-seats" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("seats")}
+          </label>
           <input
+            id="edit-seats"
             type="number"
             min={1}
             max={9}
@@ -389,8 +434,11 @@ export function ListingEditForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("powerHp")}</label>
+        <label htmlFor="edit-power" className="block text-sm font-medium text-slate-700 mb-1">
+          {tWizard("powerHp")}
+        </label>
         <input
+          id="edit-power"
           type="number"
           min={1}
           max={2000}
@@ -401,8 +449,11 @@ export function ListingEditForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("condition")}</label>
+        <label htmlFor="edit-condition" className="block text-sm font-medium text-slate-700 mb-1">
+          {tWizard("condition")}
+        </label>
         <select
+          id="edit-condition"
           value={condition}
           onChange={(e) => setCondition(e.target.value as ListingCondition)}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
@@ -423,8 +474,11 @@ export function ListingEditForm({
       </label>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{tWizard("wilaya")}</label>
+        <label htmlFor="edit-wilaya" className="block text-sm font-medium text-slate-700 mb-1">
+          {tWizard("wilaya")}
+        </label>
         <select
+          id="edit-wilaya"
           value={wilayaId}
           onChange={(e) => setWilayaId(Number(e.target.value))}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
@@ -438,25 +492,32 @@ export function ListingEditForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("photosSectionTitle")}</label>
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("photosSectionTitle")}</span>
         <div className="grid grid-cols-3 gap-3">
           {existingPhotos.map((photo, i) => (
             <div key={photo.id} className="relative group">
               {/* eslint-disable-next-line @next/next/no-img-element -- vignette de gestion, pas un affichage optimisable */}
               <img
                 src={photo.path}
-                alt=""
+                alt={t("photoNumber", { n: i + 1 })}
                 className="aspect-square w-full rounded-md object-cover border border-slate-200"
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 text-white text-xs">
                 <div className="flex gap-1">
-                  <button type="button" onClick={() => moveExistingPhoto(i, -1)} disabled={i === 0} className="px-1.5 py-0.5 bg-black/40 rounded disabled:opacity-40">
+                  <button
+                    type="button"
+                    onClick={() => moveExistingPhoto(i, -1)}
+                    disabled={i === 0}
+                    aria-label={t("photoMoveUp")}
+                    className="px-1.5 py-0.5 bg-black/40 rounded disabled:opacity-40"
+                  >
                     ▲
                   </button>
                   <button
                     type="button"
                     onClick={() => moveExistingPhoto(i, 1)}
                     disabled={i === existingPhotos.length - 1}
+                    aria-label={t("photoMoveDown")}
                     className="px-1.5 py-0.5 bg-black/40 rounded disabled:opacity-40"
                   >
                     ▼
@@ -484,7 +545,7 @@ export function ListingEditForm({
           ))}
 
           {totalPhotoCount < MAX_PHOTOS && (
-            <label className="aspect-square flex items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-slate-400 text-sm cursor-pointer hover:border-slate-400">
+            <label className="aspect-square flex items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-slate-500 text-sm cursor-pointer hover:border-slate-400">
               {tWizard("photosAdd")}
               <input
                 type="file"

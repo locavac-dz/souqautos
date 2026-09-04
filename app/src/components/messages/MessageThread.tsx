@@ -130,7 +130,7 @@ export function MessageThread({
               <button
                 type="button"
                 onClick={removeAttachment}
-                className="text-xs text-slate-400 hover:text-red-600"
+                className="text-xs text-slate-500 hover:text-red-600"
               >
                 {t("removeAttachment")}
               </button>
@@ -142,6 +142,7 @@ export function MessageThread({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={t("typePlaceholder")}
+              aria-label={t("typePlaceholder")}
               maxLength={2000}
               className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
@@ -159,6 +160,7 @@ export function MessageThread({
               title={t("addAttachment")}
             >
               📎
+              <span className="sr-only">{t("addAttachment")}</span>
             </label>
             <button
               type="submit"

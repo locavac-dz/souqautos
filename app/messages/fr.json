@@ -12,7 +12,8 @@
     "dashboard": "Mon compte",
     "myListings": "Mes annonces",
     "favorites": "Mes favoris",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "menu": "Menu"
   },
   "Home": {
     "heroTitle": "Que recherchez-vous ?",
@@ -705,6 +706,9 @@
     "resubmissionNotice": "Toute modification renvoie l'annonce en attente de vérification par notre équipe avant d'être de nouveau visible publiquement.",
     "submit": "Enregistrer et soumettre à modération",
     "photosSectionTitle": "Photos",
+    "photoNumber": "Photo {n}",
+    "photoMoveUp": "Avancer la photo",
+    "photoMoveDown": "Reculer la photo",
     "errorValidation": "Certains champs sont invalides. Vérifiez le formulaire.",
     "errorAtLeastOnePhoto": "Ajoutez au moins une photo (10 maximum).",
     "errorTooManyPhotos": "10 photos maximum.",

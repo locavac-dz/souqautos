@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { cloneElement, isValidElement, useState, type ReactElement } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 
@@ -75,6 +75,7 @@ export function SearchFilters({
         value={values.q ?? ""}
         onChange={(e) => set("q", e.target.value)}
         placeholder={t("queryPlaceholder")}
+        aria-label={t("queryPlaceholder")}
         className={
           compact
             ? "flex-1 rounded-md border border-slate-300 px-4 py-2.5"
@@ -91,7 +92,7 @@ export function SearchFilters({
         </button>
       ) : (
         <>
-          <Field label={t("category")}>
+          <Field id="filter-category" label={t("category")}>
             <select
               value={values.category ?? ""}
               onChange={(e) => set("category", e.target.value)}
@@ -106,7 +107,7 @@ export function SearchFilters({
             </select>
           </Field>
 
-          <Field label={t("brand")}>
+          <Field id="filter-brand" label={t("brand")}>
             <select
               value={values.brandId ?? ""}
               onChange={(e) => set("brandId", e.target.value)}
@@ -122,7 +123,7 @@ export function SearchFilters({
           </Field>
 
           {selectedBrand && (
-            <Field label={t("model")}>
+            <Field id="filter-model" label={t("model")}>
               <select
                 value={values.modelId ?? ""}
                 onChange={(e) => set("modelId", e.target.value)}
@@ -138,7 +139,7 @@ export function SearchFilters({
             </Field>
           )}
 
-          <Field label={t("wilaya")}>
+          <Field id="filter-wilaya" label={t("wilaya")}>
             <select
               value={values.wilayaId ?? ""}
               onChange={(e) => set("wilayaId", e.target.value)}
@@ -159,6 +160,7 @@ export function SearchFilters({
                 type="number"
                 min={0}
                 placeholder={t("min")}
+                aria-label={`${t("priceRange")} ${t("min")}`}
                 value={values.priceMin ?? ""}
                 onChange={(e) => set("priceMin", e.target.value)}
                 className="w-1/2 rounded-md border border-slate-300 px-3 py-2"
@@ -167,6 +169,7 @@ export function SearchFilters({
                 type="number"
                 min={0}
                 placeholder={t("max")}
+                aria-label={`${t("priceRange")} ${t("max")}`}
                 value={values.priceMax ?? ""}
                 onChange={(e) => set("priceMax", e.target.value)}
                 className="w-1/2 rounded-md border border-slate-300 px-3 py-2"
@@ -180,6 +183,7 @@ export function SearchFilters({
                 type="number"
                 min={1970}
                 placeholder={t("min")}
+                aria-label={`${t("yearRange")} ${t("min")}`}
                 value={values.yearMin ?? ""}
                 onChange={(e) => set("yearMin", e.target.value)}
                 className="w-1/2 rounded-md border border-slate-300 px-3 py-2"
@@ -188,6 +192,7 @@ export function SearchFilters({
                 type="number"
                 min={1970}
                 placeholder={t("max")}
+                aria-label={`${t("yearRange")} ${t("max")}`}
                 value={values.yearMax ?? ""}
                 onChange={(e) => set("yearMax", e.target.value)}
                 className="w-1/2 rounded-md border border-slate-300 px-3 py-2"
@@ -195,7 +200,7 @@ export function SearchFilters({
             </div>
           </Field>
 
-          <Field label={t("mileageMax")}>
+          <Field id="filter-mileage" label={t("mileageMax")}>
             <input
               type="number"
               min={0}
@@ -205,7 +210,7 @@ export function SearchFilters({
             />
           </Field>
 
-          <Field label={tWizard("fuelType")}>
+          <Field id="filter-fuel" label={tWizard("fuelType")}>
             <select
               value={values.fuelType ?? ""}
               onChange={(e) => set("fuelType", e.target.value)}
@@ -220,7 +225,7 @@ export function SearchFilters({
             </select>
           </Field>
 
-          <Field label={tWizard("gearbox")}>
+          <Field id="filter-gearbox" label={tWizard("gearbox")}>
             <select
               value={values.gearbox ?? ""}
               onChange={(e) => set("gearbox", e.target.value)}
@@ -232,7 +237,7 @@ export function SearchFilters({
             </select>
           </Field>
 
-          <Field label={tWizard("condition")}>
+          <Field id="filter-condition" label={tWizard("condition")}>
             <select
               value={values.condition ?? ""}
               onChange={(e) => set("condition", e.target.value)}
@@ -256,11 +261,27 @@ export function SearchFilters({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  id,
+  label,
+  children,
+}: {
+  id?: string;
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
-      {children}
+      {id ? (
+        <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1">
+          {label}
+        </label>
+      ) : (
+        <span className="block text-sm font-medium text-slate-700 mb-1">{label}</span>
+      )}
+      {id && isValidElement(children)
+        ? cloneElement(children as ReactElement<{ id?: string }>, { id })
+        : children}
     </div>
   );
 }

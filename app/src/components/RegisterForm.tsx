@@ -55,10 +55,11 @@ export function RegisterForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="register-name" className="block text-sm font-medium text-slate-700 mb-1">
           {t("displayName")}
         </label>
         <input
+          id="register-name"
           type="text"
           required
           minLength={2}
@@ -69,8 +70,11 @@ export function RegisterForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("email")}</label>
+        <label htmlFor="register-email" className="block text-sm font-medium text-slate-700 mb-1">
+          {t("email")}
+        </label>
         <input
+          id="register-email"
           type="email"
           required
           value={email}
@@ -80,10 +84,11 @@ export function RegisterForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="register-password" className="block text-sm font-medium text-slate-700 mb-1">
           {t("password")}
         </label>
         <input
+          id="register-password"
           type="password"
           required
           minLength={8}
@@ -91,14 +96,15 @@ export function RegisterForm({
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
-        <p className="mt-1 text-xs text-slate-400">{t("passwordHint")}</p>
+        <p className="mt-1 text-xs text-slate-500">{t("passwordHint")}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="register-wilaya" className="block text-sm font-medium text-slate-700 mb-1">
           {t("wilayaOptional")}
         </label>
         <select
+          id="register-wilaya"
           value={wilayaId}
           onChange={(e) => setWilayaId(e.target.value)}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"

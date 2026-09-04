@@ -111,12 +111,12 @@ export async function ListingCard({
             </span>
           )}
         </div>
-        <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+        <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
           <span>{wilayaLabel}</span>
           <span>{tSearch("viewsCount", { count: listing.views })}</span>
         </div>
         {sellerTrustScore !== null && sellerTrustScore !== undefined && (
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-500">
             {tSearch("sellerTrustScore", { score: sellerTrustScore })}
           </p>
         )}

@@ -46,8 +46,11 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("email")}</label>
+        <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 mb-1">
+          {t("email")}
+        </label>
         <input
+          id="login-email"
           type="email"
           required
           value={email}
@@ -57,10 +60,11 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="login-password" className="block text-sm font-medium text-slate-700 mb-1">
           {t("password")}
         </label>
         <input
+          id="login-password"
           type="password"
           required
           value={password}
