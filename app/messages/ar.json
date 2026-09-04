@@ -368,6 +368,7 @@
     "pendingIdentityRequests": "طلبات التحقق من الهوية المعلّقة",
     "navCatalogue": "الماركات والموديلات",
     "navStatistics": "الإحصائيات",
+    "navSettings": "الإعدادات",
     "statisticsTitle": "إحصائيات المنتج",
     "statSummaryConversations": "المحادثات",
     "statSummaryReviews": "التقييمات",
@@ -649,6 +650,19 @@
     "errorSlugTaken": "هذا الاسم يطابق معرّفًا مستخدمًا بالفعل.",
     "errorHasModels": "تعذر الحذف: لا تزال هذه الماركة تحتوي على موديلات.",
     "errorHasListings": "تعذر الحذف: لا تزال إعلانات تستخدمه.",
+    "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى."
+  },
+  "AdminSettings": {
+    "title": "إعدادات الإشراف",
+    "subtitle": "عتبات البلاغات المؤكدة التي يؤدي تجاوزها إلى تعليق تلقائي.",
+    "autoSuspendListingLabel": "عتبة التعليق التلقائي — الإعلانات",
+    "autoSuspendListingHelp": "عدد البلاغات المؤكدة (المعالجة) التي يؤدي تجاوزها إلى تعليق إعلان منشور تلقائيًا.",
+    "autoSuspendUserLabel": "عتبة التعليق التلقائي — حسابات المستخدمين",
+    "autoSuspendUserHelp": "عدد البلاغات المؤكدة (المعالجة) التي يؤدي تجاوزها إلى تعليق حساب مستخدم تلقائيًا.",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "saved": "تم حفظ الإعدادات.",
+    "readOnlyNotice": "يمكن للمسؤول فقط تعديل هذه العتبات.",
     "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى."
   },
   "ListingEdit": {

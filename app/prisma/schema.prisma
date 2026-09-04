@@ -254,6 +254,18 @@ model Favorite {
 }
 
 // --- Lot 7 — Back-office & modération ---
+// Lot 47 — seuils de signalement configurables depuis le back-office (écart
+// documenté depuis le Lot 21). Ligne singleton (id fixe) plutôt qu'une table
+// clé/valeur générique — les deux seuls réglages qui existent aujourd'hui
+// sont ces deux seuils, pas besoin de généraliser tant qu'aucun autre réglage
+// n'est prévu. Valeurs par défaut = comportement historique inchangé (3/3).
+model ModerationSettings {
+  id                          String   @id @default("singleton")
+  autoSuspendListingThreshold Int      @default(3)
+  autoSuspendUserThreshold    Int      @default(3)
+  updatedAt                   DateTime @updatedAt
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   adminId    String

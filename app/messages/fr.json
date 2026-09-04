@@ -368,6 +368,7 @@
     "pendingIdentityRequests": "Vérifications d'identité en attente",
     "navCatalogue": "Marques & modèles",
     "navStatistics": "Statistiques",
+    "navSettings": "Paramètres",
     "statisticsTitle": "Statistiques produit",
     "statSummaryConversations": "Conversations",
     "statSummaryReviews": "Avis",
@@ -649,6 +650,19 @@
     "errorSlugTaken": "Ce nom correspond à un identifiant déjà utilisé.",
     "errorHasModels": "Impossible de supprimer : cette marque a encore des modèles.",
     "errorHasListings": "Impossible de supprimer : des annonces l'utilisent encore.",
+    "errorGeneric": "Une erreur est survenue. Réessayez."
+  },
+  "AdminSettings": {
+    "title": "Paramètres de modération",
+    "subtitle": "Seuils de signalements confirmés au-delà desquels une suspension automatique se déclenche.",
+    "autoSuspendListingLabel": "Seuil de suspension automatique — annonces",
+    "autoSuspendListingHelp": "Nombre de signalements confirmés (traités) au-delà duquel une annonce publiée est suspendue automatiquement.",
+    "autoSuspendUserLabel": "Seuil de suspension automatique — comptes utilisateurs",
+    "autoSuspendUserHelp": "Nombre de signalements confirmés (traités) au-delà duquel un compte utilisateur est suspendu automatiquement.",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "saved": "Paramètres enregistrés.",
+    "readOnlyNotice": "Seul un administrateur peut modifier ces seuils.",
     "errorGeneric": "Une erreur est survenue. Réessayez."
   },
   "ListingEdit": {

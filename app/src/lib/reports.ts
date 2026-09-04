@@ -72,18 +72,16 @@ export function computeReportTransition(
 // Seuil de signalements CONFIRMÉS (jamais de simples signalements ouverts ou
 // rejetés — un signalement non vérifié ne doit jamais déclencher d'action
 // automatique, cf. décision du Lot 9) au-delà duquel une annonce est
-// suspendue automatiquement.
-export const AUTO_SUSPEND_LISTING_THRESHOLD = 3;
-
-export function shouldAutoSuspendListing(confirmedReportCount: number): boolean {
-  return confirmedReportCount >= AUTO_SUSPEND_LISTING_THRESHOLD;
+// suspendue automatiquement. Configurable depuis le back-office depuis le
+// Lot 47 (`ModerationSettings`, cf. src/lib/moderation-settings.ts) — le
+// seuil est désormais un paramètre, plus une constante en dur.
+export function shouldAutoSuspendListing(confirmedReportCount: number, threshold: number): boolean {
+  return confirmedReportCount >= threshold;
 }
 
 // Même principe, pour les signalements d'utilisateur (Lot 31 — comble l'écart
 // documenté depuis le Lot 21 : la suspension automatique ne s'appliquait
 // jusqu'ici qu'aux annonces, jamais aux comptes eux-mêmes).
-export const AUTO_SUSPEND_USER_THRESHOLD = 3;
-
-export function shouldAutoSuspendUser(confirmedReportCount: number): boolean {
-  return confirmedReportCount >= AUTO_SUSPEND_USER_THRESHOLD;
+export function shouldAutoSuspendUser(confirmedReportCount: number, threshold: number): boolean {
+  return confirmedReportCount >= threshold;
 }

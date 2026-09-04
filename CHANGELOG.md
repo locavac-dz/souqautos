@@ -928,3 +928,19 @@ Choisi selon la logique de continuation : le plus vieil écart encore ouvert et 
 - Vérification de bout en bout sur la conversation réelle Sara/Amine : signalement réel d'Amine contre Sara depuis la messagerie (motif « Messages abusifs » + commentaire) → confirmé en base (`status: OUVERT`) → bouton devenu « Vous avez déjà signalé cet utilisateur » après rechargement, cohérent entre la messagerie et la vitrine vendeur. Rendu RTL arabe confirmé (« لقد أبلغت بالفعل عن هذا المستخدم »). Signalement de test supprimé après vérification.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
+
+## Lot 47 — Seuils de suspension automatique configurables (2026-09-04)
+
+Choisi selon la logique de continuation : le plus vieil écart encore ouvert et non bloqué, documenté depuis le Lot 21 (« seuil configurable depuis le back-office »). Les seuils de signalements confirmés déclenchant une suspension automatique (annonces, Lot 21 ; comptes, Lot 31) étaient jusqu'ici des constantes en dur (`AUTO_SUSPEND_LISTING_THRESHOLD`/`AUTO_SUSPEND_USER_THRESHOLD`, toutes deux à 3).
+
+**Livré**
+- `ModerationSettings` (nouveau modèle, migration appliquée + ligne singleton insérée) : deux seuils, valeurs par défaut identiques au comportement historique (3/3) — aucune régression pour l'existant.
+- `src/lib/reports.ts` : `shouldAutoSuspendListing`/`shouldAutoSuspendUser` acceptent désormais le seuil en paramètre au lieu d'une constante figée — la décision reste une fonction pure testée, seule sa source change (back-office plutôt que code en dur).
+- `GET .../resolve` (Lot 9/31, inchangé dans sa logique) : charge désormais le seuil courant (`getModerationSettings()`) avant chaque décision de suspension automatique, pour les annonces et pour les comptes.
+- `PATCH /api/admin/moderation-settings` (nouveau, réservé **ADMIN**, jamais MODERATEUR — même niveau de gravité que la gestion du référentiel marques/modèles, Lot 25) : bornes 1-50 (`validateThreshold`, fonction pure testée) — un seuil à 0 déclencherait une suspension sur un unique signalement non corroboré, contournant l'esprit même du seuil.
+- `/admin/parametres` (nouvelle page back-office, lien ajouté à la navigation) : formulaire pour les deux seuils, lecture seule pour un modérateur (même pattern que `CatalogueManager`, Lot 25 — visible par tout le staff, modifiable par le seul admin).
+- Chaque modification est tracée dans l'audit log (`moderation_settings.update`, avant/après).
+- 9 nouveaux tests unitaires (`validateThreshold` : valeurs limites, zéro et négatif rejetés, au-delà de 50 rejeté, non-entier rejeté ; `shouldAutoSuspendListing`/`shouldAutoSuspendUser` avec seuil personnalisé) ; tests existants adaptés à la nouvelle signature ; 253/253 au vert.
+- Vérification de bout en bout avec le compte administrateur réel : seuil des annonces passé de 3 à 5 via l'interface réelle → confirmé en base + dans l'audit log (avant/après) ; garde-fou `invalid_threshold` vérifié (seuil à 0) ; accès en lecture seule confirmé pour un modérateur réel (Amine), tentative de modification via l'API directe refusée (403). **Preuve définitive que le seuil configuré est réellement utilisé et non plus la constante 3 d'origine** : une annonce jetable avec exactement 4 signalements confirmés n'a **pas** été suspendue (aurait été suspendue à ce stade avec l'ancien seuil figé à 3) ; un 5ᵉ signalement résolu via l'API réelle a déclenché la suspension automatique exactement au seuil configuré (5), jamais avant. Rendu RTL arabe confirmé. Toutes les données de test (annonce, signalements, comptes jetables, entrée d'audit) supprimées et seuils remis à 3/3 après vérification.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.

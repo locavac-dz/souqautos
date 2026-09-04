@@ -71,32 +71,44 @@ describe("computeReportTransition", () => {
 
 describe("shouldAutoSuspendListing", () => {
   it("does not suspend below the threshold", () => {
-    expect(shouldAutoSuspendListing(0)).toBe(false);
-    expect(shouldAutoSuspendListing(1)).toBe(false);
-    expect(shouldAutoSuspendListing(2)).toBe(false);
+    expect(shouldAutoSuspendListing(0, 3)).toBe(false);
+    expect(shouldAutoSuspendListing(1, 3)).toBe(false);
+    expect(shouldAutoSuspendListing(2, 3)).toBe(false);
   });
 
   it("suspends once the threshold is reached", () => {
-    expect(shouldAutoSuspendListing(3)).toBe(true);
+    expect(shouldAutoSuspendListing(3, 3)).toBe(true);
   });
 
   it("keeps suspending beyond the threshold", () => {
-    expect(shouldAutoSuspendListing(10)).toBe(true);
+    expect(shouldAutoSuspendListing(10, 3)).toBe(true);
+  });
+
+  it("honors a custom threshold (Lot 47 — configurable from the back-office)", () => {
+    expect(shouldAutoSuspendListing(2, 5)).toBe(false);
+    expect(shouldAutoSuspendListing(5, 5)).toBe(true);
+    expect(shouldAutoSuspendListing(1, 1)).toBe(true);
   });
 });
 
 describe("shouldAutoSuspendUser", () => {
   it("does not suspend below the threshold", () => {
-    expect(shouldAutoSuspendUser(0)).toBe(false);
-    expect(shouldAutoSuspendUser(1)).toBe(false);
-    expect(shouldAutoSuspendUser(2)).toBe(false);
+    expect(shouldAutoSuspendUser(0, 3)).toBe(false);
+    expect(shouldAutoSuspendUser(1, 3)).toBe(false);
+    expect(shouldAutoSuspendUser(2, 3)).toBe(false);
   });
 
   it("suspends once the threshold is reached", () => {
-    expect(shouldAutoSuspendUser(3)).toBe(true);
+    expect(shouldAutoSuspendUser(3, 3)).toBe(true);
   });
 
   it("keeps suspending beyond the threshold", () => {
-    expect(shouldAutoSuspendUser(10)).toBe(true);
+    expect(shouldAutoSuspendUser(10, 3)).toBe(true);
+  });
+
+  it("honors a custom threshold (Lot 47 — configurable from the back-office)", () => {
+    expect(shouldAutoSuspendUser(2, 5)).toBe(false);
+    expect(shouldAutoSuspendUser(5, 5)).toBe(true);
+    expect(shouldAutoSuspendUser(1, 1)).toBe(true);
   });
 });

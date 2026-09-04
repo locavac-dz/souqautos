@@ -13,6 +13,7 @@ import {
 import { writeAuditLog } from "@/lib/audit-log";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { sendAccountSuspendedEmail } from "@/lib/account-suspension-email";
+import { getModerationSettings } from "@/lib/moderation-settings";
 
 const bodySchema = z.object({
   action: z.enum(["resolve", "dismiss"]),
@@ -100,10 +101,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // du Lot 9 de ne jamais laisser un signalement non vérifié déclencher une
   // action punitive automatique.
   if (action === "resolve" && report.listingId && report.listing) {
+    const { autoSuspendListingThreshold } = await getModerationSettings();
     const confirmedReportCount = await prisma.report.count({
       where: { listingId: report.listingId, status: "TRAITE" },
     });
-    if (shouldAutoSuspendListing(confirmedReportCount) && report.listing.status === "PUBLIEE") {
+    if (
+      shouldAutoSuspendListing(confirmedReportCount, autoSuspendListingThreshold) &&
+      report.listing.status === "PUBLIEE"
+    ) {
       await prisma.listing.update({
         where: { id: report.listingId },
         data: {
@@ -125,10 +130,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // compte déjà suspendu (idempotent), jamais sur un compte du staff (défense
   // en profondeur, même règle que la suspension manuelle — cf. user-suspension.ts).
   if (action === "resolve" && report.reportedUserId) {
+    const { autoSuspendUserThreshold } = await getModerationSettings();
     const confirmedReportCount = await prisma.report.count({
       where: { reportedUserId: report.reportedUserId, status: "TRAITE" },
     });
-    if (shouldAutoSuspendUser(confirmedReportCount)) {
+    if (shouldAutoSuspendUser(confirmedReportCount, autoSuspendUserThreshold)) {
       const targetUser = await prisma.user.findUnique({ where: { id: report.reportedUserId } });
       if (targetUser && !targetUser.suspendedAt && !isStaff(targetUser.role)) {
         const autoSuspendReason = "Suspendu automatiquement après plusieurs signalements confirmés.";
