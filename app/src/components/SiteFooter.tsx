@@ -10,6 +10,9 @@ export async function SiteFooter() {
         <Link href="/voitures" className="hover:text-slate-700 hover:underline">
           {t("browseBrands")}
         </Link>
+        <Link href="/mentions-legales" className="hover:text-slate-700 hover:underline">
+          {t("legalNotice")}
+        </Link>
         <span>{t("brands")}</span>
       </div>
     </footer>

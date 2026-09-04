@@ -61,7 +61,24 @@
   "Footer": {
     "group": "Une plateforme INGENICA CIVIL EURL",
     "browseBrands": "Toutes les marques",
-    "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE"
+    "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
+    "legalNotice": "Mentions légales"
+  },
+  "Legal": {
+    "title": "Mentions légales",
+    "publisherTitle": "Éditeur du site",
+    "publisherName": "EURL INGENICA CIVIL",
+    "publisherLegalForm": "Entreprise Unipersonnelle à Responsabilité Limitée (EURL), droit algérien",
+    "publisherAddress": "Siège social : 4, rue Sakhr Ibn Salman, 22000 Sidi Bel Abbès, Algérie",
+    "publisherCapital": "Capital social : 50 000 DA",
+    "publisherRc": "Registre du commerce (CNRC) : 22/00 - 0025204B26",
+    "brandTitle": "Nom de domaine et marque",
+    "brandBody": "Souqauto.dz est une marque de l'EURL INGENICA CIVIL.",
+    "hostingTitle": "Hébergement",
+    "hostingCountry": "Le site est hébergé en France.",
+    "hostingPending": "Coordonnées complètes de l'hébergeur à compléter dès le choix du prestataire.",
+    "contactTitle": "Contact",
+    "contactPending": "Adresse de contact à compléter."
   },
   "Wizard": {
     "next": "Suivant",

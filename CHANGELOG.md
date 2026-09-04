@@ -1035,3 +1035,18 @@ Choisi explicitement par le porteur de projet, suite à la piste identifiée lor
 - Les fichiers avatar déjà uploadés ne sont pas supprimés du disque à l'anonymisation — cohérent avec la décision déjà prise au Lot 36 (photos d'annonces supprimées également laissées sur disque), un sujet séparé si l'espace disque devient un problème réel.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
+
+## Lot 52 — Mentions légales (2026-09-04)
+
+Choisi suite à une information communiquée directement par le porteur de projet (hébergement en France, domaine `souqauto.dz`, puis identité légale complète de l'éditeur). Comble un vrai manque : le site n'avait jusqu'ici aucune page d'identification de l'éditeur, pourtant une obligation légale de base pour un site marchand.
+
+**Livré**
+- `/mentions-legales` (nouvelle page, FR/AR) : identité de l'éditeur (EURL INGENICA CIVIL, forme juridique, siège social à Sidi Bel Abbès, capital social, numéro RC/CNRC), section marque/domaine, section hébergement, section contact.
+- Seuls les faits réellement communiqués sont affichés — **aucune coordonnée fabriquée** : le nom et l'adresse complète de l'hébergeur (pas encore choisi) et l'adresse de contact sont explicitement marqués « à compléter » plutôt qu'inventés, cohérent avec la discipline anti-fabrication déjà appliquée sur ce projet (ex. Lot 20/33, jamais une donnée utilisateur affichée sans preuve réelle).
+- Bloc d'identité légale (raison sociale, adresse, capital, RC) volontairement identique en français et en arabe — une adresse/un numéro de registre du commerce ne se traduit pas, il doit rester dans sa forme canonique dans les deux langues ; seuls les intitulés de section sont traduits.
+- Lien « Mentions légales » ajouté au pied de page (`SiteFooter`), à côté de « Toutes les marques ».
+- Note conservée en mémoire de session : l'hébergement en France implique le RGPD indépendamment de l'extension `.dz` du domaine — pertinent pour une future politique de confidentialité, non construite à ce jour (aucune demande explicite reçue).
+- Aucun nouveau test unitaire (page de contenu statique, aucune logique) ; 271/271 toujours au vert.
+- Vérification de bout en bout : page réelle affichant l'intégralité des informations transmises, lien du pied de page fonctionnel, rendu RTL arabe confirmé (bloc d'identité légale conservé en français, intitulés de section traduits).
+
+Prochain lot proposé : à définir avec le porteur de projet — une politique de confidentialité et des CGU restent à construire si demandées explicitement (nécessiteraient des décisions de politique — durée de conservation, cookies, juridiction — non fournies à ce jour) ; le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
