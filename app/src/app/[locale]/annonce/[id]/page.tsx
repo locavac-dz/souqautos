@@ -101,6 +101,7 @@ export default async function ListingDetailPage({
         wilaya: true,
         seller: { include: { profile: true, professionalAccount: true } },
         priceHistory: { orderBy: { recordedAt: "desc" } },
+        renewals: { orderBy: { renewedAt: "desc" } },
       },
     }),
     getCurrentUser(),
@@ -425,6 +426,27 @@ export default async function ListingDetailPage({
                       dateStyle: "long",
                     }).format(entry.recordedAt)}
                     value={`${entry.price.toLocaleString()} DA`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {listing.renewals.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("renewalHistoryTitle")}</h2>
+              <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+                {listing.renewals.map((entry) => (
+                  <DetailRow
+                    key={entry.id}
+                    label={new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
+                      dateStyle: "long",
+                    }).format(entry.renewedAt)}
+                    value={tListing("renewalUntil", {
+                      date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
+                        dateStyle: "long",
+                      }).format(entry.expiresAt),
+                    })}
                   />
                 ))}
               </div>

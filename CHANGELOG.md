@@ -963,3 +963,19 @@ Choisi selon la logique de continuation : le dernier écart encore ouvert et non
 - Historique des renouvellements d'une annonce (second volet du même écart du Lot 22, purement informatif — moins prioritaire).
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
+
+## Lot 49 — Historique des renouvellements d'une annonce (2026-09-04)
+
+Choisi selon la logique de continuation : le dernier écart connu et non bloqué du Lot 22 (le premier, rappel avant expiration, a été traité au Lot 48). `Listing.publishedAt`/`expiresAt` ne gardaient jusqu'ici que la dernière valeur — un renouvellement en écrasait silencieusement la trace précédente.
+
+**Livré**
+- `ListingRenewal` (nouveau modèle, migration appliquée) : une entrée par renouvellement réel (`renewedAt` + `expiresAt` résultant), jamais à la publication initiale — même principe que `ListingPriceHistory` (Lot 45), une table dédiée plutôt que de dépendre d'une colonne qui n'est déjà plus qu'un instantané de la dernière valeur.
+- `POST .../renew` (Lot 22, route inchangée dans sa logique d'éligibilité) crée désormais aussi cette entrée, dans la même écriture que la mise à jour du statut/de la date d'expiration.
+- Affichage sur la page publique de l'annonce (`/annonce/[id]`), section « Historique des renouvellements » — visible dès la première entrée (contrairement à l'historique des prix, Lot 45, où une entrée unique n'est pas informative ; ici, ne serait-ce qu'un seul renouvellement est déjà une information réelle pour un acheteur).
+- Aucun nouveau test unitaire (aucune nouvelle logique pure — une création Prisma imbriquée supplémentaire dans une route déjà testée fonctionnellement) ; 259/259 toujours au vert.
+- Vérification de bout en bout avec une vraie annonce d'Amine (aucun renouvellement avant ce lot) : deux renouvellements réels via l'API réelle → les deux confirmés en base avec les bonnes dates → section affichée sur la page publique avec les deux entrées, plus récente en premier. Rendu RTL arabe confirmé (« سجل التجديدات », « مُمدد حتى »). Annonce restaurée à son état d'origine (historique de test supprimé, date d'expiration remise à sa valeur antérieure) après vérification.
+
+**Décisions/notes**
+- Ce lot clôt l'intégralité de l'écart historique du Lot 22 (rappel avant expiration au Lot 48, historique des renouvellements ici).
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.

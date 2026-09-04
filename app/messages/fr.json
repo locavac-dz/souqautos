@@ -162,6 +162,8 @@
     "descriptionTitle": "Description",
     "detailsTitle": "Caractéristiques",
     "priceHistoryTitle": "Historique du prix",
+    "renewalHistoryTitle": "Historique des renouvellements",
+    "renewalUntil": "Prolongée jusqu'au {date}",
     "successTitle": "Annonce envoyée !",
     "successBody": "Votre annonce a été soumise et sera publiée après vérification par notre équipe (généralement sous 24h).",
     "viewListing": "Voir mon annonce",

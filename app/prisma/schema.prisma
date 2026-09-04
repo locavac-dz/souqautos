@@ -188,6 +188,7 @@ model Listing {
   conversations Conversation[]
   reports      Report[]
   priceHistory ListingPriceHistory[]
+  renewals     ListingRenewal[]
   createdAt    DateTime         @default(now())
   publishedAt  DateTime?
   // Fixée à publishedAt + LISTING_VALIDITY_DAYS lors de la publication ou du
@@ -218,6 +219,22 @@ model ListingPriceHistory {
   listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   price      Int
   recordedAt DateTime @default(now())
+
+  @@index([listingId])
+}
+
+// Lot 49 — historique des renouvellements (second volet de l'écart du Lot 22,
+// le premier — rappel avant expiration — a été traité au Lot 48). Une entrée
+// par renouvellement réel (jamais à la publication initiale, qui n'est pas un
+// renouvellement) ; `expiresAt` capture la nouvelle date résultant de ce
+// renouvellement précis, pour ne pas dépendre de `Listing.expiresAt` qui
+// n'est plus qu'un stock de la dernière valeur.
+model ListingRenewal {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  renewedAt DateTime @default(now())
+  expiresAt DateTime
 
   @@index([listingId])
 }

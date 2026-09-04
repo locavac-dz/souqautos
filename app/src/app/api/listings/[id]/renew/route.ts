@@ -30,14 +30,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const now = new Date();
+  const newExpiresAt = computeExpiryDate(now);
   await prisma.listing.update({
     where: { id },
     data: {
       status: "PUBLIEE",
-      expiresAt: computeExpiryDate(now),
+      expiresAt: newExpiresAt,
       publishedAt: now,
       // Nouveau cycle d'expiration (Lot 48) : le rappel doit pouvoir repartir.
       expiryReminderSentAt: null,
+      // Historique des renouvellements (Lot 49).
+      renewals: { create: [{ renewedAt: now, expiresAt: newExpiresAt }] },
     },
   });
 

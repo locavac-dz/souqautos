@@ -162,6 +162,8 @@
     "descriptionTitle": "الوصف",
     "detailsTitle": "المواصفات",
     "priceHistoryTitle": "سجل الأسعار",
+    "renewalHistoryTitle": "سجل التجديدات",
+    "renewalUntil": "مُمدد حتى {date}",
     "successTitle": "تم إرسال الإعلان!",
     "successBody": "تم إرسال إعلانك وسيُنشر بعد التحقق من طرف فريقنا (عادةً خلال 24 ساعة).",
     "viewListing": "عرض إعلاني",
