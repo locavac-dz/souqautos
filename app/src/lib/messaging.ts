@@ -28,21 +28,6 @@ export function shouldSendMessageNotification({
   return unreadCountBeforeThisMessage === 0;
 }
 
-// Comblement du plus vieux écart encore ouvert (Lot 8) : « supprimer » une
-// conversation ne détruit jamais les messages de l'autre partie — seulement un
-// masquage par utilisateur (hiddenByBuyerAt/hiddenBySellerAt sur Conversation).
-export function isConversationHiddenFor({
-  isBuyer,
-  hiddenByBuyerAt,
-  hiddenBySellerAt,
-}: {
-  isBuyer: boolean;
-  hiddenByBuyerAt: Date | null;
-  hiddenBySellerAt: Date | null;
-}): boolean {
-  return isBuyer ? hiddenByBuyerAt !== null : hiddenBySellerAt !== null;
-}
-
 export type MessageDeleteEligibility =
   | { ok: true }
   | { ok: false; error: "not_sender" | "already_deleted" };

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -42,9 +43,20 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  await prisma.identityVerificationRequest.create({
-    data: { userId: user.id, documentPath: saved.filename, documentMime: saved.mime },
-  });
+  try {
+    await prisma.identityVerificationRequest.create({
+      data: { userId: user.id, documentPath: saved.filename, documentMime: saved.mime },
+    });
+  } catch (error) {
+    // Course concurrente (double-clic/retry réseau) sur l'index unique filtré
+    // "un seul dossier EN_ATTENTE par utilisateur" (cf. audit sécurité) —
+    // traité comme la même erreur que le contrôle findFirst ci-dessus,
+    // jamais une 500 générique.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({ error: "request_pending" }, { status: 400 });
+    }
+    throw error;
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

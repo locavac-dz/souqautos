@@ -3,7 +3,6 @@ import {
   checkCanDeleteMessage,
   checkCanMessage,
   checkMessageHasContent,
-  isConversationHiddenFor,
   shouldSendMessageNotification,
 } from "@/lib/messaging";
 
@@ -42,34 +41,6 @@ describe("shouldSendMessageNotification", () => {
   it("does not re-notify while earlier unread messages are still pending", () => {
     expect(shouldSendMessageNotification({ unreadCountBeforeThisMessage: 1 })).toBe(false);
     expect(shouldSendMessageNotification({ unreadCountBeforeThisMessage: 5 })).toBe(false);
-  });
-});
-
-describe("isConversationHiddenFor", () => {
-  it("is not hidden when neither party hid it", () => {
-    expect(
-      isConversationHiddenFor({ isBuyer: true, hiddenByBuyerAt: null, hiddenBySellerAt: null })
-    ).toBe(false);
-  });
-
-  it("checks the buyer's own flag when the current user is the buyer", () => {
-    const now = new Date();
-    expect(
-      isConversationHiddenFor({ isBuyer: true, hiddenByBuyerAt: now, hiddenBySellerAt: null })
-    ).toBe(true);
-    expect(
-      isConversationHiddenFor({ isBuyer: true, hiddenByBuyerAt: null, hiddenBySellerAt: now })
-    ).toBe(false);
-  });
-
-  it("checks the seller's own flag when the current user is the seller", () => {
-    const now = new Date();
-    expect(
-      isConversationHiddenFor({ isBuyer: false, hiddenByBuyerAt: null, hiddenBySellerAt: now })
-    ).toBe(true);
-    expect(
-      isConversationHiddenFor({ isBuyer: false, hiddenByBuyerAt: now, hiddenBySellerAt: null })
-    ).toBe(false);
   });
 });
 

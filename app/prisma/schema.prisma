@@ -348,6 +348,11 @@ model Message {
   deletedAt      DateTime?
 
   @@index([conversationId])
+  // Comptage des messages non lus (badge du header, boîte de réception) —
+  // filtré sur conversationId+readAt à chaque chargement de page, cf. audit
+  // sécurité/perf.
+  @@index([conversationId, readAt])
+  @@index([senderId, readAt])
 }
 
 model Block {
@@ -560,6 +565,11 @@ model IdentityVerificationRequest {
 
   @@index([status])
   @@index([userId])
+  // Un seul dossier EN_ATTENTE par utilisateur est déjà vérifié en
+  // application (route request/route.ts) — un index unique filtré au niveau
+  // SQLite (WHERE status = 'EN_ATTENTE') ferme la course concurrente
+  // (double-clic/retry réseau) que Prisma ne modélise pas nativement ; ajouté
+  // en SQL brut dans la migration correspondante, cf. audit sécurité.
 }
 
 model ListingPhoto {

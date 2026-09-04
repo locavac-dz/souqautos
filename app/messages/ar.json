@@ -65,6 +65,7 @@
   },
   "Wizard": {
     "next": "التالي",
+    "previous": "السابق",
     "publish": "نشر الإعلان",
     "publishing": "جارٍ النشر…",
     "step1Title": "نوع البائع",

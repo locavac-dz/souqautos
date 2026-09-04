@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageCollaborators } from "@/lib/pro-account";
 import { serializeProPermissions } from "@/lib/pro-permissions";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   email: z.string().trim().email(),
@@ -26,6 +27,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
   if (!canManageCollaborators({ isOwner: account.userId === user.id, permissions: null })) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  if (!checkRateLimit(`add-collaborator:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 })) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const body = await request.json().catch(() => null);

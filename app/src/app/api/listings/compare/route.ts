@@ -22,7 +22,11 @@ export async function GET(request: NextRequest) {
       model: true,
       wilaya: true,
       photos: { orderBy: { position: "asc" }, take: 1 },
-      seller: { include: { profile: true } },
+      // Jamais `include: { profile: true }` sur User ici : cette route est
+      // publique et non authentifiée — un include complet exposerait
+      // passwordHash/phone/suspendedAt/etc. dans le JSON. Seuls les champs
+      // réellement affichés (Lot 24, page comparateur) sont sélectionnés.
+      seller: { select: { id: true, email: true, profile: { select: { displayName: true } } } },
     },
   });
 

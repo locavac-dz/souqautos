@@ -65,6 +65,7 @@
   },
   "Wizard": {
     "next": "Suivant",
+    "previous": "Précédent",
     "publish": "Publier l'annonce",
     "publishing": "Publication…",
     "step1Title": "Type de vendeur",

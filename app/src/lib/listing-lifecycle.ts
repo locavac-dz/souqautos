@@ -77,7 +77,7 @@ export function shouldSendExpiryReminder({
   now?: Date;
 }): boolean {
   if (!expiresAt || reminderSentAt) return false;
-  if (now.getTime() >= expiresAt.getTime()) return false; // déjà expirée : sweepExpiredListings s'en charge
+  if (isListingExpired(expiresAt, now)) return false; // déjà expirée : sweepExpiredListings s'en charge
   const windowStart = new Date(expiresAt);
   windowStart.setDate(windowStart.getDate() - EXPIRY_REMINDER_WINDOW_DAYS);
   return now.getTime() >= windowStart.getTime();

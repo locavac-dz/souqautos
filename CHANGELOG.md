@@ -979,3 +979,39 @@ Choisi selon la logique de continuation : le dernier écart connu et non bloqué
 - Ce lot clôt l'intégralité de l'écart historique du Lot 22 (rappel avant expiration au Lot 48, historique des renouvellements ici).
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.
+
+## Lot 50 — Audit complet et corrections (2026-09-04)
+
+Choisi explicitement par le porteur de projet (« faire audit complet et corriger »), après épuisement du backlog de lots autonomes. Cinq audits menés en parallèle par des agents dédiés sur l'ensemble du code (49 lots accumulés) : sécurité/autorisation, cohérence i18n FR/AR, intégrité des données Prisma, code mort/textes obsolètes, couverture de tests. Chaque finding a été vérifié manuellement avant correction — aucun correctif appliqué sur simple supposition d'un agent.
+
+**Corrigé — sécurité (critique)**
+- `GET /api/listings/compare` (comparateur, route publique non authentifiée) : `include: { seller: { include: { profile: true } } }` renvoyait l'objet `User` complet dans le JSON — **passwordHash (hash bcrypt), téléphone, statut de suspension, dates de vérification inclus**, exploitable par un simple appel `curl` sans compte. Remplacé par un `select` explicite (id/email/displayName uniquement, les seuls champs réellement affichés). Vérifié par appel direct : la réponse ne contient plus que ces trois champs.
+
+**Corrigé — sécurité (mineur)**
+- `POST /api/pro/accounts/[id]/collaborators` et `PATCH`/`DELETE .../collaborators/[collaboratorId]` : aucun `checkRateLimit()`, contrairement à quasiment toutes les autres routes de création de l'app — la route par email permettait un oracle d'énumération de comptes (deviner quels emails sont enregistrés). Rate limiting ajouté (20-30/heure selon la route).
+
+**Corrigé — intégrité des données**
+- `Message` : ajout de `@@index([conversationId, readAt])` et `@@index([senderId, readAt])` — le comptage des messages non lus (badge du header, exécuté à **chaque** chargement de page) n'était couvert par aucun index composite.
+- `IdentityVerificationRequest` : un seul dossier `EN_ATTENTE` par utilisateur n'était vérifié qu'en application (`findFirst` puis `create`) — race condition TOCTOU classique sur double-clic/retry réseau. Ajout d'un index unique filtré SQLite (`WHERE status = 'EN_ATTENTE'`) ; la route gère désormais proprement la violation de contrainte (P2002) en la traduisant vers la même erreur `request_pending` que le contrôle applicatif, jamais une 500 générique.
+
+**Corrigé — code mort et cohérence des tests**
+- `isListingExpired()` (`src/lib/listing-lifecycle.ts`) était testée mais jamais appelée — `shouldSendExpiryReminder()` (Lot 48) dupliquait exactement la même comparaison inline. Consolidé : `shouldSendExpiryReminder` appelle désormais `isListingExpired`, ses tests protègent enfin un chemin réellement exécuté.
+- `isConversationHiddenFor()` (`src/lib/messaging.ts`) retirée avec ses tests : jamais câblée nulle part, la logique équivalente vit déjà (correctement) dans une clause `WHERE` Prisma à l'endroit où elle est utilisée (`compte/messages/page.tsx`) — impossible d'y substituer un appel de fonction JS pure sans dégrader la requête.
+- `StepShell.tsx` (bouton « Précédent » de l'assistant de publication, présent sur les 11 étapes) : texte français codé en dur, jamais traduit — visible tel quel même en version arabe. Ajout de `Wizard.previous` (FR/AR) et câblage, à l'identique du bouton « Suivant » déjà traduit.
+
+**Corrigé — couverture de tests**
+- 4 fonctions pures sans test ajoutées : `getClientIp`/`safeUser` (`tests/http.test.ts`), `identityDocumentAbsolutePath` (`tests/identity-uploads.test.ts`), `escapeHtml` (`tests/mailer.test.ts`, y compris un scénario d'injection réaliste).
+- 268/268 tests au vert (259 + 12 ajoutés − 3 retirés avec `isConversationHiddenFor`).
+
+**Vérifié de bout en bout**
+- Fuite `compare` : confirmée absente par appel direct à la route réelle (seller ne contient plus que `id`/`email`/`profile.displayName`).
+- Race condition identité : reproduite avec un vrai document uploadé deux fois de suite via l'API réelle — la seconde tentative renvoie proprement `request_pending` (400), jamais une erreur serveur. Données de test supprimées après vérification.
+- Traduction « Précédent » : rendu confirmé en français (« ← Précédent ») et en arabe (« ← السابق »), là où l'arabe affichait auparavant le texte français en dur.
+- tsc/eslint/268 tests/build : tous verts après l'ensemble des correctifs.
+
+**Signalé, non corrigé (documenté pour plus tard, pas un bug aujourd'hui)**
+- `GET /api/auth/me` : route jamais appelée par l'UI actuelle (l'app récupère l'utilisateur courant côté serveur/RSC). Laissée en l'état — pas de preuve qu'elle soit sans usage externe, la supprimer sans certitude serait plus risqué que de la garder.
+- Relations vers `User` sans `onDelete` explicite (`AuditLog.admin`, `Conversation.buyer/seller`, `Message.sender`, `Block.blocker/blocked`, `Report.author`, `Review.author`, `Listing.seller`) : `RESTRICT` par défaut, sans risque aujourd'hui puisqu'aucune route de suppression de compte n'existe (seule la suspension, Lot 31). À anticiper avant une éventuelle fonctionnalité de suppression de compte — une stratégie d'anonymisation serait préférable à une cascade, pour ne pas perdre l'historique de modération/avis/signalements.
+- `ListingPhoto` sans `@@unique([listingId, position])` : déjà géré correctement en transaction côté application (Lot 36), garde-fou DB optionnel de faible priorité.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand module explicitement non construit.

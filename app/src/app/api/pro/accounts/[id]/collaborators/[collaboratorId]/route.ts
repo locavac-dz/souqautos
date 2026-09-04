@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageCollaborators } from "@/lib/pro-account";
 import { serializeProPermissions } from "@/lib/pro-permissions";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   permissions: z.object({
@@ -31,6 +32,10 @@ export async function PATCH(
   }
   if (!canManageCollaborators({ isOwner: account.userId === user.id, permissions: null })) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  if (!checkRateLimit(`edit-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const collaborator = await prisma.proCollaborator.findUnique({ where: { id: collaboratorId } });
@@ -68,6 +73,10 @@ export async function DELETE(
   }
   if (!canManageCollaborators({ isOwner: account.userId === user.id, permissions: null })) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  if (!checkRateLimit(`remove-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const collaborator = await prisma.proCollaborator.findUnique({ where: { id: collaboratorId } });
