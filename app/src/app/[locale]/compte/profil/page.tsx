@@ -36,6 +36,18 @@ export default async function EditProfilePage() {
         initialBio={user.profile?.bio ?? null}
         phoneVerified={Boolean(user.phoneVerifiedAt)}
       />
+      <div className="mt-10 border-t border-slate-200 pt-6">
+        <h2 className="text-base font-medium text-slate-900 mb-1">{t("exportDataTitle")}</h2>
+        <p className="text-sm text-slate-500 mb-3">{t("exportDataDescription")}</p>
+        <a
+          href="/api/profile/export"
+          download
+          className="inline-block rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          {t("exportDataAction")}
+        </a>
+      </div>
+
       <div className="mt-10">
         <DeleteAccountForm />
       </div>

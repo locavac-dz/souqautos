@@ -1094,3 +1094,17 @@ Choisi en reprenant une exigence documentée dès le cahier d'architecture ([doc
   - document d'identité de test uploadé, fichier sur disque confirmé non lisible (`file` le détecte comme « data » brute, pas une image) ; document redemandé via la route admin → déchiffré correctement (en-tête JPEG valide `ff d8 ff`).
 
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente (nécessitent des décisions/identifiants non fournis à ce jour).
+
+## Lot 55 — Export des données personnelles (2026-09-04)
+
+Choisi en complément direct du droit à l'oubli (Lot 51, suppression de compte) : le RGPD, applicable indépendamment de l'extension `.dz` du fait de l'hébergement prévu en France (cf. mémoire de session, Lot 52), prévoit aussi un droit d'accès/portabilité (art. 15/20) — un utilisateur doit pouvoir récupérer ses propres données dans un format structuré. Aucune décision externe non fournie à ce jour ne bloquait ce chantier, contrairement à la politique de confidentialité (durée de conservation, cookies, juridiction) ou au paiement (identifiants réels).
+
+**Livré**
+- `GET /api/profile/export` (nouveau) : agrège et renvoie en un seul fichier JSON téléchargeable (`Content-Disposition: attachment`) toutes les données dont l'utilisateur connecté est propriétaire ou auteur — profil (téléphone déchiffré automatiquement via l'extension Prisma du Lot 54), compte professionnel et collaborations, annonces (avec photos, historique de prix, renouvellements), favoris, conversations (les deux côtés du contenu, déjà consultable dans l'application), avis rédigés et reçus, signalements qu'il a lui-même effectués, comptes qu'il a bloqués, demandes de vérification d'identité (statut/dates, jamais les octets du document).
+- Exclusions délibérées, pour ne jamais exposer une donnée privée d'un AUTRE utilisateur sous couvert de « mes données » : signalements **reçus** (protège l'anonymat de l'auteur du signalement, déjà le principe partout ailleurs dans l'app) et comptes qui ont bloqué cet utilisateur (symétrique, jamais construit ni exposé nulle part dans l'app).
+- Rate limiting dédié (5/24h/utilisateur) — agrégation coûteuse (jusqu'à 9 requêtes Prisma en parallèle), pas un besoin d'appel fréquent.
+- Bouton « Exporter mes données » sur `/compte/profil`, entre le formulaire d'édition et la zone de suppression de compte — simple lien `<a download>` (pas de composant client nécessaire, la requête `GET` authentifiée par cookie suffit).
+- Aucun nouveau test unitaire (route d'agrégation Prisma directe, comme `delete-account` au Lot 51) ; 278/278 toujours au vert.
+- Vérification de bout en bout en conditions réelles : export de Sara Hamdi (compte pro, 1 conversation) confirmant la bonne attribution des messages (« moi » / « autre_partie »), export d'Amine Benali confirmant le téléphone correctement déchiffré (`0555123456`, preuve croisée que l'extension Prisma du Lot 54 fonctionne aussi via cette nouvelle route) et 8 annonces exportées ; lien vérifié présent avec le bon `href` en FR et en AR (RTL).
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
