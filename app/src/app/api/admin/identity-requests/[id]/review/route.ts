@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import { computeIdentityReviewTransition, type IdentityReviewAction } from "@/lib/identity-verification";
 import { deleteIdentityDocument } from "@/lib/identity-uploads";
 import { writeAuditLog } from "@/lib/audit-log";
+import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { SITE_URL } from "@/lib/site";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -58,6 +61,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       where: { id: identityRequest.userId },
       data: { identityVerifiedAt: new Date() },
     });
+  }
+
+  // Écart de la même famille que les Lots 62/63 : le demandeur n'était
+  // jamais informé de l'issue de sa vérification d'identité — il ne pouvait
+  // le découvrir qu'en revisitant lui-même son tableau de bord.
+  const requester = await prisma.user.findUnique({ where: { id: identityRequest.userId } });
+  if (requester) {
+    const t = await getTranslations({ locale: requester.locale, namespace: "Notifications" });
+    const dashboardLink = `${SITE_URL}/${requester.locale}/compte/tableau-de-bord`;
+
+    const subject = action === "approve" ? t("identityApprovedSubject") : t("identityRejectedSubject");
+    const html =
+      action === "approve"
+        ? `<p>${t("greeting")}</p><p>${t("identityApprovedBody")}</p><p><a href="${dashboardLink}">${t("identityApprovedLink")}</a></p>`
+        : `<p>${t("greeting")}</p><p>${t("identityRejectedBody", { reason: escapeHtml(parsed.data.reason?.trim() ?? "") })}</p><p><a href="${dashboardLink}">${t("identityRejectedLink")}</a></p>`;
+
+    const emailResult = await sendEmail({ to: requester.email, subject, html }).catch((err) => {
+      console.error(`[EMAIL vérification identité] échec envoi: ${(err as Error).message}`);
+      return null;
+    });
+    if (emailResult?.previewUrl) {
+      console.log(`[EMAIL vérification identité] ${emailResult.previewUrl}`);
+    }
   }
 
   await writeAuditLog({

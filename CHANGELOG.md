@@ -1218,4 +1218,18 @@ Choisi en retrouvant, dans la même famille que le Lot 62, un écart identique m
 
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
 
+## Lot 64 — Notification par email de l'issue de la vérification d'identité (2026-09-05)
+
+Choisi en retrouvant, dans la même famille que les Lots 62/63, le dernier écart de ce type restant : depuis le Lot 14 (vérification d'identité), approuver ou refuser une demande ne notifiait jamais le demandeur — il ne pouvait découvrir l'issue qu'en revisitant lui-même son tableau de bord, alors qu'il attend souvent cette décision pour débloquer le badge de confiance.
+
+**Livré**
+- `POST /api/admin/identity-requests/[id]/review` envoie désormais un email au demandeur pour chacune des deux issues (approbation → confirmation que le badge est actif ; refus → motif inclus + lien pour soumettre une nouvelle demande).
+- Nouvelles clés `Notifications.identityApproved*`/`identityRejected*` (FR/AR), sur le même modèle que les Lots 62/63.
+- Aucun nouveau test unitaire (même choix que toutes les notifications de ce type) ; 309/309 toujours au vert.
+- Vérification en conditions réelles : deux comptes de test avec un vrai dossier de vérification soumis (document réel uploadé), l'un approuvé (`identityVerifiedAt` confirmé renseigné en base) et l'autre refusé (`identityVerifiedAt` confirmé resté `null`) via de vrais appels à la route de revue. Même limite de vérification que les Lots 62/63 (serveur lancé hors session, sans accès console) : le gabarit d'email du refus a été rejoué isolément via `tsx` et vérifié par lecture de la source Ethereal brute (destinataire, sujet, motif et lien tous corrects). Aucun fichier ni compte de test laissé derrière (`private-uploads/identity/` confirmé vide après nettoyage).
+
+Avec ce lot, les trois décisions de back-office qui font attendre un utilisateur (modération d'annonce, vérification d'identité, réponse à un avis) sont maintenant toutes notifiées par email — plus aucune décision de modération silencieuse dans l'application.
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
+
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
