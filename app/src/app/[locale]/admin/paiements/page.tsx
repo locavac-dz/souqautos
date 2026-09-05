@@ -3,6 +3,7 @@ import { Link, redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
+import { computePaymentOrderStats } from "@/lib/payment-orders";
 import { PaymentOrderReviewActions } from "@/components/admin/PaymentOrderReviewActions";
 
 // Réservé à ADMIN — un virement bancaire révèle une référence de transaction
@@ -18,21 +19,46 @@ export default async function AdminPaymentOrdersPage() {
 
   const t = await getTranslations("AdminPayments");
 
-  const orders = await prisma.paymentOrder.findMany({
-    where: { status: "EN_ATTENTE" },
-    orderBy: { createdAt: "asc" },
-    include: { user: { include: { profile: true } }, listing: { select: { id: true, title: true } } },
-  });
+  const [orders, allOrdersForStats] = await Promise.all([
+    prisma.paymentOrder.findMany({
+      where: { status: "EN_ATTENTE" },
+      orderBy: { createdAt: "asc" },
+      include: { user: { include: { profile: true } }, listing: { select: { id: true, title: true } } },
+    }),
+    prisma.paymentOrder.findMany({ select: { status: true, formula: true, amountDzd: true } }),
+  ]);
+  const stats = computePaymentOrderStats(allOrdersForStats);
 
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
     dateStyle: "medium",
     timeStyle: "short",
+  });
+  const numberFormatter = new Intl.NumberFormat(locale === "ar" ? "ar-DZ" : "fr-DZ");
+  const percentFormatter = new Intl.NumberFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
+    style: "percent",
+    maximumFractionDigits: 0,
   });
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("title")}</h1>
       <p className="text-sm text-slate-500 mb-6">{t("subtitle")}</p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-2">
+        <StatCard label={t("statRevenueTotal")} value={`${numberFormatter.format(stats.totalRevenueDzd)} DA`} />
+        <StatCard
+          label={t("statConfirmationRate")}
+          value={stats.confirmationRate === null ? "—" : percentFormatter.format(stats.confirmationRate)}
+        />
+        <StatCard label={t("statConfirmedCount")} value={stats.confirmedCount} />
+        <StatCard label={t("statRejectedCount")} value={stats.rejectedCount} />
+      </div>
+      <p className="text-xs text-slate-500 mb-10">
+        {t("statRevenueByFormula", {
+          premium: numberFormatter.format(stats.premiumRevenueDzd),
+          premiumPlus: numberFormatter.format(stats.premiumPlusRevenueDzd),
+        })}
+      </p>
 
       <h2 className="text-lg font-medium text-slate-900 mb-4">
         {t("pending")} ({orders.length})
@@ -75,6 +101,15 @@ export default async function AdminPaymentOrdersPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg border border-slate-200 p-4">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-2xl font-semibold text-slate-900 mt-1">{value}</p>
     </div>
   );
 }

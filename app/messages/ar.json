@@ -825,7 +825,8 @@
     "saving": "جارٍ الحفظ…",
     "saved": "تم حفظ الإعدادات.",
     "readOnlyNotice": "يمكن للمسؤول فقط تعديل هذه المعلومات.",
-    "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى."
+    "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "restrictedNotice": "هذه المعلومات (الإحداثيات البنكية، الأسعار) مخصصة للمسؤولين فقط."
   },
   "AdminAuditLog": {
     "title": "سجل التدقيق",
@@ -846,7 +847,12 @@
     "pending": "قيد الانتظار",
     "empty": "لا توجد طلبات قيد الانتظار حاليًا.",
     "formulaLabel": "الفئة المطلوبة",
-    "referenceLabel": "مرجع التحويل المقدَّم"
+    "referenceLabel": "مرجع التحويل المقدَّم",
+    "statRevenueTotal": "الإيراد المؤكد (الإجمالي)",
+    "statConfirmationRate": "معدل التأكيد",
+    "statConfirmedCount": "الطلبات المؤكدة",
+    "statRejectedCount": "الطلبات المرفوضة",
+    "statRevenueByFormula": "منها Premium: {premium} دج · Premium+: {premiumPlus} دج"
   },
   "ListingEdit": {
     "title": "تعديل الإعلان",

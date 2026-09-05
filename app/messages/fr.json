@@ -825,7 +825,8 @@
     "saving": "Enregistrement…",
     "saved": "Paramètres enregistrés.",
     "readOnlyNotice": "Seul un administrateur peut modifier ces informations.",
-    "errorGeneric": "Une erreur est survenue. Réessayez."
+    "errorGeneric": "Une erreur est survenue. Réessayez.",
+    "restrictedNotice": "Ces informations (coordonnées bancaires, prix) sont réservées aux administrateurs."
   },
   "AdminAuditLog": {
     "title": "Journal d'audit",
@@ -846,7 +847,12 @@
     "pending": "En attente",
     "empty": "Aucune demande en attente pour le moment.",
     "formulaLabel": "Formule demandée",
-    "referenceLabel": "Référence de virement fournie"
+    "referenceLabel": "Référence de virement fournie",
+    "statRevenueTotal": "Revenu confirmé (total)",
+    "statConfirmationRate": "Taux de confirmation",
+    "statConfirmedCount": "Demandes confirmées",
+    "statRejectedCount": "Demandes refusées",
+    "statRevenueByFormula": "Dont Premium : {premium} DA · Premium+ : {premiumPlus} DA"
   },
   "ListingEdit": {
     "title": "Modifier l'annonce",

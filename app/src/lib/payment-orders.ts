@@ -1,4 +1,4 @@
-import type { ListingFormula, ListingStatus } from "@prisma/client";
+import type { ListingFormula, ListingStatus, PaymentOrderStatus } from "@prisma/client";
 
 // Lot 66 — durée de validité prolongée pour les formules payantes (§ cahier
 // d'architecture : « Premium : ... durée prolongée »), même principe que
@@ -72,4 +72,67 @@ export function priceForFormula(
   settings: { premiumPriceDzd: number; premiumPlusPriceDzd: number }
 ): number {
   return formula === "PREMIUM" ? settings.premiumPriceDzd : settings.premiumPlusPriceDzd;
+}
+
+// Lot 68 — tableau de bord de statistiques de paiement (revenus, taux de
+// confirmation), proposé à la clôture du Lot 66 une fois le paiement en
+// place. Le taux de confirmation ne compte que les demandes déjà tranchées
+// (CONFIRMEE/REJETEE) : une demande EN_ATTENTE n'a encore rien prouvé, ni
+// dans un sens ni dans l'autre, et compter les demandes EN_ATTENTE au
+// dénominateur biaiserait le taux à la baisse sans raison. `null` (plutôt
+// qu'un 0% fabriqué) tant qu'aucune demande n'a encore été tranchée.
+export type PaymentOrderStatsInput = {
+  status: PaymentOrderStatus;
+  formula: ListingFormula;
+  amountDzd: number;
+};
+
+export type PaymentOrderStats = {
+  confirmedCount: number;
+  rejectedCount: number;
+  pendingCount: number;
+  confirmationRate: number | null;
+  totalRevenueDzd: number;
+  premiumRevenueDzd: number;
+  premiumPlusRevenueDzd: number;
+};
+
+export function computePaymentOrderStats(orders: PaymentOrderStatsInput[]): PaymentOrderStats {
+  let confirmedCount = 0;
+  let rejectedCount = 0;
+  let pendingCount = 0;
+  let totalRevenueDzd = 0;
+  let premiumRevenueDzd = 0;
+  let premiumPlusRevenueDzd = 0;
+
+  for (const order of orders) {
+    if (order.status === "EN_ATTENTE") {
+      pendingCount += 1;
+      continue;
+    }
+    if (order.status === "REJETEE") {
+      rejectedCount += 1;
+      continue;
+    }
+    confirmedCount += 1;
+    totalRevenueDzd += order.amountDzd;
+    if (order.formula === "PREMIUM_PLUS") {
+      premiumPlusRevenueDzd += order.amountDzd;
+    } else {
+      premiumRevenueDzd += order.amountDzd;
+    }
+  }
+
+  const decidedCount = confirmedCount + rejectedCount;
+  const confirmationRate = decidedCount > 0 ? confirmedCount / decidedCount : null;
+
+  return {
+    confirmedCount,
+    rejectedCount,
+    pendingCount,
+    confirmationRate,
+    totalRevenueDzd,
+    premiumRevenueDzd,
+    premiumPlusRevenueDzd,
+  };
 }

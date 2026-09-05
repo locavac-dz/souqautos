@@ -25,7 +25,11 @@ export default async function AdminSettingsPage() {
       <div className="border-t border-slate-200 pt-8">
         <h2 className="text-xl font-semibold text-slate-900 mb-2">{tPayment("title")}</h2>
         <p className="text-sm text-slate-500 mb-6">{tPayment("subtitle")}</p>
-        <PaymentSettingsForm settings={paymentSettings} canEdit={canEdit} />
+        {canEdit ? (
+          <PaymentSettingsForm settings={paymentSettings} canEdit={canEdit} />
+        ) : (
+          <p className="text-sm text-slate-500">{tPayment("restrictedNotice")}</p>
+        )}
       </div>
     </div>
   );
