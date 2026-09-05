@@ -1314,3 +1314,17 @@ Choisi en reprenant directement le « prochain lot proposé » écrit à la clô
 **Signalé mais non corrigé, hors périmètre de cet audit** : le même motif de course sur double-décision (lecture puis update séparé, sans `updateMany` atomique) existe aussi dans `/api/admin/identity-requests/[id]/review` et `/api/admin/listings/[id]/moderate` — antérieurs au Lot 60 donc hors du diff audité ici, et de sévérité moindre (pas d'argent réel en jeu, contrairement au paiement). À corriger dans un futur lot de durcissement transverse si le porteur de projet le souhaite.
 
 Prochain lot proposé : à définir avec le porteur de projet — plus aucune faille connue n'est ouverte sur le paiement ; le même correctif `updateMany` atomique pourrait être généralisé aux routes de revue identité/modération par cohérence, sans urgence puisqu'aucune n'implique de transaction financière.
+
+## Lot 70 — Généralisation du correctif anti-double-décision (2026-09-05)
+
+Choisi explicitement par le porteur de projet, en réponse à la question ouverte « qu'est-ce qui reste à faire ? » où j'ai listé la dette technique connue : parmi les 4 sujets proposés (généraliser le correctif anti-double-clic, équipements dans l'estimation de prix, tester le vrai chemin IA), il a choisi le premier — le même écart signalé mais volontairement laissé ouvert à la clôture du Lot 69.
+
+**Livré**
+- `POST /api/admin/identity-requests/[id]/review` : `update` remplacé par `updateMany({ where: { id, status: "EN_ATTENTE" } })` avec vérification de `count` — même correctif que `PaymentOrder` au Lot 69.
+- `POST /api/admin/listings/[id]/moderate` : même principe, mais le filtre du `where` utilise le statut **lu** (`listing.status`) plutôt qu'une valeur fixe, puisque cette route accepte plusieurs statuts source selon l'action (`approve` part d'EN_ATTENTE ou de SUSPENDUE, `reject` d'EN_ATTENTE, `suspend` de PUBLIEE — cf. `computeModerationTransition`). L'objet mis à jour est reconstruit en mémoire (`{ ...listing, status, moderationNote, publishedAt }`) plutôt que rechargé en base, pour éviter un aller-retour DB supplémentaire inutile sur le chemin déjà protégé par la garde atomique.
+- Aucun nouveau test unitaire (la race nécessite une vraie base de données concurrente, même choix qu'au Lot 69) ; 329/329 tests toujours au vert.
+- Vérification de bout en bout en conditions réelles avec de VRAIES requêtes concurrentes (`Promise.all` de deux `fetch`, comme au Lot 69) sur les deux routes : dans les deux cas, une seule des deux requêtes aboutit (`REFUSEE`), l'autre reçoit `invalid_transition` ; une seule entrée d'audit écrite par ressource, aucune double application ni double email. Données de test (dossier d'identité + annonce créés directement en base pour le test) entièrement supprimées après vérification.
+
+Avec ce lot, les 3 routes de décision admin de l'application (paiement, identité, modération d'annonces) appliquent désormais toutes la même garde atomique contre le double-clic/la double-décision concurrente — plus aucun écart connu de ce type.
+
+Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure les équipements dans l'estimation de prix (nécessite une décision de taxonomie) et la vérification du chemin IA réel (nécessite une clé Anthropic).

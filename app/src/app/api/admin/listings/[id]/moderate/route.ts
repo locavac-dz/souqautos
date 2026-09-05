@@ -40,14 +40,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const isApproval = action === "approve";
-  const updatedListing = await prisma.listing.update({
-    where: { id },
-    data: {
-      status: transition.newStatus,
-      moderationNote: isApproval ? null : (parsed.data.reason?.trim() ?? null),
-      publishedAt: isApproval && !listing.publishedAt ? new Date() : listing.publishedAt,
-    },
+  const moderationNote = isApproval ? null : (parsed.data.reason?.trim() ?? null);
+  const publishedAt = isApproval && !listing.publishedAt ? new Date() : listing.publishedAt;
+
+  // Deux membres du staff pourraient modérer la même annonce en même temps
+  // (deux onglets, double-clic) : `findUnique` ci-dessus ne protège pas
+  // contre cette course. `updateMany` filtré sur le statut LU (pas un
+  // statut fixe : approve part d'EN_ATTENTE ou SUSPENDUE, suspend part de
+  // PUBLIEE) est atomique — si `count` vaut 0, une autre requête a déjà
+  // tranché entre-temps. Même correctif que sur PaymentOrder (Lot 69).
+  const { count } = await prisma.listing.updateMany({
+    where: { id, status: listing.status },
+    data: { status: transition.newStatus, moderationNote, publishedAt },
   });
+  if (count === 0) {
+    return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
+  }
+  const updatedListing = { ...listing, status: transition.newStatus, moderationNote, publishedAt };
 
   if (isApproval) {
     await notifyMatchingSearchAlerts(updatedListing);

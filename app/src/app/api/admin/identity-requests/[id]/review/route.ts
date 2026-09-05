@@ -39,8 +39,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: transition.error }, { status: 400 });
   }
 
-  await prisma.identityVerificationRequest.update({
-    where: { id },
+  // Deux membres du staff pourraient traiter le même dossier en même temps
+  // (deux onglets, double-clic) : `findUnique` ci-dessus ne protège pas
+  // contre cette course. `updateMany` avec le statut EN_ATTENTE dans le
+  // `where` est atomique — si `count` vaut 0, une autre requête a déjà
+  // tranché entre-temps. Même correctif que sur PaymentOrder (Lot 69).
+  const { count } = await prisma.identityVerificationRequest.updateMany({
+    where: { id, status: "EN_ATTENTE" },
     data: {
       status: transition.newStatus,
       reviewedById: user.id,
@@ -51,6 +56,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       documentMime: null,
     },
   });
+  if (count === 0) {
+    return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
+  }
 
   if (identityRequest.documentPath) {
     await deleteIdentityDocument(identityRequest.documentPath);
