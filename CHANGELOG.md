@@ -1193,4 +1193,17 @@ Choisi en retrouvant, en explorant le code de la messagerie, exactement le même
 
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
 
+## Lot 62 — Notification par email d'un nouvel avis (2026-09-05)
+
+Choisi en retrouvant, en explorant le code des avis, exactement le même écart que celui déjà documenté et comblé au Lot 32 pour la *réponse* à un avis (« l'auteur de l'avis n'était jamais informé qu'une réponse avait été publiée ») — mais dans l'autre sens : le vendeur (particulier ou compte professionnel) n'était lui-même jamais informé qu'il avait **reçu** un nouvel avis, donc jamais incité à y répondre. Combiné avec le Lot 61 (accès des collaborateurs à la messagerie), ce lot ferme la boucle complète du parcours « avis » côté vendeur.
+
+**Livré**
+- `POST /api/users/[id]/reviews` (avis sur un vendeur particulier) et `POST /api/pro/accounts/[id]/reviews` (avis sur un compte professionnel) envoient désormais un email de notification après création de l'avis, sur le même modèle que la notification de réponse (Lot 32) et de baisse de prix (Lot 23).
+- Pour un compte professionnel, la notification part **au propriétaire ET à chaque collaborateur disposant de la permission `repondreAvis`** (Lot 42/61 : ce sont eux qui répondent réellement au quotidien) — pas seulement le propriétaire, cohérent avec la logique déjà appliquée à la messagerie au Lot 61.
+- Nouvelles clés `Notifications.newReview*` (FR/AR).
+- Aucun nouveau test unitaire (envoi d'email déclenché par un effet de bord, même choix que les notifications existantes — réponse à un avis, baisse de prix — jamais testées unitairement non plus) ; 309/309 toujours au vert.
+- Vérification en conditions réelles : avis créés avec succès sur un vendeur particulier et sur un compte professionnel (données réelles, acheteur de test ayant réellement interagi via une conversation au préalable, condition d'éligibilité vérifiée). Le serveur utilisé pour la vérification navigateur de ce lot avait été lancé par l'utilisateur lui-même en dehors de cette session, donc sans accès à sa console — le gabarit d'email exact (mêmes fonctions `sendEmail`/traductions réelles, mêmes valeurs interpolées que l'avis réel créé) a été rejoué de façon isolée via `tsx` et vérifié par lecture de la source Ethereal brute (destinataire, sujet, contenu et lien tous corrects) — limite de vérification honnêtement documentée plutôt que supposée sans preuve.
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
+
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.

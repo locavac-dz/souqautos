@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkReviewEligibility, isValidRating } from "@/lib/reviews";
+import { parseProPermissions } from "@/lib/pro-permissions";
+import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { SITE_URL } from "@/lib/site";
 
 const bodySchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -61,6 +65,43 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       comment: parsed.data.comment?.trim() || null,
     },
   });
+
+  // Même écart que pour un vendeur particulier (comblé ci-dessus dans
+  // /api/users/[id]/reviews) — notifie le propriétaire ET les
+  // collaborateurs avec la permission repondreAvis (Lot 42/61 : ce sont eux
+  // qui répondent réellement au quotidien, pas seulement le propriétaire).
+  const [owner, collaborators] = await Promise.all([
+    prisma.user.findUnique({ where: { id: account.userId } }),
+    prisma.proCollaborator.findMany({
+      where: { professionalAccountId: accountId },
+      include: { user: true },
+    }),
+  ]);
+  const recipients = [
+    ...(owner ? [owner] : []),
+    ...collaborators
+      .filter((c) => parseProPermissions(c.permissions).repondreAvis)
+      .map((c) => c.user),
+  ];
+
+  const authorName = escapeHtml(user.profile?.displayName ?? user.email);
+  for (const recipient of recipients) {
+    const t = await getTranslations({ locale: recipient.locale, namespace: "Notifications" });
+    const emailResult = await sendEmail({
+      to: recipient.email,
+      subject: t("newReviewSubject"),
+      html: `<p>${t("greeting")}</p><p>${t("newReviewBody", {
+        name: authorName,
+        rating: parsed.data.rating,
+      })}</p><p><a href="${SITE_URL}/${recipient.locale}/pro/${accountId}">${t("newReviewLink")}</a></p>`,
+    }).catch((err) => {
+      console.error(`[EMAIL nouvel avis pro] échec envoi: ${(err as Error).message}`);
+      return null;
+    });
+    if (emailResult?.previewUrl) {
+      console.log(`[EMAIL nouvel avis pro] ${emailResult.previewUrl}`);
+    }
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

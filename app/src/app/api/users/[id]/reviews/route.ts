@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkReviewEligibility, isValidRating } from "@/lib/reviews";
+import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { SITE_URL } from "@/lib/site";
 
 const bodySchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -56,6 +59,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       comment: parsed.data.comment?.trim() || null,
     },
   });
+
+  // Écart documenté depuis le Lot 27 (comme la notification de réponse
+  // elle-même, comblée ensuite) : le vendeur n'était jamais informé qu'il
+  // avait reçu un nouvel avis, donc jamais incité à y répondre.
+  const t = await getTranslations({ locale: seller.locale, namespace: "Notifications" });
+  const authorName = escapeHtml(user.profile?.displayName ?? user.email);
+  const emailResult = await sendEmail({
+    to: seller.email,
+    subject: t("newReviewSubject"),
+    html: `<p>${t("greeting")}</p><p>${t("newReviewBody", {
+      name: authorName,
+      rating: parsed.data.rating,
+    })}</p><p><a href="${SITE_URL}/${seller.locale}/vendeur/${sellerId}">${t("newReviewLink")}</a></p>`,
+  }).catch((err) => {
+    console.error(`[EMAIL nouvel avis] échec envoi: ${(err as Error).message}`);
+    return null;
+  });
+  if (emailResult?.previewUrl) {
+    console.log(`[EMAIL nouvel avis] ${emailResult.previewUrl}`);
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
