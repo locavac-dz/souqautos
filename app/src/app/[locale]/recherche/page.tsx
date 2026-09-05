@@ -112,6 +112,11 @@ export default async function SearchPage({
       </aside>
 
       <div>
+        {flatParams.via === "ai" && (
+          <p className="mb-3 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600">
+            {t("aiSearchNotice")}
+          </p>
+        )}
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-slate-500">{t("resultsCount", { count: totalCount })}</p>
           <SortSelect current={params.sort ?? "recent"} />

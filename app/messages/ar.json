@@ -235,6 +235,7 @@
     "min": "الأدنى",
     "max": "الأقصى",
     "resultsCount": "{count} إعلان موجود",
+    "aiSearchNotice": "تم تفسير بحثك تلقائيًا — تحقق من المرشحات المطبقة بجانبك.",
     "viewsCount": "{count} مشاهدة",
     "sellerTrustScore": "ثقة البائع: {score}/100",
     "noResults": "لا يوجد إعلان يطابق بحثك.",

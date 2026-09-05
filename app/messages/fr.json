@@ -235,6 +235,7 @@
     "min": "Min",
     "max": "Max",
     "resultsCount": "{count} annonces trouvées",
+    "aiSearchNotice": "Votre recherche a été interprétée automatiquement — vérifiez les filtres appliqués ci-contre.",
     "viewsCount": "{count} vues",
     "sellerTrustScore": "Confiance vendeur : {score}/100",
     "noResults": "Aucune annonce ne correspond à votre recherche.",

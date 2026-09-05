@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { LogoutButton } from "./LogoutButton";
 import { MobileMenuToggle } from "./MobileMenuToggle";
+import { SiteLogoMark } from "./SiteLogoMark";
 import { isStaff } from "@/lib/auth-server/roles";
 import type { Role } from "@prisma/client";
 
@@ -82,7 +83,8 @@ export async function SiteHeader({
   return (
     <header className="border-b border-slate-200">
       <div className="relative mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
-        <Link href="/" className="font-semibold text-lg tracking-tight text-slate-900">
+        <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight text-slate-900">
+          <SiteLogoMark className="h-7 w-7 shrink-0" />
           {tBrand("name")}
         </Link>
 

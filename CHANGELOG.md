@@ -1137,3 +1137,33 @@ Choisi en reprenant la phase V3 du cahier d'architecture (§336 : « IA (AI List
 - Vérification de bout en bout en conditions réelles (assistant de publication réel, données de véhicule injectées en `sessionStorage` comme le fait l'app elle-même) : suggestion générée et affichée correctement dans les deux champs, mention de source honnête affichée (repli heuristique, aucune clé configurée sur cette machine — **le chemin IA réel n'a pas pu être testé faute de clé**, limite assumée et documentée), garde-fou données manquantes déclenché correctement, aucun brouillon serveur parasite créé pendant le test, rendu confirmé en arabe.
 
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente ; le chemin IA réel de ce lot resterait à vérifier le jour où une clé Anthropic serait fournie.
+
+## Lot 58 — Recherche en langage naturel (2026-09-05)
+
+Choisi en clôturant le dernier volet de la phase V3 « IA » du cahier d'architecture (§336 : « recherche langage naturel ») — même principe honnête établi au Lot 57 (« vrai chat Anthropic Claude, repli heuristique sans clé »), appliqué cette fois à la barre de recherche principale plutôt qu'à la publication.
+
+**Livré**
+- [`src/lib/ai-search.ts`](app/src/lib/ai-search.ts) : `parseNaturalLanguageQuery()` envoie la phrase tapée par le visiteur à l'API Anthropic (`claude-sonnet-5`) si `ANTHROPIC_API_KEY` est configurée, accompagnée de la liste réelle des marques/modèles/wilayas (id:nom) pour que le modèle ne puisse choisir que des identifiants qui existent vraiment. **Sans clé — le cas de cette machine —, le repli reproduit EXACTEMENT le comportement de recherche texte déjà existant avant ce lot (`{ q: texte tapé }`) : zéro régression pour les visiteurs du site aujourd'hui.**
+- `sanitizeParsedFilters()` (fonction pure, entièrement testée) : ne fait **jamais confiance** à un id renvoyé par le modèle — chaque `brandId`/`modelId`/`wilayaId` est vérifié contre le catalogue réel avant d'être accepté, chaque énumération (catégorie/carburant/boîte/état) contre une liste fermée ; tout le reste est silencieusement ignoré plutôt que de risquer un filtre halluciné.
+- `POST /api/search/parse` (nouveau, public comme `/recherche` elle-même, rate limité par IP — 30/h — un appel IA a un coût réel dès qu'une clé est configurée).
+- `SearchFilters.tsx` (barre compacte uniquement — la recherche avancée à filtres explicites n'est jamais réinterprétée) appelle cette route avant de naviguer vers `/recherche` ; en cas d'échec réseau, repli silencieux sur la recherche texte simple d'origine.
+- Notice honnête sur `/recherche` (« Votre recherche a été interprétée automatiquement — vérifiez les filtres appliqués ci-contre »), affichée **uniquement** quand la requête a réellement été traitée par l'IA (marqueur `via=ai` dans l'URL) — jamais affichée pour une recherche texte classique, cohérent avec l'exigence de transparence déjà appliquée à l'estimation de prix.
+- 9 nouveaux tests unitaires (`tests/ai-search.test.ts`) — couvrent notamment le rejet d'un id inexistant/hallucination et la non-régression du repli sans clé. 305/305 tests au vert au total.
+- Vérification de bout en bout en conditions réelles (site de l'utilisateur déjà lancé sur le port 5184, vérifié directement sans relancer de serveur) : appel réel à `/api/search/parse` confirmant le repli heuristique exact (`{"q":"clio diesel pas chère à Alger"}`), soumission réelle du formulaire de recherche confirmant une navigation inchangée (`?q=clio+diesel`, aucune régression), notice honnête et filtres pré-remplis confirmés en FR et en AR (RTL) via `via=ai`. **Le chemin IA réel n'a pas pu être testé faute de clé Anthropic sur cette machine** — même limite honnêtement documentée qu'au Lot 57.
+
+Avec ce lot, l'intégralité de la phase V3 « IA » listée au cahier d'architecture est couverte (score de confiance, historique des prix, AI Listing, recherche langage naturel) — restent hors périmètre les items nécessitant un vrai prestataire externe non disponible (détection de fraude/analyse photo avancées, paiement, KYC automatisé).
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
+
+## Lot 59 — Identité visuelle : symbole de marque (2026-09-05)
+
+Le site n'avait jamais eu de logo — seul le nom « Souq Auto » en texte brut dans l'en-tête, et le favicon par défaut de Next.js. Trois pistes ont été présentées au porteur de projet dans un document de présentation séparé (arc de souk traversé par une route, route en forme de S, double anneau) ; **« Le Double Anneau » a été retenu** — deux arcs de cercle décalés, lisibles à la fois comme une jante de loin et comme un accord conclu entre deux parties de près.
+
+**Livré**
+- [`src/components/SiteLogoMark.tsx`](app/src/components/SiteLogoMark.tsx) (nouveau) : le symbole en SVG (encre `#12222E`, cuivre `#C1622B`), ajouté dans [`SiteHeader.tsx`](app/src/components/SiteHeader.tsx) juste avant le nom de marque — vérifié sans régression sur le menu mobile (Lot 53) et le miroir RTL arabe.
+- Favicon du site entièrement régénéré à partir du même symbole (remplace l'icône par défaut de Next.js jamais changée depuis le Lot 1) : `src/app/icon.svg` (moderne, toutes tailles), `src/app/favicon.ico` (32×32, compatibilité), `src/app/apple-icon.png` (180×180, écran d'accueil iOS) — les trois balises `<link rel="icon">` correspondantes vérifiées générées automatiquement par Next.js.
+- Aucun changement de typographie ni de palette du reste du site : seul le symbole a été ajouté, la police et les couleurs déjà en place dans l'en-tête restent inchangées — un ajout de logo n'est pas un changement d'identité complète.
+- Aucun nouveau test unitaire (composant purement présentationnel, fichiers statiques) ; 305/305 toujours au vert.
+- Vérification de bout en bout en conditions réelles (site déjà lancé par l'utilisateur, vérifié sans redémarrage) : symbole affiché correctement dans l'en-tête desktop et mobile, favicon confirmé régénéré par lecture directe des octets (`00 00 01 00` = en-tête ICO valide, 896 octets contre 25 931 pour l'ancien défaut Next.js — preuve que ce n'est pas un résidu en cache), rendu miroir RTL confirmé en arabe (symbole et texte correctement inversés).
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.

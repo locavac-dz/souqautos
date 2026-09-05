@@ -59,13 +59,38 @@ export function SearchFilters({
     }));
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
+  function navigateWith(filters: Record<string, string | undefined>, aiAssisted: boolean) {
     const query = new URLSearchParams();
-    Object.entries(values).forEach(([key, value]) => {
+    Object.entries(filters).forEach(([key, value]) => {
       if (value) query.set(key, value);
     });
+    if (aiAssisted) query.set("via", "ai");
     router.push(`/recherche?${query.toString()}`);
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+
+    // Recherche en langage naturel (barre compacte uniquement — les filtres
+    // explicites de la recherche avancée ne doivent jamais être réinterprétés).
+    if (compact && values.q && values.q.trim().length >= 3) {
+      try {
+        const res = await fetch("/api/search/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: values.q }),
+        });
+        if (res.ok) {
+          const { filters, source } = await res.json();
+          navigateWith(filters, source === "ai");
+          return;
+        }
+      } catch {
+        // réseau indisponible — repli sur la recherche texte simple ci-dessous
+      }
+    }
+
+    navigateWith(values, false);
   }
 
   return (
