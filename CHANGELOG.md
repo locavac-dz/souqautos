@@ -1206,4 +1206,16 @@ Choisi en retrouvant, en explorant le code des avis, exactement le même écart 
 
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
 
+## Lot 63 — Notification par email de l'issue de la modération (2026-09-05)
+
+Choisi en retrouvant, dans la même famille que le Lot 62, un écart identique mais pour l'événement le plus attendu par un vendeur : depuis le Lot 7 (back-office), approuver/refuser/suspendre une annonce ne notifiait jamais le vendeur — il ne pouvait découvrir l'issue qu'en revisitant lui-même « Mes annonces ». Le motif de refus/suspension (`moderationNote`) était déjà capturé et affiché en compte, mais jamais poussé proactivement.
+
+**Livré**
+- `POST /api/admin/listings/[id]/moderate` envoie désormais un email au vendeur pour chacune des trois issues (`listing.approve` → lien vers l'annonce publiée ; `listing.reject`/`listing.suspend` → motif inclus + lien vers « Mes annonces » pour corriger et resoumettre).
+- Nouvelles clés `Notifications.listingApproved*`/`listingRejected*`/`listingSuspended*` (FR/AR), sur le même modèle que les notifications existantes (baisse de prix, suspension de compte).
+- Aucun nouveau test unitaire (envoi d'email déclenché par un effet de bord, même choix que toutes les autres notifications de ce type) ; 309/309 toujours au vert.
+- Vérification en conditions réelles : trois annonces de test approuvée/refusée/suspendue via de vrais appels à la route de modération (statuts et motifs confirmés corrects en base, entrées d'audit confirmées dans `/admin/journal`, pagination du journal elle-même vérifiée en conditions réelles pour la première fois — 30+ lignes désormais réparties sur 2 pages). Le serveur de ce lot restant hors accès console (même situation qu'au Lot 62), le gabarit d'email du cas le plus complexe (refus, avec titre ET motif interpolés) a été rejoué isolément via `tsx` et vérifié par lecture de la source Ethereal brute.
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
+
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.

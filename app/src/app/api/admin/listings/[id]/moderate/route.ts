@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import { computeModerationTransition, type ModerationAction } from "@/lib/moderation";
 import { writeAuditLog } from "@/lib/audit-log";
 import { notifyMatchingSearchAlerts } from "@/lib/search-alerts";
+import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { SITE_URL } from "@/lib/site";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject", "suspend"]),
@@ -48,6 +51,37 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (isApproval) {
     await notifyMatchingSearchAlerts(updatedListing);
+  }
+
+  // Écart trouvé en explorant le code (même famille que le Lot 62) : le
+  // vendeur n'était jamais informé de l'issue de la modération — il ne
+  // pouvait le découvrir qu'en revisitant lui-même « Mes annonces ».
+  const seller = await prisma.user.findUnique({ where: { id: listing.sellerId } });
+  if (seller) {
+    const t = await getTranslations({ locale: seller.locale, namespace: "Notifications" });
+    const title = escapeHtml(listing.title);
+    const reason = escapeHtml(parsed.data.reason?.trim() ?? "");
+
+    let subject: string;
+    let html: string;
+    if (action === "approve") {
+      subject = t("listingApprovedSubject");
+      html = `<p>${t("greeting")}</p><p>${t("listingApprovedBody", { title })}</p><p><a href="${SITE_URL}/${seller.locale}/annonce/${id}">${t("listingApprovedLink")}</a></p>`;
+    } else if (action === "reject") {
+      subject = t("listingRejectedSubject");
+      html = `<p>${t("greeting")}</p><p>${t("listingRejectedBody", { title, reason })}</p><p><a href="${SITE_URL}/${seller.locale}/compte/mes-annonces">${t("listingRejectedLink")}</a></p>`;
+    } else {
+      subject = t("listingSuspendedSubject");
+      html = `<p>${t("greeting")}</p><p>${t("listingSuspendedBody", { title, reason })}</p><p><a href="${SITE_URL}/${seller.locale}/compte/mes-annonces">${t("listingSuspendedLink")}</a></p>`;
+    }
+
+    const emailResult = await sendEmail({ to: seller.email, subject, html }).catch((err) => {
+      console.error(`[EMAIL modération annonce] échec envoi: ${(err as Error).message}`);
+      return null;
+    });
+    if (emailResult?.previewUrl) {
+      console.log(`[EMAIL modération annonce] ${emailResult.previewUrl}`);
+    }
   }
 
   await writeAuditLog({
