@@ -25,12 +25,12 @@ export default async function LegalNoticePage() {
         <section>
           <h2 className="text-base font-medium text-slate-900 mb-2">{t("hostingTitle")}</h2>
           <p>{t("hostingCountry")}</p>
-          <p className="text-slate-400">{t("hostingPending")}</p>
+          <p className="text-slate-500">{t("hostingPending")}</p>
         </section>
 
         <section>
           <h2 className="text-base font-medium text-slate-900 mb-2">{t("contactTitle")}</h2>
-          <p className="text-slate-400">{t("contactPending")}</p>
+          <p className="text-slate-500">{t("contactPending")}</p>
         </section>
       </div>
     </div>

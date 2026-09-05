@@ -1232,4 +1232,16 @@ Avec ce lot, les trois décisions de back-office qui font attendre un utilisateu
 
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
 
-Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
+## Lot 65 — Politique de confidentialité (2026-09-05)
+
+Choisi à la demande explicite du porteur de projet, en réponse directe à une question ouverte (« qu'est-ce que tu penses du site ? ») où j'ai signalé que la politique de confidentialité restait l'un des trois chantiers bloquant une vraie mise en ligne. Contrairement aux mentions légales (Lot 52, des faits fournis directement par le porteur de projet), une politique de confidentialité RGPD dépend surtout d'un audit technique honnête de ce que l'application fait *réellement* — jamais d'un texte générique copié d'un modèle.
+
+**Livré**
+- `/politique-confidentialite` (nouvelle page, FR/AR) construite après un audit direct du code, pas d'hypothèses : cookies réellement posés (session + préférence de langue, tous deux strictement nécessaires — confirmé qu'aucun script d'analytics/publicité/traçage n'existe nulle part dans le code), catégories de données réellement collectées par modèle Prisma, sous-traitants réels (hébergement France non choisi, email non choisi, SMS non intégré — `src/lib/sms.ts` journalise seulement en développement, IA Anthropic conditionnelle et désactivée par défaut cf. Lots 57/58), durée de conservation décrite fidèlement au comportement réel du code (pas de purge automatique programmée nulle part dans l'app — donnée conservée tant que le compte est actif, documents d'identité supprimés immédiatement après décision cf. Lot 14/60, anonymisation à la suppression de compte cf. Lot 51).
+- Section « Vos droits » pointant vers les fonctionnalités réellement construites : export RGPD (Lot 55) pour l'accès/la portabilité, édition de profil pour la rectification, suppression de compte (Lot 51) pour l'effacement — jamais une clause théorique sans mécanisme derrière.
+- Seuls deux points restent honnêtement marqués « à compléter/à confirmer » (adresse de contact vie privée, autorité de contrôle compétente) faute de décision communiquée à ce jour — même discipline anti-fabrication que les mentions légales (Lot 52) : aucune coordonnée ni juridiction inventée sur un document juridique.
+- Lien « Politique de confidentialité » ajouté au pied de page, à côté de « Mentions légales ». Corrigé au passage un contraste insuffisant (`text-slate-400`→`500`) resté sur les mentions légales depuis le Lot 52, jamais couvert par l'audit a11y du Lot 53.
+- Aucun nouveau test unitaire (page de contenu statique, comme les mentions légales) ; 309/309 toujours au vert.
+- Vérification de bout en bout en conditions réelles : page réelle affichant l'intégralité du contenu, liens vers mentions légales et profil confirmés fonctionnels, lien du pied de page confirmé présent, rendu RTL arabe confirmé (logo, listes à puces, liens soulignés tous correctement inversés), aucun débordement horizontal en mobile.
+
+Prochain lot proposé : à définir avec le porteur de projet — un CGU/CGV distinct (conditions d'utilisation, pas de confidentialité) et le paiement réel (identifiants non fournis) restent les principaux chantiers en attente.

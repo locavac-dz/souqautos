@@ -13,6 +13,9 @@ export async function SiteFooter() {
         <Link href="/mentions-legales" className="hover:text-slate-700 hover:underline">
           {t("legalNotice")}
         </Link>
+        <Link href="/politique-confidentialite" className="hover:text-slate-700 hover:underline">
+          {t("privacyPolicy")}
+        </Link>
         <span>{t("brands")}</span>
       </div>
     </footer>
