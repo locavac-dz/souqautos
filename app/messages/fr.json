@@ -64,6 +64,7 @@
   "Footer": {
     "group": "Une plateforme INGENICA CIVIL EURL",
     "browseBrands": "Toutes les marques",
+    "browseWilayas": "Toutes les wilayas",
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
     "legalNotice": "Mentions légales",
     "privacyPolicy": "Politique de confidentialité",
@@ -389,7 +390,13 @@
     "estimateLink": "Estimer un {brand} {model}",
     "viewAllModelListings": "Voir toutes les annonces {brand} {model}",
     "noStatsModel": "Pas encore d'annonce publiée pour ce modèle.",
-    "backToBrand": "Retour à {brand}"
+    "backToBrand": "Retour à {brand}",
+    "wilayaIndexTitle": "Toutes les wilayas",
+    "wilayaIndexSubtitle": "Parcourez les annonces publiées par wilaya en Algérie.",
+    "wilayaTitle": "Voitures d'occasion à {wilaya}",
+    "noStatsWilaya": "Pas encore d'annonce publiée dans cette wilaya.",
+    "topBrandsTitle": "Marques les plus proposées",
+    "viewAllWilayaListings": "Voir toutes les annonces à {wilaya}"
   },
   "Status": {
     "BROUILLON": "Brouillon",

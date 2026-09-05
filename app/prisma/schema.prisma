@@ -79,6 +79,11 @@ model Profile {
 model Wilaya {
   id       Int       @id
   code     String    @unique
+  // Lot 75 — page SEO /wilaya/{slug} (docs/ARCHITECTURE.md §2, ex. « /wilaya/alger »),
+  // prévue depuis le cahier des charges mais jamais construite. Calculé une fois via
+  // slugify(nomFr) (même fonction que Brand/Model/Equipment), pas géré par le seed
+  // idempotent des wilayas elles-mêmes (référentiel figé, cf. Lot 25).
+  slug     String    @unique
   nomFr    String
   nomAr    String
   profiles Profile[]

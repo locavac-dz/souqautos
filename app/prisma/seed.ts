@@ -75,10 +75,11 @@ const wilayas: { id: number; code: string; nomFr: string; nomAr: string }[] = [
 
 async function main() {
   for (const w of wilayas) {
+    const slug = slugify(w.nomFr);
     await prisma.wilaya.upsert({
       where: { id: w.id },
-      update: { code: w.code, nomFr: w.nomFr, nomAr: w.nomAr },
-      create: w,
+      update: { code: w.code, nomFr: w.nomFr, nomAr: w.nomAr, slug },
+      create: { ...w, slug },
     });
   }
   console.log(`Seed OK — ${wilayas.length} wilayas.`);

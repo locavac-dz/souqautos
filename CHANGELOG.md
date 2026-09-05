@@ -1391,3 +1391,18 @@ Choisi explicitement par le porteur de projet, en sélectionnant directement ce 
 Avec ce lot, les trois volets du §14 du cahier d'architecture concernant les équipements (estimation de prix Lot 72, édition Lot 73, recherche ici) sont tous livrés.
 
 Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise) et le remplacement des visuels de démonstration par de vraies photos ; plus aucun écart connu du §14 sur les équipements.
+
+## Lot 75 — Pages SEO par wilaya (2026-09-06)
+
+Repris directement de la liste des chantiers prévus au cahier des charges mais jamais construits (docs/ARCHITECTURE.md §2 : `/wilaya/{wilaya}`, ex. « /wilaya/alger » ; §72 : ces pages doivent générer title/meta/canonical/OG + entrer dans le sitemap segmenté). Sur le modèle exact des pages marque déjà livrées (`/voitures/[brand]`).
+
+**Livré**
+- `Wilaya.slug` (nouvelle colonne, migration hand-écrite `ALTER TABLE ... ADD COLUMN ... DEFAULT ''` puis backfill) — calculé une fois via la même fonction `slugify()` que Brand/Model/Equipment (jamais de réécriture Unicode en SQL brut, calcul fait en Node comme documenté dans la leçon de session sur ce sujet). `prisma/seed.ts` recalcule et réaffirme le slug à chaque exécution (idempotent, revérifié par un second passage du seed sans régression).
+- `/wilaya` (index, nouveau) : les 58 wilayas triées alphabétiquement avec nombre d'annonces et prix moyen, même gabarit que `/voitures`.
+- `/wilaya/[wilaya]` (détail, nouveau) : statistiques (nombre/prix moyen/fourchette), marques les plus proposées **dans cette wilaya précisément** (`getBrandCountsForWilaya`, nouvelle fonction dans `catalogue-stats.ts`, même principe que `getModelCountsForBrand` — une seule requête groupée, pas de N+1), 6 annonces récentes avec badges Bon Prix/Professionnel, lien « Voir toutes les annonces » vers `/recherche?wilayaId=X`. `getListingStats()` élargi pour accepter `wilayaId` (auparavant `brandId` obligatoire).
+- Sitemap (`src/app/sitemap.ts`) étendu avec les 58 URLs `/wilaya/{slug}` (FR+AR), confirmé présent dans le XML réel généré.
+- Lien « Toutes les wilayas » ajouté au pied de page, à côté de « Toutes les marques ».
+- Aucun nouveau test unitaire (fonctions dépendantes de la base de données comme `getListingStats`/`getModelCountsForBrand`, jamais testées unitairement non plus — même choix établi pour `catalogue-stats.ts`).
+- Vérification de bout en bout en conditions réelles : index affichant les 58 wilayas avec les bons décomptes tirés des données de démonstration, page Alger affichant 9 annonces/7 marques/prix cohérents, wilaya sans annonce affichant le message vide honnête, slug inexistant renvoyant une vraie 404, lien « voir tout » pointant vers la bonne recherche filtrée, sitemap.xml confirmé contenant `/wilaya/alger` en FR et AR. Rendu arabe (RTL — y compris le nom réel « الجزائر » pour Alger, tel que seedé) et mobile vérifiés sans débordement.
+
+Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise) et le remplacement des visuels de démonstration par de vraies photos ; côté contenu SEO, le blog « SOUQ AUTO MAG » (§37 du cahier d'architecture) est la dernière page de contenu documentée mais jamais construite.

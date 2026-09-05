@@ -7,7 +7,11 @@ export type PriceStats = {
   maxPrice: number | null;
 };
 
-export async function getListingStats(where: { brandId: number; modelId?: number }): Promise<PriceStats> {
+export async function getListingStats(where: {
+  brandId?: number;
+  modelId?: number;
+  wilayaId?: number;
+}): Promise<PriceStats> {
   const agg = await prisma.listing.aggregate({
     where: { ...where, status: "PUBLIEE" },
     _count: true,
@@ -46,6 +50,26 @@ export async function getListingCountsPerBrand(): Promise<Map<number, BrandCount
   );
 }
 
+export type WilayaListingCount = { wilayaId: number; count: number; avgPrice: number | null };
+
+// Lot 75 — même principe que getListingCountsPerBrand (une seule requête
+// groupée) pour l'index /wilaya.
+export async function getListingCountsPerWilaya(): Promise<Map<number, WilayaListingCount>> {
+  const groups = await prisma.listing.groupBy({
+    by: ["wilayaId"],
+    where: { status: "PUBLIEE" },
+    _count: true,
+    _avg: { price: true },
+  });
+
+  return new Map(
+    groups.map((g) => [
+      g.wilayaId,
+      { wilayaId: g.wilayaId, count: g._count, avgPrice: g._avg.price !== null ? Math.round(g._avg.price) : null },
+    ])
+  );
+}
+
 export type ModelCount = { modelId: number; count: number; minPrice: number | null };
 
 export async function getModelCountsForBrand(brandId: number): Promise<Map<number, ModelCount>> {
@@ -60,5 +84,25 @@ export async function getModelCountsForBrand(brandId: number): Promise<Map<numbe
     groups
       .filter((g): g is typeof g & { modelId: number } => g.modelId !== null)
       .map((g) => [g.modelId, { modelId: g.modelId, count: g._count, minPrice: g._min.price }])
+  );
+}
+
+export type WilayaBrandCount = { brandId: number; count: number; minPrice: number | null };
+
+// Lot 75 — mêmes conventions que getModelCountsForBrand (une seule requête
+// groupée, pas de N+1) pour la page wilaya : les marques les plus proposées
+// dans cette wilaya précisément, pas un classement national.
+export async function getBrandCountsForWilaya(wilayaId: number): Promise<Map<number, WilayaBrandCount>> {
+  const groups = await prisma.listing.groupBy({
+    by: ["brandId"],
+    where: { wilayaId, status: "PUBLIEE", brandId: { not: null } },
+    _count: true,
+    _min: { price: true },
+  });
+
+  return new Map(
+    groups
+      .filter((g): g is typeof g & { brandId: number } => g.brandId !== null)
+      .map((g) => [g.brandId, { brandId: g.brandId, count: g._count, minPrice: g._min.price }])
   );
 }

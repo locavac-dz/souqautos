@@ -64,6 +64,7 @@
   "Footer": {
     "group": "منصة تابعة لـ INGENICA CIVIL EURL",
     "browseBrands": "جميع الماركات",
+    "browseWilayas": "جميع الولايات",
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
     "legalNotice": "الإشعار القانوني",
     "privacyPolicy": "سياسة الخصوصية",
@@ -389,7 +390,13 @@
     "estimateLink": "تقييم {brand} {model}",
     "viewAllModelListings": "عرض كل إعلانات {brand} {model}",
     "noStatsModel": "لا يوجد إعلان منشور بعد لهذا الموديل.",
-    "backToBrand": "العودة إلى {brand}"
+    "backToBrand": "العودة إلى {brand}",
+    "wilayaIndexTitle": "جميع الولايات",
+    "wilayaIndexSubtitle": "تصفح الإعلانات المنشورة حسب الولاية في الجزائر.",
+    "wilayaTitle": "سيارات مستعملة في {wilaya}",
+    "noStatsWilaya": "لا يوجد إعلان منشور بعد في هذه الولاية.",
+    "topBrandsTitle": "الماركات الأكثر عرضًا",
+    "viewAllWilayaListings": "عرض جميع الإعلانات في {wilaya}"
   },
   "Status": {
     "BROUILLON": "مسودة",
