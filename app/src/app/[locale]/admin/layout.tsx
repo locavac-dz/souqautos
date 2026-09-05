@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <nav className="flex items-center gap-4 mb-8 text-sm border-b border-slate-200 pb-4">
+      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-8 text-sm border-b border-slate-200 pb-4">
         <Link href="/admin" className="font-medium text-slate-900">
           {t("dashboardTitle")}
         </Link>
@@ -49,6 +49,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </Link>
         <Link href="/admin/parametres" className="text-slate-600 hover:text-slate-900">
           {t("navSettings")}
+        </Link>
+        <Link href="/admin/journal" className="text-slate-600 hover:text-slate-900">
+          {t("navAuditLog")}
         </Link>
       </nav>
       {children}

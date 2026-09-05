@@ -1167,3 +1167,17 @@ Le site n'avait jamais eu de logo — seul le nom « Souq Auto » en texte brut 
 - Vérification de bout en bout en conditions réelles (site déjà lancé par l'utilisateur, vérifié sans redémarrage) : symbole affiché correctement dans l'en-tête desktop et mobile, favicon confirmé régénéré par lecture directe des octets (`00 00 01 00` = en-tête ICO valide, 896 octets contre 25 931 pour l'ancien défaut Next.js — preuve que ce n'est pas un résidu en cache), rendu miroir RTL confirmé en arabe (symbole et texte correctement inversés).
 
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
+
+## Lot 60 — Journal d'audit consultable (2026-09-05)
+
+Choisi en constatant un écart concret en explorant le code : `AuditLog` est alimenté depuis le Lot 7 par une quinzaine de routes admin (approbations, suspensions, changements de rôle, suppressions de catalogue…) mais **rien ne permettait de le consulter** — aucune page ne le lisait nulle part dans l'application. Un audit qui s'écrit sans jamais pouvoir être relu ne remplit pas vraiment son rôle de traçabilité exigé au §47 du cahier d'architecture. Complété au passage par un deuxième écart trouvé au même endroit : la consultation d'une pièce d'identité déchiffrée (Lot 54) par le staff n'était elle-même jamais auditée.
+
+**Livré**
+- `/admin/journal` (nouveau, accessible à tout le staff — MODERATEUR compris, comme les autres pages de consultation du back-office `référentiels`/`statistiques` : rien à éditer ici, seulement à lire) : tableau chronologique (date, auteur, action, cible, détails) de tout l'historique `AuditLog`, paginé à 30 lignes. Vérifié en conditions réelles affichant l'intégralité des 29 actions déjà enregistrées depuis le Lot 7 — la première fois que ce journal est visible par quiconque.
+- `formatAuditLogDetails()` (`src/lib/audit-log.ts`, fonction pure testée) : transforme le JSON libre stocké par `writeAuditLog` en ligne lisible (`clé: valeur · clé: valeur`) plutôt que d'afficher du JSON brut à l'écran.
+- `identity_verification.document_view` (nouvelle entrée d'audit) : la route `/api/admin/identity-requests/[id]/document` consigne désormais qui a consulté quelle pièce d'identité et quand — ferme la boucle « chiffré (Lot 54) + audité » plutôt que de s'arrêter au seul chiffrement.
+- Lien « Journal d'audit » ajouté à la navigation du back-office ; corrige au passage un débordement horizontal préexistant de cette navigation sur mobile (`flex-wrap` ajouté — jamais corrigé depuis sa création, aggravé par l'ajout de ce nouveau lien).
+- 4 nouveaux tests unitaires (`tests/audit-log.test.ts`). 309/309 tests au vert au total.
+- Vérification de bout en bout en conditions réelles (site déjà lancé par l'utilisateur, vérifié sans redémarrage) : dossier de vérification d'identité de test soumis puis consulté par un admin → entrée `identity_verification.document_view` confirmée apparue dans le journal avec le bon `requesterId` ; débordement mobile confirmé corrigé en arabe (RTL) après le correctif `flex-wrap`.
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.

@@ -17,3 +17,18 @@ export async function writeAuditLog(entry: {
     },
   });
 }
+
+// Reprend le JSON libre stocké par writeAuditLog en une ligne lisible pour le
+// journal d'audit (/admin/journal) — jamais un rendu JSON brut à l'écran.
+export function formatAuditLogDetails(details: string | null): string {
+  if (!details) return "—";
+  try {
+    const parsed = JSON.parse(details) as Record<string, unknown>;
+    return Object.entries(parsed)
+      .filter(([, value]) => value !== null && value !== undefined)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(" · ");
+  } catch {
+    return details;
+  }
+}

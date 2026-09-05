@@ -399,6 +399,7 @@
     "navCatalogue": "Marques & modèles",
     "navStatistics": "Statistiques",
     "navSettings": "Paramètres",
+    "navAuditLog": "Journal d'audit",
     "statisticsTitle": "Statistiques produit",
     "statSummaryConversations": "Conversations",
     "statSummaryReviews": "Avis",
@@ -726,6 +727,19 @@
     "saved": "Paramètres enregistrés.",
     "readOnlyNotice": "Seul un administrateur peut modifier ces seuils.",
     "errorGeneric": "Une erreur est survenue. Réessayez."
+  },
+  "AdminAuditLog": {
+    "title": "Journal d'audit",
+    "subtitle": "Historique des actions effectuées par l'équipe de modération et d'administration — approbations, suspensions, changements de rôle, consultations de pièces d'identité.",
+    "empty": "Aucune action enregistrée pour le moment.",
+    "colDate": "Date",
+    "colAdmin": "Effectuée par",
+    "colAction": "Action",
+    "colTarget": "Cible",
+    "colDetails": "Détails",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {page} / {totalPages}"
   },
   "ListingEdit": {
     "title": "Modifier l'annonce",

@@ -399,6 +399,7 @@
     "navCatalogue": "الماركات والموديلات",
     "navStatistics": "الإحصائيات",
     "navSettings": "الإعدادات",
+    "navAuditLog": "سجل التدقيق",
     "statisticsTitle": "إحصائيات المنتج",
     "statSummaryConversations": "المحادثات",
     "statSummaryReviews": "التقييمات",
@@ -726,6 +727,19 @@
     "saved": "تم حفظ الإعدادات.",
     "readOnlyNotice": "يمكن للمسؤول فقط تعديل هذه العتبات.",
     "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى."
+  },
+  "AdminAuditLog": {
+    "title": "سجل التدقيق",
+    "subtitle": "سجل الإجراءات التي قام بها فريق الإشراف والإدارة — الموافقات، التعليقات، تغييرات الأدوار، الاطلاع على وثائق الهوية.",
+    "empty": "لم يُسجَّل أي إجراء حتى الآن.",
+    "colDate": "التاريخ",
+    "colAdmin": "نفّذه",
+    "colAction": "الإجراء",
+    "colTarget": "الهدف",
+    "colDetails": "التفاصيل",
+    "previous": "السابق",
+    "next": "التالي",
+    "pageOf": "الصفحة {page} / {totalPages}"
   },
   "ListingEdit": {
     "title": "تعديل الإعلان",
