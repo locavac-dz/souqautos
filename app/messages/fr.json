@@ -21,7 +21,8 @@
     "heroSubtitle": "Le premier moteur de recherche automobile pensé pour l'Algérie.",
     "sellButton": "Vendre mon véhicule",
     "estimateButton": "Estimer mon véhicule",
-    "browseBrandsButton": "Parcourir les marques"
+    "browseBrandsButton": "Parcourir les marques",
+    "featuredTitle": "Annonces en vedette"
   },
   "Auth": {
     "registerTitle": "Créer un compte particulier",
@@ -204,10 +205,10 @@
     "formulaStandard": "Standard",
     "formulaStandardDesc": "Gratuite, visibilité normale.",
     "formulaPremium": "Premium",
-    "formulaPremiumDesc": "Remontée dans les résultats, badge — bientôt disponible.",
+    "formulaPremiumDesc": "Remontée dans les résultats, badge, durée prolongée.",
     "formulaPremiumPlus": "Premium+",
-    "formulaPremiumPlusDesc": "Mise en avant homepage — bientôt disponible.",
-    "formulaComingSoon": "Bientôt disponible",
+    "formulaPremiumPlusDesc": "Mise en avant sur la page d'accueil, en tête des résultats.",
+    "formulaComingSoon": "Disponible après publication, depuis « Mes annonces »",
     "step11Title": "Publication",
     "step11Body": "Votre annonce sera vérifiée par notre équipe avant publication (généralement sous 24h).",
     "errorGeneric": "Une erreur est survenue lors de la publication. Veuillez réessayer.",
@@ -260,7 +261,21 @@
     "empty": "Vous n'avez pas encore publié d'annonce.",
     "createFirst": "Publier ma première annonce",
     "views": "{count} vues",
-    "proAccountLabel": "Compte professionnel : {name}"
+    "proAccountLabel": "Compte professionnel : {name}",
+    "formulaPremium": "Premium",
+    "formulaPremiumPlus": "Premium+",
+    "upgradeToPremium": "Passer en Premium",
+    "upgradeToPremiumPlus": "Passer en Premium+",
+    "upgradePending": "Demande {formula} en attente de confirmation du paiement.",
+    "upgradeInstructions": "Effectuez un virement de {amount} DA vers le compte ci-dessous, puis indiquez la référence de votre virement pour que nous puissions le rapprocher.",
+    "upgradeBankName": "Banque",
+    "upgradeBankRib": "RIB / IBAN",
+    "upgradeBankHolder": "Titulaire",
+    "upgradeReferenceLabel": "Référence du virement",
+    "upgradeReferencePlaceholder": "Ex : numéro de transaction",
+    "upgradeSubmit": "Envoyer ma demande",
+    "upgradeCancel": "Annuler",
+    "upgradeErrorGeneric": "Impossible d'envoyer la demande. Réessayez."
   },
   "Search": {
     "queryPlaceholder": "Marque, modèle, wilaya…",
@@ -278,6 +293,9 @@
     "resultsCount": "{count} annonces trouvées",
     "aiSearchNotice": "Votre recherche a été interprétée automatiquement — vérifiez les filtres appliqués ci-contre.",
     "viewsCount": "{count} vues",
+    "formulaPremiumBadge": "Premium",
+    "formulaPremiumPlusBadge": "Premium+",
+    "featuredTitle": "Annonces en avant",
     "sellerTrustScore": "Confiance vendeur : {score}/100",
     "noResults": "Aucune annonce ne correspond à votre recherche.",
     "sortRecent": "Plus récent",
@@ -441,6 +459,7 @@
     "navStatistics": "Statistiques",
     "navSettings": "Paramètres",
     "navAuditLog": "Journal d'audit",
+    "navPayments": "Paiements",
     "statisticsTitle": "Statistiques produit",
     "statSummaryConversations": "Conversations",
     "statSummaryReviews": "Avis",
@@ -732,6 +751,12 @@
     "identityRejectedSubject": "Votre demande de vérification d'identité n'a pas été validée — Souq Auto",
     "identityRejectedBody": "Votre demande de vérification d'identité n'a pas été validée. Motif : {reason}. Vous pouvez soumettre une nouvelle demande depuis votre tableau de bord.",
     "identityRejectedLink": "Voir mon tableau de bord sur Souq Auto",
+    "paymentApprovedSubject": "Votre paiement a été confirmé — Souq Auto",
+    "paymentApprovedBody": "Votre virement a été confirmé : votre annonce « {title} » a été mise à niveau avec succès.",
+    "paymentApprovedLink": "Voir mon annonce sur Souq Auto",
+    "paymentRejectedSubject": "Votre paiement n'a pas été confirmé — Souq Auto",
+    "paymentRejectedBody": "Votre demande de mise à niveau pour l'annonce « {title} » n'a pas pu être confirmée. Motif : {reason}. Vous pouvez soumettre une nouvelle demande depuis « Mes annonces ».",
+    "paymentRejectedLink": "Gérer mes annonces sur Souq Auto",
     "accountSuspendedSubject": "Votre compte a été suspendu — Souq Auto",
     "accountSuspendedBody": "Votre compte Souq Auto a été suspendu. Motif : {reason}. Si vous pensez qu'il s'agit d'une erreur, contactez notre équipe.",
     "expiryReminderSubject": "Votre annonce expire bientôt — Souq Auto",
@@ -787,6 +812,20 @@
     "readOnlyNotice": "Seul un administrateur peut modifier ces seuils.",
     "errorGeneric": "Une erreur est survenue. Réessayez."
   },
+  "AdminPaymentSettings": {
+    "title": "Paiement — virement bancaire",
+    "subtitle": "Coordonnées affichées aux vendeurs pour effectuer un virement, et prix des formules payantes.",
+    "bankNameLabel": "Nom de la banque",
+    "bankRibLabel": "RIB / IBAN",
+    "bankAccountHolderLabel": "Titulaire du compte",
+    "premiumPriceLabel": "Prix formule Premium (DA)",
+    "premiumPlusPriceLabel": "Prix formule Premium+ (DA)",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "saved": "Paramètres enregistrés.",
+    "readOnlyNotice": "Seul un administrateur peut modifier ces informations.",
+    "errorGeneric": "Une erreur est survenue. Réessayez."
+  },
   "AdminAuditLog": {
     "title": "Journal d'audit",
     "subtitle": "Historique des actions effectuées par l'équipe de modération et d'administration — approbations, suspensions, changements de rôle, consultations de pièces d'identité.",
@@ -799,6 +838,14 @@
     "previous": "Précédent",
     "next": "Suivant",
     "pageOf": "Page {page} / {totalPages}"
+  },
+  "AdminPayments": {
+    "title": "Paiements",
+    "subtitle": "Demandes de mise à niveau d'annonces (formule Premium/Premium+) en attente de confirmation d'un virement bancaire.",
+    "pending": "En attente",
+    "empty": "Aucune demande en attente pour le moment.",
+    "formulaLabel": "Formule demandée",
+    "referenceLabel": "Référence de virement fournie"
   },
   "ListingEdit": {
     "title": "Modifier l'annonce",

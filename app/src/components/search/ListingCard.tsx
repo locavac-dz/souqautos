@@ -14,6 +14,7 @@ type CardListing = {
   mileage: number;
   fuelType: string;
   gearbox: string;
+  formula: string;
   views: number;
   createdAt: Date;
   brand: { name: string } | null;
@@ -87,11 +88,20 @@ export async function ListingCard({
           />
           <CompareToggle listingId={listing.id} label={tCompare("addToCompare")} />
         </div>
-        {professionalBadge && (
-          <span className="absolute top-2 rtl:right-2 ltr:left-2 rounded-md bg-slate-900/90 px-2 py-0.5 text-xs font-medium text-white">
-            {professionalBadge.badgeVerifie ? tPro("professionalVerifiedBadge") : tPro("professionalBadge")}
-          </span>
-        )}
+        <div className="absolute top-2 rtl:right-2 ltr:left-2 flex flex-col gap-1">
+          {listing.formula !== "STANDARD" && (
+            <span className="rounded-md bg-amber-500/90 px-2 py-0.5 text-xs font-medium text-white">
+              {listing.formula === "PREMIUM"
+                ? tSearch("formulaPremiumBadge")
+                : tSearch("formulaPremiumPlusBadge")}
+            </span>
+          )}
+          {professionalBadge && (
+            <span className="rounded-md bg-slate-900/90 px-2 py-0.5 text-xs font-medium text-white">
+              {professionalBadge.badgeVerifie ? tPro("professionalVerifiedBadge") : tPro("professionalBadge")}
+            </span>
+          )}
+        </div>
       </div>
       <div className="p-3">
         <p className="font-medium text-slate-900 line-clamp-2 min-h-[2.5rem]">{listing.title}</p>

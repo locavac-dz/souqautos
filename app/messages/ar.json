@@ -21,7 +21,8 @@
     "heroSubtitle": "أول محرك بحث للسيارات مصمم خصيصًا للجزائر.",
     "sellButton": "بيع سيارتي",
     "estimateButton": "تقييم سيارتي",
-    "browseBrandsButton": "تصفح الماركات"
+    "browseBrandsButton": "تصفح الماركات",
+    "featuredTitle": "إعلانات مميزة"
   },
   "Auth": {
     "registerTitle": "إنشاء حساب فردي",
@@ -204,10 +205,10 @@
     "formulaStandard": "عادية",
     "formulaStandardDesc": "مجانية، ظهور عادي.",
     "formulaPremium": "مميزة",
-    "formulaPremiumDesc": "ظهور أعلى في النتائج، شارة — قريبًا.",
+    "formulaPremiumDesc": "ظهور أعلى في النتائج، شارة، مدة أطول.",
     "formulaPremiumPlus": "مميزة+",
-    "formulaPremiumPlusDesc": "إبراز في الصفحة الرئيسية — قريبًا.",
-    "formulaComingSoon": "قريبًا",
+    "formulaPremiumPlusDesc": "إبراز في الصفحة الرئيسية، في مقدمة النتائج.",
+    "formulaComingSoon": "متاح بعد النشر، من « إعلاناتي »",
     "step11Title": "النشر",
     "step11Body": "سيتم التحقق من إعلانك من طرف فريقنا قبل نشره (عادةً خلال 24 ساعة).",
     "errorGeneric": "حدث خطأ أثناء النشر. يرجى المحاولة مرة أخرى.",
@@ -260,7 +261,21 @@
     "empty": "لم تنشر أي إعلان بعد.",
     "createFirst": "انشر إعلانك الأول",
     "views": "{count} مشاهدة",
-    "proAccountLabel": "حساب مهني: {name}"
+    "proAccountLabel": "حساب مهني: {name}",
+    "formulaPremium": "Premium",
+    "formulaPremiumPlus": "Premium+",
+    "upgradeToPremium": "الترقية إلى Premium",
+    "upgradeToPremiumPlus": "الترقية إلى Premium+",
+    "upgradePending": "طلب {formula} قيد انتظار تأكيد الدفع.",
+    "upgradeInstructions": "قم بتحويل {amount} دج إلى الحساب أدناه، ثم أدخل مرجع التحويل حتى نتمكن من مطابقته.",
+    "upgradeBankName": "البنك",
+    "upgradeBankRib": "رقم الحساب البنكي (RIB/IBAN)",
+    "upgradeBankHolder": "صاحب الحساب",
+    "upgradeReferenceLabel": "مرجع التحويل",
+    "upgradeReferencePlaceholder": "مثال: رقم المعاملة",
+    "upgradeSubmit": "إرسال طلبي",
+    "upgradeCancel": "إلغاء",
+    "upgradeErrorGeneric": "تعذر إرسال الطلب. حاول مرة أخرى."
   },
   "Search": {
     "queryPlaceholder": "الماركة، الموديل، الولاية…",
@@ -278,6 +293,9 @@
     "resultsCount": "{count} إعلان موجود",
     "aiSearchNotice": "تم تفسير بحثك تلقائيًا — تحقق من المرشحات المطبقة بجانبك.",
     "viewsCount": "{count} مشاهدة",
+    "formulaPremiumBadge": "Premium",
+    "formulaPremiumPlusBadge": "Premium+",
+    "featuredTitle": "إعلانات في المقدمة",
     "sellerTrustScore": "ثقة البائع: {score}/100",
     "noResults": "لا يوجد إعلان يطابق بحثك.",
     "sortRecent": "الأحدث",
@@ -441,6 +459,7 @@
     "navStatistics": "الإحصائيات",
     "navSettings": "الإعدادات",
     "navAuditLog": "سجل التدقيق",
+    "navPayments": "المدفوعات",
     "statisticsTitle": "إحصائيات المنتج",
     "statSummaryConversations": "المحادثات",
     "statSummaryReviews": "التقييمات",
@@ -732,6 +751,12 @@
     "identityRejectedSubject": "لم تتم الموافقة على طلب التحقق من هويتك — سوق أوتو",
     "identityRejectedBody": "لم تتم الموافقة على طلب التحقق من هويتك. السبب: {reason}. يمكنك تقديم طلب جديد من لوحة التحكم الخاصة بك.",
     "identityRejectedLink": "عرض لوحة التحكم على سوق أوتو",
+    "paymentApprovedSubject": "تم تأكيد دفعتك — سوق أوتو",
+    "paymentApprovedBody": "تم تأكيد تحويلك البنكي: تمت ترقية إعلانك « {title} » بنجاح.",
+    "paymentApprovedLink": "عرض إعلاني على سوق أوتو",
+    "paymentRejectedSubject": "لم يتم تأكيد دفعتك — سوق أوتو",
+    "paymentRejectedBody": "تعذّر تأكيد طلب ترقية الإعلان « {title} ». السبب: {reason}. يمكنك تقديم طلب جديد من « إعلاناتي ».",
+    "paymentRejectedLink": "إدارة إعلاناتي على سوق أوتو",
     "accountSuspendedSubject": "تم تعليق حسابك — سوق أوتو",
     "accountSuspendedBody": "تم تعليق حسابك على سوق أوتو. السبب: {reason}. إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع فريقنا.",
     "expiryReminderSubject": "إعلانك سينتهي قريبًا — سوق أوتو",
@@ -787,6 +812,20 @@
     "readOnlyNotice": "يمكن للمسؤول فقط تعديل هذه العتبات.",
     "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى."
   },
+  "AdminPaymentSettings": {
+    "title": "الدفع — التحويل البنكي",
+    "subtitle": "المعلومات المعروضة للبائعين لإجراء تحويل بنكي، وأسعار الفئات المدفوعة.",
+    "bankNameLabel": "اسم البنك",
+    "bankRibLabel": "رقم الحساب البنكي (RIB/IBAN)",
+    "bankAccountHolderLabel": "صاحب الحساب",
+    "premiumPriceLabel": "سعر فئة Premium (دج)",
+    "premiumPlusPriceLabel": "سعر فئة Premium+ (دج)",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "saved": "تم حفظ الإعدادات.",
+    "readOnlyNotice": "يمكن للمسؤول فقط تعديل هذه المعلومات.",
+    "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى."
+  },
   "AdminAuditLog": {
     "title": "سجل التدقيق",
     "subtitle": "سجل الإجراءات التي قام بها فريق الإشراف والإدارة — الموافقات، التعليقات، تغييرات الأدوار، الاطلاع على وثائق الهوية.",
@@ -799,6 +838,14 @@
     "previous": "السابق",
     "next": "التالي",
     "pageOf": "الصفحة {page} / {totalPages}"
+  },
+  "AdminPayments": {
+    "title": "المدفوعات",
+    "subtitle": "طلبات ترقية الإعلانات (فئة Premium/Premium+) في انتظار تأكيد تحويل بنكي.",
+    "pending": "قيد الانتظار",
+    "empty": "لا توجد طلبات قيد الانتظار حاليًا.",
+    "formulaLabel": "الفئة المطلوبة",
+    "referenceLabel": "مرجع التحويل المقدَّم"
   },
   "ListingEdit": {
     "title": "تعديل الإعلان",

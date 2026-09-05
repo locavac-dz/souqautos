@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isStaff } from "@/lib/auth-server/roles";
+import { isStaff, isAdmin } from "@/lib/auth-server/roles";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
@@ -53,6 +53,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/journal" className="text-slate-600 hover:text-slate-900">
           {t("navAuditLog")}
         </Link>
+        {isAdmin(user.role) && (
+          <Link href="/admin/paiements" className="text-slate-600 hover:text-slate-900">
+            {t("navPayments")}
+          </Link>
+        )}
       </nav>
       {children}
     </div>

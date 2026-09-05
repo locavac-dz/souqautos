@@ -62,6 +62,8 @@ model User {
   identityReviewsPerformed     IdentityVerificationRequest[] @relation("IdentityReviewer")
   listingDraft                 ListingDraft?
   searchAlerts                 SearchAlert[]
+  paymentOrders                PaymentOrder[] @relation("PaymentOrderAuthor")
+  paymentOrdersReviewed        PaymentOrder[] @relation("PaymentOrderReviewer")
 }
 
 model Profile {
@@ -198,6 +200,7 @@ model Listing {
   priceHistory ListingPriceHistory[]
   renewals     ListingRenewal[]
   searchAlertNotifications SearchAlertNotification[]
+  paymentOrders PaymentOrder[]
   createdAt    DateTime         @default(now())
   publishedAt  DateTime?
   // Fixée à publishedAt + LISTING_VALIDITY_DAYS lors de la publication ou du
@@ -294,6 +297,57 @@ model ModerationSettings {
   autoSuspendListingThreshold Int      @default(3)
   autoSuspendUserThreshold    Int      @default(3)
   updatedAt                   DateTime @updatedAt
+}
+
+// Lot 66 — premier mode de paiement réel (virement bancaire manuel, décidé
+// avec le porteur de projet en attendant un accès SATIM/CIB-Edahabia, cf.
+// docs/ARCHITECTURE.md §11). Ligne singleton comme ModerationSettings : les
+// coordonnées bancaires et les prix restent nuls tant qu'aucun admin ne les a
+// renseignés — jamais une valeur bancaire inventée sur un document consulté
+// par de vrais acheteurs. Les prix par défaut (non nuls) sont un point de
+// départ fonctionnel modifiable immédiatement en back-office, pas un prix
+// décidé pour l'EURL.
+model PaymentSettings {
+  id                  String   @id @default("singleton")
+  bankName            String?
+  bankRib             String?
+  bankAccountHolder   String?
+  premiumPriceDzd     Int      @default(1000)
+  premiumPlusPriceDzd Int      @default(2000)
+  updatedAt           DateTime @updatedAt
+}
+
+enum PaymentOrderStatus {
+  EN_ATTENTE
+  CONFIRMEE
+  REJETEE
+}
+
+// Une commande = une demande de passage en formule payante (PREMIUM ou
+// PREMIUM_PLUS) pour une annonce précise. `reference` est le libellé de
+// virement fourni par le vendeur pour permettre à l'admin de rapprocher le
+// virement reçu sur le relevé bancaire — jamais vérifié automatiquement
+// (aucune API bancaire, confirmation humaine uniquement, cf. même principe
+// que la vérification d'identité, Lot 14).
+model PaymentOrder {
+  id           String             @id @default(cuid())
+  userId       String
+  user         User               @relation("PaymentOrderAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  listingId    String
+  listing      Listing            @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  formula      ListingFormula
+  amountDzd    Int
+  reference    String
+  status       PaymentOrderStatus @default(EN_ATTENTE)
+  reviewedById String?
+  reviewedBy   User?              @relation("PaymentOrderReviewer", fields: [reviewedById], references: [id])
+  reviewNote   String?
+  createdAt    DateTime           @default(now())
+  reviewedAt   DateTime?
+
+  @@index([status])
+  @@index([userId])
+  @@index([listingId])
 }
 
 model AuditLog {

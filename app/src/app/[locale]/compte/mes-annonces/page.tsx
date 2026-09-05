@@ -13,9 +13,12 @@ import {
 } from "@/lib/listing-lifecycle";
 import { canManageProListings } from "@/lib/pro-account";
 import { parseProPermissions } from "@/lib/pro-permissions";
+import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
+import { formulaRank } from "@/lib/payment-orders";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ListingLifecycleActions } from "@/components/ListingLifecycleActions";
 import { ListingPriceEditor } from "@/components/ListingPriceEditor";
+import { ListingFormulaUpgrade } from "@/components/ListingFormulaUpgrade";
 
 export default async function MyListingsPage() {
   const locale = await getLocale();
@@ -59,9 +62,22 @@ export default async function MyListingsPage() {
 
   const listings = await prisma.listing.findMany({
     where: { sellerId: { in: sellerIds } },
-    include: { photos: { orderBy: { position: "asc" }, take: 1 } },
+    include: {
+      photos: { orderBy: { position: "asc" }, take: 1 },
+      paymentOrders: { where: { status: "EN_ATTENTE" } },
+    },
     orderBy: { createdAt: "desc" },
   });
+
+  const paymentSettings = await getPaymentSettings();
+  const bankDetailsComplete = isBankDetailsComplete(paymentSettings);
+  const bankDetails = bankDetailsComplete
+    ? {
+        bankName: paymentSettings.bankName!,
+        bankRib: paymentSettings.bankRib!,
+        bankAccountHolder: paymentSettings.bankAccountHolder!,
+      }
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
@@ -106,8 +122,13 @@ export default async function MyListingsPage() {
                   <div className="flex-1">
                     <p className="font-medium text-slate-900">{listing.title}</p>
                     <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                    <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
                       <StatusBadge status={listing.status} />
+                      {listing.formula !== "STANDARD" && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800">
+                          {listing.formula === "PREMIUM" ? t("formulaPremium") : t("formulaPremiumPlus")}
+                        </span>
+                      )}
                       <span>{t("views", { count: listing.views })}</span>
                     </div>
                     {proAccount && (
@@ -160,6 +181,41 @@ export default async function MyListingsPage() {
                       >
                         {tListing("editListingAction")}
                       </Link>
+                    )}
+                  </div>
+                )}
+                {canManage && checkListingRenewable(listing.status).ok && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    {listing.paymentOrders.length > 0 ? (
+                      <p className="text-xs text-slate-500">
+                        {t("upgradePending", {
+                          formula:
+                            listing.paymentOrders[0].formula === "PREMIUM"
+                              ? t("formulaPremium")
+                              : t("formulaPremiumPlus"),
+                        })}
+                      </p>
+                    ) : !bankDetailsComplete ? null : (
+                      <>
+                        {formulaRank(listing.formula) < formulaRank("PREMIUM") && (
+                          <ListingFormulaUpgrade
+                            listingId={listing.id}
+                            formula="PREMIUM"
+                            bankDetails={bankDetails!}
+                            premiumPriceDzd={paymentSettings.premiumPriceDzd}
+                            premiumPlusPriceDzd={paymentSettings.premiumPlusPriceDzd}
+                          />
+                        )}
+                        {formulaRank(listing.formula) < formulaRank("PREMIUM_PLUS") && (
+                          <ListingFormulaUpgrade
+                            listingId={listing.id}
+                            formula="PREMIUM_PLUS"
+                            bankDetails={bankDetails!}
+                            premiumPriceDzd={paymentSettings.premiumPriceDzd}
+                            premiumPlusPriceDzd={paymentSettings.premiumPlusPriceDzd}
+                          />
+                        )}
+                      </>
                     )}
                   </div>
                 )}

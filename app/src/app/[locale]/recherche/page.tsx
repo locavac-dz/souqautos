@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
@@ -36,6 +37,44 @@ export default async function SearchPage({
   const orderBy = buildListingOrderBy(params.sort);
   const page = currentPage(params);
 
+  const listingCardInclude = {
+    brand: true,
+    model: true,
+    wilaya: true,
+    photos: { orderBy: { position: "asc" as const }, take: 1 },
+  } satisfies Prisma.ListingInclude;
+
+  type ListingWithCardRelations = Prisma.ListingGetPayload<{ include: typeof listingCardInclude }>;
+
+  // Annonces en avant (Lot 66, § « Premium : remontée dans les résultats ») :
+  // uniquement sur la première page — les répéter à chaque page paginée
+  // n'aurait aucun sens — et jamais dupliquées avec les résultats normaux
+  // ci-dessous. PREMIUM_PLUS d'abord (deux requêtes bornées plutôt qu'un tri
+  // par formule : un enum SQLite se trie alphabétiquement, pas dans l'ordre
+  // de déclaration — "PREMIUM" < "PREMIUM_PLUS" < "STANDARD" ne donnerait
+  // jamais le classement voulu).
+  const FEATURED_LIMIT = 3;
+  let featuredListings: ListingWithCardRelations[] = [];
+  if (page === 1) {
+    const featuredPlus = await prisma.listing.findMany({
+      where: { ...where, formula: "PREMIUM_PLUS" },
+      orderBy: { publishedAt: "desc" },
+      take: FEATURED_LIMIT,
+      include: listingCardInclude,
+    });
+    const featuredPremium =
+      featuredPlus.length < FEATURED_LIMIT
+        ? await prisma.listing.findMany({
+            where: { ...where, formula: "PREMIUM", id: { notIn: featuredPlus.map((l) => l.id) } },
+            orderBy: { publishedAt: "desc" },
+            take: FEATURED_LIMIT - featuredPlus.length,
+            include: listingCardInclude,
+          })
+        : [];
+    featuredListings = [...featuredPlus, ...featuredPremium];
+  }
+  const featuredIds = featuredListings.map((l) => l.id);
+
   const [brands, wilayas, listings, totalCount, currentUser] = await Promise.all([
     prisma.brand.findMany({
       include: { models: { orderBy: { name: "asc" } } },
@@ -43,42 +82,39 @@ export default async function SearchPage({
     }),
     prisma.wilaya.findMany({ orderBy: { id: "asc" } }),
     prisma.listing.findMany({
-      where,
+      where: featuredIds.length > 0 ? { ...where, id: { notIn: featuredIds } } : where,
       orderBy,
       skip: paginationOffset(params),
       take: PAGE_SIZE,
-      include: {
-        brand: true,
-        model: true,
-        wilaya: true,
-        photos: { orderBy: { position: "asc" }, take: 1 },
-      },
+      include: listingCardInclude,
     }),
     prisma.listing.count({ where }),
     getCurrentUser(),
   ]);
 
+  const allListings = [...featuredListings, ...listings];
+
   const favoriteIds = currentUser
     ? new Set(
         (
           await prisma.favorite.findMany({
-            where: { userId: currentUser.id, listingId: { in: listings.map((l) => l.id) } },
+            where: { userId: currentUser.id, listingId: { in: allListings.map((l) => l.id) } },
             select: { listingId: true },
           })
         ).map((f) => f.listingId)
       )
     : new Set<string>();
 
-  const estimates = await estimatePricesForListings(listings);
+  const estimates = await estimatePricesForListings(allListings);
   const priceBadges = new Map(
-    listings.map((listing) => {
+    allListings.map((listing) => {
       const estimate = estimates.get(listing.id);
       return [listing.id, estimate ? computePriceBadge(listing.price, estimate.mid, estimate.sampleSize) : null];
     })
   );
 
-  const sellerTrustBySeller = await getSellerTrustSummariesForSellers(listings.map((l) => l.sellerId));
-  const professionalBadgesBySeller = await getProfessionalBadgesForSellers(listings.map((l) => l.sellerId));
+  const sellerTrustBySeller = await getSellerTrustSummariesForSellers(allListings.map((l) => l.sellerId));
+  const professionalBadgesBySeller = await getProfessionalBadgesForSellers(allListings.map((l) => l.sellerId));
 
   const pages = computeTotalPages(totalCount);
 
@@ -117,6 +153,26 @@ export default async function SearchPage({
             {t("aiSearchNotice")}
           </p>
         )}
+
+        {featuredListings.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-sm font-medium text-slate-700 mb-2">{t("featuredTitle")}</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {featuredListings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  isLoggedIn={Boolean(currentUser)}
+                  isFavorited={favoriteIds.has(listing.id)}
+                  priceBadge={priceBadges.get(listing.id)}
+                  sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
+                  professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-slate-500">{t("resultsCount", { count: totalCount })}</p>
           <SortSelect current={params.sort ?? "recent"} />
