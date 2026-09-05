@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { canAccessConversation } from "@/lib/listing-access";
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -13,7 +14,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   if (!conversation) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  if (conversation.buyerId !== user.id && conversation.sellerId !== user.id) {
+  if (!(await canAccessConversation(user.id, conversation))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

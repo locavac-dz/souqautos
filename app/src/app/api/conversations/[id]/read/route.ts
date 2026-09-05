@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { canAccessConversation } from "@/lib/listing-access";
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -10,7 +11,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params;
   const conversation = await prisma.conversation.findUnique({ where: { id } });
-  if (!conversation || (conversation.buyerId !== user.id && conversation.sellerId !== user.id)) {
+  if (!conversation || !(await canAccessConversation(user.id, conversation))) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 

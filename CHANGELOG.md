@@ -1180,4 +1180,17 @@ Choisi en constatant un écart concret en explorant le code : `AuditLog` est ali
 - 4 nouveaux tests unitaires (`tests/audit-log.test.ts`). 309/309 tests au vert au total.
 - Vérification de bout en bout en conditions réelles (site déjà lancé par l'utilisateur, vérifié sans redémarrage) : dossier de vérification d'identité de test soumis puis consulté par un admin → entrée `identity_verification.document_view` confirmée apparue dans le journal avec le bon `requesterId` ; débordement mobile confirmé corrigé en arabe (RTL) après le correctif `flex-wrap`.
 
+## Lot 61 — Messagerie accessible aux collaborateurs pro (2026-09-05)
+
+Choisi en retrouvant, en explorant le code de la messagerie, exactement le même écart que celui corrigé au Lot 43 pour les annonces : `Conversation.sellerId` reste toujours le propriétaire du compte professionnel (jamais le collaborateur), donc un collaborateur avec la permission `gererAnnonces` ne pouvait ni voir ni répondre aux messages des acheteurs intéressés par les annonces qu'il gère pourtant au quotidien — alors que « prospects » fait explicitement partie du CRM simplifié documenté au cahier d'architecture (§9/§26). Le correctif du Lot 43 n'avait couvert que les annonces, jamais propagé à la messagerie construite ensuite (Lot 8/26/38-40).
+
+**Livré**
+- `canAccessConversation()` et `getManageableSellerIds()` (`src/lib/listing-access.ts`) : réutilisent exactement la même règle d'autorisation que `canManageListing()` (Lot 43) — un collaborateur `gererAnnonces` est traité comme le vendeur réel, jamais un collaborateur sans cette permission ni un tiers.
+- Six points d'accès à une conversation corrigés pour appliquer cette règle : boîte de réception (`/compte/messages`, inclut maintenant les conversations des comptes pro gérés), fil de conversation (`/compte/messages/[id]`), envoi de message, flux temps réel SSE, marquage lu, masquage de conversation — plus le badge de messages non lus dans l'en-tête (`[locale]/layout.tsx`).
+- Aucun changement de schéma : les messages envoyés par un collaborateur restent attribués à son propre compte (`senderId`), jamais à celui du propriétaire — cohérent avec l'export RGPD (Lot 55) et l'audit existant.
+- Aucun nouveau test unitaire (fonctions dépendantes de la base de données, même choix que `canManageListing` au Lot 43, jamais unitairement testé non plus) ; 309/309 toujours au vert.
+- Vérification de bout en bout en conditions réelles (site déjà lancé par l'utilisateur, vérifié sans redémarrage) : annonce de test publiée par Sara Hamdi, acheteur de test démarrant une conversation, **Amine Benali (collaborateur `gererAnnonces` réel du compte, pas fabriqué)** confirmé voyant la conversation dans sa boîte de réception avec le badge non-lu, ouvrant le fil sans 404, répondant avec succès (message attribué à son propre compte) ; un compte tiers sans lien avec la conversation confirmé toujours refusé (404) — la frontière de sécurité reste intacte.
+
+Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.
+
 Prochain lot proposé : à définir avec le porteur de projet — politique de confidentialité/CGU et paiement réel restent les principaux chantiers en attente.

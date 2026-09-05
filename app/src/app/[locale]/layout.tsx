@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { routing, localeDirection, type AppLocale } from "@/i18n/routing";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { prisma } from "@/lib/prisma";
+import { getManageableSellerIds } from "@/lib/listing-access";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CompareProvider } from "@/components/compare/CompareContext";
@@ -52,7 +53,9 @@ export default async function LocaleLayout({
         where: {
           senderId: { not: user.id },
           readAt: null,
-          conversation: { OR: [{ buyerId: user.id }, { sellerId: user.id }] },
+          conversation: {
+            OR: [{ buyerId: user.id }, { sellerId: { in: await getManageableSellerIds(user.id) } }],
+          },
         },
       })
     : 0;

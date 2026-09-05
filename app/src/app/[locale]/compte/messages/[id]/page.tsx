@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { canAccessConversation } from "@/lib/listing-access";
 import { ConversationView } from "@/components/messages/ConversationView";
 
 export default async function ConversationPage({
@@ -30,7 +31,7 @@ export default async function ConversationPage({
     },
   });
 
-  if (!conversation || (conversation.buyerId !== user.id && conversation.sellerId !== user.id)) {
+  if (!conversation || !(await canAccessConversation(user.id, conversation))) {
     notFound();
   }
 

@@ -21,3 +21,34 @@ export async function canManageListing(userId: string, sellerId: string): Promis
     permissions: collaboration ? parseProPermissions(collaboration.permissions) : null,
   });
 }
+
+// Même écart que ci-dessus, jamais corrigé pour la messagerie : un
+// collaborateur avec la permission gererAnnonces ne pouvait jusqu'ici ni
+// consulter ni répondre aux conversations concernant les annonces du compte
+// pro qu'il gère (Conversation.sellerId reste toujours le propriétaire, comme
+// Listing.sellerId). Réutilise exactement la même règle d'autorisation.
+export async function canAccessConversation(
+  userId: string,
+  conversation: { buyerId: string; sellerId: string }
+): Promise<boolean> {
+  if (conversation.buyerId === userId || conversation.sellerId === userId) return true;
+  return canManageListing(userId, conversation.sellerId);
+}
+
+// Identifiants "vendeur" pour lesquels cet utilisateur peut agir : le sien
+// propre, plus ceux des comptes professionnels où il collabore avec la
+// permission gererAnnonces — utilisé pour afficher, dans la boîte de
+// réception, les conversations des annonces qu'il gère pour le compte
+// d'autrui, en plus des siennes.
+export async function getManageableSellerIds(userId: string): Promise<string[]> {
+  const collaborations = await prisma.proCollaborator.findMany({
+    where: { userId },
+    include: { professionalAccount: { select: { userId: true } } },
+  });
+
+  const collaboratedSellerIds = collaborations
+    .filter((c) => parseProPermissions(c.permissions).gererAnnonces)
+    .map((c) => c.professionalAccount.userId);
+
+  return [userId, ...collaboratedSellerIds];
+}

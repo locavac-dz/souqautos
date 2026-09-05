@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkCanMessage, checkMessageHasContent, shouldSendMessageNotification } from "@/lib/messaging";
+import { canAccessConversation } from "@/lib/listing-access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     where: { id },
     include: { listing: { select: { title: true } } },
   });
-  if (!conversation || (conversation.buyerId !== user.id && conversation.sellerId !== user.id)) {
+  if (!conversation || !(await canAccessConversation(user.id, conversation))) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 

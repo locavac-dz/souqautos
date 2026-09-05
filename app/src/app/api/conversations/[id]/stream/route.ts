@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { subscribeToConversation, type ConversationEvent } from "@/lib/realtime";
+import { canAccessConversation } from "@/lib/listing-access";
 
 const HEARTBEAT_MS = 25000;
 
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params;
   const conversation = await prisma.conversation.findUnique({ where: { id } });
-  if (!conversation || (conversation.buyerId !== user.id && conversation.sellerId !== user.id)) {
+  if (!conversation || !(await canAccessConversation(user.id, conversation))) {
     return new Response("not_found", { status: 404 });
   }
 

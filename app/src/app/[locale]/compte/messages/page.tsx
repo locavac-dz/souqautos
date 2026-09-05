@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { getManageableSellerIds } from "@/lib/listing-access";
 import { DeleteConversationButton } from "@/components/messages/DeleteConversationButton";
 
 export default async function InboxPage() {
@@ -15,11 +16,16 @@ export default async function InboxPage() {
 
   const t = await getTranslations("Messages");
 
+  // Inclut les conversations des comptes professionnels que cet utilisateur
+  // gère en tant que collaborateur (permission gererAnnonces), pas seulement
+  // les siennes propres — même principe que /compte/mes-annonces (Lot 43).
+  const manageableSellerIds = await getManageableSellerIds(user.id);
+
   const conversations = await prisma.conversation.findMany({
     where: {
       OR: [
         { buyerId: user.id, hiddenByBuyerAt: null },
-        { sellerId: user.id, hiddenBySellerAt: null },
+        { sellerId: { in: manageableSellerIds }, hiddenBySellerAt: null },
       ],
     },
     orderBy: { createdAt: "desc" },
