@@ -76,12 +76,16 @@ export default async function SearchPage({
   }
   const featuredIds = featuredListings.map((l) => l.id);
 
-  const [brands, wilayas, listings, totalCount, currentUser] = await Promise.all([
+  const [brands, wilayas, equipments, listings, totalCount, currentUser] = await Promise.all([
     prisma.brand.findMany({
       include: { models: { orderBy: { name: "asc" } } },
       orderBy: { name: "asc" },
     }),
     prisma.wilaya.findMany({ orderBy: { id: "asc" } }),
+    prisma.equipment.findMany({
+      orderBy: { nameFr: "asc" },
+      select: { id: true, nameFr: true, nameAr: true, category: true },
+    }),
     prisma.listing.findMany({
       where: featuredIds.length > 0 ? { ...where, id: { notIn: featuredIds } } : where,
       orderBy,
@@ -127,6 +131,7 @@ export default async function SearchPage({
         <SearchFilters
           brands={brands}
           wilayas={wilayas}
+          equipments={equipments}
           initialValues={{
             q: flatParams.q,
             category: flatParams.category,
@@ -141,6 +146,7 @@ export default async function SearchPage({
             fuelType: flatParams.fuelType,
             gearbox: flatParams.gearbox,
             condition: flatParams.condition,
+            equipmentIds: flatParams.equipmentIds,
           }}
         />
         {currentUser && (

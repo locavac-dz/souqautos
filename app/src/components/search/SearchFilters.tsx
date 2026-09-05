@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 type ModelRow = { id: number; name: string; brandId: number };
 type BrandRow = { id: number; name: string; models: ModelRow[] };
 type WilayaRow = { id: number; nomFr: string; nomAr: string };
+type EquipmentRow = { id: number; nameFr: string; nameAr: string; category: string };
 
 export type SearchFilterValues = {
   q?: string;
@@ -22,6 +23,7 @@ export type SearchFilterValues = {
   fuelType?: string;
   gearbox?: string;
   condition?: string;
+  equipmentIds?: string;
 };
 
 const CATEGORY_KEY: Record<string, string> = {
@@ -32,14 +34,24 @@ const CATEGORY_KEY: Record<string, string> = {
   AUTRE: "categoryAutre",
 };
 
+const EQUIPMENT_CATEGORY_ORDER = ["CONFORT", "SECURITE", "MULTIMEDIA", "EXTERIEUR"] as const;
+const EQUIPMENT_CATEGORY_KEY: Record<string, string> = {
+  CONFORT: "equipmentCategoryConfort",
+  SECURITE: "equipmentCategorySecurite",
+  MULTIMEDIA: "equipmentCategoryMultimedia",
+  EXTERIEUR: "equipmentCategoryExterieur",
+};
+
 export function SearchFilters({
   brands,
   wilayas,
+  equipments = [],
   initialValues,
   compact = false,
 }: {
   brands: BrandRow[];
   wilayas: WilayaRow[];
+  equipments?: EquipmentRow[];
   initialValues: SearchFilterValues;
   compact?: boolean;
 }) {
@@ -50,6 +62,20 @@ export function SearchFilters({
   const [values, setValues] = useState<SearchFilterValues>(initialValues);
 
   const selectedBrand = brands.find((b) => b.id === Number(values.brandId));
+  const selectedEquipmentIds = values.equipmentIds ? values.equipmentIds.split(",").map(Number) : [];
+  const equipmentsByCategory = new Map<string, EquipmentRow[]>();
+  for (const eq of equipments) {
+    const list = equipmentsByCategory.get(eq.category) ?? [];
+    list.push(eq);
+    equipmentsByCategory.set(eq.category, list);
+  }
+
+  function toggleEquipment(id: number) {
+    const next = selectedEquipmentIds.includes(id)
+      ? selectedEquipmentIds.filter((e) => e !== id)
+      : [...selectedEquipmentIds, id];
+    setValues((prev) => ({ ...prev, equipmentIds: next.length > 0 ? next.join(",") : undefined }));
+  }
 
   function set<K extends keyof SearchFilterValues>(key: K, value: string) {
     setValues((prev) => ({
@@ -273,6 +299,32 @@ export function SearchFilters({
               <option value="OCCASION">{tWizard("conditionOccasion")}</option>
             </select>
           </Field>
+
+          {equipments.length > 0 && (
+            <Field label={tWizard("equipmentsTitle")}>
+              <div className="space-y-3">
+                {EQUIPMENT_CATEGORY_ORDER.filter((c) => equipmentsByCategory.has(c)).map((category) => (
+                  <div key={category}>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+                      {tWizard(EQUIPMENT_CATEGORY_KEY[category])}
+                    </p>
+                    <div className="space-y-1">
+                      {equipmentsByCategory.get(category)!.map((eq) => (
+                        <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={selectedEquipmentIds.includes(eq.id)}
+                            onChange={() => toggleEquipment(eq.id)}
+                          />
+                          {locale === "ar" ? eq.nameAr : eq.nameFr}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Field>
+          )}
 
           <button
             type="submit"

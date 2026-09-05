@@ -1375,3 +1375,19 @@ Choisi explicitement par le porteur de projet, en sélectionnant directement ce 
 Avec ce lot, l'écart du Lot 72 est refermé : les équipements sont désormais capturables aussi bien à la création qu'à l'édition.
 
 Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise), le remplacement des visuels de démonstration par de vraies photos, et la recherche filtrée par équipement (dernier volet du §14 du cahier d'architecture, non construit).
+
+## Lot 74 — Recherche filtrée par équipement (2026-09-05)
+
+Choisi explicitement par le porteur de projet, en sélectionnant directement ce point dans la dette technique proposée à la clôture du Lot 73 : dernier volet du §14 du cahier d'architecture resté non construit, aux côtés de l'estimation de prix par équipement (Lot 72) et son édition (Lot 73).
+
+**Livré**
+- `searchParamsSchema` (`src/lib/validation/search.ts`) accepte un paramètre `equipmentIds` — un seul paramètre de requête avec une liste séparée par des virgules (`?equipmentIds=1,2,3`), pas des paramètres répétés : `recherche/page.tsx` aplatit déjà tous les query params sur leur première valeur, un `equipmentId=1&equipmentId=2` répété aurait silencieusement perdu toutes les valeurs sauf la première. Ids dédupliqués, non-entiers/non-positifs filtrés silencieusement (même discipline que les autres paramètres numériques de ce schéma).
+- `buildListingWhere` (`src/lib/search.ts`) : une annonce doit avoir **chacun** des équipements cochés, jamais un seul suffisant — une clause `some` indépendante par équipement demandé combinée en `AND`, comme une vraie facette qui affine les résultats (cocher plus d'équipements réduit le nombre de résultats, ne l'augmente jamais).
+- `SearchFilters.tsx` : section équipements ajoutée (checkboxes groupées par catégorie, réutilise telles quelles les clés `Wizard.equipments*`/`equipmentCategory*` du Lot 72), visible uniquement en mode recherche avancée (jamais dans la barre compacte de l'accueil). `recherche/page.tsx` transmet le référentiel réel et l'état initial depuis l'URL.
+- Bénéfice gratuit, sans code supplémentaire : les alertes de recherche sauvegardée (Lot 56, `search-alerts.ts`) réutilisent déjà `searchParamsSchema`/`buildListingWhere` tels quels — une alerte sur une recherche incluant des équipements devient donc automatiquement équipement-consciente.
+- 5 nouveaux tests unitaires (parsing de la liste, dédoublonnage, filtrage des valeurs invalides, absence de la clause quand aucun équipement demandé, sémantique ET jamais OU). 336/336 tests au vert au total.
+- Vérification de bout en bout en conditions réelles : deux annonces de démonstration équipées directement en base (une avec GPS seul, une avec GPS+caméra de recul), recherche filtrée par GPS confirmée retournant exactement les deux (« 2 annonces trouvées »), recherche filtrée par GPS **et** caméra confirmée n'en retournant qu'une seule (« 1 annonces trouvées ») — la sémantique ET vérifiée avec de vraies données, pas seulement en test unitaire. Cases à cocher confirmées pré-cochées depuis l'URL. Rendu arabe (RTL) et mobile vérifiés sans débordement. Données de test entièrement supprimées après vérification.
+
+Avec ce lot, les trois volets du §14 du cahier d'architecture concernant les équipements (estimation de prix Lot 72, édition Lot 73, recherche ici) sont tous livrés.
+
+Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise) et le remplacement des visuels de démonstration par de vraies photos ; plus aucun écart connu du §14 sur les équipements.

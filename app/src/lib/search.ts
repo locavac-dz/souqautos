@@ -43,6 +43,16 @@ export function buildListingWhere(params: SearchParams): Prisma.ListingWhereInpu
     where.mileage = { lte: params.mileageMax };
   }
 
+  // Lot 74 — une annonce doit avoir CHACUN des équipements cochés (facette
+  // qui affine, jamais n'élargit) : une clause `some` indépendante par
+  // équipement demandé, jamais un seul `some` avec une liste d'ids (qui
+  // matcherait dès qu'UN SEUL équipement correspond, pas tous).
+  if (params.equipmentIds && params.equipmentIds.length > 0) {
+    where.AND = params.equipmentIds.map((equipmentId) => ({
+      equipments: { some: { equipmentId } },
+    }));
+  }
+
   return where;
 }
 

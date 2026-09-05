@@ -35,6 +35,21 @@ describe("searchParamsSchema", () => {
     const result = searchParamsSchema.parse({ sort: "price_asc" });
     expect(result.sort).toBe("price_asc");
   });
+
+  it("parses a comma-separated equipmentIds list into a deduplicated number array", () => {
+    const result = searchParamsSchema.parse({ equipmentIds: "3,1,3,2" });
+    expect(result.equipmentIds).toEqual([3, 1, 2]);
+  });
+
+  it("drops non-positive or non-integer equipment ids instead of throwing", () => {
+    const result = searchParamsSchema.parse({ equipmentIds: "1,0,-2,abc,4" });
+    expect(result.equipmentIds).toEqual([1, 4]);
+  });
+
+  it("omits equipmentIds entirely when the list ends up empty", () => {
+    const result = searchParamsSchema.parse({ equipmentIds: "0,abc" });
+    expect(result.equipmentIds).toBeUndefined();
+  });
 });
 
 describe("buildListingWhere", () => {
@@ -82,6 +97,19 @@ describe("buildListingWhere", () => {
       gearbox: "MANUELLE",
       condition: "OCCASION",
     });
+  });
+
+  it("omits the equipment filter when no equipment is requested", () => {
+    const where = buildListingWhere({});
+    expect(where.AND).toBeUndefined();
+  });
+
+  it("requires every selected equipment via an independent `some` clause (AND, never OR)", () => {
+    const where = buildListingWhere({ equipmentIds: [1, 2] });
+    expect(where.AND).toEqual([
+      { equipments: { some: { equipmentId: 1 } } },
+      { equipments: { some: { equipmentId: 2 } } },
+    ]);
   });
 });
 
