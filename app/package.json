@@ -8,7 +8,8 @@
     "start": "next start -p 5184",
     "lint": "eslint",
     "test": "vitest run",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:demo": "tsx prisma/seed-demo-listings.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
