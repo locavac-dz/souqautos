@@ -1360,3 +1360,18 @@ Choisi en reprenant directement l'un des deux sujets de dette technique mineure 
 - Vérification de bout en bout en conditions réelles : annonce de test créée via `POST /api/listings` (chemin réel, pas un contournement) avec 3 équipements réels, approuvée par un admin, fiche annonce confirmant l'affichage des équipements ET une estimation de marché cohérente (repli correct vers le palier sans équipement puisqu'aucun comparable du jeu de démonstration n'en partageait) ; cases à cocher de l'étape 4 vérifiées à la fois en français et en arabe (RTL, catégories traduites, état conservé au changement de langue) ; rendu mobile de la fiche annonce (équipements, estimation) sans débordement. Donnée de test entièrement supprimée après vérification, y compris le fichier photo généré.
 
 Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise) et le remplacement des visuels de démonstration par de vraies photos ; côté produit, l'édition des équipements sur une annonce déjà publiée et la recherche par équipement complèteraient logiquement ce lot.
+
+## Lot 73 — Édition des équipements sur une annonce publiée (2026-09-05)
+
+Choisi explicitement par le porteur de projet, en sélectionnant directement ce point dans la liste de dette technique proposée à la clôture du Lot 72 : les équipements n'étaient capturés qu'à la création, jamais modifiables après coup — écart volontairement laissé ouvert au Lot 72 faute de temps pour le vérifier correctement dans le même lot.
+
+**Livré**
+- `equipmentIds` ajouté à `listingEditSchema` (`src/lib/validation/listing.ts`) — extrait en constante partagée (`equipmentIdsField`) avec `listingSchema` pour ne jamais laisser diverger les deux bornes de validation.
+- `PATCH /api/listings/[id]` valide les équipements contre le référentiel réel (même garde-fou que marque/modèle) puis **remplace entièrement** la sélection précédente (`equipments: { deleteMany: {}, create: [...] }`) — jamais un ajout cumulatif : l'utilisateur voit et coche l'état complet voulu à chaque édition, pas une liste qui grandit indéfiniment.
+- `ListingEditForm.tsx` : section équipements ajoutée (mêmes catégories/style que l'étape 4 de l'assistant de publication, réutilise les clés `Wizard.equipments*` déjà traduites FR/AR depuis le Lot 72 — aucune nouvelle clé i18n nécessaire), pré-cochée avec les équipements réels de l'annonce.
+- Aucun nouveau test unitaire (wiring API/formulaire, même choix que le reste de `ListingEditForm` — jamais testé unitairement non plus, la logique pure testable était déjà couverte côté `price-estimation` au Lot 72).
+- Vérification de bout en bout en conditions réelles, via de vrais appels `PATCH /api/listings/[id]` (pas un contournement) sur une annonce de démonstration réelle : premier edit ajoutant 3 équipements confirmé en base, second edit avec un jeu différent confirmé avoir **remplacé** (pas cumulé) le premier — exactement le comportement voulu. Page d'édition elle-même vérifiée affichant la section équipements au bon endroit avec les 20 options groupées par catégorie. Annonce de démonstration entièrement restaurée à son état d'origine après vérification (statut, description, photo, équipements).
+
+Avec ce lot, l'écart du Lot 72 est refermé : les équipements sont désormais capturables aussi bien à la création qu'à l'édition.
+
+Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise), le remplacement des visuels de démonstration par de vraies photos, et la recherche filtrée par équipement (dernier volet du §14 du cahier d'architecture, non construit).

@@ -15,6 +15,15 @@ import type {
 type WilayaRow = { id: number; nomFr: string; nomAr: string };
 type ModelRow = { id: number; slug: string; name: string; brandId: number };
 type BrandRow = { id: number; slug: string; name: string; models: ModelRow[] };
+type EquipmentRow = { id: number; nameFr: string; nameAr: string; category: string };
+
+const EQUIPMENT_CATEGORY_ORDER = ["CONFORT", "SECURITE", "MULTIMEDIA", "EXTERIEUR"] as const;
+const EQUIPMENT_CATEGORY_KEY: Record<string, string> = {
+  CONFORT: "equipmentCategoryConfort",
+  SECURITE: "equipmentCategorySecurite",
+  MULTIMEDIA: "equipmentCategoryMultimedia",
+  EXTERIEUR: "equipmentCategoryExterieur",
+};
 
 const CATEGORIES: ListingCategory[] = ["VOITURE", "UTILITAIRE", "POIDS_LOURD", "DEUX_ROUES", "AUTRE"];
 const CATEGORY_KEY: Record<ListingCategory, string> = {
@@ -44,10 +53,12 @@ export function ListingEditForm({
   listing,
   wilayas,
   brands,
+  equipments,
 }: {
-  listing: Listing & { photos: { id: string; path: string }[] };
+  listing: Listing & { photos: { id: string; path: string }[]; equipments: { equipmentId: number }[] };
   wilayas: WilayaRow[];
   brands: BrandRow[];
+  equipments: EquipmentRow[];
 }) {
   const t = useTranslations("ListingEdit");
   const tWizard = useTranslations("Wizard");
@@ -79,6 +90,21 @@ export function ListingEditForm({
   const [firstHand, setFirstHand] = useState(listing.firstHand);
   const [accidented, setAccidented] = useState(listing.accidented);
   const [wilayaId, setWilayaId] = useState<number>(listing.wilayaId);
+  const [equipmentIds, setEquipmentIds] = useState<number[]>(listing.equipments.map((e) => e.equipmentId));
+
+  function toggleEquipment(id: number) {
+    setEquipmentIds((current) => (current.includes(id) ? current.filter((e) => e !== id) : [...current, id]));
+  }
+
+  const equipmentsByCategory = useMemo(() => {
+    const map = new Map<string, EquipmentRow[]>();
+    for (const eq of equipments) {
+      const list = map.get(eq.category) ?? [];
+      list.push(eq);
+      map.set(eq.category, list);
+    }
+    return map;
+  }, [equipments]);
 
   const [existingPhotos, setExistingPhotos] = useState(listing.photos);
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
@@ -145,6 +171,7 @@ export function ListingEditForm({
         firstHand,
         accidented,
         wilayaId,
+        equipmentIds,
         existingPhotoIds: existingPhotos.map((p) => p.id),
       })
     );
@@ -472,6 +499,32 @@ export function ListingEditForm({
         <input type="checkbox" checked={accidented} onChange={(e) => setAccidented(e.target.checked)} />
         {tWizard("accidented")}
       </label>
+
+      <div>
+        <p className="block text-sm font-medium text-slate-700 mb-2">{tWizard("equipmentsTitle")}</p>
+        <p className="text-xs text-slate-500 mb-3">{tWizard("equipmentsHelp")}</p>
+        <div className="space-y-4">
+          {EQUIPMENT_CATEGORY_ORDER.filter((c) => equipmentsByCategory.has(c)).map((category) => (
+            <div key={category}>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1.5">
+                {tWizard(EQUIPMENT_CATEGORY_KEY[category])}
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {equipmentsByCategory.get(category)!.map((eq) => (
+                  <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={equipmentIds.includes(eq.id)}
+                      onChange={() => toggleEquipment(eq.id)}
+                    />
+                    {locale === "ar" ? eq.nameAr : eq.nameFr}
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div>
         <label htmlFor="edit-wilaya" className="block text-sm font-medium text-slate-700 mb-1">

@@ -44,12 +44,13 @@ const listingBaseSchema = z.object({
   phone: z.string().trim().regex(algerianPhoneRegex).optional(),
 });
 
-// Lot 72 — équipements, ajoutés après coup (pas dans listingBaseSchema
-// d'origine), uniquement à la création pour l'instant.
+// Lot 72/73 — équipements, ajoutés après coup (pas dans listingBaseSchema
+// d'origine) sur la création ET l'édition : extrait en constante partagée pour
+// ne jamais laisser diverger les deux bornes (max 30) entre les deux schémas.
+const equipmentIdsField = z.array(z.number().int().positive()).max(30).default([]);
+
 export const listingSchema = listingBaseSchema
-  .extend({
-    equipmentIds: z.array(z.number().int().positive()).max(30).default([]),
-  })
+  .extend({ equipmentIds: equipmentIdsField })
   .refine((data) => Boolean(data.brandId) || Boolean(data.brandFreeText), {
     message: "Marque requise (catalogue ou texte libre)",
     path: ["brandId"],
@@ -58,10 +59,11 @@ export const listingSchema = listingBaseSchema
 export type ListingInput = z.infer<typeof listingSchema>;
 
 // Édition d'une annonce déjà publiée (Lot 30, étendu au Lot 35 pour couvrir
-// catégorie/marque/modèle) : seuls le prix (flux dédié depuis le Lot 23) et
-// le téléphone en restent exclus.
+// catégorie/marque/modèle, Lot 73 pour les équipements) : seuls le prix (flux
+// dédié depuis le Lot 23) et le téléphone en restent exclus.
 export const listingEditSchema = listingBaseSchema
   .omit({ price: true, phone: true })
+  .extend({ equipmentIds: equipmentIdsField })
   .refine((data) => Boolean(data.brandId) || Boolean(data.brandFreeText), {
     message: "Marque requise (catalogue ou texte libre)",
     path: ["brandId"],

@@ -84,6 +84,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
   }
 
+  // Même discipline que brandId/modelId : jamais un id d'équipement fabriqué
+  // côté client accepté tel quel (Lot 72/73).
+  if (data.equipmentIds.length > 0) {
+    const matchingCount = await prisma.equipment.count({ where: { id: { in: data.equipmentIds } } });
+    if (matchingCount !== new Set(data.equipmentIds).size) {
+      return NextResponse.json({ error: "unknown_equipment" }, { status: 400 });
+    }
+  }
+
   // Seules les photos appartenant réellement à cette annonce peuvent être
   // conservées — un id étranger fourni par le client est silencieusement ignoré.
   const existingIds = listing.photos.map((p) => p.id);
@@ -152,6 +161,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         wilayaId: data.wilayaId,
         status: "EN_ATTENTE",
         moderationNote: null,
+        // Remplace entièrement la sélection précédente (Lot 73) — jamais un
+        // ajout cumulatif, l'utilisateur voit et coche l'état complet voulu.
+        equipments: {
+          deleteMany: {},
+          create: data.equipmentIds.map((equipmentId) => ({ equipmentId })),
+        },
       },
     }),
   ]);

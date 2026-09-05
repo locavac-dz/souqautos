@@ -22,12 +22,22 @@ export default async function EditListingPage({
 
   const t = await getTranslations("ListingEdit");
 
-  const [listing, wilayas, brands] = await Promise.all([
-    prisma.listing.findUnique({ where: { id }, include: { photos: { orderBy: { position: "asc" } } } }),
+  const [listing, wilayas, brands, equipments] = await Promise.all([
+    prisma.listing.findUnique({
+      where: { id },
+      include: {
+        photos: { orderBy: { position: "asc" } },
+        equipments: { select: { equipmentId: true } },
+      },
+    }),
     prisma.wilaya.findMany({ orderBy: { id: "asc" } }),
     prisma.brand.findMany({
       orderBy: { name: "asc" },
       include: { models: { orderBy: { name: "asc" } } },
+    }),
+    prisma.equipment.findMany({
+      orderBy: { nameFr: "asc" },
+      select: { id: true, nameFr: true, nameAr: true, category: true },
     }),
   ]);
 
@@ -45,7 +55,7 @@ export default async function EditListingPage({
       {!eligibility.ok ? (
         <p className="text-sm text-red-600">{t("notEditable")}</p>
       ) : (
-        <ListingEditForm listing={listing} wilayas={wilayas} brands={brands} />
+        <ListingEditForm listing={listing} wilayas={wilayas} brands={brands} equipments={equipments} />
       )}
     </div>
   );
