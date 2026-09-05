@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -61,15 +62,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const amountDzd = priceForFormula(parsed.data.formula, settings);
 
-  const order = await prisma.paymentOrder.create({
-    data: {
-      userId: user.id,
-      listingId: id,
-      formula: parsed.data.formula,
-      amountDzd,
-      reference: parsed.data.reference,
-    },
-  });
+  // Le `findFirst` ci-dessus ne suffit pas seul contre un double-clic/retry
+  // réseau (TOCTOU) — l'index unique filtré `PaymentOrder_pending_unique`
+  // (une seule ligne EN_ATTENTE par annonce) est la garantie réelle ; une
+  // violation ici signifie qu'une autre requête a gagné la course entre-temps.
+  let order;
+  try {
+    order = await prisma.paymentOrder.create({
+      data: {
+        userId: user.id,
+        listingId: id,
+        formula: parsed.data.formula,
+        amountDzd,
+        reference: parsed.data.reference,
+      },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json({ error: "order_pending" }, { status: 400 });
+    }
+    throw err;
+  }
 
   return NextResponse.json({ order }, { status: 201 });
 }

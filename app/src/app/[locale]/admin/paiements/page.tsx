@@ -85,7 +85,7 @@ export default async function AdminPaymentOrdersPage() {
                   {order.listing.title}
                 </Link>
                 <p className="text-sm text-slate-700 mt-1">
-                  {t("formulaLabel")} : <strong>{order.formula}</strong> — {order.amountDzd.toLocaleString()} DA
+                  {t("formulaLabel")} : <strong>{order.formula}</strong> — {numberFormatter.format(order.amountDzd)} DA
                 </p>
                 <p className="text-sm text-slate-700 mt-1">
                   {t("referenceLabel")} :{" "}

@@ -51,8 +51,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const now = new Date();
   const isApproval = parsed.data.action === "approve";
 
-  await prisma.paymentOrder.update({
-    where: { id },
+  // Deux admins pourraient approuver/refuser la même demande en même temps
+  // (deux onglets, double-clic) : le `findUnique` ci-dessus ne protège pas
+  // contre cette course. `updateMany` avec le statut EN_ATTENTE dans le
+  // `where` est atomique — si une autre requête a déjà tranché entre-temps,
+  // `count` vaut 0 et on s'arrête avant d'appliquer deux fois la formule ou
+  // d'envoyer deux fois l'email.
+  const { count } = await prisma.paymentOrder.updateMany({
+    where: { id, status: "EN_ATTENTE" },
     data: {
       status: isApproval ? "CONFIRMEE" : "REJETEE",
       reviewedById: user.id,
@@ -60,6 +66,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       reviewNote: parsed.data.reason?.trim() || null,
     },
   });
+  if (count === 0) {
+    return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
+  }
 
   if (isApproval) {
     const newExpiresAt = computeExpiryDate(now, formulaValidityDays(order.formula));

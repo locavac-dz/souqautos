@@ -348,6 +348,11 @@ model PaymentOrder {
   @@index([status])
   @@index([userId])
   @@index([listingId])
+  // Un seul virement EN_ATTENTE par annonce est déjà vérifié en application
+  // (route upgrade-formula/route.ts) — même piège TOCTOU que
+  // IdentityVerificationRequest (double-clic/retry créant deux demandes) ;
+  // même correctif : index unique filtré ajouté en SQL brut dans la
+  // migration correspondante, cf. audit sécurité Lot 69.
 }
 
 model AuditLog {
