@@ -68,6 +68,7 @@ export default async function ModelPage({
         model: true,
         wilaya: true,
         photos: { orderBy: { position: "asc" }, take: 1 },
+        equipments: { select: { equipmentId: true } },
       },
     }),
     getCurrentUser(),
@@ -87,12 +88,14 @@ export default async function ModelPage({
   // Tous les listings de cette page partagent déjà la même marque/modèle : on
   // réutilise ce jeu de lignes déjà chargé comme pool de comparables au lieu
   // de le requêter une seconde fois (cf. estimateFromRows, lib/price-estimation.ts).
+  const comparableRows = listings.map((l) => ({ ...l, equipmentIds: l.equipments.map((e) => e.equipmentId) }));
   const priceBadges = new Map(
     listings.map((listing) => {
-      const estimate = estimateFromRows(listings, {
+      const estimate = estimateFromRows(comparableRows, {
         year: listing.year,
         mileage: listing.mileage,
         wilayaId: listing.wilayaId,
+        equipmentIds: listing.equipments.map((e) => e.equipmentId),
         excludeListingId: listing.id,
       });
       return [listing.id, estimate ? computePriceBadge(listing.price, estimate.mid, estimate.sampleSize) : null];

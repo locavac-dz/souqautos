@@ -41,7 +41,13 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
     prisma.listing.findMany({
       where: { sellerId: id, status: "PUBLIEE" },
       orderBy: { publishedAt: "desc" },
-      include: { brand: true, model: true, wilaya: true, photos: { orderBy: { position: "asc" }, take: 1 } },
+      include: {
+        brand: true,
+        model: true,
+        wilaya: true,
+        photos: { orderBy: { position: "asc" }, take: 1 },
+        equipments: { select: { equipmentId: true } },
+      },
     }),
     getSellerTrustSummary(id),
   ]);
@@ -61,7 +67,9 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
       )
     : new Set<string>();
 
-  const estimates = await estimatePricesForListings(listings);
+  const estimates = await estimatePricesForListings(
+    listings.map((l) => ({ ...l, equipmentIds: l.equipments.map((e) => e.equipmentId) }))
+  );
   const priceBadges = new Map(
     listings.map((listing) => {
       const estimate = estimates.get(listing.id);

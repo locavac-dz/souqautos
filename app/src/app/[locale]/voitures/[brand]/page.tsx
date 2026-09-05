@@ -65,6 +65,7 @@ export default async function BrandPage({
         model: true,
         wilaya: true,
         photos: { orderBy: { position: "asc" }, take: 1 },
+        equipments: { select: { equipmentId: true } },
       },
     }),
     getCurrentUser(),
@@ -81,7 +82,9 @@ export default async function BrandPage({
       )
     : new Set<string>();
 
-  const estimates = await estimatePricesForListings(recentListings);
+  const estimates = await estimatePricesForListings(
+    recentListings.map((l) => ({ ...l, equipmentIds: l.equipments.map((e) => e.equipmentId) }))
+  );
   const priceBadges = new Map(
     recentListings.map((listing) => {
       const estimate = estimates.get(listing.id);

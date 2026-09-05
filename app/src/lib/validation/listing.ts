@@ -44,10 +44,16 @@ const listingBaseSchema = z.object({
   phone: z.string().trim().regex(algerianPhoneRegex).optional(),
 });
 
-export const listingSchema = listingBaseSchema.refine(
-  (data) => Boolean(data.brandId) || Boolean(data.brandFreeText),
-  { message: "Marque requise (catalogue ou texte libre)", path: ["brandId"] }
-);
+// Lot 72 — équipements, ajoutés après coup (pas dans listingBaseSchema
+// d'origine), uniquement à la création pour l'instant.
+export const listingSchema = listingBaseSchema
+  .extend({
+    equipmentIds: z.array(z.number().int().positive()).max(30).default([]),
+  })
+  .refine((data) => Boolean(data.brandId) || Boolean(data.brandFreeText), {
+    message: "Marque requise (catalogue ou texte libre)",
+    path: ["brandId"],
+  });
 
 export type ListingInput = z.infer<typeof listingSchema>;
 

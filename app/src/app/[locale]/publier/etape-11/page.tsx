@@ -40,6 +40,7 @@ export default function Step11Page() {
       accidented: data.accidented ?? false,
       wilayaId: data.wilayaId,
       phone: data.phone,
+      equipmentIds: data.equipmentIds ?? [],
     };
 
     const formData = new FormData();

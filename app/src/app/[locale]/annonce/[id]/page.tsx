@@ -102,6 +102,7 @@ export default async function ListingDetailPage({
         seller: { include: { profile: true, professionalAccount: true } },
         priceHistory: { orderBy: { recordedAt: "desc" } },
         renewals: { orderBy: { renewedAt: "desc" } },
+        equipments: { include: { equipment: true } },
       },
     }),
     getCurrentUser(),
@@ -136,6 +137,7 @@ export default async function ListingDetailPage({
           year: listing.year,
           mileage: listing.mileage,
           wilayaId: listing.wilayaId,
+          equipmentIds: listing.equipments.map((e) => e.equipmentId),
           excludeListingId: listing.id,
         })
       : null;
@@ -393,6 +395,22 @@ export default async function ListingDetailPage({
               {listing.powerHp && <DetailRow label={tWizard("powerHp")} value={`${listing.powerHp} ch`} />}
             </div>
           </div>
+
+          {listing.equipments.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("equipmentsTitle")}</h2>
+              <div className="flex flex-wrap gap-2">
+                {listing.equipments.map(({ equipment }) => (
+                  <span
+                    key={equipment.id}
+                    className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700"
+                  >
+                    {locale === "ar" ? equipment.nameAr : equipment.nameFr}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {estimate && (
             <div className="mt-6">

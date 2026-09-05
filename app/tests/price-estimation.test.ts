@@ -76,7 +76,7 @@ describe("estimateFromRows", () => {
       wilayaId: 16,
       excludeListingId: "self",
     });
-    expect(result!.appliedFilters).toEqual({ year: true, mileage: true, wilaya: true });
+    expect(result!.appliedFilters).toEqual({ year: true, mileage: true, wilaya: true, equipment: false });
     expect(result!.sampleSize).toBe(2); // a et b seulement
   });
 
@@ -89,7 +89,7 @@ describe("estimateFromRows", () => {
       wilayaId: 99,
       excludeListingId: "self",
     });
-    expect(result!.appliedFilters).toEqual({ year: true, mileage: true, wilaya: false });
+    expect(result!.appliedFilters).toEqual({ year: true, mileage: true, wilaya: false, equipment: false });
   });
 
   it("falls back all the way to no filters when nothing else matches", () => {
@@ -99,14 +99,48 @@ describe("estimateFromRows", () => {
       wilayaId: 99,
       excludeListingId: "self",
     });
-    expect(result!.appliedFilters).toEqual({ year: false, mileage: false, wilaya: false });
+    expect(result!.appliedFilters).toEqual({ year: false, mileage: false, wilaya: false, equipment: false });
     expect(result!.sampleSize).toBe(3); // a, b, c ("self" exclu explicitement)
   });
 
   it("ignores criteria the caller didn't provide", () => {
     const result = estimateFromRows(rows, {});
-    expect(result!.appliedFilters).toEqual({ year: false, mileage: false, wilaya: false });
+    expect(result!.appliedFilters).toEqual({ year: false, mileage: false, wilaya: false, equipment: false });
     expect(result!.sampleSize).toBe(4);
+  });
+
+  it("prefers comparables sharing at least half the queried equipment, before falling back", () => {
+    const equippedRows = [
+      { id: "a", price: 2_000_000, year: 2019, mileage: 80_000, wilayaId: 16, equipmentIds: [1, 2, 3] },
+      { id: "b", price: 2_600_000, year: 2019, mileage: 80_000, wilayaId: 16, equipmentIds: [] },
+      { id: "self", price: 2_800_000, year: 2019, mileage: 80_000, wilayaId: 16, equipmentIds: [1, 2] },
+    ];
+    const result = estimateFromRows(equippedRows, {
+      year: 2019,
+      mileage: 80_000,
+      wilayaId: 16,
+      equipmentIds: [1, 2],
+      excludeListingId: "self",
+    });
+    // "a" partage 2/2 équipements demandés (>= 50%) ; "b" n'en partage aucun.
+    expect(result!.appliedFilters.equipment).toBe(true);
+    expect(result!.sampleSize).toBe(1);
+    expect(result!.mid).toBe(2_000_000);
+  });
+
+  it("falls back to ignoring equipment when no comparable shares enough of it", () => {
+    const equippedRows = [
+      { id: "a", price: 2_000_000, year: 2019, mileage: 80_000, wilayaId: 16, equipmentIds: [] },
+      { id: "b", price: 2_200_000, year: 2019, mileage: 80_000, wilayaId: 16, equipmentIds: [] },
+    ];
+    const result = estimateFromRows(equippedRows, {
+      year: 2019,
+      mileage: 80_000,
+      wilayaId: 16,
+      equipmentIds: [1, 2, 3],
+    });
+    expect(result!.appliedFilters.equipment).toBe(false);
+    expect(result!.sampleSize).toBe(2);
   });
 });
 

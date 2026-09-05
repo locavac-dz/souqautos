@@ -42,6 +42,7 @@ export default async function SearchPage({
     model: true,
     wilaya: true,
     photos: { orderBy: { position: "asc" as const }, take: 1 },
+    equipments: { select: { equipmentId: true } },
   } satisfies Prisma.ListingInclude;
 
   type ListingWithCardRelations = Prisma.ListingGetPayload<{ include: typeof listingCardInclude }>;
@@ -105,7 +106,9 @@ export default async function SearchPage({
       )
     : new Set<string>();
 
-  const estimates = await estimatePricesForListings(allListings);
+  const estimates = await estimatePricesForListings(
+    allListings.map((l) => ({ ...l, equipmentIds: l.equipments.map((e) => e.equipmentId) }))
+  );
   const priceBadges = new Map(
     allListings.map((listing) => {
       const estimate = estimates.get(listing.id);

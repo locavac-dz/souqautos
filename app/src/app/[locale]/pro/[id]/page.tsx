@@ -40,7 +40,13 @@ export default async function ProShowcasePage({
     prisma.listing.findMany({
       where: { sellerId: account.userId, status: "PUBLIEE" },
       orderBy: { publishedAt: "desc" },
-      include: { brand: true, model: true, wilaya: true, photos: { orderBy: { position: "asc" }, take: 1 } },
+      include: {
+        brand: true,
+        model: true,
+        wilaya: true,
+        photos: { orderBy: { position: "asc" }, take: 1 },
+        equipments: { select: { equipmentId: true } },
+      },
     }),
     prisma.review.findMany({
       where: { professionalAccountId: id },
@@ -62,7 +68,9 @@ export default async function ProShowcasePage({
       )
     : new Set<string>();
 
-  const estimates = await estimatePricesForListings(listings);
+  const estimates = await estimatePricesForListings(
+    listings.map((l) => ({ ...l, equipmentIds: l.equipments.map((e) => e.equipmentId) }))
+  );
   const priceBadges = new Map(
     listings.map((listing) => {
       const estimate = estimates.get(listing.id);

@@ -7,7 +7,7 @@ export type EstimateResult = {
   sampleSize: number;
   confidencePct: number;
   confidenceLabel: "faible" | "moyenne" | "bonne" | "elevee";
-  appliedFilters: { year: boolean; mileage: boolean; wilaya: boolean };
+  appliedFilters: { year: boolean; mileage: boolean; wilaya: boolean; equipment: boolean };
 };
 
 function median(sorted: number[]): number {
@@ -42,6 +42,13 @@ export function computeEstimateFromPrices(
 
 const YEAR_WINDOW = 2;
 const MILEAGE_BAND_RATIO = 0.3; // +/- 30%
+// Lot 72 — un comparable est jugé « équipé similairement » s'il partage au
+// moins la moitié des équipements du véhicule estimé (cf. docs/ARCHITECTURE.md
+// §14 : équipements fait partie des critères de comparabilité, au même titre
+// qu'année/km/wilaya). Jamais un pourcentage d'ajustement de prix par
+// équipement inventé sans base de marché réelle — seulement un critère de
+// sélection du pool de comparables, comme les trois autres.
+const EQUIPMENT_OVERLAP_RATIO = 0.5;
 
 type EstimateQuery = {
   brandId: number;
@@ -49,35 +56,62 @@ type EstimateQuery = {
   year?: number;
   mileage?: number;
   wilayaId?: number;
+  equipmentIds?: number[];
   excludeListingId?: string;
 };
 
-type ComparableRow = { id: string; price: number; year: number; mileage: number; wilayaId: number };
+type ComparableRow = {
+  id: string;
+  price: number;
+  year: number;
+  mileage: number;
+  wilayaId: number;
+  equipmentIds?: number[];
+};
 
-type Tier = { year: boolean; mileage: boolean; wilaya: boolean };
+type Tier = { year: boolean; mileage: boolean; wilaya: boolean; equipment: boolean };
 
-function buildTiers(query: { year?: number; mileage?: number; wilayaId?: number }): Tier[] {
+function buildTiers(query: {
+  year?: number;
+  mileage?: number;
+  wilayaId?: number;
+  equipmentIds?: number[];
+}): Tier[] {
+  const hasEquipment = Boolean(query.equipmentIds && query.equipmentIds.length > 0);
   const tiers: Tier[] = [
-    { year: Boolean(query.year), mileage: Boolean(query.mileage), wilaya: Boolean(query.wilayaId) },
-    { year: Boolean(query.year), mileage: Boolean(query.mileage), wilaya: false },
-    { year: Boolean(query.year), mileage: false, wilaya: false },
-    { year: false, mileage: false, wilaya: false },
+    {
+      year: Boolean(query.year),
+      mileage: Boolean(query.mileage),
+      wilaya: Boolean(query.wilayaId),
+      equipment: hasEquipment,
+    },
+    { year: Boolean(query.year), mileage: Boolean(query.mileage), wilaya: Boolean(query.wilayaId), equipment: false },
+    { year: Boolean(query.year), mileage: Boolean(query.mileage), wilaya: false, equipment: false },
+    { year: Boolean(query.year), mileage: false, wilaya: false, equipment: false },
+    { year: false, mileage: false, wilaya: false, equipment: false },
   ];
 
   // Ne garder que des paliers distincts (évite de refaire deux fois la même
   // combinaison quand un des critères n'a pas été fourni par l'appelant).
   const seen = new Set<string>();
   return tiers.filter((t) => {
-    const key = `${t.year}-${t.mileage}-${t.wilaya}`;
+    const key = `${t.year}-${t.mileage}-${t.wilaya}-${t.equipment}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 }
 
+function matchesEquipment(rowEquipmentIds: number[], queryEquipmentIds: number[]): boolean {
+  if (queryEquipmentIds.length === 0) return true;
+  const rowSet = new Set(rowEquipmentIds);
+  const sharedCount = queryEquipmentIds.filter((id) => rowSet.has(id)).length;
+  return sharedCount / queryEquipmentIds.length >= EQUIPMENT_OVERLAP_RATIO;
+}
+
 function matchesTier(
   row: ComparableRow,
-  query: { year?: number; mileage?: number; wilayaId?: number },
+  query: { year?: number; mileage?: number; wilayaId?: number; equipmentIds?: number[] },
   tier: Tier
 ): boolean {
   if (tier.year && query.year !== undefined) {
@@ -89,6 +123,7 @@ function matchesTier(
     if (row.mileage < lo || row.mileage > hi) return false;
   }
   if (tier.wilaya && query.wilayaId !== undefined && row.wilayaId !== query.wilayaId) return false;
+  if (tier.equipment && !matchesEquipment(row.equipmentIds ?? [], query.equipmentIds ?? [])) return false;
   return true;
 }
 
@@ -100,7 +135,13 @@ function matchesTier(
 // requête par annonce (cf. estimatePricesForListings ci-dessous).
 export function estimateFromRows(
   rows: ComparableRow[],
-  query: { year?: number; mileage?: number; wilayaId?: number; excludeListingId?: string }
+  query: {
+    year?: number;
+    mileage?: number;
+    wilayaId?: number;
+    equipmentIds?: number[];
+    excludeListingId?: string;
+  }
 ): EstimateResult | null {
   const candidates = query.excludeListingId ? rows.filter((r) => r.id !== query.excludeListingId) : rows;
 
@@ -126,10 +167,20 @@ export async function estimatePrice(query: EstimateQuery): Promise<EstimateResul
       brandId: query.brandId,
       modelId: query.modelId,
     },
-    select: { id: true, price: true, year: true, mileage: true, wilayaId: true },
+    select: {
+      id: true,
+      price: true,
+      year: true,
+      mileage: true,
+      wilayaId: true,
+      equipments: { select: { equipmentId: true } },
+    },
   });
 
-  return estimateFromRows(rows, query);
+  return estimateFromRows(
+    rows.map((r) => ({ ...r, equipmentIds: r.equipments.map((e) => e.equipmentId) })),
+    query
+  );
 }
 
 type ListingForBatchEstimate = {
@@ -139,6 +190,7 @@ type ListingForBatchEstimate = {
   year: number;
   mileage: number;
   wilayaId: number;
+  equipmentIds?: number[];
 };
 
 // Version batch pour une page de résultats entière : une requête par couple
@@ -163,9 +215,19 @@ export async function estimatePricesForListings(
     Array.from(pairs.entries()).map(async ([key, { brandId, modelId }]) => {
       const rows = await prisma.listing.findMany({
         where: { status: "PUBLIEE", brandId, modelId },
-        select: { id: true, price: true, year: true, mileage: true, wilayaId: true },
+        select: {
+          id: true,
+          price: true,
+          year: true,
+          mileage: true,
+          wilayaId: true,
+          equipments: { select: { equipmentId: true } },
+        },
       });
-      rowsByPair.set(key, rows);
+      rowsByPair.set(
+        key,
+        rows.map((r) => ({ ...r, equipmentIds: r.equipments.map((e) => e.equipmentId) }))
+      );
     })
   );
 
@@ -182,6 +244,7 @@ export async function estimatePricesForListings(
         year: listing.year,
         mileage: listing.mileage,
         wilayaId: listing.wilayaId,
+        equipmentIds: listing.equipmentIds,
         excludeListingId: listing.id,
       })
     );

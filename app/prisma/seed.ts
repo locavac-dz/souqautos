@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { catalogue, slugify } from "./catalogue-data";
+import { equipmentCatalogue } from "./equipment-data";
 
 const prisma = new PrismaClient();
 
@@ -100,6 +101,15 @@ async function main() {
     }
   }
   console.log(`Seed OK — ${catalogue.length} marques, ${modelCount} modèles.`);
+
+  for (const item of equipmentCatalogue) {
+    await prisma.equipment.upsert({
+      where: { slug: item.slug },
+      update: { nameFr: item.nameFr, nameAr: item.nameAr, category: item.category },
+      create: item,
+    });
+  }
+  console.log(`Seed OK — ${equipmentCatalogue.length} équipements.`);
 
   const existingAdmin = await prisma.user.findUnique({ where: { email: ADMIN_EMAIL } });
   if (!existingAdmin) {

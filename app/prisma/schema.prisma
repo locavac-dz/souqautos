@@ -111,6 +111,37 @@ model Model {
   @@unique([brandId, slug])
 }
 
+// Lot 72 — équipements du véhicule (docs/ARCHITECTURE.md §14 : « équipements »
+// fait partie des critères de comparabilité pour le badge « Bon Prix », au même
+// titre qu'année/km/wilaya). Référentiel réel (options effectivement courantes
+// sur un véhicule d'occasion), jamais une fiche technique fabriquée — même
+// discipline que Brand/Model (cf. commentaire de tête, ligne 90).
+enum EquipmentCategory {
+  CONFORT
+  SECURITE
+  MULTIMEDIA
+  EXTERIEUR
+}
+
+model Equipment {
+  id       Int                @id @default(autoincrement())
+  slug     String             @unique
+  nameFr   String
+  nameAr   String
+  category EquipmentCategory
+  listings ListingEquipment[]
+}
+
+model ListingEquipment {
+  listingId   String
+  listing     Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  equipmentId Int
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@id([listingId, equipmentId])
+  @@index([equipmentId])
+}
+
 enum ListingCategory {
   VOITURE
   UTILITAIRE
@@ -201,6 +232,10 @@ model Listing {
   renewals     ListingRenewal[]
   searchAlertNotifications SearchAlertNotification[]
   paymentOrders PaymentOrder[]
+  // Lot 72 — comble l'écart documenté depuis le Lot 4/45 (docs/ARCHITECTURE.md
+  // §14 : la comparabilité pour le badge « Bon Prix » doit tenir compte des
+  // équipements, pas seulement année/km/wilaya).
+  equipments   ListingEquipment[]
   createdAt    DateTime         @default(now())
   publishedAt  DateTime?
   // Fixée à publishedAt + LISTING_VALIDITY_DAYS lors de la publication ou du

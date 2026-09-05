@@ -26,6 +26,7 @@ export type WizardData = {
   condition?: ListingCondition;
   firstHand?: boolean;
   accidented?: boolean;
+  equipmentIds?: number[];
   price?: number;
   title?: string;
   description?: string;

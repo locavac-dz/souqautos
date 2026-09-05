@@ -68,6 +68,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "unknown_wilaya" }, { status: 400 });
   }
 
+  // Même discipline que brandId/modelId : jamais un id d'équipement fabriqué
+  // côté client accepté tel quel (Lot 72).
+  if (data.equipmentIds.length > 0) {
+    const matchingCount = await prisma.equipment.count({ where: { id: { in: data.equipmentIds } } });
+    if (matchingCount !== new Set(data.equipmentIds).size) {
+      return NextResponse.json({ error: "unknown_equipment" }, { status: 400 });
+    }
+  }
+
   const phoneToUse = user.phone ?? data.phone;
   if (!phoneToUse) {
     return NextResponse.json({ error: "phone_required" }, { status: 400 });
@@ -118,6 +127,9 @@ export async function POST(request: NextRequest) {
       // Historique des prix (Lot 45) : première entrée dès la création.
       priceHistory: {
         create: [{ price: data.price }],
+      },
+      equipments: {
+        create: data.equipmentIds.map((equipmentId) => ({ equipmentId })),
       },
     },
     select: { id: true },
