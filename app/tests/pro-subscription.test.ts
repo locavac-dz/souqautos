@@ -3,7 +3,9 @@ import {
   checkSubscriptionUpgradeEligible,
   effectiveTier,
   isWithinQuota,
+  priceForAnyTier,
   priceForTier,
+  quotaForTier,
   SUBSCRIPTION_QUOTAS,
   tierRank,
 } from "@/lib/pro-subscription";
@@ -96,5 +98,27 @@ describe("priceForTier", () => {
   it("prices increase with the tier", () => {
     expect(priceForTier("BUSINESS")).toBeLessThan(priceForTier("PRO"));
     expect(priceForTier("PRO")).toBeLessThan(priceForTier("PREMIUM"));
+  });
+});
+
+describe("priceForAnyTier", () => {
+  it("is free (null) for STARTER, unlike every paid tier", () => {
+    expect(priceForAnyTier("STARTER")).toBeNull();
+  });
+
+  it("matches priceForTier for every paid tier", () => {
+    expect(priceForAnyTier("BUSINESS")).toBe(priceForTier("BUSINESS"));
+    expect(priceForAnyTier("PRO")).toBe(priceForTier("PRO"));
+    expect(priceForAnyTier("PREMIUM")).toBe(priceForTier("PREMIUM"));
+  });
+});
+
+describe("quotaForTier", () => {
+  it("returns the documented quota for a limited tier", () => {
+    expect(quotaForTier("STARTER")).toBe(SUBSCRIPTION_QUOTAS.STARTER);
+  });
+
+  it("returns null (unlimited) for PREMIUM", () => {
+    expect(quotaForTier("PREMIUM")).toBeNull();
   });
 });

@@ -42,6 +42,16 @@ export function priceForTier(tier: "BUSINESS" | "PRO" | "PREMIUM"): number {
   return SUBSCRIPTION_PRICES_DZD[tier];
 }
 
+// Variante utilisée par la page publique /professionnels (Lot 80), qui doit
+// afficher les 4 paliers y compris STARTER (gratuit, donc `null`).
+export function priceForAnyTier(tier: ProSubscriptionTier): number | null {
+  return tier === "STARTER" ? null : SUBSCRIPTION_PRICES_DZD[tier];
+}
+
+export function quotaForTier(tier: ProSubscriptionTier): number | null {
+  return SUBSCRIPTION_QUOTAS[tier];
+}
+
 // Statuts qui "occupent" une place dans le quota — jamais REFUSEE (jamais
 // entrée dans le stock actif), VENDUE ou EXPIREE (annonces closes, ne
 // bloquent pas de nouvelles publications). BROUILLON compte : un brouillon

@@ -1469,3 +1469,18 @@ Prochain lot proposé : à définir avec le porteur de projet — restent en det
 - **Hors périmètre explicite de ce lot** : page marketing `/professionnels` (landing pro documentée au sitemap §2 mais jamais construite, indépendante du mécanisme d'abonnement lui-même) ; quotas/prix non configurables en back-office (cf. choix assumé ci-dessus).
 
 Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise) et le remplacement des visuels de démonstration par de vraies photos ; page marketing `/professionnels` jamais construite ; côté anti-fraude (§16), restent non construits l'incohérence véhicule/prix et la détection de spam.
+
+## Lot 80 — Page publique « Professionnels » (2026-09-06)
+
+Repris directement de la dette signalée à la clôture du Lot 79 : dernière page documentée au sitemap (docs/ARCHITECTURE.md §2 : « /professionnels Landing pro (abonnements) ») restée non construite — le mécanisme d'abonnement existait depuis le Lot 79, mais aucune page publique ne le présentait à un visiteur non connecté avant de créer un compte.
+
+**Livré**
+- `/professionnels` (nouvelle page publique, accessible sans connexion) : présentation des fonctionnalités réellement livrées pour un compte pro (vitrine publique, import de stock en masse, collaborateurs avec permissions, statistiques, badge vérifié, réponse aux avis) — jamais un « outil avancé » ou un « export » inventé pour différencier les paliers, puisque le code ne différencie les paliers QUE par le quota d'annonces actives (§ Lot 79), pas par fonctionnalité.
+- Tableau des 4 paliers avec quotas et prix affichés **directement depuis `src/lib/pro-subscription.ts`** (`SUBSCRIPTION_QUOTAS`/`SUBSCRIPTION_PRICES_DZD`, via deux nouvelles fonctions `quotaForTier`/`priceForAnyTier`) — jamais une copie recopiée à la main qui pourrait diverger silencieusement du mécanisme réel si les valeurs changent un jour.
+- Bouton d'appel à l'action vers `/devenir-professionnel` (le formulaire de création existant, inchangé), lien ajouté au pied de page (à côté de « Toutes les wilayas »/« Souq Auto Mag »), page ajoutée au sitemap.xml avec BreadcrumbList schema.org.
+- 4 nouveaux tests unitaires sur les deux fonctions ajoutées (`priceForAnyTier` gratuit pour Starter, cohérence avec `priceForTier` ; `quotaForTier` limité vs illimité). 370/370 tests au vert au total.
+- Vérification de bout en bout en conditions réelles : chiffres affichés (Starter gratuit/5, Business 3000 DA/20, Pro 6000 DA/60, Premium 12000 DA/illimité) confirmés identiques aux constantes réelles du Lot 79, bouton d'action confirmé pointant vers `/devenir-professionnel`, lien pied de page fonctionnel, page présente dans sitemap.xml, JSON-LD BreadcrumbList validé. Rendu arabe RTL vérifié par capture d'écran (grille de fonctionnalités et tarifs correctement inversée), rendu mobile sans débordement.
+
+Avec ce lot, plus aucune page de contenu ou de conversion documentée au sitemap (docs/ARCHITECTURE.md §2) ne reste non construite.
+
+Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise), le remplacement des visuels de démonstration par de vraies photos, et les quotas/prix d'abonnement pro non configurables en back-office ; côté anti-fraude (§16), restent non construits l'incohérence véhicule/prix et la détection de spam.
