@@ -446,6 +446,8 @@
     "viewListing": "Voir l'annonce",
     "submittedOn": "Déposée le {date}",
     "sellerLabel": "Vendeur",
+    "fraudSignalDuplicatePhoto": "⚠ Photo déjà vue chez un autre vendeur",
+    "fraudSignalLowPrice": "⚠ Prix très inférieur au marché",
     "proAccountLabel": "Entreprise",
     "userReportBadge": "Profil",
     "navReports": "Signalements",

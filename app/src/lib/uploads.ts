@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { fileTypeFromBuffer } from "file-type";
@@ -35,7 +35,14 @@ async function readValidatedImage(file: File, maxBytes: number): Promise<Buffer>
   return buffer;
 }
 
-export async function savePhoto(file: File): Promise<string> {
+export type SavedPhoto = { path: string; sha256: string };
+
+// Lot 77 — l'empreinte porte sur les octets réellement stockés (après le
+// pipeline sharp déterministe), pas sur le fichier brut envoyé par le client :
+// deux uploads du même fichier source produisent alors la même empreinte
+// finale, permettant de repérer une photo strictement identique réutilisée
+// par un AUTRE vendeur (signal anti-fraude, cf. src/lib/fraud-signals.ts).
+export async function savePhoto(file: File): Promise<SavedPhoto> {
   const buffer = await readValidatedImage(file, MAX_PHOTO_BYTES);
 
   await mkdir(LISTING_UPLOAD_DIR, { recursive: true });
@@ -43,13 +50,16 @@ export async function savePhoto(file: File): Promise<string> {
   const filename = `${randomUUID()}.jpg`;
   const outputPath = path.join(LISTING_UPLOAD_DIR, filename);
 
-  await sharp(buffer)
+  const output = await sharp(buffer)
     .rotate() // applique l'orientation EXIF puis la retire
     .resize({ width: MAX_PHOTO_WIDTH, withoutEnlargement: true })
     .jpeg({ quality: 82 })
-    .toFile(outputPath);
+    .toBuffer();
 
-  return `/uploads/listings/${filename}`;
+  await writeFile(outputPath, output);
+  const sha256 = createHash("sha256").update(output).digest("hex");
+
+  return { path: `/uploads/listings/${filename}`, sha256 };
 }
 
 // Lot 34 — avatar de profil : mêmes règles de sécurité que savePhoto (octets

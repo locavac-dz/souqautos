@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { listingSchema } from "@/lib/validation/listing";
-import { savePhoto, PhotoValidationError } from "@/lib/uploads";
+import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const MIN_PHOTOS = 1;
@@ -85,9 +85,9 @@ export async function POST(request: NextRequest) {
     await prisma.user.update({ where: { id: user.id }, data: { phone: data.phone } });
   }
 
-  let savedPaths: string[];
+  let savedPhotos: SavedPhoto[];
   try {
-    savedPaths = await Promise.all(photoFiles.map((file) => savePhoto(file)));
+    savedPhotos = await Promise.all(photoFiles.map((file) => savePhoto(file)));
   } catch (error) {
     if (error instanceof PhotoValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       // Lot 7 : file de modération — publication seulement après approbation admin (§39).
       status: "EN_ATTENTE",
       photos: {
-        create: savedPaths.map((path, index) => ({ path, position: index })),
+        create: savedPhotos.map((photo, index) => ({ path: photo.path, sha256: photo.sha256, position: index })),
       },
       // Historique des prix (Lot 45) : première entrée dès la création.
       priceHistory: {

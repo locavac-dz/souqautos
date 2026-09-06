@@ -446,6 +446,8 @@
     "viewListing": "عرض الإعلان",
     "submittedOn": "أُودع في {date}",
     "sellerLabel": "البائع",
+    "fraudSignalDuplicatePhoto": "⚠ صورة ظهرت لدى بائع آخر",
+    "fraudSignalLowPrice": "⚠ سعر أقل بكثير من السوق",
     "proAccountLabel": "المؤسسة",
     "userReportBadge": "ملف شخصي",
     "navReports": "البلاغات",

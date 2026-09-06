@@ -6,7 +6,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { checkListingContentEditable } from "@/lib/listing-lifecycle";
 import { canManageListing } from "@/lib/listing-access";
 import { listingEditSchema } from "@/lib/validation/listing";
-import { savePhoto, PhotoValidationError } from "@/lib/uploads";
+import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
@@ -110,9 +110,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "too_many_photos" }, { status: 400 });
   }
 
-  let savedPaths: string[];
+  let savedPhotos: SavedPhoto[];
   try {
-    savedPaths = await Promise.all(newPhotoFiles.map((file) => savePhoto(file)));
+    savedPhotos = await Promise.all(newPhotoFiles.map((file) => savePhoto(file)));
   } catch (error) {
     if (error instanceof PhotoValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -131,9 +131,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     ...keptPhotoIds.map((pid, index) =>
       prisma.listingPhoto.update({ where: { id: pid }, data: { position: index } })
     ),
-    ...savedPaths.map((path, i) =>
+    ...savedPhotos.map((photo, i) =>
       prisma.listingPhoto.create({
-        data: { listingId: id, path, position: keptPhotoIds.length + i },
+        data: { listingId: id, path: photo.path, sha256: photo.sha256, position: keptPhotoIds.length + i },
       })
     ),
     prisma.listing.update({

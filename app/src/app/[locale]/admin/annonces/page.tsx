@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { ModerationActions } from "@/components/admin/ModerationActions";
+import { getFraudSignalsForListings } from "@/lib/fraud-signals";
 
 export default async function AdminListingsPage() {
   const locale = await getLocale();
@@ -12,7 +13,10 @@ export default async function AdminListingsPage() {
     prisma.listing.findMany({
       where: { status: "EN_ATTENTE" },
       orderBy: { createdAt: "asc" },
-      include: { photos: { orderBy: { position: "asc" }, take: 1 }, seller: { include: { profile: true } } },
+      include: {
+        photos: { orderBy: { position: "asc" }, select: { path: true, sha256: true } },
+        seller: { include: { profile: true } },
+      },
     }),
     prisma.listing.findMany({
       where: { status: "PUBLIEE" },
@@ -21,6 +25,24 @@ export default async function AdminListingsPage() {
       include: { photos: { orderBy: { position: "asc" }, take: 1 }, seller: { include: { profile: true } } },
     }),
   ]);
+
+  // Lot 77 — signaux anti-fraude (§16) : uniquement sur la file d'attente, où
+  // ils aident concrètement une décision qui n'a pas encore été prise. Une
+  // annonce déjà publiée a déjà été validée par un modérateur, jamais
+  // ré-examinée automatiquement ici.
+  const fraudSignals = await getFraudSignalsForListings(
+    pending.map((l) => ({
+      id: l.id,
+      sellerId: l.sellerId,
+      price: l.price,
+      brandId: l.brandId,
+      modelId: l.modelId,
+      year: l.year,
+      mileage: l.mileage,
+      wilayaId: l.wilayaId,
+      photos: l.photos,
+    }))
+  );
 
   return (
     <div className="space-y-10">
@@ -32,28 +54,45 @@ export default async function AdminListingsPage() {
           <p className="text-slate-500 text-sm">{t("noPending")}</p>
         ) : (
           <div className="space-y-3">
-            {pending.map((listing) => (
-              <div key={listing.id} className="flex gap-4 rounded-lg border border-slate-200 p-3">
-                <Thumbnail path={listing.photos[0]?.path} title={listing.title} />
-                <div className="flex-1">
-                  <Link href={`/annonce/${listing.id}`} className="font-medium text-slate-900 hover:underline">
-                    {listing.title}
-                  </Link>
-                  <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email} ·{" "}
-                    {t("submittedOn", {
-                      date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
-                        dateStyle: "medium",
-                      }).format(listing.createdAt),
-                    })}
-                  </p>
+            {pending.map((listing) => {
+              const signals = fraudSignals.get(listing.id);
+              return (
+                <div key={listing.id} className="flex gap-4 rounded-lg border border-slate-200 p-3">
+                  <Thumbnail path={listing.photos[0]?.path} title={listing.title} />
+                  <div className="flex-1">
+                    <Link href={`/annonce/${listing.id}`} className="font-medium text-slate-900 hover:underline">
+                      {listing.title}
+                    </Link>
+                    <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email} ·{" "}
+                      {t("submittedOn", {
+                        date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
+                          dateStyle: "medium",
+                        }).format(listing.createdAt),
+                      })}
+                    </p>
+                    {(signals?.duplicatePhoto || signals?.lowPrice) && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {signals.duplicatePhoto && (
+                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            {t("fraudSignalDuplicatePhoto")}
+                          </span>
+                        )}
+                        {signals.lowPrice && (
+                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            {t("fraudSignalLowPrice")}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-56 shrink-0">
+                    <ModerationActions listingId={listing.id} status="EN_ATTENTE" />
+                  </div>
                 </div>
-                <div className="w-56 shrink-0">
-                  <ModerationActions listingId={listing.id} status="EN_ATTENTE" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

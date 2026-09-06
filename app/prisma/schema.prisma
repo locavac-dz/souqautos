@@ -687,9 +687,17 @@ model ListingPhoto {
   listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   path      String
   position  Int
+  // Lot 77 — signal anti-fraude (docs/ARCHITECTURE.md §16) : empreinte des
+  // octets réellement stockés (après le pipeline sharp déterministe), jamais
+  // du fichier brut envoyé par le client. Permet de repérer une photo
+  // strictement identique réutilisée par un AUTRE vendeur (indice de vol de
+  // photo/annonce copiée), sans prétendre détecter un recadrage ou une
+  // recompression différente — ce n'est pas un hash perceptuel.
+  sha256    String   @default("")
   createdAt DateTime @default(now())
 
   @@index([listingId])
+  @@index([sha256])
 }
 
 // --- Lot 56 — Alertes de recherche sauvegardée (§27/§33 du cahier
