@@ -908,6 +908,26 @@
     "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى.",
     "restrictedNotice": "هذه المعلومات (الإحداثيات البنكية، الأسعار) مخصصة للمسؤولين فقط."
   },
+  "AdminProSubscriptionSettings": {
+    "title": "الاشتراكات الاحترافية — الحصص والأسعار",
+    "subtitle": "عدد الإعلانات النشطة المسموح بها والسعر الشهري لكل فئة (Starter/Business/Pro/Premium).",
+    "quotaHelp": "حصة الإعلانات النشطة (مسودة، قيد المراجعة، منشورة أو معلّقة) لكل فئة — يجب أن تزداد بشكل صارم من فئة إلى التي تليها.",
+    "starterQuotaLabel": "حصة Starter (إعلانات)",
+    "businessQuotaLabel": "حصة Business (إعلانات)",
+    "proQuotaLabel": "حصة Pro (إعلانات)",
+    "premiumUnlimitedNotice": "تبقى فئة Premium دائمًا غير محدودة (غير قابلة للتعديل).",
+    "businessPriceLabel": "سعر فئة Business (دج/شهر)",
+    "proPriceLabel": "سعر فئة Pro (دج/شهر)",
+    "premiumPriceLabel": "سعر فئة Premium (دج/شهر)",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "saved": "تم حفظ الإعدادات.",
+    "readOnlyNotice": "يمكن للمسؤول فقط تعديل هذه المعلومات.",
+    "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "errorQuotasNotIncreasing": "يجب أن تكون كل حصة أكبر بشكل صارم من السابقة (Starter < Business < Pro).",
+    "errorPricesNotIncreasing": "يجب أن يكون كل سعر أكبر بشكل صارم من السابق (Business < Pro < Premium).",
+    "restrictedNotice": "هذه المعلومات (الحصص، الأسعار) مخصصة للمسؤولين فقط."
+  },
   "AdminAuditLog": {
     "title": "سجل التدقيق",
     "subtitle": "سجل الإجراءات التي قام بها فريق الإشراف والإدارة — الموافقات، التعليقات، تغييرات الأدوار، الاطلاع على وثائق الهوية.",

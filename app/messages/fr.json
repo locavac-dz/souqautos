@@ -908,6 +908,26 @@
     "errorGeneric": "Une erreur est survenue. Réessayez.",
     "restrictedNotice": "Ces informations (coordonnées bancaires, prix) sont réservées aux administrateurs."
   },
+  "AdminProSubscriptionSettings": {
+    "title": "Abonnements professionnels — quotas et prix",
+    "subtitle": "Nombre d'annonces actives autorisées et prix mensuel par palier (Starter/Business/Pro/Premium).",
+    "quotaHelp": "Quota d'annonces actives (brouillon, en attente, publiée ou suspendue) par palier — doit croître strictement d'un palier au suivant.",
+    "starterQuotaLabel": "Quota Starter (annonces)",
+    "businessQuotaLabel": "Quota Business (annonces)",
+    "proQuotaLabel": "Quota Pro (annonces)",
+    "premiumUnlimitedNotice": "Le palier Premium reste toujours illimité (non configurable).",
+    "businessPriceLabel": "Prix palier Business (DA/mois)",
+    "proPriceLabel": "Prix palier Pro (DA/mois)",
+    "premiumPriceLabel": "Prix palier Premium (DA/mois)",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "saved": "Paramètres enregistrés.",
+    "readOnlyNotice": "Seul un administrateur peut modifier ces informations.",
+    "errorGeneric": "Une erreur est survenue. Réessayez.",
+    "errorQuotasNotIncreasing": "Chaque quota doit être strictement supérieur au précédent (Starter < Business < Pro).",
+    "errorPricesNotIncreasing": "Chaque prix doit être strictement supérieur au précédent (Business < Pro < Premium).",
+    "restrictedNotice": "Ces informations (quotas, prix) sont réservées aux administrateurs."
+  },
   "AdminAuditLog": {
     "title": "Journal d'audit",
     "subtitle": "Historique des actions effectuées par l'équipe de modération et d'administration — approbations, suspensions, changements de rôle, consultations de pièces d'identité.",

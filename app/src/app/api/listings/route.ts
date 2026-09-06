@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
   // `null` pour un particulier (pas de compte pro) : jamais de quota appliqué
   // hors de son périmètre documenté.
   const subscriptionStatus = await getSubscriptionStatus(user.id);
-  if (subscriptionStatus && !isWithinQuota(subscriptionStatus.activeListingCount, subscriptionStatus.tier)) {
+  if (subscriptionStatus && !isWithinQuota(subscriptionStatus.activeListingCount, subscriptionStatus.quota)) {
     return NextResponse.json({ error: "quota_exceeded" }, { status: 400 });
   }
 

@@ -1517,3 +1517,20 @@ Repris directement de la dette signalée à la clôture du Lot 81 : second volet
 Avec ce lot, les deux « outils avancés » documentés pour le palier Pro (§4-B) sont désormais tous deux livrés.
 
 Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise), le remplacement des visuels de démonstration par de vraies photos, et les quotas/prix d'abonnement pro non configurables en back-office ; côté anti-fraude (§16), restent non construits l'incohérence véhicule/prix et la détection de spam.
+
+## Lot 83 — Quotas et prix d'abonnement pro configurables (2026-09-06)
+
+Referme la dernière dette technique explicitement signalée sur les abonnements pro : les quotas/prix (Lot 79) étaient codés en dur, choix assumé à l'époque (« valeur fonctionnelle d'abord, éditable plus tard », même trajectoire que les seuils de suspension automatique, Lot 21→47) — devenu le moment de les rendre configurables.
+
+**Livré**
+- `ProSubscriptionSettings` (nouveau modèle singleton, migration hand-écrite), même patron que `PaymentSettings`/`ModerationSettings` : 3 quotas (Starter/Business/Pro) + 3 prix (Business/Pro/Premium). Premium reste **toujours illimité** — jamais un champ de quota pour lui, un nombre ne représenterait pas honnêtement « illimité ».
+- Refactor de `src/lib/pro-subscription.ts` : `quotaForTier`/`priceForTier`/`priceForAnyTier` prennent désormais les settings réels en paramètre plutôt que de lire une constante interne — même patron que `priceForFormula` (Lot 66, formules d'annonce), pour ne jamais laisser une fonction lire une valeur figée à côté de la vraie source de configuration. `isWithinQuota` simplifiée pour prendre directement le quota déjà résolu (plus besoin de refournir palier + settings à ce point d'appel).
+- `PATCH /api/admin/pro-subscription-settings` (ADMIN uniquement, même sensibilité que les coordonnées bancaires) + validation de cohérence explicite : chaque quota/prix doit être strictement croissant d'un palier au suivant (`Starter < Business < Pro`, `Business < Pro < Premium`) — un palier supérieur moins avantageux que le précédent n'aurait aucun sens commercial et n'est jamais silencieusement accepté.
+- Nouvelle section « Abonnements professionnels — quotas et prix » sur `/admin/parametres`, même patron que le formulaire de paiement (Lot 66) : lecture seule pour un non-admin, formulaire complet sinon.
+- `/professionnels` et `/pro/tableau-de-bord` lisent désormais les settings réels au lieu des anciennes constantes — un changement en back-office se reflète immédiatement partout, sans redéploiement.
+- 5 nouveaux tests unitaires sur `validateQuota` + tests existants de `priceForTier`/`quotaForTier` étendus pour vérifier qu'un changement de settings est reflété immédiatement (jamais une valeur figée). 393/393 tests au vert au total.
+- Vérification de bout en bout en conditions réelles : quota Pro modifié de 60 à 80 depuis `/admin/parametres`, changement confirmé **immédiatement répercuté** sur `/professionnels` (affichage public) sans redémarrage ; tentative de configuration incohérente (quota Business inférieur au quota Starter) rejetée avec `quotas_not_increasing` ; valeurs restaurées à l'identique (5/20/60, 3000/6000/12000 DA) après vérification. RTL arabe et rendu mobile du nouveau formulaire vérifiés par capture d'écran.
+
+Avec ce lot, plus aucune dette technique n'est signalée sur le mécanisme d'abonnement professionnel (Lots 79-83).
+
+Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise) et le remplacement des visuels de démonstration par de vraies photos ; côté anti-fraude (§16), restent non construits l'incohérence véhicule/prix et la détection de spam.

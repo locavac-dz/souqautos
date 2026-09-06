@@ -5,6 +5,7 @@ import { SITE_URL } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { hasAdvancedProTools, priceForAnyTier, quotaForTier } from "@/lib/pro-subscription";
+import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
 import type { ProSubscriptionTier } from "@prisma/client";
 
 // Lot 80 — dernière page documentée au sitemap (docs/ARCHITECTURE.md §2 :
@@ -35,6 +36,7 @@ export async function generateMetadata({
 export default async function ProfessionalsLandingPage() {
   const locale = await getLocale();
   const t = await getTranslations("ProLanding");
+  const subscriptionSettings = await getProSubscriptionSettings();
 
   const breadcrumbItems = [{ name: t("breadcrumbHome"), href: "/" }, { name: t("title") }];
   const jsonLd = buildBreadcrumbJsonLd([
@@ -84,8 +86,8 @@ export default async function ProfessionalsLandingPage() {
       <p className="mt-1 text-sm text-slate-500">{t("pricingSubtitle")}</p>
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {TIERS.map((tier) => {
-          const quota = quotaForTier(tier);
-          const price = priceForAnyTier(tier);
+          const quota = quotaForTier(tier, subscriptionSettings);
+          const price = priceForAnyTier(tier, subscriptionSettings);
           return (
             <div key={tier} className="rounded-lg border border-slate-200 p-4 flex flex-col">
               <p className="text-sm font-semibold text-slate-900">{t(`tier${tier}`)}</p>

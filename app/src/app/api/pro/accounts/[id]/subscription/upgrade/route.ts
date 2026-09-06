@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkSubscriptionUpgradeEligible, priceForTier } from "@/lib/pro-subscription";
+import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
 import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
 
 const bodySchema = z.object({
@@ -43,8 +44,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const settings = await getPaymentSettings();
-  if (!isBankDetailsComplete(settings)) {
+  const paymentSettings = await getPaymentSettings();
+  if (!isBankDetailsComplete(paymentSettings)) {
     return NextResponse.json({ error: "bank_details_missing" }, { status: 400 });
   }
 
@@ -62,7 +63,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: eligibility.error }, { status: 400 });
   }
 
-  const amountDzd = priceForTier(parsed.data.tier);
+  const subscriptionSettings = await getProSubscriptionSettings();
+  const amountDzd = priceForTier(parsed.data.tier, subscriptionSettings);
 
   // Même garde-fou TOCTOU que PaymentOrder (Lot 69) : le `findFirst` ci-dessus
   // ne suffit pas seul contre un double-clic/retry réseau — l'index unique

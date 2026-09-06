@@ -1,27 +1,13 @@
 import type { ListingStatus, ProSubscriptionTier } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getProSubscriptionSettings, type ProSubscriptionSettingsValues } from "@/lib/pro-subscription-settings";
 
 // Lot 79 — abonnements professionnels (§4-B/§11 du cahier d'architecture).
-// Quotas/prix en dur pour l'instant, pas encore configurables en back-office
-// — même choix assumé que PREMIUM_VALIDITY_DAYS (src/lib/payment-orders.ts) :
-// une valeur fonctionnelle d'abord, éditable plus tard si le besoin apparaît
-// (cf. AUTO_SUSPEND_*_THRESHOLD codé en dur au Lot 21, configurable au Lot 47).
-export const SUBSCRIPTION_QUOTAS: Record<ProSubscriptionTier, number | null> = {
-  STARTER: 5,
-  BUSINESS: 20,
-  PRO: 60,
-  PREMIUM: null, // illimité
-};
-
-// STARTER est le palier gratuit par défaut — jamais un prix pour lui.
-export const SUBSCRIPTION_PRICES_DZD: Record<"BUSINESS" | "PRO" | "PREMIUM", number> = {
-  BUSINESS: 3000,
-  PRO: 6000,
-  PREMIUM: 12000,
-};
-
-// Même règle que la validité prolongée des formules d'annonce (Lot 66) : un
-// abonnement payant dure 30 jours, renouvelable par un nouveau virement.
+// Lot 83 — quotas/prix rendus configurables (src/lib/pro-subscription-settings.ts) :
+// chaque fonction ci-dessous prend désormais les paramètres réels en entrée,
+// jamais une constante interne — même patron que priceForFormula (Lot 66,
+// src/lib/payment-orders.ts), pour ne jamais lire une valeur figée à côté de
+// la vraie source de configuration.
 export const SUBSCRIPTION_VALIDITY_DAYS = 30;
 
 // Jamais déduit du tri alphabétique de l'énumération (BUSINESS < PREMIUM <
@@ -38,18 +24,37 @@ export function tierRank(tier: ProSubscriptionTier): number {
   return TIER_RANK[tier];
 }
 
-export function priceForTier(tier: "BUSINESS" | "PRO" | "PREMIUM"): number {
-  return SUBSCRIPTION_PRICES_DZD[tier];
+export function priceForTier(
+  tier: "BUSINESS" | "PRO" | "PREMIUM",
+  settings: ProSubscriptionSettingsValues
+): number {
+  switch (tier) {
+    case "BUSINESS":
+      return settings.businessPriceDzd;
+    case "PRO":
+      return settings.proPriceDzd;
+    case "PREMIUM":
+      return settings.premiumPriceDzd;
+  }
 }
 
 // Variante utilisée par la page publique /professionnels (Lot 80), qui doit
 // afficher les 4 paliers y compris STARTER (gratuit, donc `null`).
-export function priceForAnyTier(tier: ProSubscriptionTier): number | null {
-  return tier === "STARTER" ? null : SUBSCRIPTION_PRICES_DZD[tier];
+export function priceForAnyTier(tier: ProSubscriptionTier, settings: ProSubscriptionSettingsValues): number | null {
+  return tier === "STARTER" ? null : priceForTier(tier, settings);
 }
 
-export function quotaForTier(tier: ProSubscriptionTier): number | null {
-  return SUBSCRIPTION_QUOTAS[tier];
+export function quotaForTier(tier: ProSubscriptionTier, settings: ProSubscriptionSettingsValues): number | null {
+  switch (tier) {
+    case "STARTER":
+      return settings.starterQuota;
+    case "BUSINESS":
+      return settings.businessQuota;
+    case "PRO":
+      return settings.proQuota;
+    case "PREMIUM":
+      return null; // illimité — jamais un nombre, aussi grand soit-il, pour "illimité"
+  }
 }
 
 // Statuts qui "occupent" une place dans le quota — jamais REFUSEE (jamais
@@ -59,8 +64,10 @@ export function quotaForTier(tier: ProSubscriptionTier): number | null {
 // nominalement une place dans le stock du compte pro.
 export const QUOTA_COUNTED_STATUSES: ListingStatus[] = ["BROUILLON", "EN_ATTENTE", "PUBLIEE", "SUSPENDUE"];
 
-export function isWithinQuota(activeListingCount: number, tier: ProSubscriptionTier): boolean {
-  const quota = SUBSCRIPTION_QUOTAS[tier];
+// Prend directement le quota déjà résolu (cf. SubscriptionStatus.quota) —
+// jamais besoin de re-fournir le palier/les settings à cet appel, qui n'a
+// plus qu'une comparaison à faire.
+export function isWithinQuota(activeListingCount: number, quota: number | null): boolean {
   return quota === null || activeListingCount < quota;
 }
 
@@ -102,7 +109,10 @@ export function effectiveTier(tier: ProSubscriptionTier, expiresAt: Date | null,
 // ne jamais laisser diverger deux vérifications de palier censées être
 // identiques. Premium hérite de l'avantage de Pro (palier strictement
 // supérieur), jamais Starter/Business qui ne sont jamais mentionnés avec ces
-// outils dans le cahier des charges.
+// outils dans le cahier des charges. Jamais dépendante des settings
+// configurables (Lot 83) — quels que soient les quotas/prix choisis par
+// l'admin, seuls Pro/Premium ont accès à ces outils, ce n'est pas un
+// paramètre éditable.
 const ADVANCED_TOOLS_TIERS: ReadonlySet<ProSubscriptionTier> = new Set(["PRO", "PREMIUM"]);
 
 export function hasAdvancedProTools(tier: ProSubscriptionTier): boolean {
@@ -120,10 +130,13 @@ export type SubscriptionStatus = {
 // d'un upgrade réel, jamais à l'inscription (même principe que
 // PaymentSettings, une ligne "vide" n'apporte rien tant que rien n'a changé).
 export async function getSubscriptionStatus(professionalAccountUserId: string): Promise<SubscriptionStatus | null> {
-  const account = await prisma.professionalAccount.findUnique({
-    where: { userId: professionalAccountUserId },
-    include: { subscription: true },
-  });
+  const [account, settings] = await Promise.all([
+    prisma.professionalAccount.findUnique({
+      where: { userId: professionalAccountUserId },
+      include: { subscription: true },
+    }),
+    getProSubscriptionSettings(),
+  ]);
   if (!account) return null;
 
   const now = new Date();
@@ -132,5 +145,5 @@ export async function getSubscriptionStatus(professionalAccountUserId: string): 
     where: { sellerId: professionalAccountUserId, status: { in: QUOTA_COUNTED_STATUSES } },
   });
 
-  return { tier, quota: SUBSCRIPTION_QUOTAS[tier], activeListingCount };
+  return { tier, quota: quotaForTier(tier, settings), activeListingCount };
 }

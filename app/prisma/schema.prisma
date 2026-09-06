@@ -709,6 +709,24 @@ model ProSubscriptionOrder {
   // filtré ajouté en SQL brut dans la migration, jamais laissé pour plus tard).
 }
 
+// Lot 83 — quotas/prix d'abonnement pro rendus configurables en back-office,
+// jusqu'ici codés en dur dans src/lib/pro-subscription.ts (Lot 79, choix
+// assumé « valeur fonctionnelle d'abord, éditable plus tard » — même
+// trajectoire que AUTO_SUSPEND_*_THRESHOLD, Lot 21→47). Ligne singleton
+// comme PaymentSettings/ModerationSettings. PREMIUM reste toujours illimité
+// (jamais un champ de quota pour lui — un nombre, aussi grand soit-il, ne
+// représenterait pas honnêtement "illimité").
+model ProSubscriptionSettings {
+  id               String   @id @default("singleton")
+  starterQuota     Int      @default(5)
+  businessQuota    Int      @default(20)
+  proQuota         Int      @default(60)
+  businessPriceDzd Int      @default(3000)
+  proPriceDzd      Int      @default(6000)
+  premiumPriceDzd  Int      @default(12000)
+  updatedAt        DateTime @updatedAt
+}
+
 // --- Lot 14 — Vérification d'identité (§26, KYC léger manuel) ---
 // Aucune API KYC tierce réelle (Onfido/Jumio/Veriff) intégrée — même blocage
 // que le paiement (identifiants réels non disponibles). Traitement honnête :

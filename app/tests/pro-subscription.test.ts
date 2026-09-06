@@ -7,9 +7,18 @@ import {
   priceForAnyTier,
   priceForTier,
   quotaForTier,
-  SUBSCRIPTION_QUOTAS,
   tierRank,
 } from "@/lib/pro-subscription";
+import type { ProSubscriptionSettingsValues } from "@/lib/pro-subscription-settings";
+
+const settings: ProSubscriptionSettingsValues = {
+  starterQuota: 5,
+  businessQuota: 20,
+  proQuota: 60,
+  businessPriceDzd: 3000,
+  proPriceDzd: 6000,
+  premiumPriceDzd: 12000,
+};
 
 describe("tierRank", () => {
   it("ranks tiers by real value, never alphabetically", () => {
@@ -20,16 +29,16 @@ describe("tierRank", () => {
 });
 
 describe("isWithinQuota", () => {
-  it("allows a new listing when under the tier quota", () => {
-    expect(isWithinQuota(4, "STARTER")).toBe(true);
+  it("allows a new listing when under the resolved quota", () => {
+    expect(isWithinQuota(4, 5)).toBe(true);
   });
 
-  it("blocks a new listing once the tier quota is reached", () => {
-    expect(isWithinQuota(SUBSCRIPTION_QUOTAS.STARTER!, "STARTER")).toBe(false);
+  it("blocks a new listing once the resolved quota is reached", () => {
+    expect(isWithinQuota(5, 5)).toBe(false);
   });
 
-  it("never blocks PREMIUM (unlimited quota)", () => {
-    expect(isWithinQuota(10_000, "PREMIUM")).toBe(true);
+  it("never blocks an unlimited (null) quota", () => {
+    expect(isWithinQuota(10_000, null)).toBe(true);
   });
 });
 
@@ -90,37 +99,44 @@ describe("effectiveTier", () => {
 });
 
 describe("priceForTier", () => {
-  it("returns a strictly positive price for every paid tier", () => {
-    expect(priceForTier("BUSINESS")).toBeGreaterThan(0);
-    expect(priceForTier("PRO")).toBeGreaterThan(0);
-    expect(priceForTier("PREMIUM")).toBeGreaterThan(0);
+  it("reads the configured price for every paid tier", () => {
+    expect(priceForTier("BUSINESS", settings)).toBe(settings.businessPriceDzd);
+    expect(priceForTier("PRO", settings)).toBe(settings.proPriceDzd);
+    expect(priceForTier("PREMIUM", settings)).toBe(settings.premiumPriceDzd);
   });
 
-  it("prices increase with the tier", () => {
-    expect(priceForTier("BUSINESS")).toBeLessThan(priceForTier("PRO"));
-    expect(priceForTier("PRO")).toBeLessThan(priceForTier("PREMIUM"));
+  it("reflects a settings change immediately, never a stale hardcoded value", () => {
+    const custom = { ...settings, proPriceDzd: 9999 };
+    expect(priceForTier("PRO", custom)).toBe(9999);
   });
 });
 
 describe("priceForAnyTier", () => {
   it("is free (null) for STARTER, unlike every paid tier", () => {
-    expect(priceForAnyTier("STARTER")).toBeNull();
+    expect(priceForAnyTier("STARTER", settings)).toBeNull();
   });
 
   it("matches priceForTier for every paid tier", () => {
-    expect(priceForAnyTier("BUSINESS")).toBe(priceForTier("BUSINESS"));
-    expect(priceForAnyTier("PRO")).toBe(priceForTier("PRO"));
-    expect(priceForAnyTier("PREMIUM")).toBe(priceForTier("PREMIUM"));
+    expect(priceForAnyTier("BUSINESS", settings)).toBe(priceForTier("BUSINESS", settings));
+    expect(priceForAnyTier("PRO", settings)).toBe(priceForTier("PRO", settings));
+    expect(priceForAnyTier("PREMIUM", settings)).toBe(priceForTier("PREMIUM", settings));
   });
 });
 
 describe("quotaForTier", () => {
-  it("returns the documented quota for a limited tier", () => {
-    expect(quotaForTier("STARTER")).toBe(SUBSCRIPTION_QUOTAS.STARTER);
+  it("returns the configured quota for a limited tier", () => {
+    expect(quotaForTier("STARTER", settings)).toBe(settings.starterQuota);
+    expect(quotaForTier("BUSINESS", settings)).toBe(settings.businessQuota);
+    expect(quotaForTier("PRO", settings)).toBe(settings.proQuota);
   });
 
-  it("returns null (unlimited) for PREMIUM", () => {
-    expect(quotaForTier("PREMIUM")).toBeNull();
+  it("returns null (unlimited) for PREMIUM regardless of settings", () => {
+    expect(quotaForTier("PREMIUM", settings)).toBeNull();
+  });
+
+  it("reflects a settings change immediately, never a stale hardcoded value", () => {
+    const custom = { ...settings, starterQuota: 1 };
+    expect(quotaForTier("STARTER", custom)).toBe(1);
   });
 });
 

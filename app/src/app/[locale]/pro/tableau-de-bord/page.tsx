@@ -7,6 +7,7 @@ import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions"
 import { ProCollaboratorsManager } from "@/components/ProCollaboratorsManager";
 import { ProSubscriptionUpgrade } from "@/components/ProSubscriptionUpgrade";
 import { hasAdvancedProTools, getSubscriptionStatus, priceForTier } from "@/lib/pro-subscription";
+import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
 import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
 import type { ProSubscriptionTier } from "@prisma/client";
 
@@ -55,7 +56,7 @@ export default async function ProDashboardPage() {
     );
   }
 
-  const [listingCount, viewsAgg, conversationCount, collaborators, subscriptionStatus, paymentSettings] =
+  const [listingCount, viewsAgg, conversationCount, collaborators, subscriptionStatus, paymentSettings, subscriptionSettings] =
     await Promise.all([
       prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } }),
       prisma.listing.aggregate({ where: { sellerId: account.userId }, _sum: { views: true } }),
@@ -68,6 +69,7 @@ export default async function ProDashboardPage() {
         : Promise.resolve([]),
       getSubscriptionStatus(account.userId),
       getPaymentSettings(),
+      getProSubscriptionSettings(),
     ]);
 
   // Lot 79 — palier supérieurs proposés à l'upgrade : tous les paliers payants
@@ -143,7 +145,7 @@ export default async function ProDashboardPage() {
                     key={tier}
                     accountId={account.id}
                     targetTier={tier}
-                    priceDzd={priceForTier(tier)}
+                    priceDzd={priceForTier(tier, subscriptionSettings)}
                     bankDetails={{
                       bankName: paymentSettings.bankName ?? "",
                       bankRib: paymentSettings.bankRib ?? "",
