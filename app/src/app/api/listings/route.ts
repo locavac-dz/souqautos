@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { listingSchema } from "@/lib/validation/listing";
 import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getSubscriptionStatus, isWithinQuota } from "@/lib/pro-subscription";
 
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
@@ -83,6 +84,14 @@ export async function POST(request: NextRequest) {
   }
   if (!user.phone && data.phone) {
     await prisma.user.update({ where: { id: user.id }, data: { phone: data.phone } });
+  }
+
+  // Lot 79 — quota d'annonces actives par palier d'abonnement pro (§4-B).
+  // `null` pour un particulier (pas de compte pro) : jamais de quota appliqué
+  // hors de son périmètre documenté.
+  const subscriptionStatus = await getSubscriptionStatus(user.id);
+  if (subscriptionStatus && !isWithinQuota(subscriptionStatus.activeListingCount, subscriptionStatus.tier)) {
+    return NextResponse.json({ error: "quota_exceeded" }, { status: 400 });
   }
 
   let savedPhotos: SavedPhoto[];

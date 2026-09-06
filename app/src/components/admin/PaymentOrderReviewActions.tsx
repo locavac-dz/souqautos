@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 
-export function PaymentOrderReviewActions({ orderId }: { orderId: string }) {
+// `reviewUrl` généralise ce composant à toute revue "virement + approuver/
+// refuser avec motif" (Lot 79 : réutilisé tel quel pour les demandes
+// d'abonnement pro, mêmes actions et mêmes clés i18n que les demandes de
+// formule d'annonce).
+export function PaymentOrderReviewActions({ orderId, reviewUrl }: { orderId: string; reviewUrl?: string }) {
   const t = useTranslations("Admin");
   const router = useRouter();
   const [reason, setReason] = useState("");
@@ -15,7 +19,7 @@ export function PaymentOrderReviewActions({ orderId }: { orderId: string }) {
     setPending(true);
     setError(null);
 
-    const res = await fetch(`/api/admin/payment-orders/${orderId}/review`, {
+    const res = await fetch(reviewUrl ?? `/api/admin/payment-orders/${orderId}/review`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, reason: reason.trim() || undefined }),

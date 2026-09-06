@@ -65,6 +65,8 @@ model User {
   searchAlerts                 SearchAlert[]
   paymentOrders                PaymentOrder[] @relation("PaymentOrderAuthor")
   paymentOrdersReviewed        PaymentOrder[] @relation("PaymentOrderReviewer")
+  proSubscriptionOrders         ProSubscriptionOrder[] @relation("ProSubscriptionOrderAuthor")
+  proSubscriptionOrdersReviewed ProSubscriptionOrder[] @relation("ProSubscriptionOrderReviewer")
 }
 
 model Profile {
@@ -623,6 +625,8 @@ model ProfessionalAccount {
   createdAt     DateTime          @default(now())
   collaborators ProCollaborator[]
   reviews       Review[]
+  subscription  ProSubscription?
+  subscriptionOrders ProSubscriptionOrder[]
 
   @@index([wilayaId])
 }
@@ -643,6 +647,60 @@ model ProCollaborator {
 
   @@unique([professionalAccountId, userId])
   @@index([userId])
+}
+
+// --- Lot 79 — Abonnements professionnels (§4-B / §11 du cahier
+// d'architecture, paliers Starter/Business/Pro/Premium) ---
+// Écart documenté depuis le Lot 13 ("un seul palier fonctionnel, pas
+// d'abonnement payant, le paiement reste bloqué en attente d'identifiants
+// réels") — devenu obsolète depuis que le virement bancaire manuel a été
+// adopté comme méthode de paiement réelle pour les formules d'annonce
+// (Lot 66). Même mécanisme reproduit ici pour les comptes pro : jamais de
+// fausse intégration CIB/Edahabia, un virement + rapprochement humain.
+enum ProSubscriptionTier {
+  STARTER
+  BUSINESS
+  PRO
+  PREMIUM
+}
+
+// Une ligne par compte pro, créée paresseusement au premier besoin (comme
+// PaymentSettings) plutôt qu'à l'inscription — un compte pro sans ligne est
+// implicitement STARTER (palier gratuit par défaut, cf. src/lib/pro-subscription.ts).
+model ProSubscription {
+  id                    String              @id @default(cuid())
+  professionalAccountId String              @unique
+  professionalAccount   ProfessionalAccount @relation(fields: [professionalAccountId], references: [id], onDelete: Cascade)
+  tier                  ProSubscriptionTier @default(STARTER)
+  // `null` pour STARTER (gratuit, jamais expiré) ; fixée à la date
+  // d'approbation + durée de validité pour un palier payant (même principe
+  // que Listing.expiresAt pour les formules d'annonce, Lot 66).
+  expiresAt             DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+}
+
+model ProSubscriptionOrder {
+  id                    String              @id @default(cuid())
+  professionalAccountId String
+  professionalAccount   ProfessionalAccount @relation(fields: [professionalAccountId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User                @relation("ProSubscriptionOrderAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  tier                  ProSubscriptionTier
+  amountDzd             Int
+  reference             String
+  status                PaymentOrderStatus  @default(EN_ATTENTE)
+  reviewedById          String?
+  reviewedBy            User?               @relation("ProSubscriptionOrderReviewer", fields: [reviewedById], references: [id])
+  reviewNote            String?
+  createdAt             DateTime            @default(now())
+  reviewedAt            DateTime?
+
+  @@index([status])
+  @@index([professionalAccountId])
+  // Un seul virement EN_ATTENTE par compte pro — même piège TOCTOU que
+  // PaymentOrder (Lot 69), corrigé de la même façon dès ce lot (index unique
+  // filtré ajouté en SQL brut dans la migration, jamais laissé pour plus tard).
 }
 
 // --- Lot 14 — Vérification d'identité (§26, KYC léger manuel) ---

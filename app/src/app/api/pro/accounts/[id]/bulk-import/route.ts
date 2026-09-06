@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { parseCsv, csvRowsToRecords } from "@/lib/csv";
 import { mapCsvRowToListingInput, type ImportLookups } from "@/lib/bulk-import";
 import type { ListingInput } from "@/lib/validation/listing";
+import { getSubscriptionStatus } from "@/lib/pro-subscription";
 
 const MAX_ROWS = 500;
 
@@ -90,6 +91,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       rejected.push({ row: index + 2, error: result.error });
     }
   });
+
+  // Lot 79 — quota d'annonces actives par palier d'abonnement (§4-B) : un
+  // import ne peut pas contourner le quota en ajoutant d'un coup plus de
+  // lignes que la place restante, jamais un rejet partiel silencieux qui
+  // laisserait deviner combien sont réellement passées.
+  if (toCreate.length > 0) {
+    const subscriptionStatus = await getSubscriptionStatus(account.userId);
+    if (subscriptionStatus && subscriptionStatus.quota !== null) {
+      const remaining = subscriptionStatus.quota - subscriptionStatus.activeListingCount;
+      if (toCreate.length > remaining) {
+        return NextResponse.json(
+          { error: "quota_exceeded", quota: subscriptionStatus.quota, remaining: Math.max(remaining, 0) },
+          { status: 400 }
+        );
+      }
+    }
+  }
 
   if (toCreate.length > 0) {
     await prisma.listing.createMany({

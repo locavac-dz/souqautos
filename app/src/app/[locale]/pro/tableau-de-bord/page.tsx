@@ -5,6 +5,10 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageCollaborators, canManageProListings, canViewProDashboard } from "@/lib/pro-account";
 import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions";
 import { ProCollaboratorsManager } from "@/components/ProCollaboratorsManager";
+import { ProSubscriptionUpgrade } from "@/components/ProSubscriptionUpgrade";
+import { getSubscriptionStatus, priceForTier } from "@/lib/pro-subscription";
+import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
+import type { ProSubscriptionTier } from "@prisma/client";
 
 export default async function ProDashboardPage() {
   const locale = await getLocale();
@@ -51,17 +55,29 @@ export default async function ProDashboardPage() {
     );
   }
 
-  const [listingCount, viewsAgg, conversationCount, collaborators] = await Promise.all([
-    prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } }),
-    prisma.listing.aggregate({ where: { sellerId: account.userId }, _sum: { views: true } }),
-    prisma.conversation.count({ where: { sellerId: account.userId } }),
-    canManageCollaborators(access)
-      ? prisma.proCollaborator.findMany({
-          where: { professionalAccountId: account.id },
-          include: { user: { include: { profile: true } } },
-        })
-      : Promise.resolve([]),
-  ]);
+  const [listingCount, viewsAgg, conversationCount, collaborators, subscriptionStatus, paymentSettings] =
+    await Promise.all([
+      prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } }),
+      prisma.listing.aggregate({ where: { sellerId: account.userId }, _sum: { views: true } }),
+      prisma.conversation.count({ where: { sellerId: account.userId } }),
+      canManageCollaborators(access)
+        ? prisma.proCollaborator.findMany({
+            where: { professionalAccountId: account.id },
+            include: { user: { include: { profile: true } } },
+          })
+        : Promise.resolve([]),
+      getSubscriptionStatus(account.userId),
+      getPaymentSettings(),
+    ]);
+
+  // Lot 79 — palier supérieurs proposés à l'upgrade : tous les paliers payants
+  // strictement au-dessus du palier actuel (pas seulement le suivant), un
+  // compte Starter peut vouloir passer directement à Premium.
+  const allTiers: ProSubscriptionTier[] = ["STARTER", "BUSINESS", "PRO", "PREMIUM"];
+  const currentTier = subscriptionStatus?.tier ?? "STARTER";
+  const currentTierIndex = allTiers.indexOf(currentTier);
+  const upgradableTiers = allTiers.slice(currentTierIndex + 1) as Exclude<ProSubscriptionTier, "STARTER">[];
+  const bankReady = isBankDetailsComplete(paymentSettings);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -91,6 +107,44 @@ export default async function ProDashboardPage() {
           </Link>
         )}
       </div>
+
+      {subscriptionStatus && (
+        <div className="mt-8 rounded-lg border border-slate-200 p-4">
+          <h2 className="text-sm font-medium text-slate-900 mb-1">{t("subscriptionTitle")}</h2>
+          <p className="text-sm text-slate-700">
+            {t("subscriptionCurrentTier", { tier: t(`subscriptionTier${subscriptionStatus.tier}`) })}
+          </p>
+          <p className="text-sm text-slate-500 mt-1">
+            {subscriptionStatus.quota === null
+              ? t("subscriptionQuotaUnlimited", { count: subscriptionStatus.activeListingCount })
+              : t("subscriptionQuotaUsage", {
+                  count: subscriptionStatus.activeListingCount,
+                  quota: subscriptionStatus.quota,
+                })}
+          </p>
+          {isOwner && upgradableTiers.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {!bankReady ? (
+                <p className="text-xs text-amber-700">{t("subscriptionBankDetailsMissing")}</p>
+              ) : (
+                upgradableTiers.map((tier) => (
+                  <ProSubscriptionUpgrade
+                    key={tier}
+                    accountId={account.id}
+                    targetTier={tier}
+                    priceDzd={priceForTier(tier)}
+                    bankDetails={{
+                      bankName: paymentSettings.bankName ?? "",
+                      bankRib: paymentSettings.bankRib ?? "",
+                      bankAccountHolder: paymentSettings.bankAccountHolder ?? "",
+                    }}
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {canManageCollaborators(access) && (
         <div className="mt-10">
