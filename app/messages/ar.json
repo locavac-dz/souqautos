@@ -65,6 +65,7 @@
     "group": "منصة تابعة لـ INGENICA CIVIL EURL",
     "browseBrands": "جميع الماركات",
     "browseWilayas": "جميع الولايات",
+    "blog": "مجلة سوق أوتو",
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
     "legalNotice": "الإشعار القانوني",
     "privacyPolicy": "سياسة الخصوصية",
@@ -475,6 +476,7 @@
     "navSettings": "الإعدادات",
     "navAuditLog": "سجل التدقيق",
     "navPayments": "المدفوعات",
+    "navBlog": "المجلة",
     "statisticsTitle": "إحصائيات المنتج",
     "statSummaryConversations": "المحادثات",
     "statSummaryReviews": "التقييمات",
@@ -928,5 +930,34 @@
     "updatesTitle": "تعديل الشروط",
     "updatesBody": "يمكن تعديل هذه الشروط في أي وقت ؛ النسخة المعمول بها هي تلك المنشورة في هذه الصفحة وقت استخدام الموقع.",
     "lastUpdated": "آخر تحديث: 5 سبتمبر 2026."
+  },
+  "Blog": {
+    "breadcrumbHome": "الرئيسية",
+    "indexTitle": "مجلة سوق أوتو",
+    "indexSubtitle": "نصائح وأخبار لشراء وبيع وصيانة السيارات في الجزائر.",
+    "empty": "لا يوجد مقال منشور حاليًا."
+  },
+  "AdminBlog": {
+    "title": "مجلة سوق أوتو",
+    "subtitle": "المقالات المنشورة على المدونة العامة للموقع.",
+    "newArticle": "مقال جديد",
+    "editArticle": "تعديل المقال",
+    "empty": "لا يوجد مقال حاليًا.",
+    "draft": "مسودة",
+    "publishedOn": "نُشر في {date}",
+    "view": "عرض",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "titleFrLabel": "العنوان (بالفرنسية)",
+    "titleArLabel": "العنوان (بالعربية)",
+    "excerptFrLabel": "الملخص (بالفرنسية)",
+    "excerptArLabel": "الملخص (بالعربية)",
+    "contentFrLabel": "المحتوى (بالفرنسية)",
+    "contentArLabel": "المحتوى (بالعربية)",
+    "contentHelp": "افصل بين الفقرات بسطر فارغ.",
+    "publishedLabel": "نشر هذا المقال (يظهر للعموم)",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "errorGeneric": "حدث خطأ. تأكد من ملء جميع الحقول (الفرنسية والعربية مطلوبتان)."
   }
 }

@@ -25,6 +25,30 @@ export type VehicleJsonLdInput = {
   gearboxLabel: string;
 };
 
+export type ArticleJsonLdInput = {
+  title: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  dateModified: string;
+  authorName: string;
+};
+
+// Lot 76 — schema.org Article pour le blog (docs/ARCHITECTURE.md §37 :
+// « données structurées schema.org »), même principe que buildVehicleJsonLd.
+export function buildArticleJsonLd(input: ArticleJsonLdInput) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: input.title,
+    description: input.description,
+    url: input.url,
+    datePublished: input.datePublished,
+    dateModified: input.dateModified,
+    author: { "@type": "Organization", name: input.authorName },
+  };
+}
+
 export function buildVehicleJsonLd(input: VehicleJsonLdInput) {
   return {
     "@context": "https://schema.org",

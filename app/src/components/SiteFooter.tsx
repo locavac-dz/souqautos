@@ -13,6 +13,9 @@ export async function SiteFooter() {
         <Link href="/wilaya" className="hover:text-slate-700 hover:underline">
           {t("browseWilayas")}
         </Link>
+        <Link href="/mag" className="hover:text-slate-700 hover:underline">
+          {t("blog")}
+        </Link>
         <Link href="/mentions-legales" className="hover:text-slate-700 hover:underline">
           {t("legalNotice")}
         </Link>

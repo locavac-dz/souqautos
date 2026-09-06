@@ -65,6 +65,7 @@
     "group": "Une plateforme INGENICA CIVIL EURL",
     "browseBrands": "Toutes les marques",
     "browseWilayas": "Toutes les wilayas",
+    "blog": "Souq Auto Mag",
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
     "legalNotice": "Mentions légales",
     "privacyPolicy": "Politique de confidentialité",
@@ -475,6 +476,7 @@
     "navSettings": "Paramètres",
     "navAuditLog": "Journal d'audit",
     "navPayments": "Paiements",
+    "navBlog": "Mag",
     "statisticsTitle": "Statistiques produit",
     "statSummaryConversations": "Conversations",
     "statSummaryReviews": "Avis",
@@ -928,5 +930,34 @@
     "updatesTitle": "Modification des conditions",
     "updatesBody": "Ces conditions peuvent être modifiées à tout moment ; la version applicable est celle publiée sur cette page au moment de l'utilisation du site.",
     "lastUpdated": "Dernière mise à jour : 5 septembre 2026."
+  },
+  "Blog": {
+    "breadcrumbHome": "Accueil",
+    "indexTitle": "Souq Auto Mag",
+    "indexSubtitle": "Conseils et actualités pour acheter, vendre et entretenir un véhicule en Algérie.",
+    "empty": "Aucun article publié pour le moment."
+  },
+  "AdminBlog": {
+    "title": "Souq Auto Mag",
+    "subtitle": "Articles publiés sur le blog public du site.",
+    "newArticle": "Nouvel article",
+    "editArticle": "Modifier l'article",
+    "empty": "Aucun article pour le moment.",
+    "draft": "Brouillon",
+    "publishedOn": "Publié le {date}",
+    "view": "Voir",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "titleFrLabel": "Titre (français)",
+    "titleArLabel": "Titre (arabe)",
+    "excerptFrLabel": "Résumé (français)",
+    "excerptArLabel": "Résumé (arabe)",
+    "contentFrLabel": "Contenu (français)",
+    "contentArLabel": "Contenu (arabe)",
+    "contentHelp": "Séparez les paragraphes par une ligne vide.",
+    "publishedLabel": "Publier cet article (visible publiquement)",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "errorGeneric": "Une erreur est survenue. Vérifiez que tous les champs sont remplis (français et arabe requis)."
   }
 }

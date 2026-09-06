@@ -58,6 +58,7 @@ model User {
   phoneVerificationCodes  PhoneVerificationCode[]
   professionalAccount     ProfessionalAccount?
   proCollaborations       ProCollaborator[]
+  blogArticles            BlogArticle[]
   identityVerificationRequests IdentityVerificationRequest[] @relation("IdentityRequester")
   identityReviewsPerformed     IdentityVerificationRequest[] @relation("IdentityReviewer")
   listingDraft                 ListingDraft?
@@ -725,4 +726,31 @@ model SearchAlertNotification {
 
   @@unique([alertId, listingId])
   @@index([listingId])
+}
+
+// --- Lot 76 — Blog « SOUQ AUTO MAG » (docs/ARCHITECTURE.md §37 : « Pages
+// marque/modèle/wilaya, blog « SOUQ AUTO MAG », données structurées
+// schema.org » ; §2 : /mag, /mag/{slug-article}), dernière page de contenu
+// SEO documentée mais jamais construite. Contenu bilingue en base (mêmes
+// conventions que Wilaya/Equipment), les deux langues requises à la
+// publication — jamais un article à moitié traduit visible publiquement.
+// Pas de champ image de couverture pour l'instant : aucune source de photo
+// fiable/libre de droits disponible sur cette machine (même limite que le
+// jeu de données de démonstration, Lot 71) ; texte seul.
+model BlogArticle {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  titleFr     String
+  titleAr     String
+  excerptFr   String
+  excerptAr   String
+  contentFr   String
+  contentAr   String
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([publishedAt])
 }

@@ -17,12 +17,16 @@ function localizedEntry(path: string, lastModified?: Date) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [brands, wilayas, listings] = await Promise.all([
+  const [brands, wilayas, listings, articles] = await Promise.all([
     prisma.brand.findMany({ include: { models: true } }),
     prisma.wilaya.findMany(),
     prisma.listing.findMany({
       where: { status: "PUBLIEE" },
       select: { id: true, createdAt: true },
+    }),
+    prisma.blogArticle.findMany({
+      where: { publishedAt: { not: null } },
+      select: { slug: true, updatedAt: true },
     }),
   ]);
 
@@ -32,6 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry("/cote-souq-auto"),
     localizedEntry("/voitures"),
     localizedEntry("/wilaya"),
+    localizedEntry("/mag"),
   ];
 
   const brandEntries = brands.map((brand) => localizedEntry(`/voitures/${brand.slug}`));
@@ -46,5 +51,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry(`/annonce/${listing.id}`, listing.createdAt)
   );
 
-  return [...staticEntries, ...brandEntries, ...modelEntries, ...wilayaEntries, ...listingEntries];
+  const articleEntries = articles.map((article) =>
+    localizedEntry(`/mag/${article.slug}`, article.updatedAt)
+  );
+
+  return [
+    ...staticEntries,
+    ...brandEntries,
+    ...modelEntries,
+    ...wilayaEntries,
+    ...listingEntries,
+    ...articleEntries,
+  ];
 }
