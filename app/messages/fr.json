@@ -375,7 +375,18 @@
     "remove": "Retirer",
     "seller": "Vendeur",
     "sellerTrustScore": "Score de confiance",
-    "sellerReviews": "Avis vendeur"
+    "sellerReviews": "Avis vendeur",
+    "summaryButton": "Voir une synthèse de la comparaison",
+    "summaryPending": "Génération de la synthèse…",
+    "summaryTitle": "Synthèse",
+    "summaryCheapest": "{title} a le prix le plus bas.",
+    "summaryLowestMileage": "{title} a le kilométrage le plus faible.",
+    "summaryNewest": "{title} est le véhicule le plus récent.",
+    "summaryMostPowerful": "{title} a la puissance la plus élevée.",
+    "summaryMostTrusted": "{title} a le score de confiance vendeur le plus élevé.",
+    "summaryDisclaimer": "Synthèse indicative basée sur les données affichées, ne remplace pas votre propre vérification.",
+    "summaryLoginRequired": "Connectez-vous pour voir une synthèse de la comparaison.",
+    "summaryErrorGeneric": "Impossible de générer la synthèse pour le moment."
   },
   "Catalogue": {
     "breadcrumbHome": "Accueil",

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useCompare } from "@/components/compare/CompareContext";
+import type { CompareHighlights } from "@/lib/ai-compare";
 
 type CompareListing = {
   id: string;
@@ -48,6 +49,19 @@ export default function ComparePage() {
   const locale = useLocale();
   const { ids, toggle } = useCompare();
   const [listings, setListings] = useState<CompareListing[]>([]);
+  // `forIds` mémorise la sélection pour laquelle la synthèse a été calculée —
+  // un changement de sélection invalide implicitement l'ancienne synthèse au
+  // rendu (ci-dessous), jamais besoin de la réinitialiser explicitement dans
+  // un effet (évite un setState synchrone superflu dans l'effet de chargement).
+  const [summary, setSummary] = useState<{
+    highlights: CompareHighlights;
+    narrative: string | null;
+    forIds: string;
+  } | null>(null);
+  const [summaryPending, setSummaryPending] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const idsKey = ids.join(",");
+  const currentSummary = summary && summary.forIds === idsKey ? summary : null;
 
   useEffect(() => {
     if (ids.length === 0) return;
@@ -55,6 +69,31 @@ export default function ComparePage() {
       .then((res) => res.json())
       .then((data) => setListings(data.listings));
   }, [ids]);
+
+  async function requestSummary() {
+    setSummaryPending(true);
+    setSummaryError(null);
+
+    const res = await fetch("/api/listings/compare-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids, locale }),
+    });
+
+    setSummaryPending(false);
+
+    if (res.status === 401) {
+      setSummaryError(t("summaryLoginRequired"));
+      return;
+    }
+    if (!res.ok) {
+      setSummaryError(t("summaryErrorGeneric"));
+      return;
+    }
+
+    const data = await res.json();
+    setSummary({ highlights: data.highlights, narrative: data.narrative, forIds: idsKey });
+  }
 
   const rows: { label: string; render: (l: CompareListing) => React.ReactNode }[] = [
     {
@@ -89,6 +128,10 @@ export default function ComparePage() {
     { label: tWizard("powerHp"), render: (l) => (l.powerHp ? `${l.powerHp} ch` : "—") },
     { label: tWizard("color"), render: (l) => l.color ?? "—" },
   ];
+
+  function titleForId(id: string): string {
+    return listings.find((l) => l.id === id)?.title ?? "";
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 pb-24">
@@ -147,6 +190,58 @@ export default function ComparePage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {listings.length >= 2 && (
+        <div className="mt-8 rounded-lg border border-slate-200 p-4 max-w-2xl">
+          {!currentSummary && !summaryPending && (
+            <button
+              type="button"
+              onClick={requestSummary}
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            >
+              {t("summaryButton")}
+            </button>
+          )}
+          {summaryPending && <p className="text-sm text-slate-500">{t("summaryPending")}</p>}
+          {summaryError && <p className="text-sm text-red-600">{summaryError}</p>}
+          {currentSummary && (
+            <div>
+              <h2 className="text-sm font-medium text-slate-900 mb-2">{t("summaryTitle")}</h2>
+              <ul className="space-y-1 text-sm text-slate-700 list-disc pl-4 rtl:pl-0 rtl:pr-4">
+                {currentSummary.highlights.cheapestId && (
+                  <li>
+                    {t("summaryCheapest", { title: titleForId(currentSummary.highlights.cheapestId) })}
+                  </li>
+                )}
+                {currentSummary.highlights.lowestMileageId && (
+                  <li>
+                    {t("summaryLowestMileage", { title: titleForId(currentSummary.highlights.lowestMileageId) })}
+                  </li>
+                )}
+                {currentSummary.highlights.newestId && (
+                  <li>{t("summaryNewest", { title: titleForId(currentSummary.highlights.newestId) })}</li>
+                )}
+                {currentSummary.highlights.mostPowerfulId && (
+                  <li>
+                    {t("summaryMostPowerful", { title: titleForId(currentSummary.highlights.mostPowerfulId) })}
+                  </li>
+                )}
+                {currentSummary.highlights.mostTrustedId && (
+                  <li>
+                    {t("summaryMostTrusted", { title: titleForId(currentSummary.highlights.mostTrustedId) })}
+                  </li>
+                )}
+              </ul>
+              {currentSummary.narrative && (
+                <p className="mt-3 text-sm text-slate-600 border-t border-slate-100 pt-3">
+                  {currentSummary.narrative}
+                </p>
+              )}
+              <p className="mt-3 text-xs text-slate-400">{t("summaryDisclaimer")}</p>
+            </div>
+          )}
         </div>
       )}
     </div>

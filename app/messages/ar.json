@@ -375,7 +375,18 @@
     "remove": "إزالة",
     "seller": "البائع",
     "sellerTrustScore": "درجة الثقة",
-    "sellerReviews": "تقييمات البائع"
+    "sellerReviews": "تقييمات البائع",
+    "summaryButton": "عرض ملخص للمقارنة",
+    "summaryPending": "جارٍ إنشاء الملخص…",
+    "summaryTitle": "ملخص",
+    "summaryCheapest": "{title} لديه أقل سعر.",
+    "summaryLowestMileage": "{title} لديه أقل كيلومتراج.",
+    "summaryNewest": "{title} هو المركبة الأحدث.",
+    "summaryMostPowerful": "{title} لديه أعلى قوة.",
+    "summaryMostTrusted": "{title} لديه أعلى درجة ثقة للبائع.",
+    "summaryDisclaimer": "ملخص إرشادي يعتمد على البيانات المعروضة، لا يغني عن تحققك الخاص.",
+    "summaryLoginRequired": "سجّل الدخول لعرض ملخص المقارنة.",
+    "summaryErrorGeneric": "تعذر إنشاء الملخص حاليًا."
   },
   "Catalogue": {
     "breadcrumbHome": "الرئيسية",
