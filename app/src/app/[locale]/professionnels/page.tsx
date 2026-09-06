@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { canExportListings, priceForAnyTier, quotaForTier } from "@/lib/pro-subscription";
+import { hasAdvancedProTools, priceForAnyTier, quotaForTier } from "@/lib/pro-subscription";
 import type { ProSubscriptionTier } from "@prisma/client";
 
 // Lot 80 — dernière page documentée au sitemap (docs/ARCHITECTURE.md §2 :
@@ -46,6 +46,7 @@ export default async function ProfessionalsLandingPage() {
     "featureShowcase",
     "featureBulkImport",
     "featureExport",
+    "featureAutoRenew",
     "featureCollaborators",
     "featureStats",
     "featureVerifiedBadge",
@@ -95,7 +96,9 @@ export default async function ProfessionalsLandingPage() {
               <p className="mt-2 text-sm text-slate-600">
                 {quota === null ? t("pricingQuotaUnlimited") : t("pricingQuotaLimited", { quota })}
               </p>
-              {canExportListings(tier) && <p className="mt-1 text-xs text-emerald-700">{t("pricingExportIncluded")}</p>}
+              {hasAdvancedProTools(tier) && (
+                <p className="mt-1 text-xs text-emerald-700">{t("pricingAdvancedToolsIncluded")}</p>
+              )}
             </div>
           );
         })}

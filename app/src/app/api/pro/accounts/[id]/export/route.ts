@@ -6,7 +6,7 @@ import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions"
 import { checkRateLimit } from "@/lib/rate-limit";
 import { EXPORT_CSV_HEADER, listingToCsvRow } from "@/lib/bulk-import";
 import { stringifyCsv } from "@/lib/csv";
-import { canExportListings, getSubscriptionStatus } from "@/lib/pro-subscription";
+import { hasAdvancedProTools, getSubscriptionStatus } from "@/lib/pro-subscription";
 
 // Lot 81 — inverse de l'import en masse (Lot 41) : même permission
 // (gererAnnonces), mais réservé aux paliers Pro/Premium (§4-B, seul outil
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   const subscriptionStatus = await getSubscriptionStatus(account.userId);
-  if (!subscriptionStatus || !canExportListings(subscriptionStatus.tier)) {
+  if (!subscriptionStatus || !hasAdvancedProTools(subscriptionStatus.tier)) {
     return NextResponse.json({ error: "export_not_available" }, { status: 403 });
   }
 

@@ -18,6 +18,33 @@ export function isListingExpired(expiresAt: Date | null, now: Date = new Date())
   return now.getTime() >= expiresAt.getTime();
 }
 
+// Lot 82 — renouvellement automatique (§4-B, palier Pro/Premium). Une
+// préférence `autoRenew` activée sur une annonce ne suffit jamais seule :
+// l'éligibilité de palier du vendeur est revérifiée à chaque balayage
+// (jamais mise en cache), pour qu'un compte rétrogradé après activation ne
+// continue pas à bénéficier du renouvellement automatique. Ne s'applique
+// qu'à une annonce PUBLIEE dont la date d'expiration est dépassée — jamais
+// une annonce déjà EXPIREE (sweepExpiredListings l'aurait déjà basculée) ni
+// une annonce suspendue/refusée par la modération (contournerait la
+// décision humaine).
+export function isEligibleForAutoRenewal({
+  status,
+  autoRenew,
+  expiresAt,
+  sellerHasAdvancedTools,
+  now = new Date(),
+}: {
+  status: ListingStatus;
+  autoRenew: boolean;
+  expiresAt: Date | null;
+  sellerHasAdvancedTools: boolean;
+  now?: Date;
+}): boolean {
+  if (!autoRenew || !sellerHasAdvancedTools) return false;
+  if (status !== "PUBLIEE") return false;
+  return isListingExpired(expiresAt, now);
+}
+
 export type ListingActionEligibility =
   | { ok: true }
   | { ok: false; error: "invalid_status" };

@@ -6,6 +6,7 @@ import {
   checkListingPriceEditable,
   checkListingRenewable,
   computeExpiryDate,
+  isEligibleForAutoRenewal,
   isListingExpired,
   isPriceDrop,
   shouldSendExpiryReminder,
@@ -150,5 +151,80 @@ describe("shouldSendExpiryReminder", () => {
   it("sends exactly at the window boundary", () => {
     const expiresAt = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
     expect(shouldSendExpiryReminder({ expiresAt, reminderSentAt: null, now })).toBe(true);
+  });
+});
+
+describe("isEligibleForAutoRenewal", () => {
+  const now = new Date("2026-09-06T00:00:00.000Z");
+  const yesterday = new Date("2026-09-05T00:00:00.000Z");
+  const tomorrow = new Date("2026-09-07T00:00:00.000Z");
+
+  it("renews a published, expired listing when auto-renew is on and the seller has advanced tools", () => {
+    expect(
+      isEligibleForAutoRenewal({
+        status: "PUBLIEE",
+        autoRenew: true,
+        expiresAt: yesterday,
+        sellerHasAdvancedTools: true,
+        now,
+      })
+    ).toBe(true);
+  });
+
+  it("never renews when autoRenew is off, even if everything else matches", () => {
+    expect(
+      isEligibleForAutoRenewal({
+        status: "PUBLIEE",
+        autoRenew: false,
+        expiresAt: yesterday,
+        sellerHasAdvancedTools: true,
+        now,
+      })
+    ).toBe(false);
+  });
+
+  it("never renews when the seller's tier no longer has advanced tools, even if autoRenew was left on", () => {
+    expect(
+      isEligibleForAutoRenewal({
+        status: "PUBLIEE",
+        autoRenew: true,
+        expiresAt: yesterday,
+        sellerHasAdvancedTools: false,
+        now,
+      })
+    ).toBe(false);
+  });
+
+  it("never renews a listing that isn't PUBLIEE (e.g. already EXPIREE or SUSPENDUE)", () => {
+    expect(
+      isEligibleForAutoRenewal({
+        status: "EXPIREE",
+        autoRenew: true,
+        expiresAt: yesterday,
+        sellerHasAdvancedTools: true,
+        now,
+      })
+    ).toBe(false);
+    expect(
+      isEligibleForAutoRenewal({
+        status: "SUSPENDUE",
+        autoRenew: true,
+        expiresAt: yesterday,
+        sellerHasAdvancedTools: true,
+        now,
+      })
+    ).toBe(false);
+  });
+
+  it("never renews before the actual expiry date", () => {
+    expect(
+      isEligibleForAutoRenewal({
+        status: "PUBLIEE",
+        autoRenew: true,
+        expiresAt: tomorrow,
+        sellerHasAdvancedTools: true,
+        now,
+      })
+    ).toBe(false);
   });
 });

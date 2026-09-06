@@ -286,7 +286,9 @@
     "upgradeReferencePlaceholder": "Ex : numéro de transaction",
     "upgradeSubmit": "Envoyer ma demande",
     "upgradeCancel": "Annuler",
-    "upgradeErrorGeneric": "Impossible d'envoyer la demande. Réessayez."
+    "upgradeErrorGeneric": "Impossible d'envoyer la demande. Réessayez.",
+    "autoRenewLabel": "Renouvellement automatique",
+    "autoRenewErrorGeneric": "Impossible de modifier le renouvellement automatique. Réessayez."
   },
   "Search": {
     "queryPlaceholder": "Marque, modèle, wilaya…",
@@ -648,7 +650,7 @@
     "manageListings": "Gérer mes annonces",
     "bulkImportLink": "Import de stock en masse",
     "exportLink": "Exporter mon stock (CSV)",
-    "subscriptionExportLocked": "L'export CSV du stock est disponible à partir du palier Pro.",
+    "subscriptionAdvancedToolsLocked": "L'export CSV et le renouvellement automatique sont disponibles à partir du palier Pro.",
     "subscriptionTitle": "Abonnement professionnel",
     "subscriptionCurrentTier": "Palier actuel : {tier}",
     "subscriptionQuotaUsage": "{count} / {quota} annonces actives (brouillon, en attente, publiée ou suspendue)",
@@ -699,17 +701,18 @@
     "featureShowcase": "Une boutique publique dédiée présentant toutes vos annonces sous votre nom commercial.",
     "featureBulkImport": "L'import de votre stock en masse depuis un fichier CSV, plutôt qu'annonce par annonce.",
     "featureExport": "L'export de votre stock au format CSV, à partir du palier Pro.",
+    "featureAutoRenew": "Le renouvellement automatique de vos annonces à l'expiration, à partir du palier Pro.",
     "featureCollaborators": "Des accès collaborateurs avec permissions individuelles (gestion des annonces, réponse aux avis).",
     "featureStats": "Un tableau de bord avec vos annonces publiées, vues totales et conversations.",
     "featureVerifiedBadge": "Un badge « Vérifié » attribué après contrôle par notre équipe.",
     "featureReviews": "La possibilité de répondre publiquement aux avis laissés par vos clients.",
     "pricingTitle": "Paliers d'abonnement",
-    "pricingSubtitle": "Le nombre d'annonces actives autorisé en même temps (brouillon, en attente, publiée ou suspendue) augmente avec le palier ; l'export CSV du stock s'ajoute à partir du palier Pro.",
+    "pricingSubtitle": "Le nombre d'annonces actives autorisé en même temps (brouillon, en attente, publiée ou suspendue) augmente avec le palier ; l'export CSV et le renouvellement automatique s'ajoutent à partir du palier Pro.",
     "pricingFree": "Gratuit",
     "pricingPerMonth": "mois",
     "pricingQuotaLimited": "{quota} annonces actives",
     "pricingQuotaUnlimited": "Annonces actives illimitées",
-    "pricingExportIncluded": "Export CSV du stock inclus",
+    "pricingAdvancedToolsIncluded": "Export CSV + renouvellement automatique inclus",
     "pricingFootnote": "Palier Starter actif par défaut à la création du compte. Le passage à un palier supérieur se fait par virement bancaire, confirmé par notre équipe, depuis votre tableau de bord professionnel.",
     "tierSTARTER": "Starter",
     "tierBUSINESS": "Business",
@@ -839,7 +842,10 @@
     "expiryReminderLink": "Voir mon annonce sur Souq Auto",
     "searchAlertMatchSubject": "Une nouvelle annonce correspond à votre alerte — Souq Auto",
     "searchAlertMatchBody": "Une nouvelle annonce correspond à votre alerte « {alertLabel} » : « {title} », {price} DA.",
-    "searchAlertMatchLink": "Voir l'annonce sur Souq Auto"
+    "searchAlertMatchLink": "Voir l'annonce sur Souq Auto",
+    "autoRenewedSubject": "Votre annonce a été renouvelée automatiquement — Souq Auto",
+    "autoRenewedBody": "Votre annonce « {title} » a été renouvelée automatiquement (renouvellement automatique activé, palier Pro/Premium) et reste visible jusqu'au {date}.",
+    "autoRenewedLink": "Voir mon annonce sur Souq Auto"
   },
   "Alerts": {
     "title": "Mes alertes",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  canExportListings,
+  hasAdvancedProTools,
   checkSubscriptionUpgradeEligible,
   effectiveTier,
   isWithinQuota,
@@ -124,14 +124,14 @@ describe("quotaForTier", () => {
   });
 });
 
-describe("canExportListings", () => {
+describe("hasAdvancedProTools", () => {
   it("is disabled for STARTER and BUSINESS, never documented with this tool", () => {
-    expect(canExportListings("STARTER")).toBe(false);
-    expect(canExportListings("BUSINESS")).toBe(false);
+    expect(hasAdvancedProTools("STARTER")).toBe(false);
+    expect(hasAdvancedProTools("BUSINESS")).toBe(false);
   });
 
   it("is enabled for PRO and PREMIUM", () => {
-    expect(canExportListings("PRO")).toBe(true);
-    expect(canExportListings("PREMIUM")).toBe(true);
+    expect(hasAdvancedProTools("PRO")).toBe(true);
+    expect(hasAdvancedProTools("PREMIUM")).toBe(true);
   });
 });

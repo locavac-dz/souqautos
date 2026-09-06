@@ -254,6 +254,12 @@ model Listing {
   // l'expiration elle-même (aucun scheduler dans cette application). Remis à
   // null à chaque renouvellement (nouveau cycle d'expiration, cf. route renew).
   expiryReminderSentAt DateTime?
+  // Lot 82 — renouvellement automatique (§4-B, "outils avancés" Pro/Premium).
+  // Préférence par annonce, jamais activée d'office même pour un compte
+  // éligible — l'éligibilité réelle du vendeur (palier effectif au moment du
+  // balayage, pas au moment de l'activation) est revérifiée par
+  // sweepAutoRenewals() à chaque cycle, jamais mise en cache ici.
+  autoRenew    Boolean          @default(false)
 
   @@index([status, category, wilayaId])
   @@index([sellerId])

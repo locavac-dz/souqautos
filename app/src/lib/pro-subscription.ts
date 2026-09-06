@@ -96,15 +96,17 @@ export function effectiveTier(tier: ProSubscriptionTier, expiresAt: Date | null,
   return tier;
 }
 
-// Lot 81 — export CSV du stock : seul avantage fonctionnel réel distinguant
-// les paliers au-delà du quota (docs/ARCHITECTURE.md §4-B : "Pro : Stock
-// important + outils avancés (renouvellement auto, export)"). Premium hérite
-// de cet avantage (palier strictement supérieur à Pro), jamais Starter/
-// Business qui ne sont jamais mentionnés avec cet outil dans le cahier.
-const EXPORT_ENABLED_TIERS: ReadonlySet<ProSubscriptionTier> = new Set(["PRO", "PREMIUM"]);
+// Lots 81-82 — "outils avancés" (docs/ARCHITECTURE.md §4-B : "Pro : Stock
+// important + outils avancés (renouvellement auto, export)") : les deux
+// outils cités partagent exactement la même porte, une seule fonction pour
+// ne jamais laisser diverger deux vérifications de palier censées être
+// identiques. Premium hérite de l'avantage de Pro (palier strictement
+// supérieur), jamais Starter/Business qui ne sont jamais mentionnés avec ces
+// outils dans le cahier des charges.
+const ADVANCED_TOOLS_TIERS: ReadonlySet<ProSubscriptionTier> = new Set(["PRO", "PREMIUM"]);
 
-export function canExportListings(tier: ProSubscriptionTier): boolean {
-  return EXPORT_ENABLED_TIERS.has(tier);
+export function hasAdvancedProTools(tier: ProSubscriptionTier): boolean {
+  return ADVANCED_TOOLS_TIERS.has(tier);
 }
 
 export type SubscriptionStatus = {

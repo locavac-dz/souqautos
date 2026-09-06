@@ -286,7 +286,9 @@
     "upgradeReferencePlaceholder": "مثال: رقم المعاملة",
     "upgradeSubmit": "إرسال طلبي",
     "upgradeCancel": "إلغاء",
-    "upgradeErrorGeneric": "تعذر إرسال الطلب. حاول مرة أخرى."
+    "upgradeErrorGeneric": "تعذر إرسال الطلب. حاول مرة أخرى.",
+    "autoRenewLabel": "التجديد التلقائي",
+    "autoRenewErrorGeneric": "تعذر تعديل التجديد التلقائي. حاول مرة أخرى."
   },
   "Search": {
     "queryPlaceholder": "الماركة، الموديل، الولاية…",
@@ -648,7 +650,7 @@
     "manageListings": "إدارة إعلاناتي",
     "bulkImportLink": "استيراد المخزون بالجملة",
     "exportLink": "تصدير مخزوني (CSV)",
-    "subscriptionExportLocked": "تصدير المخزون بصيغة CSV متاح ابتداءً من فئة Pro.",
+    "subscriptionAdvancedToolsLocked": "تصدير CSV والتجديد التلقائي متاحان ابتداءً من فئة Pro.",
     "subscriptionTitle": "الاشتراك الاحترافي",
     "subscriptionCurrentTier": "الفئة الحالية: {tier}",
     "subscriptionQuotaUsage": "{count} / {quota} إعلان نشط (مسودة، قيد المراجعة، منشور أو معلّق)",
@@ -699,17 +701,18 @@
     "featureShowcase": "متجر عام مخصص يعرض جميع إعلاناتك تحت اسمك التجاري.",
     "featureBulkImport": "استيراد مخزونك بالجملة من ملف CSV، بدلاً من إعلان تلو الآخر.",
     "featureExport": "تصدير مخزونك بصيغة CSV، ابتداءً من فئة Pro.",
+    "featureAutoRenew": "التجديد التلقائي لإعلاناتك عند انتهاء صلاحيتها، ابتداءً من فئة Pro.",
     "featureCollaborators": "صلاحيات وصول للمتعاونين مع أذونات فردية (إدارة الإعلانات، الرد على التقييمات).",
     "featureStats": "لوحة تحكم تعرض إعلاناتك المنشورة، إجمالي المشاهدات والمحادثات.",
     "featureVerifiedBadge": "شارة « موثّق » تُمنح بعد تحقق فريقنا.",
     "featureReviews": "إمكانية الرد علنًا على التقييمات التي يتركها عملاؤك.",
     "pricingTitle": "فئات الاشتراك",
-    "pricingSubtitle": "يزداد عدد الإعلانات النشطة المسموح بها في آنٍ واحد (مسودة، قيد المراجعة، منشورة أو معلّقة) مع الفئة؛ يُضاف تصدير المخزون بصيغة CSV ابتداءً من فئة Pro.",
+    "pricingSubtitle": "يزداد عدد الإعلانات النشطة المسموح بها في آنٍ واحد (مسودة، قيد المراجعة، منشورة أو معلّقة) مع الفئة؛ يُضاف تصدير المخزون بصيغة CSV والتجديد التلقائي ابتداءً من فئة Pro.",
     "pricingFree": "مجاني",
     "pricingPerMonth": "شهر",
     "pricingQuotaLimited": "{quota} إعلان نشط",
     "pricingQuotaUnlimited": "إعلانات نشطة غير محدودة",
-    "pricingExportIncluded": "تصدير المخزون بصيغة CSV متضمّن",
+    "pricingAdvancedToolsIncluded": "تصدير CSV + التجديد التلقائي متضمّنان",
     "pricingFootnote": "فئة Starter مفعّلة افتراضيًا عند إنشاء الحساب. الترقية إلى فئة أعلى تتم عبر تحويل بنكي، يؤكده فريقنا، من لوحة التحكم الاحترافية.",
     "tierSTARTER": "Starter",
     "tierBUSINESS": "Business",
@@ -839,7 +842,10 @@
     "expiryReminderLink": "عرض إعلاني على سوق أوتو",
     "searchAlertMatchSubject": "إعلان جديد يطابق تنبيهك — سوق أوتو",
     "searchAlertMatchBody": "إعلان جديد يطابق تنبيهك « {alertLabel} »: « {title} »، {price} دج.",
-    "searchAlertMatchLink": "عرض الإعلان على سوق أوتو"
+    "searchAlertMatchLink": "عرض الإعلان على سوق أوتو",
+    "autoRenewedSubject": "تم تجديد إعلانك تلقائيًا — سوق أوتو",
+    "autoRenewedBody": "تم تجديد إعلانك « {title} » تلقائيًا (التجديد التلقائي مفعّل، فئة Pro/Premium) ويبقى ظاهرًا حتى {date}.",
+    "autoRenewedLink": "عرض إعلاني على سوق أوتو"
   },
   "Alerts": {
     "title": "تنبيهاتي",

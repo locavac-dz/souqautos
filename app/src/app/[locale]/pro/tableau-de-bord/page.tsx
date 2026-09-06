@@ -6,7 +6,7 @@ import { canManageCollaborators, canManageProListings, canViewProDashboard } fro
 import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions";
 import { ProCollaboratorsManager } from "@/components/ProCollaboratorsManager";
 import { ProSubscriptionUpgrade } from "@/components/ProSubscriptionUpgrade";
-import { canExportListings, getSubscriptionStatus, priceForTier } from "@/lib/pro-subscription";
+import { hasAdvancedProTools, getSubscriptionStatus, priceForTier } from "@/lib/pro-subscription";
 import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
 import type { ProSubscriptionTier } from "@prisma/client";
 
@@ -106,7 +106,7 @@ export default async function ProDashboardPage() {
             {t("bulkImportLink")}
           </Link>
         )}
-        {canManageProListings(access) && subscriptionStatus && canExportListings(subscriptionStatus.tier) && (
+        {canManageProListings(access) && subscriptionStatus && hasAdvancedProTools(subscriptionStatus.tier) && (
           <a
             href={`/api/pro/accounts/${account.id}/export`}
             className="text-sm text-slate-700 underline hover:text-slate-900"
@@ -130,8 +130,8 @@ export default async function ProDashboardPage() {
                   quota: subscriptionStatus.quota,
                 })}
           </p>
-          {!canExportListings(subscriptionStatus.tier) && (
-            <p className="text-xs text-slate-400 mt-1">{t("subscriptionExportLocked")}</p>
+          {!hasAdvancedProTools(subscriptionStatus.tier) && (
+            <p className="text-xs text-slate-400 mt-1">{t("subscriptionAdvancedToolsLocked")}</p>
           )}
           {isOwner && upgradableTiers.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">

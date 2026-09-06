@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
+import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import { searchParamsSchema, PAGE_SIZE } from "@/lib/validation/search";
 import { buildListingWhere, buildListingOrderBy, currentPage, paginationOffset, totalPages as computeTotalPages } from "@/lib/search";
 import { SearchFilters } from "@/components/search/SearchFilters";
@@ -30,6 +31,7 @@ export default async function SearchPage({
   const params = searchParamsSchema.parse(flatParams);
   const t = await getTranslations("Search");
 
+  await sweepAutoRenewals();
   await sweepExpiredListings();
   await sweepExpiringListingsForReminders();
 

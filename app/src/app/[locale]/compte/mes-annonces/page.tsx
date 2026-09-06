@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
+import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import {
   checkListingRenewable,
   checkListingCanBeMarkedSold,
@@ -15,10 +16,12 @@ import { canManageProListings } from "@/lib/pro-account";
 import { parseProPermissions } from "@/lib/pro-permissions";
 import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
 import { formulaRank } from "@/lib/payment-orders";
+import { hasAdvancedProTools, getSubscriptionStatus } from "@/lib/pro-subscription";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ListingLifecycleActions } from "@/components/ListingLifecycleActions";
 import { ListingPriceEditor } from "@/components/ListingPriceEditor";
 import { ListingFormulaUpgrade } from "@/components/ListingFormulaUpgrade";
+import { ListingAutoRenewToggle } from "@/components/ListingAutoRenewToggle";
 
 export default async function MyListingsPage() {
   const locale = await getLocale();
@@ -31,6 +34,7 @@ export default async function MyListingsPage() {
   const t = await getTranslations("MyListings");
   const tListing = await getTranslations("Listing");
 
+  await sweepAutoRenewals();
   await sweepExpiredListings();
   await sweepExpiringListingsForReminders();
 
@@ -68,6 +72,18 @@ export default async function MyListingsPage() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  // Lot 82 — le renouvellement automatique n'est proposé que si le vendeur
+  // (compte propre ou compte pro géré) a le palier requis — jamais pour un
+  // particulier (getSubscriptionStatus renvoie null, palier absent).
+  const advancedToolsBySellerId = new Map(
+    await Promise.all(
+      sellerIds.map(async (sellerId): Promise<[string, boolean]> => {
+        const status = await getSubscriptionStatus(sellerId);
+        return [sellerId, Boolean(status && hasAdvancedProTools(status.tier))];
+      })
+    )
+  );
 
   const paymentSettings = await getPaymentSettings();
   const bankDetailsComplete = isBankDetailsComplete(paymentSettings);
@@ -182,6 +198,10 @@ export default async function MyListingsPage() {
                         {tListing("editListingAction")}
                       </Link>
                     )}
+                    {checkListingRenewable(listing.status).ok &&
+                      advancedToolsBySellerId.get(listing.sellerId) && (
+                        <ListingAutoRenewToggle listingId={listing.id} initialAutoRenew={listing.autoRenew} />
+                      )}
                   </div>
                 )}
                 {canManage && checkListingRenewable(listing.status).ok && (
