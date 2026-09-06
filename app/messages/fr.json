@@ -288,7 +288,13 @@
     "upgradeCancel": "Annuler",
     "upgradeErrorGeneric": "Impossible d'envoyer la demande. Réessayez.",
     "autoRenewLabel": "Renouvellement automatique",
-    "autoRenewErrorGeneric": "Impossible de modifier le renouvellement automatique. Réessayez."
+    "autoRenewErrorGeneric": "Impossible de modifier le renouvellement automatique. Réessayez.",
+    "photoQualityNudge": "Une ou plusieurs photos pourraient être améliorées pour attirer plus d'acheteurs :",
+    "photoQualityLowResolution": "résolution trop faible",
+    "photoQualityTooDark": "photo trop sombre",
+    "photoQualityTooBright": "photo trop claire (surexposée)",
+    "photoQualityNearSolidColor": "photo quasiment unie (peu de détails visibles)",
+    "photoQualityAction": "Modifier les photos"
   },
   "Search": {
     "queryPlaceholder": "Marque, modèle, wilaya…",

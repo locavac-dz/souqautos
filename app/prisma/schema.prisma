@@ -784,6 +784,12 @@ model ListingPhoto {
   // photo/annonce copiée), sans prétendre détecter un recadrage ou une
   // recompression différente — ce n'est pas un hash perceptuel.
   sha256    String   @default("")
+  // Lot 86 — analyse qualité photo (docs/ARCHITECTURE.md §36) : liste JSON de
+  // PhotoQualityFlag (cf. src/lib/photo-quality.ts), calculée une seule fois à
+  // l'upload sur les octets déjà traités par sharp. Purement indicative pour
+  // le vendeur (nudge sur /compte/mes-annonces) — jamais un signal de fraude,
+  // jamais visible des acheteurs ni des modérateurs.
+  qualityFlags String @default("[]")
   createdAt DateTime @default(now())
 
   @@index([listingId])

@@ -17,11 +17,31 @@ import { parseProPermissions } from "@/lib/pro-permissions";
 import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
 import { formulaRank } from "@/lib/payment-orders";
 import { hasAdvancedProTools, getSubscriptionStatus } from "@/lib/pro-subscription";
+import type { PhotoQualityFlag } from "@/lib/photo-quality";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ListingLifecycleActions } from "@/components/ListingLifecycleActions";
 import { ListingPriceEditor } from "@/components/ListingPriceEditor";
 import { ListingFormulaUpgrade } from "@/components/ListingFormulaUpgrade";
 import { ListingAutoRenewToggle } from "@/components/ListingAutoRenewToggle";
+
+const PHOTO_QUALITY_FLAG_KEY: Record<PhotoQualityFlag, string> = {
+  low_resolution: "photoQualityLowResolution",
+  too_dark: "photoQualityTooDark",
+  too_bright: "photoQualityTooBright",
+  near_solid_color: "photoQualityNearSolidColor",
+};
+
+// Lot 86 — nudge privé au vendeur uniquement : jamais un signal de fraude
+// (photo médiocre ≠ malhonnêteté), jamais visible des acheteurs/modérateurs.
+function distinctPhotoQualityFlags(photos: { qualityFlags: string }[]): PhotoQualityFlag[] {
+  const flags = new Set<PhotoQualityFlag>();
+  for (const photo of photos) {
+    for (const flag of JSON.parse(photo.qualityFlags) as PhotoQualityFlag[]) {
+      flags.add(flag);
+    }
+  }
+  return [...flags];
+}
 
 export default async function MyListingsPage() {
   const locale = await getLocale();
@@ -67,7 +87,7 @@ export default async function MyListingsPage() {
   const listings = await prisma.listing.findMany({
     where: { sellerId: { in: sellerIds } },
     include: {
-      photos: { orderBy: { position: "asc" }, take: 1 },
+      photos: { orderBy: { position: "asc" } },
       paymentOrders: { where: { status: "EN_ATTENTE" } },
     },
     orderBy: { createdAt: "desc" },
@@ -115,6 +135,7 @@ export default async function MyListingsPage() {
             const isOwnListing = listing.sellerId === user.id;
             const proAccount = isOwnListing ? null : proAccountBySellerId.get(listing.sellerId);
             const canManage = isOwnListing || Boolean(proAccount?.canManage);
+            const photoQualityFlags = distinctPhotoQualityFlags(listing.photos);
 
             return (
               <div
@@ -169,6 +190,23 @@ export default async function MyListingsPage() {
                     )}
                   </div>
                 </Link>
+                {canManage && photoQualityFlags.length > 0 && (
+                  <p className="text-xs text-amber-700 bg-amber-50 rounded-md px-3 py-2">
+                    {t("photoQualityNudge")}{" "}
+                    {photoQualityFlags.map((flag) => t(PHOTO_QUALITY_FLAG_KEY[flag])).join(", ")}
+                    {checkListingContentEditable(listing.status).ok && (
+                      <>
+                        {" — "}
+                        <Link
+                          href={`/compte/mes-annonces/${listing.id}/modifier`}
+                          className="underline hover:text-amber-900"
+                        >
+                          {t("photoQualityAction")}
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                )}
                 {canManage && (
                   <div className="flex flex-wrap items-center gap-3">
                     <ListingLifecycleActions

@@ -134,7 +134,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     ),
     ...savedPhotos.map((photo, i) =>
       prisma.listingPhoto.create({
-        data: { listingId: id, path: photo.path, sha256: photo.sha256, position: keptPhotoIds.length + i },
+        data: {
+          listingId: id,
+          path: photo.path,
+          sha256: photo.sha256,
+          qualityFlags: JSON.stringify(photo.qualityFlags),
+          position: keptPhotoIds.length + i,
+        },
       })
     ),
     prisma.listing.update({

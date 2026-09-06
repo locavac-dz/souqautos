@@ -288,7 +288,13 @@
     "upgradeCancel": "إلغاء",
     "upgradeErrorGeneric": "تعذر إرسال الطلب. حاول مرة أخرى.",
     "autoRenewLabel": "التجديد التلقائي",
-    "autoRenewErrorGeneric": "تعذر تعديل التجديد التلقائي. حاول مرة أخرى."
+    "autoRenewErrorGeneric": "تعذر تعديل التجديد التلقائي. حاول مرة أخرى.",
+    "photoQualityNudge": "يمكن تحسين صورة واحدة أو أكثر لجذب مزيد من المشترين:",
+    "photoQualityLowResolution": "دقة منخفضة جدًا",
+    "photoQualityTooDark": "صورة مظلمة جدًا",
+    "photoQualityTooBright": "صورة فاتحة جدًا (تعرض مفرط للضوء)",
+    "photoQualityNearSolidColor": "صورة شبه أحادية اللون (تفاصيل قليلة مرئية)",
+    "photoQualityAction": "تعديل الصور"
   },
   "Search": {
     "queryPlaceholder": "الماركة، الموديل، الولاية…",

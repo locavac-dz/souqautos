@@ -133,7 +133,12 @@ export async function POST(request: NextRequest) {
       // Lot 7 : file de modération — publication seulement après approbation admin (§39).
       status: "EN_ATTENTE",
       photos: {
-        create: savedPhotos.map((photo, index) => ({ path: photo.path, sha256: photo.sha256, position: index })),
+        create: savedPhotos.map((photo, index) => ({
+          path: photo.path,
+          sha256: photo.sha256,
+          qualityFlags: JSON.stringify(photo.qualityFlags),
+          position: index,
+        })),
       },
       // Historique des prix (Lot 45) : première entrée dès la création.
       priceHistory: {

@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { fileTypeFromBuffer } from "file-type";
+import { analyzePhotoQuality, type PhotoQualityFlag } from "@/lib/photo-quality";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024; // 8 Mo
@@ -35,7 +36,7 @@ async function readValidatedImage(file: File, maxBytes: number): Promise<Buffer>
   return buffer;
 }
 
-export type SavedPhoto = { path: string; sha256: string };
+export type SavedPhoto = { path: string; sha256: string; qualityFlags: PhotoQualityFlag[] };
 
 // Lot 77 — l'empreinte porte sur les octets réellement stockés (après le
 // pipeline sharp déterministe), pas sur le fichier brut envoyé par le client :
@@ -58,8 +59,9 @@ export async function savePhoto(file: File): Promise<SavedPhoto> {
 
   await writeFile(outputPath, output);
   const sha256 = createHash("sha256").update(output).digest("hex");
+  const qualityFlags = await analyzePhotoQuality(output);
 
-  return { path: `/uploads/listings/${filename}`, sha256 };
+  return { path: `/uploads/listings/${filename}`, sha256, qualityFlags };
 }
 
 // Lot 34 — avatar de profil : mêmes règles de sécurité que savePhoto (octets
