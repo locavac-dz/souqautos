@@ -8,6 +8,7 @@ import { parseCsv, csvRowsToRecords } from "@/lib/csv";
 import { mapCsvRowToListingInput, type ImportLookups } from "@/lib/bulk-import";
 import type { ListingInput } from "@/lib/validation/listing";
 import { getSubscriptionStatus } from "@/lib/pro-subscription";
+import { computeListingContentHash } from "@/lib/fraud-signals";
 
 const MAX_ROWS = 500;
 
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         modelFreeText: data.modelId ? null : data.modelFreeText,
         title: data.title,
         description: data.description,
+        contentHash: computeListingContentHash(data.title, data.description),
         price: data.price,
         year: data.year,
         mileage: data.mileage,

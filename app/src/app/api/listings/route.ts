@@ -5,6 +5,7 @@ import { listingSchema } from "@/lib/validation/listing";
 import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getSubscriptionStatus, isWithinQuota } from "@/lib/pro-subscription";
+import { computeListingContentHash } from "@/lib/fraud-signals";
 
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
       modelFreeText: data.modelId ? null : data.modelFreeText,
       title: data.title,
       description: data.description,
+      contentHash: computeListingContentHash(data.title, data.description),
       price: data.price,
       year: data.year,
       mileage: data.mileage,

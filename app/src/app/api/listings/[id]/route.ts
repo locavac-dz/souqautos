@@ -7,6 +7,7 @@ import { checkListingContentEditable } from "@/lib/listing-lifecycle";
 import { canManageListing } from "@/lib/listing-access";
 import { listingEditSchema } from "@/lib/validation/listing";
 import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
+import { computeListingContentHash } from "@/lib/fraud-signals";
 
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
@@ -146,6 +147,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         modelFreeText: data.modelId ? null : data.modelFreeText,
         title: data.title,
         description: data.description,
+        contentHash: computeListingContentHash(data.title, data.description),
         year: data.year,
         mileage: data.mileage,
         fuelType: data.fuelType,

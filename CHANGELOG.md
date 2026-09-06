@@ -1534,3 +1534,19 @@ Referme la dernière dette technique explicitement signalée sur les abonnements
 Avec ce lot, plus aucune dette technique n'est signalée sur le mécanisme d'abonnement professionnel (Lots 79-83).
 
 Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise) et le remplacement des visuels de démonstration par de vraies photos ; côté anti-fraude (§16), restent non construits l'incohérence véhicule/prix et la détection de spam.
+
+## Lot 84 — Quatrième signal anti-fraude : contenu dupliqué (spam) (2026-09-06)
+
+Reprend le dernier volet de §16 jugé jusqu'ici trop vague pour être construit sans arbitrage : « spam ». Relu plus précisément, le cahier des charges cite explicitement « répétition de contenu ... pour un même vendeur » — un cas concret et honnêtement détectable sans base de marché : un texte d'annonce (titre+description) strictement identique republié par un AUTRE vendeur, signature classique d'une annonce-appât recopiée sous plusieurs faux comptes.
+
+**Livré**
+- `Listing.contentHash` (nouvelle colonne + index, migration hand-écrite, backfill des 24 annonces existantes — zéro collision confirmée) : empreinte du titre+description normalisés (espaces/casse ignorés), recalculée à chaque création/édition (`POST /api/listings`, `PATCH /api/listings/[id]`, import en masse) — même principe que `ListingPhoto.sha256` (Lot 77), jamais une comparaison floue.
+- `computeListingContentHash()`/`detectDuplicateContent()` (`src/lib/fraud-signals.ts`) : signale un contenu identique publié par un AUTRE vendeur, jamais un vendeur qui republie son propre texte (renouvellement, annonce similaire pour un véhicule identique). Intégré à `getFraudSignalsForListings()` en une seule requête batch supplémentaire, même principe que les 3 signaux précédents.
+- Quatrième bandeau ambre sur `/admin/annonces` (« ⚠ Texte identique à une annonce d'un autre vendeur »), même style et même règle non accusatoire que les signaux précédents.
+- 7 nouveaux tests unitaires (déterminisme du hash, insensibilité à la casse/aux espaces, contenu différent → hash différent, détection cross-vendeur, jamais sur soi-même, hash vide ignoré). 400/400 tests au vert au total.
+- **Limite documentée** : hash exact, pas un texte reformulé même légèrement — un spammeur qui paraphrase son annonce échappe à la détection, limite assumée comme pour les photos.
+- Vérification de bout en bout en conditions réelles : deux vraies annonces soumises par deux comptes différents (Karim Boudiaf, Yasmine Cherif) avec un titre+description strictement identiques (casse et espaces volontairement différents pour vérifier la normalisation) — les deux confirmées signalées à la modération. Rendu arabe RTL vérifié par capture d'écran. Données de test supprimées après vérification — file de modération et nombre total d'annonces (24, 0 en attente) confirmés strictement identiques à l'état d'avant lot.
+
+Avec ce lot, quatre des cinq signaux visés par §16 sont construits (prix anormalement bas, photos dupliquées, historique de refus vendeur, contenu dupliqué). Seule « l'incohérence véhicule/prix » reste non construite — en pratique déjà largement couverte par le signal de prix anormalement bas (Lot 77), qui compare intrinsèquement le véhicule (marque/modèle/année/km/wilaya) à son prix via les comparables réels ; une définition distincte nécessiterait un arbitrage produit supplémentaire pour ne pas dupliquer ce signal.
+
+Prochain lot proposé : à définir avec le porteur de projet — restent en dette technique mineure la vérification du chemin IA réel (clé Anthropic requise) et le remplacement des visuels de démonstration par de vraies photos.

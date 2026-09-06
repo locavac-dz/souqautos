@@ -40,6 +40,7 @@ export default async function AdminListingsPage() {
       year: l.year,
       mileage: l.mileage,
       wilayaId: l.wilayaId,
+      contentHash: l.contentHash,
       photos: l.photos,
     }))
   );
@@ -76,11 +77,19 @@ export default async function AdminListingsPage() {
                           }).format(listing.createdAt),
                         })}
                       </p>
-                      {(signals?.duplicatePhoto || signals?.lowPrice || signals?.sellerRejectionHistory) && (
+                      {(signals?.duplicatePhoto ||
+                        signals?.lowPrice ||
+                        signals?.sellerRejectionHistory ||
+                        signals?.duplicateContent) && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {signals.duplicatePhoto && (
                             <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                               {t("fraudSignalDuplicatePhoto")}
+                            </span>
+                          )}
+                          {signals.duplicateContent && (
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                              {t("fraudSignalDuplicateContent")}
                             </span>
                           )}
                           {signals.lowPrice && (

@@ -260,10 +260,18 @@ model Listing {
   // balayage, pas au moment de l'activation) est revérifiée par
   // sweepAutoRenewals() à chaque cycle, jamais mise en cache ici.
   autoRenew    Boolean          @default(false)
+  // Lot 84 — signal anti-fraude "spam" (§16 : "répétition de contenu ...
+  // pour un même vendeur") : empreinte du titre+description normalisés,
+  // recalculée à chaque création/édition. Permet de repérer un texte
+  // strictement identique republié par un AUTRE vendeur (copier-coller
+  // classique d'une annonce-appât sous plusieurs faux comptes) — même
+  // principe que ListingPhoto.sha256 (Lot 77), jamais une comparaison floue.
+  contentHash  String           @default("")
 
   @@index([status, category, wilayaId])
   @@index([sellerId])
   @@index([status, expiresAt])
+  @@index([contentHash])
 }
 
 // Lot 45 — historique des prix (écart documenté depuis le Lot 4). Une entrée

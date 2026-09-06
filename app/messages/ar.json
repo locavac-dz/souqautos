@@ -452,6 +452,7 @@
     "fraudSignalDuplicatePhoto": "⚠ صورة ظهرت لدى بائع آخر",
     "fraudSignalLowPrice": "⚠ سعر أقل بكثير من السوق",
     "fraudSignalRejectionHistory": "⚠ بائع لديه إعلانات سبق رفضها أو تعليقها",
+    "fraudSignalDuplicateContent": "⚠ نص مطابق لإعلان بائع آخر",
     "proAccountLabel": "المؤسسة",
     "userReportBadge": "ملف شخصي",
     "navReports": "البلاغات",

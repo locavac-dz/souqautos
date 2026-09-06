@@ -1,7 +1,8 @@
+import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { estimateFromRows, type EstimateResult } from "@/lib/price-estimation";
 
-// Lots 77-78 — "Système anti-fraude" documenté depuis le Lot 0
+// Lots 77-78, 84 — "Système anti-fraude" documenté depuis le Lot 0
 // (docs/ARCHITECTURE.md §16 : "Règles + IA : détection de prix anormalement
 // bas, photos dupliquées inter-annonces, comptes/comportements suspects,
 // incohérences véhicule/prix, spam") mais jamais construit jusqu'ici — seul
@@ -15,7 +16,30 @@ export type FraudSignals = {
   duplicatePhoto: boolean;
   lowPrice: boolean;
   sellerRejectionHistory: boolean;
+  duplicateContent: boolean;
 };
+
+// Lot 84 — "spam" (§16 : "répétition de contenu ... pour un même vendeur") :
+// empreinte du titre+description normalisés (espaces/casse ignorés), jamais
+// une comparaison floue — un texte reformulé même légèrement n'est pas
+// détecté, c'est une limite assumée (comme pour les photos, Lot 77).
+export function computeListingContentHash(title: string, description: string): string {
+  const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  return createHash("sha256").update(`${normalize(title)}\n${normalize(description)}`).digest("hex");
+}
+
+// Un contenu strictement identique (titre+description) publié par un AUTRE
+// vendeur est un indice classique de spam/annonce-appât recopiée sous
+// plusieurs comptes — un vendeur qui republie SON PROPRE texte (renouvellement,
+// annonce similaire pour un véhicule identique) n'est jamais signalé.
+export function detectDuplicateContent(
+  ownSellerId: string,
+  ownHash: string,
+  otherListings: { contentHash: string; sellerId: string }[]
+): boolean {
+  if (ownHash === "") return false;
+  return otherListings.some((l) => l.sellerId !== ownSellerId && l.contentHash === ownHash);
+}
 
 // Une photo strictement identique (mêmes octets stockés) publiée par un AUTRE
 // vendeur est un indice de photo volée/copiée depuis une autre annonce — un
@@ -64,6 +88,7 @@ type ListingForFraudSignals = {
   year: number;
   mileage: number;
   wilayaId: number;
+  contentHash: string;
   photos: { sha256: string }[];
 };
 
@@ -86,6 +111,15 @@ export async function getFraudSignalsForListings(
           select: { sha256: true, listing: { select: { sellerId: true } } },
         });
   const otherPhotos = matchingPhotos.map((p) => ({ sha256: p.sha256, sellerId: p.listing.sellerId }));
+
+  const allContentHashes = Array.from(new Set(listings.map((l) => l.contentHash).filter((h) => h !== "")));
+  const matchingContent =
+    allContentHashes.length === 0
+      ? []
+      : await prisma.listing.findMany({
+          where: { contentHash: { in: allContentHashes } },
+          select: { contentHash: true, sellerId: true },
+        });
 
   const pairs = new Map<string, { brandId: number; modelId: number }>();
   for (const listing of listings) {
@@ -133,7 +167,9 @@ export async function getFraudSignalsForListings(
 
     const sellerRejectionHistory = detectSellerRejectionHistory(rejectionCountBySeller.get(listing.sellerId) ?? 0);
 
-    results.set(listing.id, { duplicatePhoto, lowPrice, sellerRejectionHistory });
+    const duplicateContent = detectDuplicateContent(listing.sellerId, listing.contentHash, matchingContent);
+
+    results.set(listing.id, { duplicatePhoto, lowPrice, sellerRejectionHistory, duplicateContent });
   }
 
   return results;

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  computeListingContentHash,
+  detectDuplicateContent,
   detectDuplicatePhoto,
   detectLowPrice,
   detectSellerRejectionHistory,
@@ -91,5 +93,47 @@ describe("detectSellerRejectionHistory", () => {
 
   it("flags a seller well past the threshold", () => {
     expect(detectSellerRejectionHistory(5)).toBe(true);
+  });
+});
+
+describe("computeListingContentHash", () => {
+  it("is deterministic for the same title and description", () => {
+    const h1 = computeListingContentHash("Renault Clio 4", "Voiture en très bon état.");
+    const h2 = computeListingContentHash("Renault Clio 4", "Voiture en très bon état.");
+    expect(h1).toBe(h2);
+  });
+
+  it("ignores case and extra whitespace differences", () => {
+    const h1 = computeListingContentHash("Renault Clio 4", "Voiture en   très bon état.");
+    const h2 = computeListingContentHash("renault clio 4", "voiture en très bon état.");
+    expect(h1).toBe(h2);
+  });
+
+  it("differs when the content actually differs", () => {
+    const h1 = computeListingContentHash("Renault Clio 4", "Voiture en très bon état.");
+    const h2 = computeListingContentHash("Renault Clio 4", "Voiture accidentée, pour pièces.");
+    expect(h1).not.toBe(h2);
+  });
+});
+
+describe("detectDuplicateContent", () => {
+  it("flags a content hash reused by a different seller", () => {
+    const result = detectDuplicateContent("seller-a", "hash1", [{ contentHash: "hash1", sellerId: "seller-b" }]);
+    expect(result).toBe(true);
+  });
+
+  it("never flags the seller's own reused content", () => {
+    const result = detectDuplicateContent("seller-a", "hash1", [{ contentHash: "hash1", sellerId: "seller-a" }]);
+    expect(result).toBe(false);
+  });
+
+  it("ignores an empty hash (never computed)", () => {
+    const result = detectDuplicateContent("seller-a", "", [{ contentHash: "", sellerId: "seller-b" }]);
+    expect(result).toBe(false);
+  });
+
+  it("returns false when no other listing matches", () => {
+    const result = detectDuplicateContent("seller-a", "hash1", [{ contentHash: "hash-unrelated", sellerId: "seller-b" }]);
+    expect(result).toBe(false);
   });
 });
