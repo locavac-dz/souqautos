@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapCsvRowToListingInput, type ImportLookups } from "@/lib/bulk-import";
+import { mapCsvRowToListingInput, listingToCsvRow, EXPORT_CSV_HEADER, type ImportLookups, type ListingForExport } from "@/lib/bulk-import";
 
 function makeLookups(): ImportLookups {
   return {
@@ -128,5 +128,75 @@ describe("mapCsvRowToListingInput", () => {
     if (result.ok) {
       expect(result.data.transmission).toBeUndefined();
     }
+  });
+});
+
+function makeListingForExport(overrides: Partial<ListingForExport> = {}): ListingForExport {
+  return {
+    category: "VOITURE",
+    brand: { name: "Renault" },
+    brandFreeText: null,
+    model: { name: "Clio" },
+    modelFreeText: null,
+    title: "Renault Clio 4 diesel, très propre",
+    description: "Voiture bien entretenue, révisée régulièrement.",
+    price: 1500000,
+    year: 2019,
+    mileage: 45000,
+    fuelType: "DIESEL",
+    gearbox: "MANUELLE",
+    transmission: null,
+    color: null,
+    doors: null,
+    seats: null,
+    powerHp: null,
+    condition: "OCCASION",
+    firstHand: false,
+    accidented: false,
+    wilaya: { nomFr: "Alger" },
+    ...overrides,
+  };
+}
+
+describe("listingToCsvRow", () => {
+  it("produces a row matching EXPORT_CSV_HEADER's column count and order", () => {
+    const row = listingToCsvRow(makeListingForExport());
+    expect(row).toHaveLength(EXPORT_CSV_HEADER.length);
+  });
+
+  it("uses the catalogue brand/model name when the listing is linked to the catalogue", () => {
+    const row = listingToCsvRow(makeListingForExport());
+    expect(row[EXPORT_CSV_HEADER.indexOf("marque")]).toBe("Renault");
+    expect(row[EXPORT_CSV_HEADER.indexOf("modele")]).toBe("Clio");
+  });
+
+  it("falls back to free text when the listing has no catalogue brand/model", () => {
+    const row = listingToCsvRow(
+      makeListingForExport({ brand: null, brandFreeText: "MarqueRare", model: null, modelFreeText: "ModeleRare" })
+    );
+    expect(row[EXPORT_CSV_HEADER.indexOf("marque")]).toBe("MarqueRare");
+    expect(row[EXPORT_CSV_HEADER.indexOf("modele")]).toBe("ModeleRare");
+  });
+
+  it("round-trips through mapCsvRowToListingInput for a linked-catalogue listing", () => {
+    const row = listingToCsvRow(makeListingForExport());
+    const record = Object.fromEntries(EXPORT_CSV_HEADER.map((key, i) => [key, row[i]]));
+    const lookups: ImportLookups = {
+      brands: new Map([["renault", { id: 1, models: new Map([["clio", 10]]) }]]),
+      wilayas: new Map([["alger", 16]]),
+    };
+    const result = mapCsvRowToListingInput(record, lookups);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.brandId).toBe(1);
+      expect(result.data.modelId).toBe(10);
+      expect(result.data.price).toBe(1500000);
+    }
+  });
+
+  it("encodes booleans as oui/non, matching what the importer parses back to true/false", () => {
+    const row = listingToCsvRow(makeListingForExport({ firstHand: true, accidented: false }));
+    expect(row[EXPORT_CSV_HEADER.indexOf("premiereMain")]).toBe("oui");
+    expect(row[EXPORT_CSV_HEADER.indexOf("accidente")]).toBe("non");
   });
 });

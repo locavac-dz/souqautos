@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { priceForAnyTier, quotaForTier } from "@/lib/pro-subscription";
+import { canExportListings, priceForAnyTier, quotaForTier } from "@/lib/pro-subscription";
 import type { ProSubscriptionTier } from "@prisma/client";
 
 // Lot 80 — dernière page documentée au sitemap (docs/ARCHITECTURE.md §2 :
@@ -42,7 +42,15 @@ export default async function ProfessionalsLandingPage() {
     { name: t("title"), url: `${SITE_URL}/${locale}/professionnels` },
   ]);
 
-  const features = ["featureShowcase", "featureBulkImport", "featureCollaborators", "featureStats", "featureVerifiedBadge", "featureReviews"];
+  const features = [
+    "featureShowcase",
+    "featureBulkImport",
+    "featureExport",
+    "featureCollaborators",
+    "featureStats",
+    "featureVerifiedBadge",
+    "featureReviews",
+  ];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -87,6 +95,7 @@ export default async function ProfessionalsLandingPage() {
               <p className="mt-2 text-sm text-slate-600">
                 {quota === null ? t("pricingQuotaUnlimited") : t("pricingQuotaLimited", { quota })}
               </p>
+              {canExportListings(tier) && <p className="mt-1 text-xs text-emerald-700">{t("pricingExportIncluded")}</p>}
             </div>
           );
         })}

@@ -131,3 +131,76 @@ export function mapCsvRowToListingInput(
 
   return { ok: true, data: parsed.data };
 }
+
+// Lot 81 — export de stock (§4-B, outil réservé aux paliers Pro/Premium) :
+// même en-tête, même ordre de colonnes que l'import (Lot 41), pour qu'un
+// fichier exporté puis modifié soit ré-importable tel quel sans adaptation.
+export const EXPORT_CSV_HEADER = [
+  "categorie",
+  "marque",
+  "modele",
+  "titre",
+  "description",
+  "prix",
+  "annee",
+  "kilometrage",
+  "carburant",
+  "boiteVitesses",
+  "transmission",
+  "couleur",
+  "portes",
+  "places",
+  "puissance",
+  "etat",
+  "premiereMain",
+  "accidente",
+  "wilaya",
+];
+
+export type ListingForExport = {
+  category: string;
+  brand: { name: string } | null;
+  brandFreeText: string | null;
+  model: { name: string } | null;
+  modelFreeText: string | null;
+  title: string;
+  description: string;
+  price: number;
+  year: number;
+  mileage: number;
+  fuelType: string;
+  gearbox: string;
+  transmission: string | null;
+  color: string | null;
+  doors: number | null;
+  seats: number | null;
+  powerHp: number | null;
+  condition: string;
+  firstHand: boolean;
+  accidented: boolean;
+  wilaya: { nomFr: string };
+};
+
+export function listingToCsvRow(listing: ListingForExport): string[] {
+  return [
+    listing.category,
+    listing.brand?.name ?? listing.brandFreeText ?? "",
+    listing.model?.name ?? listing.modelFreeText ?? "",
+    listing.title,
+    listing.description,
+    String(listing.price),
+    String(listing.year),
+    String(listing.mileage),
+    listing.fuelType,
+    listing.gearbox,
+    listing.transmission ?? "",
+    listing.color ?? "",
+    listing.doors !== null ? String(listing.doors) : "",
+    listing.seats !== null ? String(listing.seats) : "",
+    listing.powerHp !== null ? String(listing.powerHp) : "",
+    listing.condition,
+    listing.firstHand ? "oui" : "non",
+    listing.accidented ? "oui" : "non",
+    listing.wilaya.nomFr,
+  ];
+}

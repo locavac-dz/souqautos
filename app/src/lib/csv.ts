@@ -66,3 +66,18 @@ export function csvRowsToRecords(rows: string[][]): Record<string, string>[] {
     return record;
   });
 }
+
+// Lot 81 — export de stock (inverse de parseCsv) : un champ n'est mis entre
+// guillemets que s'il contient une virgule, un guillemet ou un retour à la
+// ligne (RFC4180), pour rester lisible tel quel dans la majorité des cas —
+// même discipline "format maison, pas de bibliothèque" que le parseur.
+function escapeCsvField(value: string): string {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+export function stringifyCsv(rows: string[][]): string {
+  return rows.map((row) => row.map(escapeCsvField).join(",")).join("\r\n");
+}

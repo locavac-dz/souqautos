@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCsv, csvRowsToRecords } from "@/lib/csv";
+import { parseCsv, csvRowsToRecords, stringifyCsv } from "@/lib/csv";
 
 describe("parseCsv", () => {
   it("parses simple comma-separated rows", () => {
@@ -62,5 +62,34 @@ describe("csvRowsToRecords", () => {
   it("returns an empty array when there is only a header or nothing", () => {
     expect(csvRowsToRecords([])).toEqual([]);
     expect(csvRowsToRecords([["nom", "age"]])).toEqual([]);
+  });
+});
+
+describe("stringifyCsv", () => {
+  it("joins simple rows with commas and CRLF", () => {
+    expect(
+      stringifyCsv([
+        ["a", "b", "c"],
+        ["1", "2", "3"],
+      ])
+    ).toBe("a,b,c\r\n1,2,3");
+  });
+
+  it("quotes a field containing a comma", () => {
+    expect(stringifyCsv([["un, deux", "3"]])).toBe('"un, deux",3');
+  });
+
+  it("quotes and doubles an embedded quote", () => {
+    expect(stringifyCsv([['il dit "bonjour"']])).toBe('"il dit ""bonjour"""');
+  });
+
+  it("quotes a field containing a newline", () => {
+    expect(stringifyCsv([["ligne 1\nligne 2"]])).toBe('"ligne 1\nligne 2"');
+  });
+
+  it("round-trips through parseCsv for a row needing every kind of escaping", () => {
+    const original = [["titre", "description"], ['Clio, "bon état"', "Ligne 1\nLigne 2"]];
+    const csv = stringifyCsv(original);
+    expect(parseCsv(csv)).toEqual(original);
   });
 });

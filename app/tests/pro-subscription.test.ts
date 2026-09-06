@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canExportListings,
   checkSubscriptionUpgradeEligible,
   effectiveTier,
   isWithinQuota,
@@ -120,5 +121,17 @@ describe("quotaForTier", () => {
 
   it("returns null (unlimited) for PREMIUM", () => {
     expect(quotaForTier("PREMIUM")).toBeNull();
+  });
+});
+
+describe("canExportListings", () => {
+  it("is disabled for STARTER and BUSINESS, never documented with this tool", () => {
+    expect(canExportListings("STARTER")).toBe(false);
+    expect(canExportListings("BUSINESS")).toBe(false);
+  });
+
+  it("is enabled for PRO and PREMIUM", () => {
+    expect(canExportListings("PRO")).toBe(true);
+    expect(canExportListings("PREMIUM")).toBe(true);
   });
 });
