@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { catalogue, slugify } from "./catalogue-data";
 import { equipmentCatalogue } from "./equipment-data";
 import { communes } from "./commune-data";
+import { generations } from "./generation-data";
 
 const prisma = new PrismaClient();
 
@@ -112,6 +113,15 @@ async function main() {
     }
   }
   console.log(`Seed OK — ${catalogue.length} marques, ${modelCount} modèles.`);
+
+  for (const g of generations) {
+    await prisma.generation.upsert({
+      where: { modelId_name: { modelId: g.modelId, name: g.name } },
+      update: { yearStart: g.yearStart, yearEnd: g.yearEnd },
+      create: g,
+    });
+  }
+  console.log(`Seed OK — ${generations.length} générations.`);
 
   for (const item of equipmentCatalogue) {
     await prisma.equipment.upsert({

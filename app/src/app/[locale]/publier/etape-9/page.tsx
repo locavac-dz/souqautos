@@ -60,6 +60,7 @@ export default function Step9Page() {
         {data.category && <Row label={t("category")} value={t(CATEGORY_KEY[data.category])} />}
         <Row label={t("brand")} value={brandLabel} />
         <Row label={t("model")} value={modelLabel} />
+        {data.generationName && <Row label={t("generation")} value={data.generationName} />}
         <Row label={t("year")} value={data.year?.toString()} />
         <Row label={t("mileage")} value={data.mileage ? `${data.mileage} km` : undefined} />
         {data.fuelType && <Row label={t("fuelType")} value={t(FUEL_KEY[data.fuelType])} />}

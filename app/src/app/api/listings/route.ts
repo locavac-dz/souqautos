@@ -65,6 +65,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "unknown_model" }, { status: 400 });
     }
   }
+  // Lot 88 — même discipline que brandId/modelId : une génération n'est
+  // acceptée que si elle appartient réellement au modèle choisi.
+  if (data.generationId) {
+    const generation = await prisma.generation.findUnique({ where: { id: data.generationId } });
+    if (!generation || generation.modelId !== data.modelId) {
+      return NextResponse.json({ error: "unknown_generation" }, { status: 400 });
+    }
+  }
   const wilaya = await prisma.wilaya.findUnique({ where: { id: data.wilayaId } });
   if (!wilaya) {
     return NextResponse.json({ error: "unknown_wilaya" }, { status: 400 });
@@ -119,6 +127,7 @@ export async function POST(request: NextRequest) {
       category: data.category,
       brandId: data.brandId ?? null,
       modelId: data.modelId ?? null,
+      generationId: data.generationId ?? null,
       brandFreeText: data.brandId ? null : data.brandFreeText,
       modelFreeText: data.modelId ? null : data.modelFreeText,
       title: data.title,

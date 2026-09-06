@@ -92,6 +92,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: "unknown_model" }, { status: 400 });
     }
   }
+  // Lot 88 — même discipline que brandId/modelId : une génération n'est
+  // acceptée que si elle appartient réellement au modèle choisi.
+  if (data.generationId) {
+    const generation = await prisma.generation.findUnique({ where: { id: data.generationId } });
+    if (!generation || generation.modelId !== data.modelId) {
+      return NextResponse.json({ error: "unknown_generation" }, { status: 400 });
+    }
+  }
 
   // Même discipline que brandId/modelId : jamais un id d'équipement fabriqué
   // côté client accepté tel quel (Lot 72/73).
@@ -157,6 +165,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         category: data.category,
         brandId: data.brandId ?? null,
         modelId: data.modelId ?? null,
+        generationId: data.generationId ?? null,
         brandFreeText: data.brandId ? null : data.brandFreeText,
         modelFreeText: data.modelId ? null : data.modelFreeText,
         title: data.title,

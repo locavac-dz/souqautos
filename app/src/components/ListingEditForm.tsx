@@ -14,7 +14,8 @@ import type {
 
 type CommuneRow = { id: number; nomFr: string; nomAr: string };
 type WilayaRow = { id: number; nomFr: string; nomAr: string; communes: CommuneRow[] };
-type ModelRow = { id: number; slug: string; name: string; brandId: number };
+type GenerationRow = { id: number; name: string; yearStart: number; yearEnd: number | null };
+type ModelRow = { id: number; slug: string; name: string; brandId: number; generations: GenerationRow[] };
 type BrandRow = { id: number; slug: string; name: string; models: ModelRow[] };
 type EquipmentRow = { id: number; nameFr: string; nameAr: string; category: string };
 
@@ -39,6 +40,7 @@ const ERROR_KEY: Record<string, string> = {
   validation: "errorValidation",
   unknown_wilaya: "errorValidation",
   unknown_commune: "errorValidation",
+  unknown_generation: "errorValidation",
   unknown_brand: "errorValidation",
   unknown_model: "errorValidation",
   at_least_one_photo: "errorAtLeastOnePhoto",
@@ -76,6 +78,15 @@ export function ListingEditForm({
   const [modelOther, setModelOther] = useState(!listing.modelId && Boolean(listing.modelFreeText));
 
   const selectedBrand = useMemo(() => brands.find((b) => b.id === brandId) ?? null, [brands, brandId]);
+  const [generationId, setGenerationId] = useState<number | undefined>(listing.generationId ?? undefined);
+  const selectedModelForGeneration = useMemo(
+    () => selectedBrand?.models.find((m) => m.id === modelId) ?? null,
+    [selectedBrand, modelId]
+  );
+
+  function generationLabel(g: GenerationRow): string {
+    return `${g.name} (${g.yearStart}–${g.yearEnd ?? tWizard("generationOngoing")})`;
+  }
 
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
@@ -161,6 +172,7 @@ export function ListingEditForm({
         brandFreeText: brandOther ? brandFreeText.trim() || undefined : undefined,
         modelId: brandOther || modelOther ? undefined : modelId,
         modelFreeText: brandOther || modelOther ? modelFreeText.trim() || undefined : undefined,
+        generationId: brandOther || modelOther ? undefined : generationId,
         title,
         description,
         year,
@@ -234,12 +246,14 @@ export function ListingEditForm({
               setModelOther(true);
               setBrandId(undefined);
               setModelId(undefined);
+              setGenerationId(undefined);
               return;
             }
             setBrandOther(false);
             setModelOther(false);
             setBrandId(Number(e.target.value));
             setModelId(undefined);
+            setGenerationId(undefined);
           }}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
         >
@@ -282,10 +296,12 @@ export function ListingEditForm({
               if (e.target.value === "__other__") {
                 setModelOther(true);
                 setModelId(undefined);
+                setGenerationId(undefined);
                 return;
               }
               setModelOther(false);
               setModelId(Number(e.target.value));
+              setGenerationId(undefined);
             }}
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
           >
@@ -301,6 +317,30 @@ export function ListingEditForm({
           </select>
         </div>
       )}
+
+      {!brandOther &&
+        !modelOther &&
+        selectedModelForGeneration &&
+        selectedModelForGeneration.generations.length > 0 && (
+          <div>
+            <label htmlFor="edit-generation" className="block text-sm font-medium text-slate-700 mb-1">
+              {tWizard("generation")}
+            </label>
+            <select
+              id="edit-generation"
+              value={generationId ?? ""}
+              onChange={(e) => setGenerationId(e.target.value ? Number(e.target.value) : undefined)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            >
+              <option value="">{tWizard("generationPlaceholder")}</option>
+              {selectedModelForGeneration.generations.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {generationLabel(g)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
       {(brandOther || modelOther) && (
         <div>

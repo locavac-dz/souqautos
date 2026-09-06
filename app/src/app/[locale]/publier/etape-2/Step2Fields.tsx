@@ -6,7 +6,8 @@ import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
 import type { ListingCategory } from "@prisma/client";
 
-type ModelRow = { id: number; slug: string; name: string; brandId: number };
+type GenerationRow = { id: number; name: string; yearStart: number; yearEnd: number | null };
+type ModelRow = { id: number; slug: string; name: string; brandId: number; generations: GenerationRow[] };
 type BrandRow = { id: number; slug: string; name: string; models: ModelRow[] };
 
 const CATEGORIES: ListingCategory[] = [
@@ -36,6 +37,14 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
     () => brands.find((b) => b.id === data.brandId) ?? null,
     [brands, data.brandId]
   );
+  const selectedModel = useMemo(
+    () => selectedBrand?.models.find((m) => m.id === data.modelId) ?? null,
+    [selectedBrand, data.modelId]
+  );
+
+  function generationLabel(g: GenerationRow): string {
+    return `${g.name} (${g.yearStart}–${g.yearEnd ?? t("generationOngoing")})`;
+  }
 
   function handleNext() {
     if (!data.category) {
@@ -91,6 +100,8 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
               modelId: undefined,
               modelName: undefined,
               modelFreeText: undefined,
+              generationId: undefined,
+              generationName: undefined,
             });
           }}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
@@ -129,12 +140,18 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
             onChange={(e) => {
               if (e.target.value === "__other__") {
                 setModelOther(true);
-                setData({ modelId: undefined, modelName: undefined });
+                setData({ modelId: undefined, modelName: undefined, generationId: undefined, generationName: undefined });
                 return;
               }
               setModelOther(false);
               const model = selectedBrand.models.find((m) => m.id === Number(e.target.value));
-              setData({ modelId: model?.id, modelName: model?.name, modelFreeText: undefined });
+              setData({
+                modelId: model?.id,
+                modelName: model?.name,
+                modelFreeText: undefined,
+                generationId: undefined,
+                generationName: undefined,
+              });
             }}
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
           >
@@ -147,6 +164,30 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
               </option>
             ))}
             <option value="__other__">{t("modelOther")}</option>
+          </select>
+        </div>
+      )}
+
+      {!brandOther && !modelOther && selectedModel && selectedModel.generations.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">{t("generation")}</label>
+          <select
+            value={data.generationId ?? ""}
+            onChange={(e) => {
+              const generation = selectedModel.generations.find((g) => g.id === Number(e.target.value));
+              setData({
+                generationId: generation?.id,
+                generationName: generation ? generationLabel(generation) : undefined,
+              });
+            }}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          >
+            <option value="">{t("generationPlaceholder")}</option>
+            {selectedModel.generations.map((g) => (
+              <option key={g.id} value={g.id}>
+                {generationLabel(g)}
+              </option>
+            ))}
           </select>
         </div>
       )}

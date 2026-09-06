@@ -36,7 +36,12 @@ export default async function EditListingPage({
     }),
     prisma.brand.findMany({
       orderBy: { name: "asc" },
-      include: { models: { orderBy: { name: "asc" } } },
+      include: {
+        models: {
+          orderBy: { name: "asc" },
+          include: { generations: { orderBy: { yearStart: "desc" } } },
+        },
+      },
     }),
     prisma.equipment.findMany({
       orderBy: { nameFr: "asc" },

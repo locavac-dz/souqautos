@@ -14,6 +14,8 @@ export type WizardData = {
   modelId?: number;
   modelName?: string;
   modelFreeText?: string;
+  generationId?: number;
+  generationName?: string;
   year?: number;
   mileage?: number;
   fuelType?: FuelType;

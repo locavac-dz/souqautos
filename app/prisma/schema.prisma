@@ -132,8 +132,32 @@ model Model {
   slug    String
   name    String
   listings Listing[]
+  generations Generation[]
 
   @@unique([brandId, slug])
+}
+
+// Lot 88 — profondeur de catalogue (docs/ARCHITECTURE.md §5). Contrairement à
+// Wilaya/Commune (source officielle unique), il n'existe aucune source fiable
+// unique pour les générations par modèle sur le marché algérien : référentiel
+// VOLONTAIREMENT PARTIEL, vérifié modèle par modèle (jamais inventé) — voir
+// prisma/generation-data.ts pour le détail des sources et la couverture
+// (24 modèles réellement utilisés par les annonces de démonstration, pas les
+// 108 du catalogue). Comme Wilaya/Commune : référentiel figé, seed uniquement,
+// pas d'édition back-office dans ce lot.
+model Generation {
+  id        Int      @id @default(autoincrement())
+  modelId   Int
+  model     Model    @relation(fields: [modelId], references: [id])
+  name      String
+  yearStart Int
+  // null = génération toujours produite/vendue au moment du seed — jamais une
+  // date de fin inventée pour une génération encore en production.
+  yearEnd   Int?
+  listings  Listing[]
+
+  @@index([modelId])
+  @@unique([modelId, name])
 }
 
 // Lot 72 — équipements du véhicule (docs/ARCHITECTURE.md §14 : « équipements »
@@ -223,6 +247,11 @@ model Listing {
   brand        Brand?           @relation(fields: [brandId], references: [id])
   modelId      Int?
   model        Model?           @relation(fields: [modelId], references: [id])
+  // Lot 88 — génération du modèle (docs/ARCHITECTURE.md §5), nullable comme
+  // commune (Lot 87) : couverture volontairement partielle du catalogue,
+  // jamais un choix forcé quand le modèle n'a pas encore de génération référencée.
+  generationId Int?
+  generation   Generation?      @relation(fields: [generationId], references: [id])
   // Repli texte libre quand le véhicule n'est pas dans le catalogue (ex: motos,
   // marques non encore référencées) — jamais de fiche catalogue fabriquée pour compenser.
   brandFreeText String?
@@ -296,6 +325,7 @@ model Listing {
   @@index([status, expiresAt])
   @@index([contentHash])
   @@index([communeId])
+  @@index([generationId])
 }
 
 // Lot 45 — historique des prix (écart documenté depuis le Lot 4). Une entrée

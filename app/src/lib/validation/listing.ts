@@ -25,6 +25,7 @@ const listingBaseSchema = z.object({
   brandFreeText: z.string().trim().min(2).max(60).optional(),
   modelId: z.number().int().positive().optional(),
   modelFreeText: z.string().trim().min(1).max(60).optional(),
+  generationId: z.number().int().positive().optional(),
   title: z.string().trim().min(10).max(120),
   description: z.string().trim().min(30).max(5000),
   price: z.number().int().positive().max(999_999_999),

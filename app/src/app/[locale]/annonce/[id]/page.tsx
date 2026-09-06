@@ -102,6 +102,7 @@ export default async function ListingDetailPage({
         model: true,
         wilaya: true,
         commune: true,
+        generation: true,
         seller: { include: { profile: true, professionalAccount: true } },
         priceHistory: { orderBy: { recordedAt: "desc" } },
         renewals: { orderBy: { renewedAt: "desc" } },
@@ -388,6 +389,12 @@ export default async function ListingDetailPage({
           <div className="mt-6">
             <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("detailsTitle")}</h2>
             <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+              {listing.generation && (
+                <DetailRow
+                  label={tWizard("generation")}
+                  value={`${listing.generation.name} (${listing.generation.yearStart}–${listing.generation.yearEnd ?? tWizard("generationOngoing")})`}
+                />
+              )}
               <DetailRow label={tWizard("fuelType")} value={tWizard(FUEL_KEY[listing.fuelType])} />
               <DetailRow label={tWizard("gearbox")} value={tWizard(GEARBOX_KEY[listing.gearbox])} />
               <DetailRow

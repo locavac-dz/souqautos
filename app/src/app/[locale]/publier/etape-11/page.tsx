@@ -23,6 +23,7 @@ export default function Step11Page() {
       brandFreeText: data.brandFreeText,
       modelId: data.modelId,
       modelFreeText: data.modelFreeText,
+      generationId: data.generationId,
       title: data.title,
       description: data.description,
       price: data.price,
