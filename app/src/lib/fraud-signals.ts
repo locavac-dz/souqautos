@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { estimateFromRows, type EstimateResult } from "@/lib/price-estimation";
 
-// Lot 77 — première brique du "Système anti-fraude" documenté depuis le Lot 0
+// Lots 77-78 — "Système anti-fraude" documenté depuis le Lot 0
 // (docs/ARCHITECTURE.md §16 : "Règles + IA : détection de prix anormalement
 // bas, photos dupliquées inter-annonces, comptes/comportements suspects,
 // incohérences véhicule/prix, spam") mais jamais construit jusqu'ici — seul
 // le circuit réactif de signalement par les utilisateurs existait (Lot 21).
-// Ici : deux règles simples, jamais une "IA" fabriquée sans base réelle.
+// Ici : des règles simples, jamais une "IA" fabriquée sans base réelle.
 // Ces signaux sont uniquement des AIDES à la décision du modérateur humain —
 // jamais un rejet ou une accusation automatique (§16 : "bandeau d'avertissement
 // non accusatoire").
@@ -14,6 +14,7 @@ import { estimateFromRows, type EstimateResult } from "@/lib/price-estimation";
 export type FraudSignals = {
   duplicatePhoto: boolean;
   lowPrice: boolean;
+  sellerRejectionHistory: boolean;
 };
 
 // Une photo strictement identique (mêmes octets stockés) publiée par un AUTRE
@@ -40,6 +41,18 @@ const MIN_SAMPLE_SIZE_FOR_LOW_PRICE_SIGNAL = 3;
 export function detectLowPrice(price: number, estimate: EstimateResult | null): boolean {
   if (!estimate || estimate.sampleSize < MIN_SAMPLE_SIZE_FOR_LOW_PRICE_SIGNAL) return false;
   return price < estimate.low * LOW_PRICE_RATIO;
+}
+
+// "Comportements suspects" (§16) : un vendeur dont plusieurs AUTRES annonces
+// ont déjà été refusées ou suspendues par un modérateur humain n'est pas
+// automatiquement de mauvaise foi (un refus isolé arrive à tout le monde),
+// mais un historique répété mérite une vérification plus attentive de la
+// nouvelle annonce — jamais une seule annonce refusée (trop courant pour être
+// un signal), un seuil de 2 évite de pénaliser une erreur ponctuelle corrigée.
+export const MIN_REJECTIONS_FOR_SIGNAL = 2;
+
+export function detectSellerRejectionHistory(rejectionCount: number): boolean {
+  return rejectionCount >= MIN_REJECTIONS_FOR_SIGNAL;
 }
 
 type ListingForFraudSignals = {
@@ -87,6 +100,17 @@ export async function getFraudSignalsForListings(
     })
   );
 
+  const sellerIds = Array.from(new Set(listings.map((l) => l.sellerId)));
+  const rejectionGroups =
+    sellerIds.length === 0
+      ? []
+      : await prisma.listing.groupBy({
+          by: ["sellerId"],
+          where: { sellerId: { in: sellerIds }, status: { in: ["REFUSEE", "SUSPENDUE"] } },
+          _count: { _all: true },
+        });
+  const rejectionCountBySeller = new Map(rejectionGroups.map((g) => [g.sellerId, g._count._all]));
+
   const results = new Map<string, FraudSignals>();
   for (const listing of listings) {
     const duplicatePhoto = detectDuplicatePhoto(
@@ -107,7 +131,9 @@ export async function getFraudSignalsForListings(
       lowPrice = detectLowPrice(listing.price, estimate);
     }
 
-    results.set(listing.id, { duplicatePhoto, lowPrice });
+    const sellerRejectionHistory = detectSellerRejectionHistory(rejectionCountBySeller.get(listing.sellerId) ?? 0);
+
+    results.set(listing.id, { duplicatePhoto, lowPrice, sellerRejectionHistory });
   }
 
   return results;

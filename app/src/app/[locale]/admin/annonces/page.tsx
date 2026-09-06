@@ -57,37 +57,47 @@ export default async function AdminListingsPage() {
             {pending.map((listing) => {
               const signals = fraudSignals.get(listing.id);
               return (
-                <div key={listing.id} className="flex gap-4 rounded-lg border border-slate-200 p-3">
-                  <Thumbnail path={listing.photos[0]?.path} title={listing.title} />
-                  <div className="flex-1">
-                    <Link href={`/annonce/${listing.id}`} className="font-medium text-slate-900 hover:underline">
-                      {listing.title}
-                    </Link>
-                    <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email} ·{" "}
-                      {t("submittedOn", {
-                        date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
-                          dateStyle: "medium",
-                        }).format(listing.createdAt),
-                      })}
-                    </p>
-                    {(signals?.duplicatePhoto || signals?.lowPrice) && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {signals.duplicatePhoto && (
-                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                            {t("fraudSignalDuplicatePhoto")}
-                          </span>
-                        )}
-                        {signals.lowPrice && (
-                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                            {t("fraudSignalLowPrice")}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                <div
+                  key={listing.id}
+                  className="flex flex-col gap-4 rounded-lg border border-slate-200 p-3 sm:flex-row"
+                >
+                  <div className="flex gap-4">
+                    <Thumbnail path={listing.photos[0]?.path} title={listing.title} />
+                    <div className="flex-1">
+                      <Link href={`/annonce/${listing.id}`} className="font-medium text-slate-900 hover:underline">
+                        {listing.title}
+                      </Link>
+                      <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email} ·{" "}
+                        {t("submittedOn", {
+                          date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
+                            dateStyle: "medium",
+                          }).format(listing.createdAt),
+                        })}
+                      </p>
+                      {(signals?.duplicatePhoto || signals?.lowPrice || signals?.sellerRejectionHistory) && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {signals.duplicatePhoto && (
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                              {t("fraudSignalDuplicatePhoto")}
+                            </span>
+                          )}
+                          {signals.lowPrice && (
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                              {t("fraudSignalLowPrice")}
+                            </span>
+                          )}
+                          {signals.sellerRejectionHistory && (
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                              {t("fraudSignalRejectionHistory")}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="w-56 shrink-0">
+                  <div className="sm:w-56 sm:shrink-0">
                     <ModerationActions listingId={listing.id} status="EN_ATTENTE" />
                   </div>
                 </div>
@@ -101,18 +111,20 @@ export default async function AdminListingsPage() {
         <h2 className="text-lg font-medium text-slate-900 mb-4">{t("publishedListingsSection")}</h2>
         <div className="space-y-3">
           {published.map((listing) => (
-            <div key={listing.id} className="flex gap-4 rounded-lg border border-slate-200 p-3">
-              <Thumbnail path={listing.photos[0]?.path} title={listing.title} />
-              <div className="flex-1">
-                <Link href={`/annonce/${listing.id}`} className="font-medium text-slate-900 hover:underline">
-                  {listing.title}
-                </Link>
-                <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email}
-                </p>
+            <div key={listing.id} className="flex flex-col gap-4 rounded-lg border border-slate-200 p-3 sm:flex-row">
+              <div className="flex gap-4">
+                <Thumbnail path={listing.photos[0]?.path} title={listing.title} />
+                <div className="flex-1">
+                  <Link href={`/annonce/${listing.id}`} className="font-medium text-slate-900 hover:underline">
+                    {listing.title}
+                  </Link>
+                  <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email}
+                  </p>
+                </div>
               </div>
-              <div className="w-56 shrink-0">
+              <div className="sm:w-56 sm:shrink-0">
                 <ModerationActions listingId={listing.id} status="PUBLIEE" />
               </div>
             </div>

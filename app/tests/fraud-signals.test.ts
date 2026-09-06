@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { detectDuplicatePhoto, detectLowPrice, LOW_PRICE_RATIO } from "@/lib/fraud-signals";
+import {
+  detectDuplicatePhoto,
+  detectLowPrice,
+  detectSellerRejectionHistory,
+  LOW_PRICE_RATIO,
+  MIN_REJECTIONS_FOR_SIGNAL,
+} from "@/lib/fraud-signals";
 import type { EstimateResult } from "@/lib/price-estimation";
 
 describe("detectDuplicatePhoto", () => {
@@ -67,5 +73,23 @@ describe("detectLowPrice", () => {
 
   it("never flags when the comparable sample is too small to be meaningful", () => {
     expect(detectLowPrice(100, { ...baseEstimate, sampleSize: 2 })).toBe(false);
+  });
+});
+
+describe("detectSellerRejectionHistory", () => {
+  it("never flags a single past rejection (an honest mistake can happen once)", () => {
+    expect(detectSellerRejectionHistory(1)).toBe(false);
+  });
+
+  it("never flags a seller with no rejection history", () => {
+    expect(detectSellerRejectionHistory(0)).toBe(false);
+  });
+
+  it("flags a seller at exactly the documented threshold", () => {
+    expect(detectSellerRejectionHistory(MIN_REJECTIONS_FOR_SIGNAL)).toBe(true);
+  });
+
+  it("flags a seller well past the threshold", () => {
+    expect(detectSellerRejectionHistory(5)).toBe(true);
   });
 });

@@ -448,6 +448,7 @@
     "sellerLabel": "Vendeur",
     "fraudSignalDuplicatePhoto": "⚠ Photo déjà vue chez un autre vendeur",
     "fraudSignalLowPrice": "⚠ Prix très inférieur au marché",
+    "fraudSignalRejectionHistory": "⚠ Vendeur avec des annonces déjà refusées/suspendues",
     "proAccountLabel": "Entreprise",
     "userReportBadge": "Profil",
     "navReports": "Signalements",
