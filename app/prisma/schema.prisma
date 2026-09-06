@@ -92,6 +92,23 @@ model Wilaya {
   profiles Profile[]
   listings Listing[]
   professionalAccounts ProfessionalAccount[]
+  communes Commune[]
+}
+
+// Lot 87 — découpage administratif sous la wilaya (docs/ARCHITECTURE.md §5),
+// référentiel figé comme Wilaya (Lot 25 : pas d'édition back-office, seed
+// uniquement) : source officielle Ministère de l'Intérieur, 1541 communes,
+// ids repris tels quels du jeu de données source (stables, jamais réattribués
+// par le seed idempotent — même principe que les ids fixes de Wilaya).
+model Commune {
+  id       Int       @id
+  wilayaId Int
+  wilaya   Wilaya    @relation(fields: [wilayaId], references: [id])
+  nomFr    String
+  nomAr    String
+  listings Listing[]
+
+  @@index([wilayaId])
 }
 
 // --- Lot 2 — Catalogue véhicules & annonces ---
@@ -227,6 +244,12 @@ model Listing {
   accidented   Boolean          @default(false)
   wilayaId     Int
   wilaya       Wilaya           @relation(fields: [wilayaId], references: [id])
+  // Lot 87 — précision géographique optionnelle sous la wilaya (docs/ARCHITECTURE.md
+  // §5, jamais construite depuis le Lot 2). Nullable : les annonces existantes et
+  // toute future annonce sans commune choisie restent valides, la wilaya seule
+  // reste le niveau géographique obligatoire.
+  communeId    Int?
+  commune      Commune?         @relation(fields: [communeId], references: [id])
   formula      ListingFormula   @default(STANDARD)
   status       ListingStatus    @default(BROUILLON)
   // Motif affiché au vendeur quand le statut est REFUSEE ou SUSPENDUE (§39).
@@ -272,6 +295,7 @@ model Listing {
   @@index([sellerId])
   @@index([status, expiresAt])
   @@index([contentHash])
+  @@index([communeId])
 }
 
 // Lot 45 — historique des prix (écart documenté depuis le Lot 4). Une entrée

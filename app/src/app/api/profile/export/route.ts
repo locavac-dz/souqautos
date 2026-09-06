@@ -35,7 +35,15 @@ export async function GET() {
   ] = await Promise.all([
     prisma.listing.findMany({
       where: { sellerId: user.id },
-      include: { photos: true, priceHistory: true, renewals: true, brand: true, model: true, wilaya: true },
+      include: {
+        photos: true,
+        priceHistory: true,
+        renewals: true,
+        brand: true,
+        model: true,
+        wilaya: true,
+        commune: true,
+      },
       orderBy: { createdAt: "asc" },
     }),
     prisma.favorite.findMany({
@@ -117,6 +125,7 @@ export async function GET() {
       kilometrage: l.mileage,
       statut: l.status,
       wilaya: l.wilaya.nomFr,
+      commune: l.commune?.nomFr ?? null,
       vues: l.views,
       creeLe: l.createdAt,
       publieeLe: l.publishedAt,

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
 
-type WilayaRow = { id: number; nomFr: string; nomAr: string };
+type CommuneRow = { id: number; nomFr: string; nomAr: string };
+type WilayaRow = { id: number; nomFr: string; nomAr: string; communes: CommuneRow[] };
 
 const ALGERIAN_PHONE = /^(0[5-7]\d{8}|\+213[5-7]\d{8})$/;
 
@@ -20,6 +21,11 @@ export function Step8Fields({
   const locale = useLocale();
   const { data, setData } = useWizard();
   const [error, setError] = useState<string | null>(null);
+
+  const selectedWilaya = useMemo(
+    () => wilayas.find((w) => w.id === data.wilayaId) ?? null,
+    [wilayas, data.wilayaId]
+  );
 
   function handleNext() {
     if (!data.wilayaId) {
@@ -48,6 +54,8 @@ export function Step8Fields({
             setData({
               wilayaId: wilaya?.id,
               wilayaName: wilaya ? (locale === "ar" ? wilaya.nomAr : wilaya.nomFr) : undefined,
+              communeId: undefined,
+              communeName: undefined,
             });
           }}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
@@ -62,6 +70,33 @@ export function Step8Fields({
           ))}
         </select>
       </div>
+
+      {selectedWilaya && selectedWilaya.communes.length > 0 && (
+        <div>
+          <label htmlFor="wizard-commune" className="block text-sm font-medium text-slate-700 mb-1">
+            {t("commune")}
+          </label>
+          <select
+            id="wizard-commune"
+            value={data.communeId ?? ""}
+            onChange={(e) => {
+              const commune = selectedWilaya.communes.find((c) => c.id === Number(e.target.value));
+              setData({
+                communeId: commune?.id,
+                communeName: commune ? (locale === "ar" ? commune.nomAr : commune.nomFr) : undefined,
+              });
+            }}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          >
+            <option value="">{t("communePlaceholder")}</option>
+            {selectedWilaya.communes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {locale === "ar" ? c.nomAr : c.nomFr}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label htmlFor="wizard-phone" className="block text-sm font-medium text-slate-700 mb-1">

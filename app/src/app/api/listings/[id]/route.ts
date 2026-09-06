@@ -66,6 +66,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!wilaya) {
     return NextResponse.json({ error: "unknown_wilaya" }, { status: 400 });
   }
+  // Lot 87 — même discipline que brandId/modelId : une commune n'est acceptée
+  // que si elle appartient réellement à la wilaya choisie, jamais fabriquée.
+  if (parsed.data.communeId) {
+    const commune = await prisma.commune.findUnique({ where: { id: parsed.data.communeId } });
+    if (!commune || commune.wilayaId !== parsed.data.wilayaId) {
+      return NextResponse.json({ error: "unknown_commune" }, { status: 400 });
+    }
+  }
 
   const data = parsed.data;
 
@@ -167,6 +175,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         firstHand: data.firstHand,
         accidented: data.accidented,
         wilayaId: data.wilayaId,
+        communeId: data.communeId ?? null,
         status: "EN_ATTENTE",
         moderationNote: null,
         // Remplace entièrement la sélection précédente (Lot 73) — jamais un

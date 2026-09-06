@@ -43,6 +43,7 @@ export default async function SearchPage({
     brand: true,
     model: true,
     wilaya: true,
+    commune: true,
     photos: { orderBy: { position: "asc" as const }, take: 1 },
     equipments: { select: { equipmentId: true } },
   } satisfies Prisma.ListingInclude;
@@ -83,7 +84,10 @@ export default async function SearchPage({
       include: { models: { orderBy: { name: "asc" } } },
       orderBy: { name: "asc" },
     }),
-    prisma.wilaya.findMany({ orderBy: { id: "asc" } }),
+    prisma.wilaya.findMany({
+      orderBy: { id: "asc" },
+      include: { communes: { orderBy: { nomFr: "asc" } } },
+    }),
     prisma.equipment.findMany({
       orderBy: { nameFr: "asc" },
       select: { id: true, nameFr: true, nameAr: true, category: true },
@@ -140,6 +144,7 @@ export default async function SearchPage({
             brandId: flatParams.brandId,
             modelId: flatParams.modelId,
             wilayaId: flatParams.wilayaId,
+            communeId: flatParams.communeId,
             priceMin: flatParams.priceMin,
             priceMax: flatParams.priceMax,
             yearMin: flatParams.yearMin,

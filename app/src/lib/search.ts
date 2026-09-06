@@ -21,6 +21,7 @@ export function buildListingWhere(params: SearchParams): Prisma.ListingWhereInpu
   if (params.brandId) where.brandId = params.brandId;
   if (params.modelId) where.modelId = params.modelId;
   if (params.wilayaId) where.wilayaId = params.wilayaId;
+  if (params.communeId) where.communeId = params.communeId;
   if (params.fuelType) where.fuelType = params.fuelType;
   if (params.gearbox) where.gearbox = params.gearbox;
   if (params.condition) where.condition = params.condition;

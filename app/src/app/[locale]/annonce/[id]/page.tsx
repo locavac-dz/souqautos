@@ -101,6 +101,7 @@ export default async function ListingDetailPage({
         brand: true,
         model: true,
         wilaya: true,
+        commune: true,
         seller: { include: { profile: true, professionalAccount: true } },
         priceHistory: { orderBy: { recordedAt: "desc" } },
         renewals: { orderBy: { renewedAt: "desc" } },
@@ -129,6 +130,8 @@ export default async function ListingDetailPage({
   const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
   const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
   const wilayaLabel = locale === "ar" ? listing.wilaya.nomAr : listing.wilaya.nomFr;
+  const communeLabel = listing.commune ? (locale === "ar" ? listing.commune.nomAr : listing.commune.nomFr) : null;
+  const locationLabel = communeLabel ? `${communeLabel}, ${wilayaLabel}` : wilayaLabel;
 
   const tPriceBadge = await getTranslations("PriceBadge");
   const estimate =
@@ -492,7 +495,7 @@ export default async function ListingDetailPage({
                 <CompareToggle listingId={listing.id} label={tCompare("addToCompare")} />
               </div>
             </div>
-            <p className="text-sm text-slate-500 mt-1">{wilayaLabel}</p>
+            <p className="text-sm text-slate-500 mt-1">{locationLabel}</p>
 
             {priceBadge && (
               <div className={`mt-4 rounded-md border px-3 py-2 ${BADGE_STYLE[priceBadge.badge]}`}>

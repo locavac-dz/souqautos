@@ -6,7 +6,8 @@ import { useRouter } from "@/i18n/navigation";
 
 type ModelRow = { id: number; name: string; brandId: number };
 type BrandRow = { id: number; name: string; models: ModelRow[] };
-type WilayaRow = { id: number; nomFr: string; nomAr: string };
+type CommuneRow = { id: number; nomFr: string; nomAr: string };
+type WilayaRow = { id: number; nomFr: string; nomAr: string; communes: CommuneRow[] };
 type EquipmentRow = { id: number; nameFr: string; nameAr: string; category: string };
 
 export type SearchFilterValues = {
@@ -15,6 +16,7 @@ export type SearchFilterValues = {
   brandId?: string;
   modelId?: string;
   wilayaId?: string;
+  communeId?: string;
   priceMin?: string;
   priceMax?: string;
   yearMin?: string;
@@ -62,6 +64,7 @@ export function SearchFilters({
   const [values, setValues] = useState<SearchFilterValues>(initialValues);
 
   const selectedBrand = brands.find((b) => b.id === Number(values.brandId));
+  const selectedWilaya = wilayas.find((w) => w.id === Number(values.wilayaId));
   const selectedEquipmentIds = values.equipmentIds ? values.equipmentIds.split(",").map(Number) : [];
   const equipmentsByCategory = new Map<string, EquipmentRow[]>();
   for (const eq of equipments) {
@@ -82,6 +85,7 @@ export function SearchFilters({
       ...prev,
       [key]: value || undefined,
       ...(key === "brandId" ? { modelId: undefined } : {}),
+      ...(key === "wilayaId" ? { communeId: undefined } : {}),
     }));
   }
 
@@ -204,6 +208,23 @@ export function SearchFilters({
               ))}
             </select>
           </Field>
+
+          {selectedWilaya && selectedWilaya.communes.length > 0 && (
+            <Field id="filter-commune" label={t("commune")}>
+              <select
+                value={values.communeId ?? ""}
+                onChange={(e) => set("communeId", e.target.value)}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              >
+                <option value="">{t("any")}</option>
+                {selectedWilaya.communes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {locale === "ar" ? c.nomAr : c.nomFr}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
 
           <Field label={t("priceRange")}>
             <div className="flex gap-2">

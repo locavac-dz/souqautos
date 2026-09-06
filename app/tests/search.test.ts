@@ -15,8 +15,14 @@ describe("searchParamsSchema", () => {
   });
 
   it("coerces numeric fields from strings", () => {
-    const result = searchParamsSchema.parse({ brandId: "3", priceMin: "1000000", page: "2" });
+    const result = searchParamsSchema.parse({
+      brandId: "3",
+      communeId: "42",
+      priceMin: "1000000",
+      page: "2",
+    });
     expect(result.brandId).toBe(3);
+    expect(result.communeId).toBe(42);
     expect(result.priceMin).toBe(1_000_000);
     expect(result.page).toBe(2);
   });
@@ -84,6 +90,7 @@ describe("buildListingWhere", () => {
       category: "VOITURE",
       brandId: 1,
       wilayaId: 16,
+      communeId: 42,
       fuelType: "DIESEL",
       gearbox: "MANUELLE",
       condition: "OCCASION",
@@ -93,10 +100,16 @@ describe("buildListingWhere", () => {
       category: "VOITURE",
       brandId: 1,
       wilayaId: 16,
+      communeId: 42,
       fuelType: "DIESEL",
       gearbox: "MANUELLE",
       condition: "OCCASION",
     });
+  });
+
+  it("omits communeId when no commune is selected", () => {
+    const where = buildListingWhere({ wilayaId: 16 });
+    expect(where.communeId).toBeUndefined();
   });
 
   it("omits the equipment filter when no equipment is requested", () => {

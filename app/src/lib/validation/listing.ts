@@ -41,6 +41,7 @@ const listingBaseSchema = z.object({
   firstHand: z.boolean().default(false),
   accidented: z.boolean().default(false),
   wilayaId: z.number().int().positive(),
+  communeId: z.number().int().positive().optional(),
   phone: z.string().trim().regex(algerianPhoneRegex).optional(),
 });
 

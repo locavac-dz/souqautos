@@ -32,6 +32,8 @@ export type WizardData = {
   description?: string;
   wilayaId?: number;
   wilayaName?: string;
+  communeId?: number;
+  communeName?: string;
   phone?: string;
 };
 

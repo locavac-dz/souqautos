@@ -22,6 +22,7 @@ type CardListing = {
   brandFreeText: string | null;
   modelFreeText: string | null;
   wilaya: { nomFr: string; nomAr: string };
+  commune: { nomFr: string; nomAr: string } | null;
   photos: { path: string }[];
 };
 
@@ -63,6 +64,8 @@ export async function ListingCard({
   const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
   const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
   const wilayaLabel = locale === "ar" ? listing.wilaya.nomAr : listing.wilaya.nomFr;
+  const communeLabel = listing.commune ? (locale === "ar" ? listing.commune.nomAr : listing.commune.nomFr) : null;
+  const locationLabel = communeLabel ? `${communeLabel}, ${wilayaLabel}` : wilayaLabel;
 
   return (
     <Link
@@ -122,7 +125,7 @@ export async function ListingCard({
           )}
         </div>
         <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-          <span>{wilayaLabel}</span>
+          <span>{locationLabel}</span>
           <span>{tSearch("viewsCount", { count: listing.views })}</span>
         </div>
         {sellerTrustScore !== null && sellerTrustScore !== undefined && (

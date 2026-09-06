@@ -12,7 +12,8 @@ import type {
   ListingCategory,
 } from "@prisma/client";
 
-type WilayaRow = { id: number; nomFr: string; nomAr: string };
+type CommuneRow = { id: number; nomFr: string; nomAr: string };
+type WilayaRow = { id: number; nomFr: string; nomAr: string; communes: CommuneRow[] };
 type ModelRow = { id: number; slug: string; name: string; brandId: number };
 type BrandRow = { id: number; slug: string; name: string; models: ModelRow[] };
 type EquipmentRow = { id: number; nameFr: string; nameAr: string; category: string };
@@ -37,6 +38,7 @@ const CATEGORY_KEY: Record<ListingCategory, string> = {
 const ERROR_KEY: Record<string, string> = {
   validation: "errorValidation",
   unknown_wilaya: "errorValidation",
+  unknown_commune: "errorValidation",
   unknown_brand: "errorValidation",
   unknown_model: "errorValidation",
   at_least_one_photo: "errorAtLeastOnePhoto",
@@ -90,7 +92,10 @@ export function ListingEditForm({
   const [firstHand, setFirstHand] = useState(listing.firstHand);
   const [accidented, setAccidented] = useState(listing.accidented);
   const [wilayaId, setWilayaId] = useState<number>(listing.wilayaId);
+  const [communeId, setCommuneId] = useState<number | undefined>(listing.communeId ?? undefined);
   const [equipmentIds, setEquipmentIds] = useState<number[]>(listing.equipments.map((e) => e.equipmentId));
+
+  const selectedWilaya = useMemo(() => wilayas.find((w) => w.id === wilayaId) ?? null, [wilayas, wilayaId]);
 
   function toggleEquipment(id: number) {
     setEquipmentIds((current) => (current.includes(id) ? current.filter((e) => e !== id) : [...current, id]));
@@ -171,6 +176,7 @@ export function ListingEditForm({
         firstHand,
         accidented,
         wilayaId,
+        communeId,
         equipmentIds,
         existingPhotoIds: existingPhotos.map((p) => p.id),
       })
@@ -533,7 +539,10 @@ export function ListingEditForm({
         <select
           id="edit-wilaya"
           value={wilayaId}
-          onChange={(e) => setWilayaId(Number(e.target.value))}
+          onChange={(e) => {
+            setWilayaId(Number(e.target.value));
+            setCommuneId(undefined);
+          }}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
         >
           {wilayas.map((w) => (
@@ -543,6 +552,27 @@ export function ListingEditForm({
           ))}
         </select>
       </div>
+
+      {selectedWilaya && selectedWilaya.communes.length > 0 && (
+        <div>
+          <label htmlFor="edit-commune" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("commune")}
+          </label>
+          <select
+            id="edit-commune"
+            value={communeId ?? ""}
+            onChange={(e) => setCommuneId(e.target.value ? Number(e.target.value) : undefined)}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          >
+            <option value="">{tWizard("communePlaceholder")}</option>
+            {selectedWilaya.communes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {locale === "ar" ? c.nomAr : c.nomFr}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <span className="block text-sm font-medium text-slate-700 mb-1">{t("photosSectionTitle")}</span>

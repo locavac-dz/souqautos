@@ -30,7 +30,10 @@ export default async function EditListingPage({
         equipments: { select: { equipmentId: true } },
       },
     }),
-    prisma.wilaya.findMany({ orderBy: { id: "asc" } }),
+    prisma.wilaya.findMany({
+      orderBy: { id: "asc" },
+      include: { communes: { orderBy: { nomFr: "asc" } } },
+    }),
     prisma.brand.findMany({
       orderBy: { name: "asc" },
       include: { models: { orderBy: { name: "asc" } } },

@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { catalogue, slugify } from "./catalogue-data";
 import { equipmentCatalogue } from "./equipment-data";
+import { communes } from "./commune-data";
 
 const prisma = new PrismaClient();
 
@@ -83,6 +84,15 @@ async function main() {
     });
   }
   console.log(`Seed OK — ${wilayas.length} wilayas.`);
+
+  for (const c of communes) {
+    await prisma.commune.upsert({
+      where: { id: c.id },
+      update: { wilayaId: c.wilayaId, nomFr: c.nomFr, nomAr: c.nomAr },
+      create: c,
+    });
+  }
+  console.log(`Seed OK — ${communes.length} communes.`);
 
   let modelCount = 0;
   for (const { brand, models } of catalogue) {

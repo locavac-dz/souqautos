@@ -24,6 +24,7 @@ export default async function HomePage() {
         brand: true,
         model: true,
         wilaya: true,
+        commune: true,
         photos: { orderBy: { position: "asc" }, take: 1 },
       },
     }),

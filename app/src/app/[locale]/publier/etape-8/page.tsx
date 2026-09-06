@@ -4,7 +4,10 @@ import { Step8Fields } from "./Step8Fields";
 
 export default async function Step8Page() {
   const [wilayas, user] = await Promise.all([
-    prisma.wilaya.findMany({ orderBy: { id: "asc" } }),
+    prisma.wilaya.findMany({
+      orderBy: { id: "asc" },
+      include: { communes: { orderBy: { nomFr: "asc" } } },
+    }),
     getCurrentUser(),
   ]);
 

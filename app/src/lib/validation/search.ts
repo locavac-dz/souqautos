@@ -43,6 +43,7 @@ export const searchParamsSchema = z.object({
   brandId: numeric(),
   modelId: numeric(),
   wilayaId: numeric(),
+  communeId: numeric(),
   priceMin: numeric(),
   priceMax: numeric(),
   yearMin: numeric(),

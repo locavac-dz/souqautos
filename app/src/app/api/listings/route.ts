@@ -69,6 +69,14 @@ export async function POST(request: NextRequest) {
   if (!wilaya) {
     return NextResponse.json({ error: "unknown_wilaya" }, { status: 400 });
   }
+  // Lot 87 — même discipline que brandId/modelId : une commune n'est acceptée
+  // que si elle appartient réellement à la wilaya choisie, jamais fabriquée.
+  if (data.communeId) {
+    const commune = await prisma.commune.findUnique({ where: { id: data.communeId } });
+    if (!commune || commune.wilayaId !== data.wilayaId) {
+      return NextResponse.json({ error: "unknown_commune" }, { status: 400 });
+    }
+  }
 
   // Même discipline que brandId/modelId : jamais un id d'équipement fabriqué
   // côté client accepté tel quel (Lot 72).
@@ -130,6 +138,7 @@ export async function POST(request: NextRequest) {
       firstHand: data.firstHand,
       accidented: data.accidented,
       wilayaId: data.wilayaId,
+      communeId: data.communeId ?? null,
       // Lot 7 : file de modération — publication seulement après approbation admin (§39).
       status: "EN_ATTENTE",
       photos: {

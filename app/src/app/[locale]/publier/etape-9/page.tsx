@@ -67,6 +67,7 @@ export default function Step9Page() {
         {data.condition && <Row label={t("condition")} value={t(CONDITION_KEY[data.condition])} />}
         <Row label={t("price")} value={data.price ? `${data.price.toLocaleString()} DA` : undefined} />
         <Row label={t("wilaya")} value={data.wilayaName} />
+        {data.communeName && <Row label={t("commune")} value={data.communeName} />}
       </div>
 
       {data.description && (

@@ -64,6 +64,7 @@ export default async function BrandPage({
         brand: true,
         model: true,
         wilaya: true,
+        commune: true,
         photos: { orderBy: { position: "asc" }, take: 1 },
         equipments: { select: { equipmentId: true } },
       },
