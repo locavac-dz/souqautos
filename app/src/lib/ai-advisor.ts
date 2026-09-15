@@ -106,14 +106,14 @@ function extractYearMin(text: string): number | undefined {
   return match ? Number(match[1]) : undefined;
 }
 
-// Modèle reste volontairement en graphie latine uniquement — Model.name n'a
-// pas d'équivalent arabe en base. Marque reconnue aussi en arabe depuis le
-// Lot 92 via Brand.nameAr (référentiel partiel, vérifié marque par marque
-// via Wikipédia arabe — jamais une translittération inventée) : une marque
-// non encore vérifiée (nameAr `null`) n'est simplement reconnue qu'en
-// latin, jamais un texte fabriqué à sa place. Un texte déjà en graphie
-// latine dans une phrase arabe (code-switching courant, ex. "بيجو 208
-// Peugeot") continue de matcher normalement, aucune régression.
+// Marque (Lot 92) et modèle à nom propre (Lot 94) reconnus aussi en arabe
+// via Brand.nameAr/Model.nameAr — référentiels partiels, vérifiés un par un
+// via Wikipédia arabe (jamais une translittération inventée). Une marque ou
+// un modèle non encore vérifié (nameAr `null`) — ou un code alphanumérique
+// comme "208"/"X5", jamais transcrit à sa place — n'est simplement reconnu
+// qu'en latin. Un texte déjà en graphie latine dans une phrase arabe
+// (code-switching courant, ex. "بيجو 208 Peugeot") continue de matcher
+// normalement, aucune régression.
 function findCatalogMatch<T>(text: string, entries: T[], getLabels: (entry: T) => (string | undefined)[]): T | undefined {
   return entries.find((entry) => getLabels(entry).some((label) => label && containsWord(text, label)));
 }
@@ -132,8 +132,18 @@ function extractFiltersFromText(
   const brand = findCatalogMatch(lower, catalog.brands, (b) => [b.name, b.nameAr ?? undefined]);
   if (brand) {
     raw.brandId = brand.id;
-    const model = findCatalogMatch(lower, brand.models, (m) => [m.name]);
+    const model = findCatalogMatch(lower, brand.models, (m) => [m.name, m.nameAr ?? undefined]);
     if (model) raw.modelId = model.id;
+  } else {
+    // Un modèle nommé seul (ex. "كليو"/"Clio" sans "Renault") retrouve sa
+    // marque implicitement — un acheteur nomme rarement marque ET modèle en
+    // toutes lettres dans une phrase informelle (Lot 94).
+    const allModels = catalog.brands.flatMap((b) => b.models.map((m) => ({ ...m, brandId: b.id })));
+    const model = findCatalogMatch(lower, allModels, (m) => [m.name, m.nameAr ?? undefined]);
+    if (model) {
+      raw.brandId = model.brandId;
+      raw.modelId = model.id;
+    }
   }
 
   const wilaya = findCatalogMatch(lower, catalog.wilayas, (w) => [w.nomFr, w.nomAr]);
@@ -186,7 +196,7 @@ async function callAnthropicForTurn(
 ): Promise<AdvisorTurnResult | null> {
   const brandList = catalog.brands.map((b) => `${b.id}:${b.name}${b.nameAr ? `/${b.nameAr}` : ""}`).join(", ");
   const modelList = catalog.brands
-    .flatMap((b) => b.models.map((m) => `${m.id}:${b.name} ${m.name}`))
+    .flatMap((b) => b.models.map((m) => `${m.id}:${b.name} ${m.name}${m.nameAr ? `/${m.nameAr}` : ""}`))
     .join(", ");
   const wilayaList = catalog.wilayas.map((w) => `${w.id}:${w.nomFr}${w.nomAr ? `/${w.nomAr}` : ""}`).join(", ");
 

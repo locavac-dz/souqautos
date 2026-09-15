@@ -104,10 +104,12 @@ async function main() {
     });
 
     for (const model of models) {
+      const modelName = typeof model === "string" ? model : model.name;
+      const modelNameAr = typeof model === "string" ? null : model.nameAr;
       await prisma.model.upsert({
-        where: { brandId_slug: { brandId: brandRow.id, slug: slugify(model) } },
-        update: { name: model },
-        create: { brandId: brandRow.id, slug: slugify(model), name: model },
+        where: { brandId_slug: { brandId: brandRow.id, slug: slugify(modelName) } },
+        update: { name: modelName, nameAr: modelNameAr },
+        create: { brandId: brandRow.id, slug: slugify(modelName), name: modelName, nameAr: modelNameAr },
       });
       modelCount += 1;
     }

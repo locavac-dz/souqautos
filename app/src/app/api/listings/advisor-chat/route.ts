@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const t = await getTranslations({ locale, namespace: "AiAdvisor" });
 
   const [brands, wilayas] = await Promise.all([
-    prisma.brand.findMany({ include: { models: { select: { id: true, name: true } } } }),
+    prisma.brand.findMany({ include: { models: { select: { id: true, name: true, nameAr: true } } } }),
     prisma.wilaya.findMany({ select: { id: true, nomFr: true, nomAr: true } }),
   ]);
 

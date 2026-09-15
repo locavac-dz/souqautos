@@ -1705,3 +1705,19 @@ Avec ce lot, les cinq signaux anti-fraude visés par §16 sont désormais tous c
 **Hors périmètre délibéré** : aucune autre combinaison d'incohérence interne (ex. `firstHand`/kilométrage, `accidented`/prix) — seule la paire état/kilométrage-année était suffisamment objective pour être vérifiée sans base de marché ; un chantier à part si d'autres incohérences déclaratives sont jugées pertinentes.
 
 Prochain lot proposé : à définir avec le porteur de projet — §16 (anti-fraude) est désormais entièrement couvert. La translittération arabe des modèles à nom propre (Lot 92) ou le paiement (toujours en attente d'identifiants réels) restent les candidats naturels.
+
+## Lot 94 — Translittération arabe des modèles à nom propre (AI Advisor) (2026-09-15)
+
+Prolonge le Lot 92 (marques) : les modèles restaient reconnus uniquement en graphie latine, faute d'équivalent arabe en base.
+
+**Livré**
+- `Model.nameAr` (nouvelle colonne nullable, migration hand-écrite — SQL appliqué via `prisma db execute` + `migrate resolve --applied`, même méthode sûre que le Lot 92 pour éviter le piège de reset découvert alors) : référentiel volontairement PARTIEL, uniquement les 19 modèles à nom propre réellement utilisés par les annonces de démonstration (sur les 24 modèles au total) — chaque nom vérifié via Wikipédia arabe (deux agents de recherche en parallèle, même méthode que le Lot 92). **Exception** : « Tiggo » (Chery Tiggo 7) n'a pas d'article Wikipédia arabe dédié — confirmé indépendamment via cinq sites automobiles arabophones réels (hatla2ee, chery-eg, egy-car, arabwheels, cheryalghanim) plutôt que d'être écarté ou inventé.
+- Les 5 modèles alphanumériques restants (208, Q3, Série 3, C4, Classe C — codes, jamais des noms propres) restent volontairement de simples chaînes sans `nameAr`, même raisonnement que pour les marques non démontrées.
+- `findCatalogMatch()` (`src/lib/ai-advisor.ts`) reconnaît un modèle via `Model.name` OU `Model.nameAr`, même patron exact que les marques (Lot 92).
+- **Amélioration découverte en écrivant les tests, pas seulement une extension arabe** : un modèle cité seul, sans nommer sa marque (ex. « كليو » ou « Clio » sans « Renault »/« رينو ») ne remontait auparavant AUCUN critère — la recherche de modèle n'avait jamais lieu (imbriquée dans le `if (brand)`, jamais atteinte si la marque n'était pas d'abord reconnue). Un acheteur nomme rarement marque ET modèle en toutes lettres dans une phrase informelle ; corrigé pour chercher aussi parmi tous les modèles quand aucune marque n'a été reconnue, retrouvant alors la marque implicitement via le modèle. Bénéficie au latin comme à l'arabe, pas seulement à ce lot.
+- 5 tests unitaires ajustés/ajoutés (reconnaissance d'un modèle en translittération arabe, modèle retrouvé sans mention de marque, non-reconnaissance honnête d'un modèle non encore vérifié) + 1 test d'intégrité du référentiel (`catalogue-data.ts` : aucun `nameAr` vide). 455/455 tests au vert au total.
+- Vérification de bout en bout en conditions réelles, avec le compte de démonstration réel Karim Boudiaf en interface arabe : « كليو » seul (aucune mention de marque) → recherche réelle dès le premier tour, trouve exactement la vraie annonce Renault Clio 2018 ; « أوكتافيا » seul → trouve exactement la vraie annonce Skoda Octavia 2017. Base restaurée identique après vérification (24 annonces, 9 utilisateurs — recherches en lecture seule uniquement).
+
+**Hors périmètre délibéré** : les codes alphanumériques (cf. ci-dessus) ; les modèles des 5 marques du catalogue non démontrées (cohérent avec le Lot 92).
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement (toujours en attente d'identifiants réels) reste le seul grand chantier d'infrastructure non engagé ; la vérification du chemin IA réel reste bloquée faute de clé Anthropic sur cette machine.

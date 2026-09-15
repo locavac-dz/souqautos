@@ -27,7 +27,12 @@ export type ParsedSearchFilters = Partial<
 // nameAr optionnel — seul le repli heuristique arabe de AI Advisor (Lots 91,
 // 92) en a besoin ; /api/search/parse continue de sélectionner uniquement
 // id/name sans que ça casse ce type.
-export type CatalogBrand = { id: number; name: string; nameAr?: string | null; models: { id: number; name: string }[] };
+export type CatalogBrand = {
+  id: number;
+  name: string;
+  nameAr?: string | null;
+  models: { id: number; name: string; nameAr?: string | null }[];
+};
 // nomAr optionnel — seul le repli heuristique arabe de AI Advisor (Lot 91,
 // src/lib/ai-advisor.ts) en a besoin ; /api/search/parse continue de
 // sélectionner uniquement id/nomFr sans que ça casse ce type.

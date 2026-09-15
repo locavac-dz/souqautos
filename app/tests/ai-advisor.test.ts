@@ -3,7 +3,14 @@ import { runHeuristicTurn, runAdvisorTurn, type AdvisorMessage } from "@/lib/ai-
 
 const catalog = {
   brands: [
-    { id: 3, name: "Renault", nameAr: "رينو", models: [{ id: 10, name: "Clio" }, { id: 11, name: "Megane" }] },
+    {
+      id: 3,
+      name: "Renault",
+      nameAr: "رينو",
+      // Megane volontairement sans nameAr — simule un modèle pas encore
+      // vérifié (cf. la plupart des modèles du référentiel réel).
+      models: [{ id: 10, name: "Clio", nameAr: "كليو" }, { id: 11, name: "Megane" }],
+    },
     { id: 5, name: "Peugeot", nameAr: "بيجو", models: [{ id: 20, name: "208" }] },
     // Marque volontairement sans nameAr — simule une marque du catalogue pas
     // encore vérifiée (cf. Chevrolet/Geely/Haval/Volvo/Mitsubishi en base).
@@ -110,7 +117,7 @@ describe("runHeuristicTurn", () => {
       expect(result.filters).toMatchObject({ brandId: "5", wilayaId: "16" });
     });
 
-    it("reconnaît la marque même sans modèle associé en arabe (Model.name reste latin uniquement)", () => {
+    it("reconnaît la marque même quand aucun modèle de la phrase n'est reconnu en arabe", () => {
       const result = runHeuristicTurn(userTurn("أبحث عن رينو"), catalog);
       expect(result.filters).toEqual({ brandId: "3" });
     });
@@ -122,6 +129,28 @@ describe("runHeuristicTurn", () => {
       // vers une clarification plutôt qu'une marque devinée.
       const result = runHeuristicTurn(userTurn("شيفروليه أفيو"), catalog);
       expect(result).toEqual({ action: "clarify", filters: {}, question: null, source: "heuristic" });
+    });
+  });
+
+  describe("reconnaissance de modèle à nom propre en translittération arabe (Lot 94)", () => {
+    it("reconnaît un modèle écrit en translittération arabe (nameAr vérifié)", () => {
+      const result = runHeuristicTurn(userTurn("رينو كليو"), catalog);
+      expect(result.filters).toEqual({ brandId: "3", modelId: "10" });
+    });
+
+    it("reconnaît le modèle même sans mentionner la marque explicitement", () => {
+      // "كليو" seul suffit à retrouver la marque via son modèle, exactement
+      // comme le code-switching latin ("Clio" seul retrouverait Renault).
+      const result = runHeuristicTurn(userTurn("je veux une كليو"), catalog);
+      expect(result.filters).toMatchObject({ brandId: "3", modelId: "10" });
+    });
+
+    it("ne reconnaît jamais un modèle non encore vérifié en arabe (hors périmètre assumé, pas de fabrication)", () => {
+      // "Megane" n'a pas de nameAr dans le référentiel de test (comme la
+      // plupart des modèles réels) — la marque reste reconnue (رينو), mais
+      // aucun modèle n'est fabriqué à sa place.
+      const result = runHeuristicTurn(userTurn("رينو ميغان"), catalog);
+      expect(result.filters).toEqual({ brandId: "3" });
     });
   });
 });

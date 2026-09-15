@@ -24,8 +24,16 @@ describe("catalogue data", () => {
 
   it("has unique model slugs within each brand", () => {
     for (const { models } of catalogue) {
-      const slugs = models.map(slugify);
+      const slugs = models.map((m) => slugify(typeof m === "string" ? m : m.name));
       expect(new Set(slugs).size).toBe(slugs.length);
+    }
+  });
+
+  it("never gives a model an empty Arabic name (Lot 94)", () => {
+    for (const { models } of catalogue) {
+      for (const model of models) {
+        if (typeof model !== "string") expect(model.nameAr.trim().length).toBeGreaterThan(0);
+      }
     }
   });
 });

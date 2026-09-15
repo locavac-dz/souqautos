@@ -137,6 +137,13 @@ model Model {
   brand   Brand   @relation(fields: [brandId], references: [id])
   slug    String
   name    String
+  // Lot 94 — nom arabe vérifié individuellement via Wikipédia arabe (+ une
+  // seconde source pour Tiggo, faute d'article Wikipédia dédié), même
+  // discipline que Brand.nameAr (Lot 92). `null` pour un modèle non encore
+  // vérifié, et pour les codes alphanumériques ("208", "X5") qui restent en
+  // usage réel écrits en latin même dans une phrase arabe — jamais couverts
+  // par construction (aucune entrée nameAr n'existe pour eux dans le seed).
+  nameAr String?
   listings Listing[]
   generations Generation[]
 
