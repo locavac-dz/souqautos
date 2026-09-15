@@ -1689,3 +1689,19 @@ Reprend le candidat identifié à la clôture du Lot 91 : les marques restaient 
 **Hors périmètre délibéré** : translittération arabe des modèles (cf. ci-dessus) ; les 5 marques du catalogue non démontrées (cf. ci-dessus) ; chiffres indo-arabes, toujours hors périmètre du Lot 91.
 
 Prochain lot proposé : à définir avec le porteur de projet — la translittération arabe des modèles à nom propre serait le prolongement naturel si jugée prioritaire ; sinon le paiement (toujours en attente d'identifiants réels) reste le seul grand chantier d'infrastructure non engagé.
+
+## Lot 93 — Cinquième signal anti-fraude : incohérence véhicule (§16) (2026-09-15)
+
+Referme §16 : depuis le Lot 84, « incohérence véhicule/prix » restait le seul des cinq signaux visés par le cahier des charges non construit, faute de définition qui ne duplique pas le signal « prix bas » (Lot 77, qui compare le prix aux vraies annonces comparables). Arbitrage demandé et tranché avec le porteur de projet avant tout code : signal d'incohérence **kilométrage/année vs état déclaré « Neuf »**, volontairement indépendant de tout prix ou comparable.
+
+**Livré**
+- `detectVehicleInconsistency()` (`src/lib/fraud-signals.ts`) : une annonce déclarée `condition: NEUF` avec un kilométrage significatif (> 500 km, seuil conservateur — laisse une marge large pour convoyage/essai) OU une année trop ancienne (> 2 ans) est incohérente. Ne reçoit ni prix ni estimation de marché en paramètre — l'indépendance vis-à-vis de `detectLowPrice` est garantie par la signature de la fonction, pas seulement par convention. Comble au passage un vrai trou de couverture du signal prix bas : celui-ci ne s'applique qu'à partir de 3 annonces comparables en base (`MIN_SAMPLE_SIZE_FOR_LOW_PRICE_SIGNAL`), donc aucune vérification de prix n'existait pour les marques/modèles rares — ce nouveau signal, purement déclaratif, s'applique quel que soit le nombre de comparables.
+- `FraudSignals.vehicleInconsistency` intégré à `getFraudSignalsForListings()` (aucune requête supplémentaire — `condition` déjà disponible sur chaque annonce) et à `/admin/annonces` (5ᵉ bandeau ambre, même style non accusatoire que les quatre existants).
+- 6 nouveaux tests unitaires (jamais sur une annonce « Occasion », jamais sur un véhicule neuf plausible, seuils de kilométrage et d'année testés à la limite exacte documentée). 451/451 tests au vert au total.
+- Vérification de bout en bout en conditions réelles : annonce réellement soumise via l'API (`POST /api/listings`, vraie photo, vrai compte vendeur Karim Boudiaf) avec `condition: NEUF` et 15 000 km → confirmée signalée dans la file de modération réelle (`/admin/annonces`, connecté en admin réel) avec le bandeau « ⚠ Kilométrage/année incohérent avec l'état « Neuf » ». Donnée de test (annonce + photo sur disque) supprimée après vérification — total d'annonces (24) confirmé strictement identique à l'état d'avant lot.
+
+Avec ce lot, les cinq signaux anti-fraude visés par §16 sont désormais tous construits (prix anormalement bas, photos dupliquées, historique de refus vendeur, contenu dupliqué, incohérence véhicule).
+
+**Hors périmètre délibéré** : aucune autre combinaison d'incohérence interne (ex. `firstHand`/kilométrage, `accidented`/prix) — seule la paire état/kilométrage-année était suffisamment objective pour être vérifiée sans base de marché ; un chantier à part si d'autres incohérences déclaratives sont jugées pertinentes.
+
+Prochain lot proposé : à définir avec le porteur de projet — §16 (anti-fraude) est désormais entièrement couvert. La translittération arabe des modèles à nom propre (Lot 92) ou le paiement (toujours en attente d'identifiants réels) restent les candidats naturels.

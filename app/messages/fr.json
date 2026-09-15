@@ -490,6 +490,7 @@
     "fraudSignalLowPrice": "⚠ Prix très inférieur au marché",
     "fraudSignalRejectionHistory": "⚠ Vendeur avec des annonces déjà refusées/suspendues",
     "fraudSignalDuplicateContent": "⚠ Texte identique à une annonce d'un autre vendeur",
+    "fraudSignalVehicleInconsistency": "⚠ Kilométrage/année incohérent avec l'état « Neuf »",
     "proAccountLabel": "Entreprise",
     "userReportBadge": "Profil",
     "navReports": "Signalements",

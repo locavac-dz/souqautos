@@ -5,8 +5,11 @@ import {
   detectDuplicatePhoto,
   detectLowPrice,
   detectSellerRejectionHistory,
+  detectVehicleInconsistency,
   LOW_PRICE_RATIO,
   MIN_REJECTIONS_FOR_SIGNAL,
+  NEUF_MAX_AGE_YEARS,
+  NEUF_MAX_PLAUSIBLE_MILEAGE_KM,
 } from "@/lib/fraud-signals";
 import type { EstimateResult } from "@/lib/price-estimation";
 
@@ -135,5 +138,39 @@ describe("detectDuplicateContent", () => {
   it("returns false when no other listing matches", () => {
     const result = detectDuplicateContent("seller-a", "hash1", [{ contentHash: "hash-unrelated", sellerId: "seller-b" }]);
     expect(result).toBe(false);
+  });
+});
+
+describe("detectVehicleInconsistency", () => {
+  const CURRENT_YEAR = 2026;
+
+  it("never flags an OCCASION listing, regardless of mileage/year", () => {
+    expect(detectVehicleInconsistency("OCCASION", 300_000, 1990, CURRENT_YEAR)).toBe(false);
+  });
+
+  it("never flags a genuinely new car (low mileage, recent year)", () => {
+    expect(detectVehicleInconsistency("NEUF", 50, CURRENT_YEAR, CURRENT_YEAR)).toBe(false);
+  });
+
+  it("flags a car declared NEUF with implausible mileage", () => {
+    expect(detectVehicleInconsistency("NEUF", NEUF_MAX_PLAUSIBLE_MILEAGE_KM + 1, CURRENT_YEAR, CURRENT_YEAR)).toBe(
+      true
+    );
+  });
+
+  it("uses exactly the documented mileage threshold as the boundary", () => {
+    expect(detectVehicleInconsistency("NEUF", NEUF_MAX_PLAUSIBLE_MILEAGE_KM, CURRENT_YEAR, CURRENT_YEAR)).toBe(
+      false
+    );
+  });
+
+  it("flags a car declared NEUF but too old to still be unsold", () => {
+    const tooOld = CURRENT_YEAR - NEUF_MAX_AGE_YEARS - 1;
+    expect(detectVehicleInconsistency("NEUF", 0, tooOld, CURRENT_YEAR)).toBe(true);
+  });
+
+  it("uses exactly the documented age threshold as the boundary", () => {
+    const stillPlausible = CURRENT_YEAR - NEUF_MAX_AGE_YEARS;
+    expect(detectVehicleInconsistency("NEUF", 0, stillPlausible, CURRENT_YEAR)).toBe(false);
   });
 });

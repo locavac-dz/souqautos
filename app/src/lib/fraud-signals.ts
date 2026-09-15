@@ -17,6 +17,7 @@ export type FraudSignals = {
   lowPrice: boolean;
   sellerRejectionHistory: boolean;
   duplicateContent: boolean;
+  vehicleInconsistency: boolean;
 };
 
 // Lot 84 — "spam" (§16 : "répétition de contenu ... pour un même vendeur") :
@@ -79,6 +80,34 @@ export function detectSellerRejectionHistory(rejectionCount: number): boolean {
   return rejectionCount >= MIN_REJECTIONS_FOR_SIGNAL;
 }
 
+// Lot 93 — "incohérence véhicule/prix" (§16), dernier des cinq signaux visés
+// par le cahier des charges, resté non construit depuis le Lot 84 faute de
+// définition qui ne duplique pas le signal "prix bas" (lowPrice ci-dessus,
+// qui compare le prix aux VRAIES annonces comparables — inopérant sous les
+// 3 comparables, cf. MIN_SAMPLE_SIZE_FOR_LOW_PRICE_SIGNAL, un vrai trou de
+// couverture pour les marques/modèles rares). Signal volontairement
+// indépendant de tout prix ou comparable : une incohérence interne entre
+// deux champs DÉCLARÉS PAR LE VENDEUR lui-même sur CETTE annonce (état
+// "Neuf" vs kilométrage/année), jamais une estimation de marché — donc
+// jamais un seuil fabriqué à partir de données de prix qui n'existent pas.
+// Seuils volontairement conservateurs (cf. Lot 86, photo quality) : ne vise
+// que des cas extrêmes et sans ambiguïté, jamais une annonce légitime
+// (véhicule neuf convoyé/essayé sur quelques centaines de km).
+export const NEUF_MAX_PLAUSIBLE_MILEAGE_KM = 500;
+export const NEUF_MAX_AGE_YEARS = 2;
+
+export function detectVehicleInconsistency(
+  condition: "NEUF" | "OCCASION",
+  mileage: number,
+  year: number,
+  currentYear: number
+): boolean {
+  if (condition !== "NEUF") return false;
+  if (mileage > NEUF_MAX_PLAUSIBLE_MILEAGE_KM) return true;
+  if (currentYear - year > NEUF_MAX_AGE_YEARS) return true;
+  return false;
+}
+
 type ListingForFraudSignals = {
   id: string;
   sellerId: string;
@@ -88,6 +117,7 @@ type ListingForFraudSignals = {
   year: number;
   mileage: number;
   wilayaId: number;
+  condition: "NEUF" | "OCCASION";
   contentHash: string;
   photos: { sha256: string }[];
 };
@@ -99,6 +129,8 @@ type ListingForFraudSignals = {
 export async function getFraudSignalsForListings(
   listings: ListingForFraudSignals[]
 ): Promise<Map<string, FraudSignals>> {
+  const currentYear = new Date().getFullYear();
+
   const allHashes = Array.from(
     new Set(listings.flatMap((l) => l.photos.map((p) => p.sha256)).filter((h) => h !== ""))
   );
@@ -169,7 +201,20 @@ export async function getFraudSignalsForListings(
 
     const duplicateContent = detectDuplicateContent(listing.sellerId, listing.contentHash, matchingContent);
 
-    results.set(listing.id, { duplicatePhoto, lowPrice, sellerRejectionHistory, duplicateContent });
+    const vehicleInconsistency = detectVehicleInconsistency(
+      listing.condition,
+      listing.mileage,
+      listing.year,
+      currentYear
+    );
+
+    results.set(listing.id, {
+      duplicatePhoto,
+      lowPrice,
+      sellerRejectionHistory,
+      duplicateContent,
+      vehicleInconsistency,
+    });
   }
 
   return results;

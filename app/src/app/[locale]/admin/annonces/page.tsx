@@ -40,6 +40,7 @@ export default async function AdminListingsPage() {
       year: l.year,
       mileage: l.mileage,
       wilayaId: l.wilayaId,
+      condition: l.condition,
       contentHash: l.contentHash,
       photos: l.photos,
     }))
@@ -80,7 +81,8 @@ export default async function AdminListingsPage() {
                       {(signals?.duplicatePhoto ||
                         signals?.lowPrice ||
                         signals?.sellerRejectionHistory ||
-                        signals?.duplicateContent) && (
+                        signals?.duplicateContent ||
+                        signals?.vehicleInconsistency) && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {signals.duplicatePhoto && (
                             <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
@@ -100,6 +102,11 @@ export default async function AdminListingsPage() {
                           {signals.sellerRejectionHistory && (
                             <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                               {t("fraudSignalRejectionHistory")}
+                            </span>
+                          )}
+                          {signals.vehicleInconsistency && (
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                              {t("fraudSignalVehicleInconsistency")}
                             </span>
                           )}
                         </div>

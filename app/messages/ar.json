@@ -490,6 +490,7 @@
     "fraudSignalLowPrice": "⚠ سعر أقل بكثير من السوق",
     "fraudSignalRejectionHistory": "⚠ بائع لديه إعلانات سبق رفضها أو تعليقها",
     "fraudSignalDuplicateContent": "⚠ نص مطابق لإعلان بائع آخر",
+    "fraudSignalVehicleInconsistency": "⚠ الكيلومترات/السنة لا تتطابق مع حالة «جديدة»",
     "proAccountLabel": "المؤسسة",
     "userReportBadge": "ملف شخصي",
     "navReports": "البلاغات",
