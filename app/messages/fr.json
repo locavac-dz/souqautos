@@ -13,6 +13,7 @@
     "myListings": "Mes annonces",
     "favorites": "Mes favoris",
     "alerts": "Mes alertes",
+    "aiAdvisor": "Conseiller IA",
     "logout": "Déconnexion",
     "menu": "Menu"
   },
@@ -399,6 +400,19 @@
     "summaryDisclaimer": "Synthèse indicative basée sur les données affichées, ne remplace pas votre propre vérification.",
     "summaryLoginRequired": "Connectez-vous pour voir une synthèse de la comparaison.",
     "summaryErrorGeneric": "Impossible de générer la synthèse pour le moment."
+  },
+  "AiAdvisor": {
+    "pageTitle": "Conseiller IA",
+    "pageIntro": "Décrivez le véhicule que vous cherchez, l'assistant vous pose quelques questions puis propose de vraies annonces publiées sur Souq Auto.",
+    "inputPlaceholder": "Ex. : une citadine diesel à Alger, moins d'un million",
+    "sendButton": "Envoyer",
+    "pending": "Le conseiller réfléchit…",
+    "resultsFound": "{count} annonce(s) correspondent à votre recherche.",
+    "noResults": "Aucune annonce ne correspond à ces critères pour le moment.",
+    "heuristicClarify": "Pouvez-vous préciser une marque, un budget ou une wilaya ?",
+    "rateLimited": "Trop de messages envoyés récemment — réessayez plus tard.",
+    "errorGeneric": "Le conseiller est indisponible pour le moment.",
+    "turnLimitReached": "Conversation trop longue — rafraîchissez la page pour recommencer."
   },
   "Catalogue": {
     "breadcrumbHome": "Accueil",

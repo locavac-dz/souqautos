@@ -1,6 +1,21 @@
 import type { Prisma } from "@prisma/client";
 import { PAGE_SIZE, type SearchParams, type SortOption } from "./validation/search";
 
+// Include Prisma partagé par toute page/route qui affiche une carte
+// d'annonce (ListingCard) — extrait de recherche/page.tsx (Lot 3) pour que
+// le chat AI Advisor (Lot 89) réutilise exactement la même forme plutôt
+// qu'un troisième littéral recopié à la main.
+export const listingCardInclude = {
+  brand: true,
+  model: true,
+  wilaya: true,
+  commune: true,
+  photos: { orderBy: { position: "asc" as const }, take: 1 },
+  equipments: { select: { equipmentId: true } },
+} satisfies Prisma.ListingInclude;
+
+export type ListingWithCardRelations = Prisma.ListingGetPayload<{ include: typeof listingCardInclude }>;
+
 export function buildListingWhere(params: SearchParams): Prisma.ListingWhereInput {
   const where: Prisma.ListingWhereInput = { status: "PUBLIEE" };
 

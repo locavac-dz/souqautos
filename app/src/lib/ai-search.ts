@@ -24,8 +24,8 @@ export type ParsedSearchFilters = Partial<
   >
 >;
 
-type CatalogBrand = { id: number; name: string; models: { id: number; name: string }[] };
-type CatalogWilaya = { id: number; nomFr: string };
+export type CatalogBrand = { id: number; name: string; models: { id: number; name: string }[] };
+export type CatalogWilaya = { id: number; nomFr: string };
 
 const CATEGORIES = ["VOITURE", "UTILITAIRE", "POIDS_LOURD", "DEUX_ROUES", "AUTRE"];
 const FUEL_TYPES = ["ESSENCE", "DIESEL", "GPL", "HYBRIDE", "ELECTRIQUE"];

@@ -1,12 +1,19 @@
 import { getTranslations } from "next-intl/server";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
 import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import { searchParamsSchema, PAGE_SIZE } from "@/lib/validation/search";
-import { buildListingWhere, buildListingOrderBy, currentPage, paginationOffset, totalPages as computeTotalPages } from "@/lib/search";
+import {
+  buildListingWhere,
+  buildListingOrderBy,
+  currentPage,
+  paginationOffset,
+  totalPages as computeTotalPages,
+  listingCardInclude,
+  type ListingWithCardRelations,
+} from "@/lib/search";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SaveSearchAlertForm } from "@/components/search/SaveSearchAlertForm";
 import { SortSelect } from "@/components/search/SortSelect";
@@ -38,17 +45,6 @@ export default async function SearchPage({
   const where = buildListingWhere(params);
   const orderBy = buildListingOrderBy(params.sort);
   const page = currentPage(params);
-
-  const listingCardInclude = {
-    brand: true,
-    model: true,
-    wilaya: true,
-    commune: true,
-    photos: { orderBy: { position: "asc" as const }, take: 1 },
-    equipments: { select: { equipmentId: true } },
-  } satisfies Prisma.ListingInclude;
-
-  type ListingWithCardRelations = Prisma.ListingGetPayload<{ include: typeof listingCardInclude }>;
 
   // Annonces en avant (Lot 66, § « Premium : remontée dans les résultats ») :
   // uniquement sur la première page — les répéter à chaque page paginée
