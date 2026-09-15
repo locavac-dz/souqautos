@@ -18,17 +18,14 @@ import { PrismaClient, type FuelType, type Gearbox, type ListingCondition, type 
 import bcrypt from "bcryptjs";
 import sharp from "sharp";
 import { randomUUID } from "node:crypto";
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
 import { computeExpiryDate } from "../src/lib/listing-lifecycle";
 import { formulaValidityDays } from "../src/lib/payment-orders";
+import { storeProcessedImage } from "../src/lib/uploads";
 import { slugify } from "./catalogue-data";
 
 const prisma = new PrismaClient();
 
 const DEMO_PASSWORD = "DemoVendeur2026!";
-
-const LISTING_UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "listings");
 
 const BRAND_COLORS: Record<string, string> = {
   Renault: "#1B3A6B",
@@ -64,10 +61,12 @@ async function generatePlaceholderPhoto(brand: string, model: string): Promise<s
     <text x="50%" y="58%" font-family="Arial, sans-serif" font-size="44" fill="#e2e8f0" text-anchor="middle">${escapeXml(model)}</text>
   </svg>`;
 
-  await mkdir(LISTING_UPLOAD_DIR, { recursive: true });
+  const output = await sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toBuffer();
   const filename = `${randomUUID()}.jpg`;
-  await sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toFile(path.join(LISTING_UPLOAD_DIR, filename));
-  return `/uploads/listings/${filename}`;
+  // Même point d'écriture que les vrais uploads (src/lib/uploads.ts) : va
+  // vers S3 si configuré, repli disque local sinon — les photos de
+  // démonstration restent visibles depuis n'importe quelle instance.
+  return storeProcessedImage("listings", filename, output);
 }
 
 type DemoSeller = {

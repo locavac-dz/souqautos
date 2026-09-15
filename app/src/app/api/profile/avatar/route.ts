@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { saveAvatar, PhotoValidationError } from "@/lib/uploads";
+import { saveAvatar, deleteStoredFile, PhotoValidationError } from "@/lib/uploads";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -30,7 +30,11 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
+  const previous = await prisma.profile.findUnique({ where: { userId: user.id }, select: { avatarUrl: true } });
   await prisma.profile.update({ where: { userId: user.id }, data: { avatarUrl } });
+  // Après la mutation seulement, jamais avant — même discipline que la
+  // suppression de photo d'annonce.
+  if (previous?.avatarUrl) await deleteStoredFile(previous.avatarUrl);
 
   return NextResponse.json({ avatarUrl });
 }
@@ -41,7 +45,9 @@ export async function DELETE() {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
+  const previous = await prisma.profile.findUnique({ where: { userId: user.id }, select: { avatarUrl: true } });
   await prisma.profile.update({ where: { userId: user.id }, data: { avatarUrl: null } });
+  if (previous?.avatarUrl) await deleteStoredFile(previous.avatarUrl);
 
   return NextResponse.json({ ok: true });
 }

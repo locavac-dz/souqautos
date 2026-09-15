@@ -25,7 +25,7 @@ import { CompareToggle } from "@/components/compare/CompareToggle";
 import { ContactSellerButton } from "@/components/ContactSellerButton";
 import { ReportListingButton } from "@/components/ReportListingButton";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
 import { buildVehicleJsonLd, buildBreadcrumbJsonLd } from "@/lib/structured-data";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
@@ -59,7 +59,7 @@ export async function generateMetadata({
   const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
   const title = `${listing.title} — ${brandLabel} ${modelLabel} ${listing.year}`.trim();
   const canonical = `${SITE_URL}/${locale}/annonce/${listing.id}`;
-  const image = listing.photos[0] ? `${SITE_URL}${listing.photos[0].path}` : undefined;
+  const image = listing.photos[0] ? resolveAbsolutePhotoUrl(listing.photos[0].path) : undefined;
 
   return {
     title: `${title} — Souq Auto`,
@@ -182,7 +182,7 @@ export default async function ListingDetailPage({
     title: listing.title,
     description: listing.description,
     url: listingUrl,
-    images: listing.photos.map((p) => `${SITE_URL}${p.path}`),
+    images: listing.photos.map((p) => resolveAbsolutePhotoUrl(p.path)),
     price: listing.price,
     brandName: listing.brand?.name,
     modelName: listing.model?.name,

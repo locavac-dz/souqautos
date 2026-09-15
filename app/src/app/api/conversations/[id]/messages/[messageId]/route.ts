@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkCanDeleteMessage } from "@/lib/messaging";
 import { publishToConversation } from "@/lib/realtime";
+import { deleteStoredFile } from "@/lib/uploads";
 
 export async function DELETE(
   request: NextRequest,
@@ -31,6 +32,10 @@ export async function DELETE(
     where: { id: messageId },
     data: { content: "", attachmentUrl: null, deletedAt: new Date() },
   });
+
+  // Après la mutation seulement, jamais avant — même discipline que la
+  // suppression de photo d'annonce/avatar.
+  if (message.attachmentUrl) await deleteStoredFile(message.attachmentUrl);
 
   await publishToConversation(id, { type: "delete", messageId });
 

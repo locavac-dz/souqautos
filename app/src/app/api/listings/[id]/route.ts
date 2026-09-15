@@ -6,7 +6,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { checkListingContentEditable } from "@/lib/listing-lifecycle";
 import { canManageListing } from "@/lib/listing-access";
 import { listingEditSchema } from "@/lib/validation/listing";
-import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
+import { savePhoto, deleteStoredFile, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 import { computeListingContentHash } from "@/lib/fraud-signals";
 
 const MIN_PHOTOS = 1;
@@ -196,6 +196,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       },
     }),
   ]);
+
+  // Après la transaction seulement — jamais avant : un échec de suppression
+  // de fichier ne doit jamais annuler une mutation déjà appliquée en base.
+  await Promise.all(photosToDelete.map((p) => deleteStoredFile(p.path)));
 
   return NextResponse.json({ status: "EN_ATTENTE" });
 }
