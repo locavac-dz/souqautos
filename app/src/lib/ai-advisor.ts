@@ -27,40 +27,73 @@ export type AdvisorTurnResult = {
   source: "ai" | "heuristic";
 };
 
+// Mots-clés FR + AR. Les valeurs arabes sont reprises telles quelles des
+// traductions déjà existantes et vérifiées de l'application (messages/ar.json
+// namespaces Wizard/Listing) — jamais une traduction inventée pour ce lot :
+// même discipline que la commune (Lot 87) ou la génération (Lot 88), qui ne
+// réutilisaient une donnée qu'une fois sa source établie.
 const FUEL_KEYWORDS: Record<string, string> = {
   essence: "ESSENCE",
+  بنزين: "ESSENCE",
   diesel: "DIESEL",
+  ديزل: "DIESEL",
   gpl: "GPL",
+  "غاز البترول المسال": "GPL",
   hybride: "HYBRIDE",
+  هجين: "HYBRIDE",
   électrique: "ELECTRIQUE",
   electrique: "ELECTRIQUE",
+  كهربائي: "ELECTRIQUE",
 };
 const GEARBOX_KEYWORDS: Record<string, string> = {
   automatique: "AUTOMATIQUE",
+  أوتوماتيكي: "AUTOMATIQUE",
   manuelle: "MANUELLE",
+  يدوي: "MANUELLE",
 };
 const CONDITION_KEYWORDS: Record<string, string> = {
   neuf: "NEUF",
+  جديدة: "NEUF",
   occasion: "OCCASION",
+  مستعملة: "OCCASION",
 };
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Frontière de mot compatible Unicode — `\b` natif de JS se base sur `\w`
+// (uniquement [A-Za-z0-9_]), donc échoue silencieusement en arabe (aucune
+// des deux limites d'un mot arabe entouré d'espaces n'est un caractère `\w`,
+// `\b` n'y trouve alors aucune transition). Corrige aussi un bug latent côté
+// français/anglais, pas seulement l'ajout de l'arabe.
+function containsWord(text: string, word: string): boolean {
+  if (word.length < 2) return false;
+  const escaped = escapeRegExp(word.toLowerCase());
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, "iu").test(text);
+}
 
 function findKeyword(text: string, keywords: Record<string, string>): string | undefined {
   for (const [keyword, value] of Object.entries(keywords)) {
-    if (text.includes(keyword)) return value;
+    if (containsWord(text, keyword)) return value;
   }
   return undefined;
 }
 
-// "1.5 million"/"1,5 million"/"800 000 da"/"2000000 DA" → un montant en DA.
-// Repli volontairement simple (jamais une tentative de comprendre une
-// fourchette min/max en texte libre) : seul priceMax est extrait, cohérent
-// avec l'usage courant ("moins de X") plutôt qu'un budget exact.
+// "1.5 million"/"1,5 million"/"1.5 مليون"/"800 000 da"/"800000 دج" → un
+// montant en DA. Repli volontairement simple (jamais une tentative de
+// comprendre une fourchette min/max en texte libre) : seul priceMax est
+// extrait, cohérent avec l'usage courant ("moins de X") plutôt qu'un budget
+// exact. "مليون"/"دج" repris de messages/ar.json (Estimate/Listing), jamais
+// des chiffres indo-arabes ٠-٩ : l'usage algérien courant reste les chiffres
+// occidentaux même en écrivant en arabe (héritage du français, contrairement
+// au Machrek) — pas une donnée à deviner, juste l'usage réel non couvert.
 function extractPriceMax(text: string): number | undefined {
-  const millionMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:millions?|mda)\b/);
+  const millionMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:millions?|مليون|mda)(?![\p{L}\p{N}])/u);
   if (millionMatch) {
     return Math.round(parseFloat(millionMatch[1].replace(",", ".")) * 1_000_000);
   }
-  const plainMatch = text.match(/(\d[\d\s]{4,})\s*(?:da|dinars?)\b/);
+  const plainMatch = text.match(/(\d[\d\s]{4,})\s*(?:da|دج|dinars?)(?![\p{L}\p{N}])/u);
   if (plainMatch) {
     const value = Number(plainMatch[1].replace(/\s/g, ""));
     return Number.isFinite(value) && value > 0 ? value : undefined;
@@ -69,24 +102,20 @@ function extractPriceMax(text: string): number | undefined {
 }
 
 function extractYearMin(text: string): number | undefined {
-  const match = text.match(/\b(19\d{2}|20\d{2})\b/);
+  const match = text.match(/(?<![\p{L}\p{N}])(19\d{2}|20\d{2})(?![\p{L}\p{N}])/u);
   return match ? Number(match[1]) : undefined;
 }
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function findCatalogMatch<T extends { name?: string; nomFr?: string }>(
-  text: string,
-  entries: T[],
-  getLabel: (entry: T) => string
-): T | undefined {
-  return entries.find((entry) => {
-    const label = getLabel(entry).toLowerCase();
-    if (label.length < 2) return false;
-    return new RegExp(`\\b${escapeRegExp(label)}\\b`, "i").test(text);
-  });
+// Marque/modèle restent volontairement en graphie latine uniquement
+// (Brand.name/Model.name n'ont pas d'équivalent arabe en base, contrairement
+// à Wilaya.nomAr — cf. schema.prisma) : une table de translittération
+// phonétique (ex. "بيجو" → Peugeot) ne serait vérifiable marque par marque
+// qu'avec le même sérieux que les communes/générations (Lots 87/88), hors
+// périmètre de ce lot. Un texte déjà en graphie latine dans une phrase
+// arabe (code-switching courant, ex. "بيجو 208 Peugeot") continue de
+// matcher normalement, aucune régression.
+function findCatalogMatch<T>(text: string, entries: T[], getLabels: (entry: T) => (string | undefined)[]): T | undefined {
+  return entries.find((entry) => getLabels(entry).some((label) => label && containsWord(text, label)));
 }
 
 // Cœur pur et déterministe du repli sans clé Anthropic — jamais un stub :
@@ -100,14 +129,14 @@ function extractFiltersFromText(
   const lower = text.toLowerCase();
   const raw: Record<string, unknown> = {};
 
-  const brand = findCatalogMatch(lower, catalog.brands, (b) => b.name);
+  const brand = findCatalogMatch(lower, catalog.brands, (b) => [b.name]);
   if (brand) {
     raw.brandId = brand.id;
-    const model = findCatalogMatch(lower, brand.models, (m) => m.name);
+    const model = findCatalogMatch(lower, brand.models, (m) => [m.name]);
     if (model) raw.modelId = model.id;
   }
 
-  const wilaya = findCatalogMatch(lower, catalog.wilayas, (w) => w.nomFr);
+  const wilaya = findCatalogMatch(lower, catalog.wilayas, (w) => [w.nomFr, w.nomAr]);
   if (wilaya) raw.wilayaId = wilaya.id;
 
   const fuelType = findKeyword(lower, FUEL_KEYWORDS);
@@ -159,7 +188,7 @@ async function callAnthropicForTurn(
   const modelList = catalog.brands
     .flatMap((b) => b.models.map((m) => `${m.id}:${b.name} ${m.name}`))
     .join(", ");
-  const wilayaList = catalog.wilayas.map((w) => `${w.id}:${w.nomFr}`).join(", ");
+  const wilayaList = catalog.wilayas.map((w) => `${w.id}:${w.nomFr}${w.nomAr ? `/${w.nomAr}` : ""}`).join(", ");
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",

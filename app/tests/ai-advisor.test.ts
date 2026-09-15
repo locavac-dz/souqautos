@@ -7,8 +7,8 @@ const catalog = {
     { id: 5, name: "Peugeot", models: [{ id: 20, name: "208" }] },
   ],
   wilayas: [
-    { id: 16, nomFr: "Alger" },
-    { id: 31, nomFr: "Oran" },
+    { id: 16, nomFr: "Alger", nomAr: "الجزائر" },
+    { id: 31, nomFr: "Oran", nomAr: "وهران" },
   ],
 };
 
@@ -66,6 +66,48 @@ describe("runHeuristicTurn", () => {
     // qu'un critère structuré existe.
     const result = runHeuristicTurn(userTurn("une Renault avec toit ouvrant"), catalog);
     expect(result.filters).toEqual({ brandId: "3" });
+  });
+
+  describe("reconnaissance en écriture arabe (Lot 91)", () => {
+    it("reconnaît une wilaya écrite en arabe (nomAr)", () => {
+      const result = runHeuristicTurn(userTurn("سيارة في وهران"), catalog);
+      expect(result.filters).toMatchObject({ wilayaId: "31" });
+    });
+
+    it("reconnaît un carburant/une boîte/un état écrits en arabe", () => {
+      const result = runHeuristicTurn(userTurn("سيارة ديزل أوتوماتيكي مستعملة"), catalog);
+      expect(result.filters).toEqual({ fuelType: "DIESEL", gearbox: "AUTOMATIQUE", condition: "OCCASION" });
+    });
+
+    it("extrait un prix exprimé en arabe (مليون/دج)", () => {
+      const result = runHeuristicTurn(userTurn("أقل من 1.5 مليون"), catalog);
+      expect(result.filters.priceMax).toBe("1500000");
+    });
+
+    it("ne reconnaît jamais une marque/un modèle écrits en translittération arabe (hors périmètre assumé)", () => {
+      // Brand.name/Model.name n'ont pas d'équivalent arabe en base — un
+      // message qui ne contient AUCUN signal reconnaissable (ni wilaya, ni
+      // carburant/boîte/état, ni prix/année) au premier tour dégrade
+      // honnêtement vers une clarification plutôt qu'une recherche fausse.
+      const result = runHeuristicTurn(userTurn("بيجو 208"), catalog);
+      expect(result).toEqual({ action: "clarify", filters: {}, question: null, source: "heuristic" });
+    });
+
+    it("continue de reconnaître une marque écrite en latin au sein d'une phrase arabe (code-switching)", () => {
+      const result = runHeuristicTurn(userTurn("أريد Peugeot 208 في وهران"), catalog);
+      expect(result.filters).toMatchObject({ brandId: "5", modelId: "20", wilayaId: "31" });
+    });
+
+    it("accumule des critères arabes et latins sur des tours séparés", () => {
+      const messages: AdvisorMessage[] = [
+        { role: "user", content: "أريد Renault ديزل" },
+        { role: "assistant", content: "في أي ولاية؟" },
+        { role: "user", content: "الجزائر" },
+      ];
+      const result = runHeuristicTurn(messages, catalog);
+      expect(result.action).toBe("search");
+      expect(result.filters).toEqual({ brandId: "3", fuelType: "DIESEL", wilayaId: "16" });
+    });
   });
 });
 

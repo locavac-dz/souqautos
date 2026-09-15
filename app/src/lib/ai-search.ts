@@ -25,7 +25,10 @@ export type ParsedSearchFilters = Partial<
 >;
 
 export type CatalogBrand = { id: number; name: string; models: { id: number; name: string }[] };
-export type CatalogWilaya = { id: number; nomFr: string };
+// nomAr optionnel — seul le repli heuristique arabe de AI Advisor (Lot 91,
+// src/lib/ai-advisor.ts) en a besoin ; /api/search/parse continue de
+// sélectionner uniquement id/nomFr sans que ça casse ce type.
+export type CatalogWilaya = { id: number; nomFr: string; nomAr?: string };
 
 const CATEGORIES = ["VOITURE", "UTILITAIRE", "POIDS_LOURD", "DEUX_ROUES", "AUTRE"];
 const FUEL_TYPES = ["ESSENCE", "DIESEL", "GPL", "HYBRIDE", "ELECTRIQUE"];

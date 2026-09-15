@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
   const [brands, wilayas] = await Promise.all([
     prisma.brand.findMany({ include: { models: { select: { id: true, name: true } } } }),
-    prisma.wilaya.findMany({ select: { id: true, nomFr: true } }),
+    prisma.wilaya.findMany({ select: { id: true, nomFr: true, nomAr: true } }),
   ]);
 
   const turn = await runAdvisorTurn(messages, { brands, wilayas }, locale);
