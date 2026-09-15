@@ -121,6 +121,12 @@ model Brand {
   id     Int     @id @default(autoincrement())
   slug   String  @unique
   name   String
+  // Lot 92 — nom arabe vérifié individuellement via Wikipédia arabe (même
+  // discipline que Wilaya.nomAr/Commune.nomAr), `null` tant qu'une marque
+  // n'a pas été vérifiée : référentiel volontairement partiel (marques
+  // réellement utilisées par les annonces de démonstration), même principe
+  // que Generation (Lot 88).
+  nameAr String?
   models Model[]
   listings Listing[]
 }

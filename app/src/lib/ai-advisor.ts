@@ -106,14 +106,14 @@ function extractYearMin(text: string): number | undefined {
   return match ? Number(match[1]) : undefined;
 }
 
-// Marque/modèle restent volontairement en graphie latine uniquement
-// (Brand.name/Model.name n'ont pas d'équivalent arabe en base, contrairement
-// à Wilaya.nomAr — cf. schema.prisma) : une table de translittération
-// phonétique (ex. "بيجو" → Peugeot) ne serait vérifiable marque par marque
-// qu'avec le même sérieux que les communes/générations (Lots 87/88), hors
-// périmètre de ce lot. Un texte déjà en graphie latine dans une phrase
-// arabe (code-switching courant, ex. "بيجو 208 Peugeot") continue de
-// matcher normalement, aucune régression.
+// Modèle reste volontairement en graphie latine uniquement — Model.name n'a
+// pas d'équivalent arabe en base. Marque reconnue aussi en arabe depuis le
+// Lot 92 via Brand.nameAr (référentiel partiel, vérifié marque par marque
+// via Wikipédia arabe — jamais une translittération inventée) : une marque
+// non encore vérifiée (nameAr `null`) n'est simplement reconnue qu'en
+// latin, jamais un texte fabriqué à sa place. Un texte déjà en graphie
+// latine dans une phrase arabe (code-switching courant, ex. "بيجو 208
+// Peugeot") continue de matcher normalement, aucune régression.
 function findCatalogMatch<T>(text: string, entries: T[], getLabels: (entry: T) => (string | undefined)[]): T | undefined {
   return entries.find((entry) => getLabels(entry).some((label) => label && containsWord(text, label)));
 }
@@ -129,7 +129,7 @@ function extractFiltersFromText(
   const lower = text.toLowerCase();
   const raw: Record<string, unknown> = {};
 
-  const brand = findCatalogMatch(lower, catalog.brands, (b) => [b.name]);
+  const brand = findCatalogMatch(lower, catalog.brands, (b) => [b.name, b.nameAr ?? undefined]);
   if (brand) {
     raw.brandId = brand.id;
     const model = findCatalogMatch(lower, brand.models, (m) => [m.name]);
@@ -184,7 +184,7 @@ async function callAnthropicForTurn(
   catalog: AdvisorCatalog,
   locale: string
 ): Promise<AdvisorTurnResult | null> {
-  const brandList = catalog.brands.map((b) => `${b.id}:${b.name}`).join(", ");
+  const brandList = catalog.brands.map((b) => `${b.id}:${b.name}${b.nameAr ? `/${b.nameAr}` : ""}`).join(", ");
   const modelList = catalog.brands
     .flatMap((b) => b.models.map((m) => `${m.id}:${b.name} ${m.name}`))
     .join(", ");

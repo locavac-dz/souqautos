@@ -96,11 +96,11 @@ async function main() {
   console.log(`Seed OK — ${communes.length} communes.`);
 
   let modelCount = 0;
-  for (const { brand, models } of catalogue) {
+  for (const { brand, nameAr, models } of catalogue) {
     const brandRow = await prisma.brand.upsert({
       where: { slug: slugify(brand) },
-      update: { name: brand },
-      create: { slug: slugify(brand), name: brand },
+      update: { name: brand, nameAr: nameAr ?? null },
+      create: { slug: slugify(brand), name: brand, nameAr },
     });
 
     for (const model of models) {

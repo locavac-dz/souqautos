@@ -3,8 +3,11 @@ import { runHeuristicTurn, runAdvisorTurn, type AdvisorMessage } from "@/lib/ai-
 
 const catalog = {
   brands: [
-    { id: 3, name: "Renault", models: [{ id: 10, name: "Clio" }, { id: 11, name: "Megane" }] },
-    { id: 5, name: "Peugeot", models: [{ id: 20, name: "208" }] },
+    { id: 3, name: "Renault", nameAr: "رينو", models: [{ id: 10, name: "Clio" }, { id: 11, name: "Megane" }] },
+    { id: 5, name: "Peugeot", nameAr: "بيجو", models: [{ id: 20, name: "208" }] },
+    // Marque volontairement sans nameAr — simule une marque du catalogue pas
+    // encore vérifiée (cf. Chevrolet/Geely/Haval/Volvo/Mitsubishi en base).
+    { id: 7, name: "Chevrolet", models: [{ id: 30, name: "Aveo" }] },
   ],
   wilayas: [
     { id: 16, nomFr: "Alger", nomAr: "الجزائر" },
@@ -84,15 +87,6 @@ describe("runHeuristicTurn", () => {
       expect(result.filters.priceMax).toBe("1500000");
     });
 
-    it("ne reconnaît jamais une marque/un modèle écrits en translittération arabe (hors périmètre assumé)", () => {
-      // Brand.name/Model.name n'ont pas d'équivalent arabe en base — un
-      // message qui ne contient AUCUN signal reconnaissable (ni wilaya, ni
-      // carburant/boîte/état, ni prix/année) au premier tour dégrade
-      // honnêtement vers une clarification plutôt qu'une recherche fausse.
-      const result = runHeuristicTurn(userTurn("بيجو 208"), catalog);
-      expect(result).toEqual({ action: "clarify", filters: {}, question: null, source: "heuristic" });
-    });
-
     it("continue de reconnaître une marque écrite en latin au sein d'une phrase arabe (code-switching)", () => {
       const result = runHeuristicTurn(userTurn("أريد Peugeot 208 في وهران"), catalog);
       expect(result.filters).toMatchObject({ brandId: "5", modelId: "20", wilayaId: "31" });
@@ -107,6 +101,27 @@ describe("runHeuristicTurn", () => {
       const result = runHeuristicTurn(messages, catalog);
       expect(result.action).toBe("search");
       expect(result.filters).toEqual({ brandId: "3", fuelType: "DIESEL", wilayaId: "16" });
+    });
+  });
+
+  describe("reconnaissance de marque en translittération arabe (Lot 92)", () => {
+    it("reconnaît une marque écrite en translittération arabe (nameAr vérifié)", () => {
+      const result = runHeuristicTurn(userTurn("بيجو في الجزائر"), catalog);
+      expect(result.filters).toMatchObject({ brandId: "5", wilayaId: "16" });
+    });
+
+    it("reconnaît la marque même sans modèle associé en arabe (Model.name reste latin uniquement)", () => {
+      const result = runHeuristicTurn(userTurn("أبحث عن رينو"), catalog);
+      expect(result.filters).toEqual({ brandId: "3" });
+    });
+
+    it("ne reconnaît jamais une marque non encore vérifiée en arabe (hors périmètre assumé, pas de fabrication)", () => {
+      // "Chevrolet" n'a pas de nameAr dans le référentiel (comme en base
+      // réelle pour Chevrolet/Geely/Haval/Volvo/Mitsubishi) — un message qui
+      // ne contient AUCUN autre signal reconnaissable dégrade honnêtement
+      // vers une clarification plutôt qu'une marque devinée.
+      const result = runHeuristicTurn(userTurn("شيفروليه أفيو"), catalog);
+      expect(result).toEqual({ action: "clarify", filters: {}, question: null, source: "heuristic" });
     });
   });
 });
