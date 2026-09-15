@@ -15,6 +15,7 @@ export default async function LegalNoticePage() {
           <p>{t("publisherAddress")}</p>
           <p>{t("publisherCapital")}</p>
           <p>{t("publisherRc")}</p>
+          <p>{t("publisherNif")}</p>
         </section>
 
         <section>
