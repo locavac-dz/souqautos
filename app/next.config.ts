@@ -12,6 +12,18 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // fournisseur en production.
 const s3PublicUrl = process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL) : null;
 
+// next/image refuse par défaut de proxyer une image dont l'hôte résout vers
+// une IP privée (protection SSRF). Un MinIO/S3-compatible auto-hébergé sur le
+// même réseau privé que le serveur applicatif (cas de vérification locale, ou
+// déploiement volontairement interne en production) est un usage légitime :
+// on ne désactive cette protection que pour l'hôte S3 explicitement
+// allowlisté ci-dessus via remotePatterns, jamais globalement pour d'autres
+// hôtes — donc sans risque ajouté même si S3_PUBLIC_URL pointe vers une IP
+// publique classique, où ce drapeau n'a de toute façon aucun effet.
+const s3HostIsLocalOrPrivateIp = s3PublicUrl
+  ? /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.|::1$|localhost$)/.test(s3PublicUrl.hostname)
+  : false;
+
 const nextConfig: NextConfig = {
   // Un package.json préexistant dans le dossier utilisateur (hors de ce projet)
   // fait remonter Turbopack plus haut que nécessaire : on fixe la racine ici.
@@ -28,6 +40,7 @@ const nextConfig: NextConfig = {
               port: s3PublicUrl.port || undefined,
             },
           ],
+          ...(s3HostIsLocalOrPrivateIp ? { dangerouslyAllowLocalIP: true } : {}),
         },
       }
     : {}),
