@@ -8,7 +8,7 @@ import { getClientIp, safeUser } from "@/lib/http";
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  if (!checkRateLimit(`login:${ip}`, { limit: 10, windowMs: 15 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`login:${ip}`, { limit: 10, windowMs: 15 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

@@ -19,7 +19,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`auto-renew-toggle:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`auto-renew-toggle:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

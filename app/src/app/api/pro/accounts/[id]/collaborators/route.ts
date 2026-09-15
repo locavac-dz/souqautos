@@ -29,7 +29,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  if (!checkRateLimit(`add-collaborator:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`add-collaborator:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

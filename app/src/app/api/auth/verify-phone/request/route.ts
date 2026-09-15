@@ -17,7 +17,7 @@ export async function POST() {
     return NextResponse.json({ error: "already_verified" }, { status: 400 });
   }
 
-  if (!checkRateLimit(`verify-phone-request:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`verify-phone-request:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

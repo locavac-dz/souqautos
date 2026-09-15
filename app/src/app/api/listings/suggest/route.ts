@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   // Limite volontairement resserrée : un appel IA a un coût réel dès qu'une
   // clé Anthropic est configurée, même si aucun coût n'est engagé aujourd'hui
   // (repli heuristique sans clé, cf. src/lib/ai-listing.ts).
-  if (!checkRateLimit(`listing-suggest:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`listing-suggest:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

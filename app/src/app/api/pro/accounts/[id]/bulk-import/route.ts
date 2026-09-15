@@ -18,7 +18,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`bulk-import:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`bulk-import:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

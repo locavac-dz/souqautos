@@ -18,7 +18,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`send-message:${user.id}`, { limit: 60, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`send-message:${user.id}`, { limit: 60, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     select: { id: true, content: true, attachmentUrl: true, senderId: true, createdAt: true },
   });
 
-  publishToConversation(id, {
+  await publishToConversation(id, {
     type: "message",
     message: { ...message, deletedAt: null, createdAt: message.createdAt.toISOString() },
   });

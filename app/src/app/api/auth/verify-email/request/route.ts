@@ -16,7 +16,7 @@ export async function POST() {
     return NextResponse.json({ error: "already_verified" }, { status: 400 });
   }
 
-  if (!checkRateLimit(`verify-email-request:${user.id}`, { limit: 3, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`verify-email-request:${user.id}`, { limit: 3, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

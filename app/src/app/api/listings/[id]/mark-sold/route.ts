@@ -11,7 +11,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`mark-sold-listing:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`mark-sold-listing:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

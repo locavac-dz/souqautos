@@ -18,7 +18,7 @@ export async function GET() {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`profile-export:${user.id}`, { limit: 5, windowMs: 24 * 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`profile-export:${user.id}`, { limit: 5, windowMs: 24 * 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

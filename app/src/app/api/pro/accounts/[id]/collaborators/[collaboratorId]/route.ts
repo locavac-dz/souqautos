@@ -34,7 +34,7 @@ export async function PATCH(
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  if (!checkRateLimit(`edit-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`edit-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
@@ -75,7 +75,7 @@ export async function DELETE(
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  if (!checkRateLimit(`remove-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`remove-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

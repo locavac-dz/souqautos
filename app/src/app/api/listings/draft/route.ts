@@ -34,7 +34,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`wizard-draft:${user.id}`, { limit: 120, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`wizard-draft:${user.id}`, { limit: 120, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

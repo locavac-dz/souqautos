@@ -12,7 +12,7 @@ const bodySchema = z.object({ query: z.string().trim().min(2).max(200) });
 // est configurée (cf. src/lib/ai-search.ts, repli sans clé sinon).
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  if (!checkRateLimit(`search-parse:${ip}`, { limit: 30, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`search-parse:${ip}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

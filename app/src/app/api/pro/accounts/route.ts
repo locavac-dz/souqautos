@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "already_professional" }, { status: 400 });
   }
 
-  if (!checkRateLimit(`create-pro-account:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 })) {
+  if (!(await checkRateLimit(`create-pro-account:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

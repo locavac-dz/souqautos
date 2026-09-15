@@ -32,7 +32,7 @@ export async function DELETE(
     data: { content: "", attachmentUrl: null, deletedAt: new Date() },
   });
 
-  publishToConversation(id, { type: "delete", messageId });
+  await publishToConversation(id, { type: "delete", messageId });
 
   return NextResponse.json({ ok: true });
 }
