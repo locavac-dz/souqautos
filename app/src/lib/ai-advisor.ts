@@ -52,11 +52,23 @@ const GEARBOX_KEYWORDS: Record<string, string> = {
   يدوي: "MANUELLE",
 };
 const CONDITION_KEYWORDS: Record<string, string> = {
-  neuf: "NEUF",
   جديدة: "NEUF",
   occasion: "OCCASION",
   مستعملة: "OCCASION",
 };
+
+// "neuf" sort du dictionnaire ci-dessus : homographe avec le nombre 9 en
+// français ("neuf cent mille", "dix-neuf"), contrairement à "جديدة" qui n'a
+// pas cette ambiguïté. Jamais traité comme l'état du véhicule quand il fait
+// visiblement partie d'un nombre écrit en toutes lettres — dans le doute
+// (ex. juste "neuf" seul), reste interprété comme l'état, de loin le sens le
+// plus probable dans une conversation d'achat automobile.
+function matchesNeufCondition(text: string): boolean {
+  if (!containsWord(text, "neuf")) return false;
+  if (/(?<![\p{L}\p{N}])dix-neuf(?![\p{L}\p{N}])/u.test(text)) return false;
+  if (/neuf\s+(cent|mille)/u.test(text)) return false;
+  return true;
+}
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -118,6 +130,14 @@ function findCatalogMatch<T>(text: string, entries: T[], getLabels: (entry: T) =
   return entries.find((entry) => getLabels(entry).some((label) => label && containsWord(text, label)));
 }
 
+function findAllCatalogMatches<T>(
+  text: string,
+  entries: T[],
+  getLabels: (entry: T) => (string | undefined)[]
+): T[] {
+  return entries.filter((entry) => getLabels(entry).some((label) => label && containsWord(text, label)));
+}
+
 // Cœur pur et déterministe du repli sans clé Anthropic — jamais un stub :
 // extraction par mots-clés/sous-chaînes, cumulée sur tous les messages
 // utilisateur de la conversation (pour ne pas perdre le contexte d'un tour
@@ -137,12 +157,18 @@ function extractFiltersFromText(
   } else {
     // Un modèle nommé seul (ex. "كليو"/"Clio" sans "Renault") retrouve sa
     // marque implicitement — un acheteur nomme rarement marque ET modèle en
-    // toutes lettres dans une phrase informelle (Lot 94).
+    // toutes lettres dans une phrase informelle (Lot 94). Mais si le même nom
+    // de modèle existe sous plusieurs marques (ex. "Duster" chez Dacia ET
+    // Renault), impossible de deviner laquelle sans risquer de filtrer sur
+    // la mauvaise marque — mieux vaut ne rien assigner (le texte reste
+    // disponible comme résidu libre) que de choisir arbitrairement la
+    // première trouvée.
     const allModels = catalog.brands.flatMap((b) => b.models.map((m) => ({ ...m, brandId: b.id })));
-    const model = findCatalogMatch(lower, allModels, (m) => [m.name, m.nameAr ?? undefined]);
-    if (model) {
-      raw.brandId = model.brandId;
-      raw.modelId = model.id;
+    const matchingModels = findAllCatalogMatches(lower, allModels, (m) => [m.name, m.nameAr ?? undefined]);
+    const distinctBrandIds = new Set(matchingModels.map((m) => m.brandId));
+    if (matchingModels.length > 0 && distinctBrandIds.size === 1) {
+      raw.brandId = matchingModels[0].brandId;
+      raw.modelId = matchingModels[0].id;
     }
   }
 
@@ -155,7 +181,7 @@ function extractFiltersFromText(
   const gearbox = findKeyword(lower, GEARBOX_KEYWORDS);
   if (gearbox) raw.gearbox = gearbox;
 
-  const condition = findKeyword(lower, CONDITION_KEYWORDS);
+  const condition = matchesNeufCondition(lower) ? "NEUF" : findKeyword(lower, CONDITION_KEYWORDS);
   if (condition) raw.condition = condition;
 
   const priceMax = extractPriceMax(lower);

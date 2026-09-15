@@ -15,6 +15,14 @@ const catalog = {
     // Marque volontairement sans nameAr — simule une marque du catalogue pas
     // encore vérifiée (cf. Chevrolet/Geely/Haval/Volvo/Mitsubishi en base).
     { id: 7, name: "Chevrolet", models: [{ id: 30, name: "Aveo" }] },
+    // Tiggo 3 volontairement sans nameAr, Tiggo 7 avec le chiffre inclus —
+    // reproduit le référentiel réel (cf. correctif Lot 94/relecture qualité).
+    {
+      id: 9,
+      name: "Chery",
+      nameAr: "شيري",
+      models: [{ id: 40, name: "Tiggo 3" }, { id: 41, name: "Tiggo 7", nameAr: "تيجو 7" }],
+    },
   ],
   wilayas: [
     { id: 16, nomFr: "Alger", nomAr: "الجزائر" },
@@ -151,6 +159,77 @@ describe("runHeuristicTurn", () => {
       // aucun modèle n'est fabriqué à sa place.
       const result = runHeuristicTurn(userTurn("رينو ميغان"), catalog);
       expect(result.filters).toEqual({ brandId: "3" });
+    });
+  });
+
+  describe("correctifs de relecture qualité — collision de nom de modèle entre marques", () => {
+    // "Duster" existe chez Dacia ET Renault dans le vrai référentiel — un
+    // modèle nommé seul mais ambigu entre plusieurs marques ne doit jamais
+    // faire deviner une marque au hasard.
+    const catalogWithCollision = {
+      brands: [
+        { id: 1, name: "Renault", models: [{ id: 100, name: "Duster" }] },
+        { id: 2, name: "Dacia", models: [{ id: 200, name: "Duster" }] },
+      ],
+      wilayas: catalog.wilayas,
+    };
+
+    it("n'assigne aucune marque quand un modèle nommé seul est ambigu entre plusieurs marques", () => {
+      // Un autre critère (wilaya) force le passage en recherche — sans lui,
+      // l'absence de marque/modèle assignés serait indiscernable d'une
+      // simple absence totale de signal (qui déclenche une clarification).
+      const result = runHeuristicTurn(userTurn("je cherche un Duster à Alger"), catalogWithCollision);
+      expect(result.action).toBe("search");
+      expect(result.filters.brandId).toBeUndefined();
+      expect(result.filters.modelId).toBeUndefined();
+      expect(result.filters.wilayaId).toBe("16");
+    });
+
+    it("assigne toujours la bonne marque quand le nom de modèle n'est pas ambigu", () => {
+      const result = runHeuristicTurn(userTurn("رينو كليو"), catalog);
+      expect(result.filters).toEqual({ brandId: "3", modelId: "10" });
+    });
+  });
+
+  describe("correctifs de relecture qualité — nameAr générique matchant la mauvaise variante", () => {
+    it("ne reconnaît jamais Tiggo 7 quand le message mentionne une autre variante non vérifiée", () => {
+      // "تيجو 3" (Tiggo 3, sans nameAr dans le référentiel) ne doit jamais
+      // résoudre vers Tiggo 7 seulement parce que "تيجو" y apparaît aussi —
+      // ni même deviner la marque Chery, puisque son nom arabe (شيري)
+      // n'apparaît pas non plus dans le message.
+      const result = runHeuristicTurn(userTurn("تيجو 3 في الجزائر"), catalog);
+      expect(result.filters.modelId).toBeUndefined();
+      expect(result.filters.brandId).toBeUndefined();
+      expect(result.filters.wilayaId).toBe("16");
+    });
+
+    it("reconnaît toujours Tiggo 7 quand le chiffre correspond (nameAr vérifié)", () => {
+      const result = runHeuristicTurn(userTurn("تيجو 7 في الجزائر"), catalog);
+      expect(result.filters).toMatchObject({ brandId: "9", modelId: "41", wilayaId: "16" });
+    });
+  });
+
+  describe("correctifs de relecture qualité — homographe « neuf » (état vs nombre)", () => {
+    // Un critère wilaya force le passage en recherche dans chaque cas — sans
+    // lui, l'absence de condition serait indiscernable d'une simple absence
+    // totale de signal (qui déclenche une clarification).
+    it("ne confond jamais l'état « neuf » avec le nombre 9 dans un prix écrit en toutes lettres", () => {
+      const result = runHeuristicTurn(userTurn("une voiture à Alger, moins de neuf cent mille da"), catalog);
+      expect(result.action).toBe("search");
+      expect(result.filters.condition).toBeUndefined();
+      expect(result.filters.wilayaId).toBe("16");
+    });
+
+    it("ne confond jamais « neuf » dans « dix-neuf » avec l'état du véhicule", () => {
+      const result = runHeuristicTurn(userTurn("un modèle dix-neuf à Alger"), catalog);
+      expect(result.action).toBe("search");
+      expect(result.filters.condition).toBeUndefined();
+      expect(result.filters.wilayaId).toBe("16");
+    });
+
+    it("reconnaît toujours « neuf » seul comme l'état du véhicule (cas normal, non régressé)", () => {
+      const result = runHeuristicTurn(userTurn("je veux une voiture neuf à Alger"), catalog);
+      expect(result.filters.condition).toBe("NEUF");
     });
   });
 });

@@ -106,7 +106,12 @@ export const catalogue: { brand: string; nameAr?: string; models: CatalogueModel
     models: [
       "Tiggo 2",
       "Tiggo 3",
-      { name: "Tiggo 7", nameAr: "تيجو" },
+      // "تيجو" seul (sans le chiffre) matcherait aussi "تيجو 3"/"تيجو 8" —
+      // jamais vérifié individuellement pour ces variantes, contrairement à
+      // Tiggo 7 (confirmé via plusieurs sites automobiles réels, cf.
+      // CHANGELOG Lot 94/correctif). Inclure le chiffre dans nameAr évite un
+      // modèle deviné plutôt que reconnu.
+      { name: "Tiggo 7", nameAr: "تيجو 7" },
       "Tiggo 8",
       "Arrizo 5",
       "QQ",

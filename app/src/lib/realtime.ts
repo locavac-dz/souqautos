@@ -34,7 +34,14 @@ function deliverLocally(conversationId: string, event: ConversationEvent): void 
   for (const listener of set) listener(event);
 }
 
-let redisSubscriptionStarted = false;
+let pmessageHandlerRegistered = false;
+// `null` tant qu'aucun abonnement n'est en cours/réussi — distinct d'un
+// simple booléen pour pouvoir RETENTER : si le PSUBSCRIBE échoue (Redis
+// injoignable au moment précis du tout premier abonné), remis à `null` pour
+// que le prochain appel relance une tentative, plutôt que d'abandonner
+// silencieusement et définitivement la diffusion Redis pour le reste de vie
+// du process.
+let redisSubscriptionPromise: Promise<void> | null = null;
 
 // Un seul PSUBSCRIBE pour toutes les conversations (pattern `conversation:*`)
 // plutôt qu'un SUBSCRIBE par conversation : le nombre de conversations
@@ -44,22 +51,32 @@ let redisSubscriptionStarted = false;
 // local (un autre navigateur, connecté à une autre instance) — filtrés sans
 // effet ci-dessous par `deliverLocally` (Map.get renvoie undefined).
 function ensureRedisSubscription(): void {
-  if (redisSubscriptionStarted) return;
   const subscriber = getRedisSubscriberClient();
   if (!subscriber) return;
-  redisSubscriptionStarted = true;
 
-  subscriber.psubscribe(`${REDIS_CHANNEL_PREFIX}*`).catch((err: Error) => {
-    console.error(`[realtime] échec de l'abonnement Redis: ${err.message}`);
-  });
-  subscriber.on("pmessage", (_pattern: string, channel: string, message: string) => {
-    const conversationId = channel.slice(REDIS_CHANNEL_PREFIX.length);
-    try {
-      deliverLocally(conversationId, JSON.parse(message) as ConversationEvent);
-    } catch (err) {
-      console.error(`[realtime] message Redis illisible, ignoré: ${(err as Error).message}`);
+  // Enregistré une seule fois, indépendamment du succès/échec du
+  // PSUBSCRIBE — jamais dupliqué par une nouvelle tentative (qui livrerait
+  // alors chaque message plusieurs fois aux abonnés locaux).
+  if (!pmessageHandlerRegistered) {
+    pmessageHandlerRegistered = true;
+    subscriber.on("pmessage", (_pattern: string, channel: string, message: string) => {
+      const conversationId = channel.slice(REDIS_CHANNEL_PREFIX.length);
+      try {
+        deliverLocally(conversationId, JSON.parse(message) as ConversationEvent);
+      } catch (err) {
+        console.error(`[realtime] message Redis illisible, ignoré: ${(err as Error).message}`);
+      }
+    });
+  }
+
+  if (redisSubscriptionPromise) return;
+  redisSubscriptionPromise = subscriber.psubscribe(`${REDIS_CHANNEL_PREFIX}*`).then(
+    () => undefined,
+    (err: Error) => {
+      console.error(`[realtime] échec de l'abonnement Redis, nouvelle tentative au prochain appel: ${err.message}`);
+      redisSubscriptionPromise = null;
     }
-  });
+  );
 }
 
 export function subscribeToConversation(conversationId: string, listener: Listener): () => void {
