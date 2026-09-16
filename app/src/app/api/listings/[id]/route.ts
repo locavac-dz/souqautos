@@ -8,6 +8,7 @@ import { canManageListing } from "@/lib/listing-access";
 import { listingEditSchema } from "@/lib/validation/listing";
 import { savePhoto, deleteStoredFile, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 import { computeListingContentHash } from "@/lib/fraud-signals";
+import { validateCatalogueRefs } from "@/lib/listing-catalogue-refs";
 
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
@@ -62,52 +63,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: eligibility.error }, { status: 400 });
   }
 
-  const wilaya = await prisma.wilaya.findUnique({ where: { id: parsed.data.wilayaId } });
-  if (!wilaya) {
-    return NextResponse.json({ error: "unknown_wilaya" }, { status: 400 });
-  }
-  // Lot 87 — même discipline que brandId/modelId : une commune n'est acceptée
-  // que si elle appartient réellement à la wilaya choisie, jamais fabriquée.
-  if (parsed.data.communeId) {
-    const commune = await prisma.commune.findUnique({ where: { id: parsed.data.communeId } });
-    if (!commune || commune.wilayaId !== parsed.data.wilayaId) {
-      return NextResponse.json({ error: "unknown_commune" }, { status: 400 });
-    }
-  }
-
   const data = parsed.data;
 
-  // Mêmes vérifications catalogue qu'à la création (Lot 2) : jamais un
-  // brandId/modelId fabriqué côté client, jamais un modèle qui n'appartient
-  // pas à la marque choisie.
-  if (data.brandId) {
-    const brand = await prisma.brand.findUnique({ where: { id: data.brandId } });
-    if (!brand) {
-      return NextResponse.json({ error: "unknown_brand" }, { status: 400 });
-    }
-  }
-  if (data.modelId) {
-    const model = await prisma.model.findUnique({ where: { id: data.modelId } });
-    if (!model || (data.brandId && model.brandId !== data.brandId)) {
-      return NextResponse.json({ error: "unknown_model" }, { status: 400 });
-    }
-  }
-  // Lot 88 — même discipline que brandId/modelId : une génération n'est
-  // acceptée que si elle appartient réellement au modèle choisi.
-  if (data.generationId) {
-    const generation = await prisma.generation.findUnique({ where: { id: data.generationId } });
-    if (!generation || generation.modelId !== data.modelId) {
-      return NextResponse.json({ error: "unknown_generation" }, { status: 400 });
-    }
-  }
-
-  // Même discipline que brandId/modelId : jamais un id d'équipement fabriqué
-  // côté client accepté tel quel (Lot 72/73).
-  if (data.equipmentIds.length > 0) {
-    const matchingCount = await prisma.equipment.count({ where: { id: { in: data.equipmentIds } } });
-    if (matchingCount !== new Set(data.equipmentIds).size) {
-      return NextResponse.json({ error: "unknown_equipment" }, { status: 400 });
-    }
+  // Mêmes vérifications catalogue qu'à la création (Lot 2, Lot 99 pour la
+  // factorisation) : jamais un brandId/modelId/generationId/communeId/
+  // equipmentId fabriqué côté client accepté tel quel.
+  const catalogueValidation = await validateCatalogueRefs(data);
+  if (!catalogueValidation.ok) {
+    return NextResponse.json({ error: catalogueValidation.error }, { status: 400 });
   }
 
   // Seules les photos appartenant réellement à cette annonce peuvent être

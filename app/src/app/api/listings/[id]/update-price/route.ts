@@ -65,24 +65,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       include: { user: true },
     });
 
-    for (const favorite of favorites) {
-      const t = await getTranslations({ locale: favorite.user.locale, namespace: "Notifications" });
-      const emailResult = await sendEmail({
-        to: favorite.user.email,
-        subject: t("priceDropSubject"),
-        html: `<p>${t("greeting")}</p><p>${t("priceDropBody", {
-          title: escapeHtml(listing.title),
-          oldPrice: oldPrice.toLocaleString(),
-          newPrice: newPrice.toLocaleString(),
-        })}</p>`,
-      }).catch((err) => {
-        console.error(`[EMAIL notification baisse de prix] échec envoi: ${(err as Error).message}`);
-        return null;
-      });
-      if (emailResult?.previewUrl) {
-        console.log(`[EMAIL notification baisse de prix] ${emailResult.previewUrl}`);
-      }
-    }
+    // Envoyés en parallèle plutôt que séquentiellement (Lot 99, audit
+    // qualité) — chaque envoi est déjà indépendant et au mieux (.catch()
+    // propre), aucune raison d'attendre l'un avant de commencer le suivant.
+    await Promise.all(
+      favorites.map(async (favorite) => {
+        const t = await getTranslations({ locale: favorite.user.locale, namespace: "Notifications" });
+        const emailResult = await sendEmail({
+          to: favorite.user.email,
+          subject: t("priceDropSubject"),
+          html: `<p>${t("greeting")}</p><p>${t("priceDropBody", {
+            title: escapeHtml(listing.title),
+            oldPrice: oldPrice.toLocaleString(),
+            newPrice: newPrice.toLocaleString(),
+          })}</p>`,
+        }).catch((err) => {
+          console.error(`[EMAIL notification baisse de prix] échec envoi: ${(err as Error).message}`);
+          return null;
+        });
+        if (emailResult?.previewUrl) {
+          console.log(`[EMAIL notification baisse de prix] ${emailResult.previewUrl}`);
+        }
+      })
+    );
   }
 
   return NextResponse.json({ price: newPrice });

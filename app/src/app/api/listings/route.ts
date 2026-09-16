@@ -6,6 +6,7 @@ import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads"
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getSubscriptionStatus, isWithinQuota } from "@/lib/pro-subscription";
 import { computeListingContentHash } from "@/lib/fraud-signals";
+import { validateCatalogueRefs } from "@/lib/listing-catalogue-refs";
 
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
@@ -53,46 +54,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "too_many_photos" }, { status: 400 });
   }
 
-  if (data.brandId) {
-    const brand = await prisma.brand.findUnique({ where: { id: data.brandId } });
-    if (!brand) {
-      return NextResponse.json({ error: "unknown_brand" }, { status: 400 });
-    }
-  }
-  if (data.modelId) {
-    const model = await prisma.model.findUnique({ where: { id: data.modelId } });
-    if (!model || (data.brandId && model.brandId !== data.brandId)) {
-      return NextResponse.json({ error: "unknown_model" }, { status: 400 });
-    }
-  }
-  // Lot 88 — même discipline que brandId/modelId : une génération n'est
-  // acceptée que si elle appartient réellement au modèle choisi.
-  if (data.generationId) {
-    const generation = await prisma.generation.findUnique({ where: { id: data.generationId } });
-    if (!generation || generation.modelId !== data.modelId) {
-      return NextResponse.json({ error: "unknown_generation" }, { status: 400 });
-    }
-  }
-  const wilaya = await prisma.wilaya.findUnique({ where: { id: data.wilayaId } });
-  if (!wilaya) {
-    return NextResponse.json({ error: "unknown_wilaya" }, { status: 400 });
-  }
-  // Lot 87 — même discipline que brandId/modelId : une commune n'est acceptée
-  // que si elle appartient réellement à la wilaya choisie, jamais fabriquée.
-  if (data.communeId) {
-    const commune = await prisma.commune.findUnique({ where: { id: data.communeId } });
-    if (!commune || commune.wilayaId !== data.wilayaId) {
-      return NextResponse.json({ error: "unknown_commune" }, { status: 400 });
-    }
-  }
-
-  // Même discipline que brandId/modelId : jamais un id d'équipement fabriqué
-  // côté client accepté tel quel (Lot 72).
-  if (data.equipmentIds.length > 0) {
-    const matchingCount = await prisma.equipment.count({ where: { id: { in: data.equipmentIds } } });
-    if (matchingCount !== new Set(data.equipmentIds).size) {
-      return NextResponse.json({ error: "unknown_equipment" }, { status: 400 });
-    }
+  const catalogueValidation = await validateCatalogueRefs(data);
+  if (!catalogueValidation.ok) {
+    return NextResponse.json({ error: catalogueValidation.error }, { status: 400 });
   }
 
   const phoneToUse = user.phone ?? data.phone;

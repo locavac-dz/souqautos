@@ -85,23 +85,28 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   ];
 
   const authorName = escapeHtml(user.profile?.displayName ?? user.email);
-  for (const recipient of recipients) {
-    const t = await getTranslations({ locale: recipient.locale, namespace: "Notifications" });
-    const emailResult = await sendEmail({
-      to: recipient.email,
-      subject: t("newReviewSubject"),
-      html: `<p>${t("greeting")}</p><p>${t("newReviewBody", {
-        name: authorName,
-        rating: parsed.data.rating,
-      })}</p><p><a href="${SITE_URL}/${recipient.locale}/pro/${accountId}">${t("newReviewLink")}</a></p>`,
-    }).catch((err) => {
-      console.error(`[EMAIL nouvel avis pro] échec envoi: ${(err as Error).message}`);
-      return null;
-    });
-    if (emailResult?.previewUrl) {
-      console.log(`[EMAIL nouvel avis pro] ${emailResult.previewUrl}`);
-    }
-  }
+  // Envoyés en parallèle plutôt que séquentiellement (Lot 99, audit qualité)
+  // — propriétaire et collaborateurs notifiés indépendamment, chaque envoi
+  // déjà au mieux (.catch() propre).
+  await Promise.all(
+    recipients.map(async (recipient) => {
+      const t = await getTranslations({ locale: recipient.locale, namespace: "Notifications" });
+      const emailResult = await sendEmail({
+        to: recipient.email,
+        subject: t("newReviewSubject"),
+        html: `<p>${t("greeting")}</p><p>${t("newReviewBody", {
+          name: authorName,
+          rating: parsed.data.rating,
+        })}</p><p><a href="${SITE_URL}/${recipient.locale}/pro/${accountId}">${t("newReviewLink")}</a></p>`,
+      }).catch((err) => {
+        console.error(`[EMAIL nouvel avis pro] échec envoi: ${(err as Error).message}`);
+        return null;
+      });
+      if (emailResult?.previewUrl) {
+        console.log(`[EMAIL nouvel avis pro] ${emailResult.previewUrl}`);
+      }
+    })
+  );
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
