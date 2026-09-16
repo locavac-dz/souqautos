@@ -40,6 +40,11 @@ export function LoginForm() {
           ? `${t("errorAccountSuspended")} ${t("errorAccountSuspendedReason", { reason: data.reason })}`
           : t("errorAccountSuspended")
       );
+    } else if (data?.error === "account_locked") {
+      const minutesLeft = data.lockedUntil
+        ? Math.max(1, Math.ceil((new Date(data.lockedUntil).getTime() - Date.now()) / 60_000))
+        : 15;
+      setError(t("errorAccountLocked", { minutes: minutesLeft }));
     } else setError(t("errorGeneric"));
   }
 

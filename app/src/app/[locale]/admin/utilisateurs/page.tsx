@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin, isStaff } from "@/lib/auth-server/roles";
 import { RoleSelect } from "@/components/admin/RoleSelect";
 import { SuspendUserButton } from "@/components/admin/SuspendUserButton";
+import { UnlockUserButton } from "@/components/admin/UnlockUserButton";
+import { isAccountLocked } from "@/lib/login-lockout";
 
 const ROLE_KEY: Record<string, string> = {
   PARTICULIER: "roleOptionParticulier",
@@ -22,45 +24,53 @@ export default async function AdminUsersPage() {
     orderBy: { createdAt: "desc" },
     include: { profile: true },
   });
+  const now = new Date();
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("navUsers")}</h1>
       <div className="rounded-lg border border-slate-200 divide-y divide-slate-100">
-        {users.map((user) => (
-          <div key={user.id} className="flex items-center justify-between px-4 py-3 text-sm">
-            <div>
-              <p className="font-medium text-slate-900">{user.profile?.displayName ?? user.email}</p>
-              <p className="text-slate-400 text-xs">{user.email}</p>
-              {user.deletedAt ? (
-                <p className="mt-0.5 text-xs text-slate-400">{t("deletedLabel")}</p>
-              ) : (
-                user.suspendedAt && (
-                  <p className="mt-0.5 text-xs text-red-600">
-                    {t("suspendedLabel")}
-                    {user.suspensionReason && ` — ${t("suspensionReasonLabel", { reason: user.suspensionReason })}`}
-                  </p>
-                )
-              )}
+        {users.map((user) => {
+          const locked = isAccountLocked(user.lockedUntil, now);
+          return (
+            <div key={user.id} className="flex items-center justify-between px-4 py-3 text-sm">
+              <div>
+                <p className="font-medium text-slate-900">{user.profile?.displayName ?? user.email}</p>
+                <p className="text-slate-400 text-xs">{user.email}</p>
+                {user.deletedAt ? (
+                  <p className="mt-0.5 text-xs text-slate-400">{t("deletedLabel")}</p>
+                ) : (
+                  <>
+                    {user.suspendedAt && (
+                      <p className="mt-0.5 text-xs text-red-600">
+                        {t("suspendedLabel")}
+                        {user.suspensionReason && ` — ${t("suspensionReasonLabel", { reason: user.suspensionReason })}`}
+                      </p>
+                    )}
+                    {locked && <p className="mt-0.5 text-xs text-amber-600">{t("lockedLabel")}</p>}
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {user.deletedAt ? (
+                  <span className="text-slate-400">{t(ROLE_KEY[user.role])}</span>
+                ) : (
+                  <>
+                    {canChangeRoles ? (
+                      <RoleSelect userId={user.id} currentRole={user.role} disabled={user.id === currentUser?.id} />
+                    ) : (
+                      <span className="text-slate-600">{t(ROLE_KEY[user.role])}</span>
+                    )}
+                    {canSuspend && locked && <UnlockUserButton userId={user.id} />}
+                    {canSuspend && !isStaff(user.role) && user.id !== currentUser?.id && (
+                      <SuspendUserButton userId={user.id} suspended={Boolean(user.suspendedAt)} />
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              {user.deletedAt ? (
-                <span className="text-slate-400">{t(ROLE_KEY[user.role])}</span>
-              ) : (
-                <>
-                  {canChangeRoles ? (
-                    <RoleSelect userId={user.id} currentRole={user.role} disabled={user.id === currentUser?.id} />
-                  ) : (
-                    <span className="text-slate-600">{t(ROLE_KEY[user.role])}</span>
-                  )}
-                  {canSuspend && !isStaff(user.role) && user.id !== currentUser?.id && (
-                    <SuspendUserButton userId={user.id} suspended={Boolean(user.suspendedAt)} />
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

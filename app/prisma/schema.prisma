@@ -33,6 +33,13 @@ model User {
   // intermédiaire n'existe pour un compte (pas de file de modération).
   suspendedAt      DateTime?
   suspensionReason String?
+  // Verrouillage de connexion après échecs répétés (Lot 102) — protège
+  // uniquement la connexion (nouvelle tentative), jamais une session déjà
+  // active, contrairement à suspendedAt ci-dessus. Auto-expire par simple
+  // comparaison de date, aucun job requis (même principe que l'expiration
+  // d'annonce). Remis à zéro à chaque connexion réussie.
+  failedLoginAttempts Int       @default(0)
+  lockedUntil          DateTime?
   // Suppression de compte à la demande du titulaire (Lot 51) — anonymisation,
   // jamais une suppression physique de la ligne : la plupart des relations
   // vers User sont en RESTRICT (cf. audit Lot 50), une vraie suppression

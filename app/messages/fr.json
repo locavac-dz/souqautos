@@ -44,6 +44,7 @@
     "errorInvalidCredentials": "Email ou mot de passe incorrect.",
     "errorAccountSuspended": "Ce compte a été suspendu.",
     "errorAccountSuspendedReason": "Motif : {reason}",
+    "errorAccountLocked": "Trop de tentatives échouées. Compte temporairement verrouillé, réessayez dans {minutes} min.",
     "errorGeneric": "Une erreur est survenue, veuillez réessayer.",
     "errorValidation": "Veuillez vérifier les champs du formulaire."
   },
@@ -484,6 +485,9 @@
     "confirmAction": "Confirmer",
     "cancelActionSuspend": "Annuler",
     "suspendErrorGeneric": "Une erreur est survenue. Réessayez.",
+    "lockedLabel": "Compte verrouillé (échecs de connexion répétés)",
+    "unlockAction": "Déverrouiller",
+    "unlockErrorGeneric": "Une erreur est survenue. Réessayez.",
     "viewListing": "Voir l'annonce",
     "submittedOn": "Déposée le {date}",
     "sellerLabel": "Vendeur",

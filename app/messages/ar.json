@@ -44,6 +44,7 @@
     "errorInvalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "errorAccountSuspended": "تم تعليق هذا الحساب.",
     "errorAccountSuspendedReason": "السبب: {reason}",
+    "errorAccountLocked": "عدد كبير جدًا من المحاولات الفاشلة. الحساب مقفل مؤقتًا، حاول مرة أخرى خلال {minutes} دقيقة.",
     "errorGeneric": "حدث خطأ، يرجى المحاولة مرة أخرى.",
     "errorValidation": "يرجى التحقق من حقول النموذج."
   },
@@ -484,6 +485,9 @@
     "confirmAction": "تأكيد",
     "cancelActionSuspend": "إلغاء",
     "suspendErrorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "lockedLabel": "حساب مقفل (محاولات دخول فاشلة متكررة)",
+    "unlockAction": "إلغاء القفل",
+    "unlockErrorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى.",
     "viewListing": "عرض الإعلان",
     "submittedOn": "أُودع في {date}",
     "sellerLabel": "البائع",

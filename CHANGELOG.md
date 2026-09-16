@@ -1863,3 +1863,21 @@ Depuis le début du projet, chaque changement était vérifié « en conditions 
 **Hors périmètre délibéré** : CI (aucun remote/pipeline configuré sur ce dépôt — chantier à part une fois l'hébergement choisi, cf. Lot 98) ; Firefox/WebKit, tests visuels, tests de charge — ajout facile plus tard si besoin réel démontré ; le chemin IA réel (Claude) reste non testable, comme partout ailleurs dans le projet.
 
 Prochain lot proposé : à définir avec le porteur de projet — brancher `npm run test:e2e` sur un pipeline CI serait le prolongement naturel une fois l'hébergement/remote choisi ; sinon le paiement reste le seul grand chantier d'infrastructure non engagé.
+
+## Lot 102 — Verrouillage de compte après échecs de connexion répétés (2026-09-16)
+
+Referme le dernier point mineur laissé en suspens à l'audit sécurité (Lot 98) : la connexion n'était protégée que par un rate limit **par IP** (10 tentatives/15 min, déjà documenté comme contournable via un `X-Forwarded-For` usurpé) — aucun compteur **par compte**, donc un attaquant ciblant un seul compte depuis des IP tournantes n'était pas freiné. Demandé explicitement par le porteur de projet. Complète le rate limit IP existant, ne le remplace pas.
+
+**Livré**
+- `User.failedLoginAttempts`/`lockedUntil` (`prisma/schema.prisma`) — seuil de **5 échecs consécutifs**, verrouillage de **15 minutes** (même fenêtre que le rate limit IP, cohérent), auto-expiration par simple comparaison de date, aucun job requis (même principe que l'expiration d'annonce). Migration réelle appliquée sans erreur de checksum (confirme que le correctif du Lot 97 tient).
+- Logique pure extraite dans `src/lib/login-lockout.ts` (`isAccountLocked`, `computeFailedLoginUpdate`), même discipline que `checkCanSuspendUser` — testable sans base de données.
+- `src/app/api/auth/login/route.ts` : le verrouillage protège uniquement la **connexion** (nouvelle tentative), jamais une session déjà active — contrairement à `suspendedAt`, jamais vérifié dans `getCurrentUser()`. Garde intact le correctif anti-énumération du Lot 98 (`verifyPassword` toujours exécuté contre `DUMMY_PASSWORD_HASH` quand le compte n'existe pas **ou est verrouillé** — jamais un écart de temps de réponse qui révélerait l'état du compte) ; pendant le verrouillage, jamais de confirmation si le mot de passe était correct ou non. Compteur remis à zéro à chaque connexion réussie.
+- Déverrouillage admin : `POST /api/admin/users/[id]/unlock` (même gabarit que `.../unsuspend`), `UnlockUserButton` (badge « Compte verrouillé » + bouton dans `/admin/utilisateurs`), tracé dans le journal d'audit (`user.unlock`) — un verrouillage automatique, lui, n'est jamais audit-loggé (route publique non authentifiée, `writeAuditLog` exige un admin réel) : `console.warn` suffit pour la visibilité opérationnelle.
+- Nouvelle clé i18n `errorAccountLocked` (FR/AR) avec le nombre de minutes restantes, affichée dans `LoginForm.tsx`.
+- 6 nouveaux tests unitaires (`tests/login-lockout.test.ts`). 486/486 tests au vert au total.
+
+**Vérification de bout en bout en conditions réelles** : 5 mauvais mots de passe consécutifs envoyés à un vrai compte de démonstration (Sofiane Guerroudj) → 6ᵉ tentative, même avec le **bon** mot de passe, rejetée `423 account_locked` (confirmé aussi bien en API directe qu'à l'écran, message « Trop de tentatives échouées... réessayez dans 15 min. »). Déverrouillage réel depuis `/admin/utilisateurs` (badge disparu après clic) → reconnexion immédiate réussie (`200`). Entrée `user.unlock` confirmée dans `/admin/journal` (« previousFailedAttempts: 5 »). `npm run test:e2e` (Lot 101) toujours 6/6 — le mauvais mot de passe testé par `auth.spec.ts` (1 seule tentative) ne déclenche pas de faux verrouillage. Compte de test restauré à son état d'origine (`failedLoginAttempts: 0`, `lockedUntil: null`) ; `prisma/dev.db` confirmé inchangé par ailleurs (24 annonces, 9 utilisateurs).
+
+**Hors périmètre** : aucun — le point identifié au Lot 98 est traité. Reste ouvert : la décision sur `X-Forwarded-For`/reverse proxy (dépend du choix d'hébergement, toujours pas connu).
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.
