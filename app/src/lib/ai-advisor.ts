@@ -33,6 +33,13 @@ export type AdvisorTurnResult = {
 // namespaces Wizard/Listing) — jamais une traduction inventée pour ce lot :
 // même discipline que la commune (Lot 87) ou la génération (Lot 88), qui ne
 // réutilisaient une donnée qu'une fois sa source établie.
+// هجين/كهربائي/أوتوماتيكي/يدوي sont des adjectifs arabes qui s'accordent en
+// genre — "سيارة" (voiture) étant féminin, une phrase naturelle dit "سيارة
+// أوتوماتيكية"/"سيارة كهربائية", pas la forme masculine seule. Les deux
+// formes (masculine = vocabulaire déjà vérifié du site, messages/ar.json ;
+// féminine = même adjectif, accord grammatical standard, jamais une
+// traduction inventée) sont reconnues — trouvé en testant une vraie phrase
+// arabe naturelle (Lot 100).
 const FUEL_KEYWORDS: Record<string, string> = {
   essence: "ESSENCE",
   بنزين: "ESSENCE",
@@ -42,15 +49,19 @@ const FUEL_KEYWORDS: Record<string, string> = {
   "غاز البترول المسال": "GPL",
   hybride: "HYBRIDE",
   هجين: "HYBRIDE",
+  هجينة: "HYBRIDE",
   électrique: "ELECTRIQUE",
   electrique: "ELECTRIQUE",
   كهربائي: "ELECTRIQUE",
+  كهربائية: "ELECTRIQUE",
 };
 const GEARBOX_KEYWORDS: Record<string, string> = {
   automatique: "AUTOMATIQUE",
   أوتوماتيكي: "AUTOMATIQUE",
+  أوتوماتيكية: "AUTOMATIQUE",
   manuelle: "MANUELLE",
   يدوي: "MANUELLE",
+  يدوية: "MANUELLE",
 };
 const CONDITION_KEYWORDS: Record<string, string> = {
   جديدة: "NEUF",

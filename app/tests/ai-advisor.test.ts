@@ -97,6 +97,24 @@ describe("runHeuristicTurn", () => {
       expect(result.filters).toEqual({ fuelType: "DIESEL", gearbox: "AUTOMATIQUE", condition: "OCCASION" });
     });
 
+    // Trouvé en testant une vraie phrase arabe naturelle (Lot 100) :
+    // "سيارة" (voiture) est féminin, une phrase naturelle accorde donc
+    // l'adjectif au féminin ("أوتوماتيكية"/"كهربائية"/"هجينة"/"يدوية"), pas
+    // seulement la forme masculine déjà couverte ci-dessus.
+    it("reconnaît carburant/boîte accordés au féminin (accord avec « سيارة »)", () => {
+      const gearbox = runHeuristicTurn(userTurn("سيارة تويوتا أوتوماتيكية"), catalog);
+      expect(gearbox.filters).toMatchObject({ gearbox: "AUTOMATIQUE" });
+
+      const manual = runHeuristicTurn(userTurn("سيارة يدوية"), catalog);
+      expect(manual.filters).toMatchObject({ gearbox: "MANUELLE" });
+
+      const electric = runHeuristicTurn(userTurn("سيارة كهربائية"), catalog);
+      expect(electric.filters).toMatchObject({ fuelType: "ELECTRIQUE" });
+
+      const hybrid = runHeuristicTurn(userTurn("سيارة هجينة"), catalog);
+      expect(hybrid.filters).toMatchObject({ fuelType: "HYBRIDE" });
+    });
+
     it("extrait un prix exprimé en arabe (مليون/دج)", () => {
       const result = runHeuristicTurn(userTurn("أقل من 1.5 مليون"), catalog);
       expect(result.filters.priceMax).toBe("1500000");

@@ -1830,3 +1830,16 @@ Reprend les 3 constats de qualité identifiés mais volontairement non appliqué
 **Hors périmètre** : aucun — les 3 points identifiés au Lot 98 sont traités.
 
 Prochain lot proposé : à définir avec le porteur de projet — la décision sur `X-Forwarded-For`/reverse proxy (Lot 98) dépend toujours du choix d'hébergement ; sinon le paiement reste le seul grand chantier d'infrastructure non engagé.
+
+## Lot 100 — Accord féminin carburant/boîte en arabe (AI Advisor) (2026-09-16)
+
+Bug réel trouvé en testant le conseiller IA en arabe avec une vraie phrase naturelle : « سيارة تويوتا أوتوماتيكية في قسنطينة » (voiture Toyota automatique à Constantine) ne reconnaissait ni « automatique » ni les autres adjectifs de carburant/boîte — seule la marque et la wilaya étaient extraites.
+
+**Corrigé**
+- `src/lib/ai-advisor.ts` (`FUEL_KEYWORDS`, `GEARBOX_KEYWORDS`) : « أوتوماتيكي »/« يدوي »/« كهربائي »/« هجين » sont des adjectifs arabes qui s'accordent en genre — « سيارة » (voiture) étant féminin, une phrase naturelle dit « سيارة أوتوماتيكية »/« سيارة كهربائية », pas seulement la forme masculine (celle déjà présente, reprise telle quelle des traductions vérifiées de `messages/ar.json`). Les deux formes sont désormais reconnues — la forme féminine ajoutée n'est pas une traduction inventée, seulement l'accord grammatical standard du même adjectif déjà vérifié.
+- 1 nouveau test unitaire (`tests/ai-advisor.test.ts`) couvrant les 4 formes féminines. 480/480 tests au vert au total.
+- Vérification de bout en bout en conditions réelles, avec le compte de démonstration réel Yasmine Cherif en interface arabe : « سيارة تويوتا أوتوماتيكية في قسنطينة » → `gearbox: "AUTOMATIQUE"` désormais bien extrait (absent avant le correctif), 0 résultat réel (légitime, aucune Toyota automatique à Constantine dans les données de démo) ; « سيارة أوتوماتيكية في الجزائر » → 5 annonces réelles trouvées, dont la BMW Série 3 2019 attendue (Alger, Automatique).
+
+**Hors périmètre délibéré** : les autres adjectifs éventuellement genrés dans le reste du repli heuristique (aucun autre identifié à ce jour) ; la reconnaissance des chiffres indo-arabes ٠-٩, toujours hors périmètre depuis le Lot 89.
+
+Prochain lot proposé : à définir avec le porteur de projet — la décision sur `X-Forwarded-For`/reverse proxy (Lot 98) dépend toujours du choix d'hébergement ; sinon le paiement reste le seul grand chantier d'infrastructure non engagé.
