@@ -26,7 +26,7 @@ import { ContactSellerButton } from "@/components/ContactSellerButton";
 import { ReportListingButton } from "@/components/ReportListingButton";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
-import { buildVehicleJsonLd, buildBreadcrumbJsonLd } from "@/lib/structured-data";
+import { buildVehicleJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
 const BADGE_KEY = PRICE_BADGE_KEY;
@@ -211,11 +211,11 @@ export default async function ListingDetailPage({
     <div className="mx-auto max-w-4xl px-4 py-10">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(vehicleJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(vehicleJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
 
       <Breadcrumbs items={breadcrumbItems} />

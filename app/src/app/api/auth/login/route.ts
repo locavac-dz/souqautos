@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validation/auth";
-import { verifyPassword } from "@/lib/auth-server/password";
+import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/auth-server/password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, safeUser } from "@/lib/http";
@@ -24,8 +24,14 @@ export async function POST(request: NextRequest) {
   const { email, password } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  // Même message générique que l'email existe ou non — ne pas révéler l'existence d'un compte.
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+  // bcrypt.compare() toujours exécuté, même si le compte n'existe pas (contre
+  // DUMMY_PASSWORD_HASH) — jamais un court-circuit `!user || ...` qui
+  // sauterait l'appel bcrypt, ce qui rendrait la réponse mesurablement plus
+  // rapide pour un email inconnu et permettrait d'énumérer les comptes
+  // existants par le temps de réponse (Lot 98, audit sécurité). Même message
+  // générique dans les deux cas — ne jamais révéler l'existence d'un compte.
+  const passwordValid = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
+  if (!user || !passwordValid) {
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
   }
 

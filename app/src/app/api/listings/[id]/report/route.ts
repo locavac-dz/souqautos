@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -54,14 +55,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "already_reported" }, { status: 409 });
   }
 
-  await prisma.report.create({
-    data: {
-      listingId: id,
-      authorId: user.id,
-      reason: parsed.data.reason,
-      comment: parsed.data.comment?.trim() || null,
-    },
-  });
+  // Le `findUnique` ci-dessus évite l'aller-retour DB dans le cas courant,
+  // mais ne protège pas contre deux soumissions quasi simultanées (double
+  // clic, retentative réseau) — la contrainte unique reste la seule garantie
+  // réelle contre un doublon, d'où le try/catch P2002 (même discipline que
+  // upgrade-formula/route.ts et subscription/upgrade/route.ts).
+  try {
+    await prisma.report.create({
+      data: {
+        listingId: id,
+        authorId: user.id,
+        reason: parsed.data.reason,
+        comment: parsed.data.comment?.trim() || null,
+      },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json({ error: "already_reported" }, { status: 409 });
+    }
+    throw err;
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

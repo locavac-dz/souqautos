@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
-import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
+import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { hasAdvancedProTools, priceForAnyTier, quotaForTier } from "@/lib/pro-subscription";
 import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
@@ -57,7 +57,7 @@ export default async function ProfessionalsLandingPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }} />
 
       <Breadcrumbs items={breadcrumbItems} />
 

@@ -25,6 +25,12 @@ export async function PATCH(
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
+  // Vérification de débit avant tout accès DB (Lot 98, audit sécurité/qualité
+  // — même raisonnement que collaborators/route.ts).
+  if (!(await checkRateLimit(`edit-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const { id, collaboratorId } = await params;
   const account = await prisma.professionalAccount.findUnique({ where: { id } });
   if (!account) {
@@ -32,10 +38,6 @@ export async function PATCH(
   }
   if (!canManageCollaborators({ isOwner: account.userId === user.id, permissions: null })) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
-
-  if (!(await checkRateLimit(`edit-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const collaborator = await prisma.proCollaborator.findUnique({ where: { id: collaboratorId } });
@@ -66,6 +68,12 @@ export async function DELETE(
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
+  // Vérification de débit avant tout accès DB (Lot 98, audit sécurité/qualité
+  // — même raisonnement que collaborators/route.ts).
+  if (!(await checkRateLimit(`remove-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const { id, collaboratorId } = await params;
   const account = await prisma.professionalAccount.findUnique({ where: { id } });
   if (!account) {
@@ -73,10 +81,6 @@ export async function DELETE(
   }
   if (!canManageCollaborators({ isOwner: account.userId === user.id, permissions: null })) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
-
-  if (!(await checkRateLimit(`remove-collaborator:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const collaborator = await prisma.proCollaborator.findUnique({ where: { id: collaboratorId } });

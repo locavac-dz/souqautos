@@ -1,3 +1,14 @@
+// Sérialise un objet JSON-LD pour un <script dangerouslySetInnerHTML> — sans
+// échappement, un titre/description d'annonce ou d'article contenant
+// littéralement "</script><script>...</script>" fermerait prématurément la
+// balise et injecterait du script exécutable (XSS stockée) chez tout
+// visiteur de la page, `JSON.stringify` n'échappant jamais "<". Utilisé par
+// TOUS les blocs JSON-LD de l'application, jamais un JSON.stringify direct
+// dans un dangerouslySetInnerHTML.
+export function safeJsonLdStringify(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 export function buildBreadcrumbJsonLd(items: { name: string; url: string }[]) {
   return {
     "@context": "https://schema.org",

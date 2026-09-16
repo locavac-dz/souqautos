@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { getListingStats } from "@/lib/catalogue-stats";
-import { buildBreadcrumbJsonLd } from "@/lib/structured-data";
+import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -119,7 +119,7 @@ export default async function ModelPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }} />
 
       <Breadcrumbs items={breadcrumbItems} />
 

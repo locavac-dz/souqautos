@@ -13,9 +13,14 @@ import { SITE_URL } from "@/lib/site";
 const MAX_AUTO_RENEWALS_PER_SWEEP = 50;
 
 export async function sweepAutoRenewals(now: Date = new Date()): Promise<void> {
+  // orderBy par expiration la plus ancienne (Lot 98, audit sécurité/qualité)
+  // — même raisonnement que sweepExpiringListingsForReminders : sans lui, le
+  // `take` échantillonne arbitrairement dès que plus de
+  // MAX_AUTO_RENEWALS_PER_SWEEP annonces sont expirées en même temps.
   const candidates = await prisma.listing.findMany({
     where: { status: "PUBLIEE", autoRenew: true, expiresAt: { lt: now } },
     include: { seller: { include: { professionalAccount: { include: { subscription: true } } } } },
+    orderBy: { expiresAt: "asc" },
     take: MAX_AUTO_RENEWALS_PER_SWEEP,
   });
 

@@ -12,9 +12,17 @@ import { SITE_URL } from "@/lib/site";
 const MAX_REMINDERS_PER_SWEEP = 50;
 
 export async function sweepExpiringListingsForReminders(now: Date = new Date()): Promise<void> {
+  // orderBy indispensable ici (Lot 98, audit sécurité/qualité) : sans lui, le
+  // `take` échantillonne un sous-ensemble arbitraire de l'ordre par défaut de
+  // la base dès que plus de MAX_REMINDERS_PER_SWEEP annonces sont éligibles —
+  // une annonce dont la fenêtre de rappel vient de s'ouvrir pourrait alors ne
+  // jamais être tirée, aucun email de rappel jamais envoyé. Trier par
+  // expiration la plus proche garantit que les annonces qui en ont le plus
+  // besoin sont toujours traitées en premier.
   const candidates = await prisma.listing.findMany({
     where: { status: "PUBLIEE", expiryReminderSentAt: null, expiresAt: { not: null } },
     include: { seller: true },
+    orderBy: { expiresAt: "asc" },
     take: MAX_REMINDERS_PER_SWEEP,
   });
 

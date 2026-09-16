@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildBreadcrumbJsonLd, buildVehicleJsonLd } from "@/lib/structured-data";
+import { buildBreadcrumbJsonLd, buildVehicleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 
 describe("buildBreadcrumbJsonLd", () => {
   it("numbers items starting at 1 in order", () => {
@@ -59,5 +59,38 @@ describe("buildVehicleJsonLd", () => {
       value: 85_000,
       unitCode: "KMT",
     });
+  });
+});
+
+// Lot 98 (audit sécurité) : une annonce/un article avec un titre/description
+// contenant littéralement "</script>" ne doit jamais pouvoir fermer la
+// balise <script type="application/ld+json"> qui l'embarque — ce qui
+// injecterait du script exécutable chez tout visiteur (XSS stockée).
+describe("safeJsonLdStringify", () => {
+  it("échappe les '<' pour empêcher une évasion de balise </script>", () => {
+    const malicious = buildVehicleJsonLd({
+      title: '</script><script>alert(document.cookie)</script>',
+      description: "Description normale",
+      url: "https://example.com/annonce/abc",
+      images: [],
+      price: 1,
+      year: 2019,
+      mileage: 1,
+      fuelTypeLabel: "Diesel",
+      gearboxLabel: "Manuelle",
+    });
+
+    const serialized = safeJsonLdStringify(malicious);
+    expect(serialized).not.toContain("</script>");
+    expect(serialized).not.toContain("<script>");
+    expect(serialized).toContain("\\u003c/script>");
+    // Le contenu reste intact une fois désérialisé côté navigateur — seul
+    // l'échappement "<" change, jamais une perte ou altération de données.
+    expect(JSON.parse(serialized).name).toBe(malicious.name);
+  });
+
+  it("produit un JSON strictement identique à JSON.stringify pour un contenu sans '<'", () => {
+    const data = { a: 1, b: "texte normal" };
+    expect(safeJsonLdStringify(data)).toBe(JSON.stringify(data));
   });
 });

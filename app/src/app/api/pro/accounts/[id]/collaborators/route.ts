@@ -20,6 +20,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
+  // Vérification de débit avant tout accès DB (même ordre que les autres
+  // routes de l'application) : un appelant non autorisé sur cette ressource
+  // n'échappe pas au rate limit en le faisant échouer après coup (Lot 98,
+  // audit sécurité/qualité).
+  if (!(await checkRateLimit(`add-collaborator:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const { id } = await params;
   const account = await prisma.professionalAccount.findUnique({ where: { id } });
   if (!account) {
@@ -27,10 +35,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
   if (!canManageCollaborators({ isOwner: account.userId === user.id, permissions: null })) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
-
-  if (!(await checkRateLimit(`add-collaborator:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const body = await request.json().catch(() => null);

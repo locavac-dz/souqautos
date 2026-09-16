@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
-import { buildBreadcrumbJsonLd, buildArticleJsonLd } from "@/lib/structured-data";
+import { buildBreadcrumbJsonLd, buildArticleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 async function getPublishedArticle(slug: string) {
@@ -77,9 +77,9 @@ export default async function BlogArticlePage({
     <div className="mx-auto max-w-3xl px-4 py-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(articleJsonLd) }} />
 
       <Breadcrumbs items={breadcrumbItems} />
 

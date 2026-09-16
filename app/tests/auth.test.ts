@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashPassword, verifyPassword } from "@/lib/auth-server/password";
+import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/auth-server/password";
 import { createSessionToken, verifySessionToken } from "@/lib/auth-server/session";
 import { registerSchema, loginSchema } from "@/lib/validation/auth";
 
@@ -13,6 +13,20 @@ describe("password hashing", () => {
   it("rejects the wrong password", async () => {
     const hash = await hashPassword("correct-horse-battery-staple");
     await expect(verifyPassword("wrong-password", hash)).resolves.toBe(false);
+  });
+});
+
+// Lot 98 (audit sécurité) : le hash factice utilisé par la route de connexion
+// pour égaliser le temps de réponse d'un email inconnu (jamais de
+// court-circuit qui sauterait bcrypt.compare()) doit être un vrai hash bcrypt
+// valide — sinon verifyPassword échouerait immédiatement (rejet synchrone)
+// au lieu d'exécuter un vrai bcrypt.compare(), ce qui recréerait exactement
+// l'écart de temps que ce hash est censé éliminer.
+describe("DUMMY_PASSWORD_HASH (atténuation de l'énumération de comptes par le temps de réponse)", () => {
+  it("est un hash bcrypt valide qui ne correspond à aucun mot de passe réel", async () => {
+    expect(DUMMY_PASSWORD_HASH).toMatch(/^\$2[aby]\$\d{2}\$/);
+    await expect(verifyPassword("n'importe quel mot de passe", DUMMY_PASSWORD_HASH)).resolves.toBe(false);
+    await expect(verifyPassword("", DUMMY_PASSWORD_HASH)).resolves.toBe(false);
   });
 });
 
