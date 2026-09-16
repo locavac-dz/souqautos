@@ -44,6 +44,10 @@ next-env.d.ts
 # prisma (dev SQLite database)
 /prisma/dev.db
 /prisma/dev.db-journal
+/prisma/e2e.db
+/prisma/e2e.db-journal
+/playwright-report/
+/test-results/
 
 # fichiers uploadés par les utilisateurs (photos d'annonces) — stockage local de dev,
 # à migrer vers un stockage S3-compatible pour staging/prod (cf. docs/ARCHITECTURE.md §06)

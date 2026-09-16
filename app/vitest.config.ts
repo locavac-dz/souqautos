@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, defaultExclude } from "vitest/config";
 
 export default defineConfig({
   resolve: {
@@ -6,5 +6,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // e2e/ contient les specs Playwright (e2e/*.spec.ts) — une API de test
+    // différente (@playwright/test), jamais exécutées par vitest (Lot 101).
+    // Étend la liste par défaut de vitest plutôt que de la remplacer.
+    exclude: [...defaultExclude, "e2e/**"],
   },
 });

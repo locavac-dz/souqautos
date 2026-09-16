@@ -204,10 +204,27 @@ async function main() {
     const id = await upsertDemoSeller(seller);
     sellerIdByKey.set(seller.key, id);
   }
-  const sara = await prisma.user.findUnique({ where: { email: "sara.hamdi@example.dz" } });
-  if (!sara) {
-    throw new Error("Compte sara.hamdi@example.dz introuvable — ce persona de test doit déjà exister.");
-  }
+  // "sara.hamdi" (persona utilisé ailleurs pour vérifier les permissions
+  // pro) n'était jamais créé par aucun script — présent uniquement parce
+  // qu'il avait été mis en place manuellement une fois sur cette base de
+  // développement, jamais reproduit depuis zéro (trouvé en écrivant les
+  // tests E2E, Lot 101 : le seed échouait sur une base neuve). `upsert` avec
+  // `update: {}` : sans risque sur la vraie base de dev où le compte existe
+  // déjà (aucune modification), crée un compte minimal mais réel sur une
+  // base neuve.
+  const saraPasswordHash = await bcrypt.hash(DEMO_PASSWORD, 12);
+  const sara = await prisma.user.upsert({
+    where: { email: "sara.hamdi@example.dz" },
+    update: {},
+    create: {
+      email: "sara.hamdi@example.dz",
+      passwordHash: saraPasswordHash,
+      role: "PROFESSIONNEL",
+      emailVerifiedAt: new Date(),
+      profile: { create: { displayName: "Sara Hamdi", wilayaId: 16 } },
+      professionalAccount: { create: { nomCommercial: "Auto Sara Motors", wilayaId: 16, badgeVerifie: true } },
+    },
+  });
   sellerIdByKey.set("sara", sara.id);
   console.log(`Vendeurs de démonstration prêts : ${sellerIdByKey.size}`);
 
