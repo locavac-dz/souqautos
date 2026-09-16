@@ -1,4 +1,5 @@
 import { sanitizeParsedFilters, type ParsedSearchFilters, type CatalogBrand, type CatalogWilaya } from "./ai-search";
+import { callAnthropicMessages } from "./anthropic-client";
 
 // Lot 89 — AI Advisor (§ cahier d'architecture, phase V3 « AI Advisor/Buyer »).
 // Découverte guidée en conversation multi-tours : à chaque tour, un seul
@@ -142,35 +143,39 @@ function findAllCatalogMatches<T>(
 // extraction par mots-clés/sous-chaînes, cumulée sur tous les messages
 // utilisateur de la conversation (pour ne pas perdre le contexte d'un tour
 // à l'autre même sans raisonnement IA réel).
+//
+// Un modèle nommé seul (ex. "كليو"/"Clio" sans "Renault") retrouve sa marque
+// implicitement — un acheteur nomme rarement marque ET modèle en toutes
+// lettres dans une phrase informelle (Lot 94). Mais si le même nom de modèle
+// existe sous plusieurs marques (ex. "Duster" chez Dacia ET Renault),
+// impossible de deviner laquelle sans risquer de filtrer sur la mauvaise
+// marque — mieux vaut ne rien assigner (le texte reste disponible comme
+// résidu libre) que de choisir arbitrairement la première trouvée.
+function resolveBrandAndModel(
+  lower: string,
+  catalog: AdvisorCatalog
+): { brandId?: number; modelId?: number } {
+  const brand = findCatalogMatch(lower, catalog.brands, (b) => [b.name, b.nameAr ?? undefined]);
+  if (brand) {
+    const model = findCatalogMatch(lower, brand.models, (m) => [m.name, m.nameAr ?? undefined]);
+    return model ? { brandId: brand.id, modelId: model.id } : { brandId: brand.id };
+  }
+
+  const allModels = catalog.brands.flatMap((b) => b.models.map((m) => ({ ...m, brandId: b.id })));
+  const matchingModels = findAllCatalogMatches(lower, allModels, (m) => [m.name, m.nameAr ?? undefined]);
+  const distinctBrandIds = new Set(matchingModels.map((m) => m.brandId));
+  if (matchingModels.length > 0 && distinctBrandIds.size === 1) {
+    return { brandId: matchingModels[0].brandId, modelId: matchingModels[0].id };
+  }
+  return {};
+}
+
 function extractFiltersFromText(
   text: string,
   catalog: AdvisorCatalog
 ): Record<string, unknown> {
   const lower = text.toLowerCase();
-  const raw: Record<string, unknown> = {};
-
-  const brand = findCatalogMatch(lower, catalog.brands, (b) => [b.name, b.nameAr ?? undefined]);
-  if (brand) {
-    raw.brandId = brand.id;
-    const model = findCatalogMatch(lower, brand.models, (m) => [m.name, m.nameAr ?? undefined]);
-    if (model) raw.modelId = model.id;
-  } else {
-    // Un modèle nommé seul (ex. "كليو"/"Clio" sans "Renault") retrouve sa
-    // marque implicitement — un acheteur nomme rarement marque ET modèle en
-    // toutes lettres dans une phrase informelle (Lot 94). Mais si le même nom
-    // de modèle existe sous plusieurs marques (ex. "Duster" chez Dacia ET
-    // Renault), impossible de deviner laquelle sans risquer de filtrer sur
-    // la mauvaise marque — mieux vaut ne rien assigner (le texte reste
-    // disponible comme résidu libre) que de choisir arbitrairement la
-    // première trouvée.
-    const allModels = catalog.brands.flatMap((b) => b.models.map((m) => ({ ...m, brandId: b.id })));
-    const matchingModels = findAllCatalogMatches(lower, allModels, (m) => [m.name, m.nameAr ?? undefined]);
-    const distinctBrandIds = new Set(matchingModels.map((m) => m.brandId));
-    if (matchingModels.length > 0 && distinctBrandIds.size === 1) {
-      raw.brandId = matchingModels[0].brandId;
-      raw.modelId = matchingModels[0].id;
-    }
-  }
+  const raw: Record<string, unknown> = { ...resolveBrandAndModel(lower, catalog) };
 
   const wilaya = findCatalogMatch(lower, catalog.wilayas, (w) => [w.nomFr, w.nomAr]);
   if (wilaya) raw.wilayaId = wilaya.id;
@@ -226,25 +231,11 @@ async function callAnthropicForTurn(
     .join(", ");
   const wilayaList = catalog.wilayas.map((w) => `${w.id}:${w.nomFr}${w.nomAr ? `/${w.nomAr}` : ""}`).join(", ");
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 400,
-      system: `Tu es un conseiller d'achat automobile pour la plateforme Souq Auto (Algérie), en conversation avec un acheteur qui cherche un véhicule. À chaque tour, décide : soit poser UNE SEULE question de clarification si, sur l'ensemble de la conversation, moins de deux critères significatifs sont connus (marque/catégorie, budget, wilaya...), soit lancer une recherche dès que tu en sais assez. Critères disponibles : brandId (nombre, choisi EXACTEMENT dans cette liste id:nom — ${brandList}), modelId (nombre, choisi EXACTEMENT dans cette liste id:marque modèle — ${modelList} — uniquement si la marque correspondante est aussi identifiée), wilayaId (nombre, choisi EXACTEMENT dans cette liste id:nom — ${wilayaList}), category (VOITURE, UTILITAIRE, POIDS_LOURD, DEUX_ROUES, AUTRE), fuelType (ESSENCE, DIESEL, GPL, HYBRIDE, ELECTRIQUE), gearbox (MANUELLE, AUTOMATIQUE), condition (NEUF, OCCASION), priceMin/priceMax (nombres en dinars algériens), yearMin/yearMax (années). N'invente JAMAIS un id absent des listes fournies — omets le critère plutôt que d'approximer. Tu n'as accès à AUCUNE donnée d'annonce réelle : ne mentionne, ne décris et ne compare JAMAIS une annonce précise, ce serait une invention. Réponds UNIQUEMENT avec un objet JSON de la forme {"action": "clarify"|"search", "filters": {tous les critères comprises jusqu'ici, cumulés sur toute la conversation}, "question": string|null} — "question" rempli uniquement si action="clarify", une seule question courte et naturelle en ${locale === "ar" ? "arabe" : "français"} portant sur les critères de recherche (jamais sur une annonce), sinon null. Aucun texte hors de ce JSON.`,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-    }),
+  const text = await callAnthropicMessages({
+    maxTokens: 400,
+    system: `Tu es un conseiller d'achat automobile pour la plateforme Souq Auto (Algérie), en conversation avec un acheteur qui cherche un véhicule. À chaque tour, décide : soit poser UNE SEULE question de clarification si, sur l'ensemble de la conversation, moins de deux critères significatifs sont connus (marque/catégorie, budget, wilaya...), soit lancer une recherche dès que tu en sais assez. Critères disponibles : brandId (nombre, choisi EXACTEMENT dans cette liste id:nom — ${brandList}), modelId (nombre, choisi EXACTEMENT dans cette liste id:marque modèle — ${modelList} — uniquement si la marque correspondante est aussi identifiée), wilayaId (nombre, choisi EXACTEMENT dans cette liste id:nom — ${wilayaList}), category (VOITURE, UTILITAIRE, POIDS_LOURD, DEUX_ROUES, AUTRE), fuelType (ESSENCE, DIESEL, GPL, HYBRIDE, ELECTRIQUE), gearbox (MANUELLE, AUTOMATIQUE), condition (NEUF, OCCASION), priceMin/priceMax (nombres en dinars algériens), yearMin/yearMax (années). N'invente JAMAIS un id absent des listes fournies — omets le critère plutôt que d'approximer. Tu n'as accès à AUCUNE donnée d'annonce réelle : ne mentionne, ne décris et ne compare JAMAIS une annonce précise, ce serait une invention. Réponds UNIQUEMENT avec un objet JSON de la forme {"action": "clarify"|"search", "filters": {tous les critères comprises jusqu'ici, cumulés sur toute la conversation}, "question": string|null} — "question" rempli uniquement si action="clarify", une seule question courte et naturelle en ${locale === "ar" ? "arabe" : "français"} portant sur les critères de recherche (jamais sur une annonce), sinon null. Aucun texte hors de ce JSON.`,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
   });
-
-  if (!res.ok) return null;
-
-  const data = (await res.json()) as { content?: { text?: string }[] };
-  const text = data.content?.[0]?.text;
   if (!text) return null;
 
   const parsed = JSON.parse(text) as { action?: unknown; filters?: unknown; question?: unknown };

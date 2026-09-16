@@ -1,4 +1,5 @@
 import type { ListingSuggestionInput } from "./validation/listing-suggestion";
+import { callAnthropicMessages } from "./anthropic-client";
 
 // Suggestion de titre/description à l'étape 7 de l'assistant de publication
 // (§ cahier d'architecture, phase V3 « AI Listing »). Comme l'Assistant IA de
@@ -53,26 +54,12 @@ export function generateHeuristicSuggestion(input: ListingSuggestionInput): {
 async function callAnthropic(
   input: ListingSuggestionInput
 ): Promise<{ title: string; description: string } | null> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 500,
-      system:
-        'Tu rédiges des annonces de vente de véhicules d\'occasion en Algérie pour la plateforme Souq Auto. Réponds UNIQUEMENT avec un objet JSON de la forme {"title": string, "description": string}, sans aucun texte avant ou après. N\'invente JAMAIS une caractéristique qui ne t\'a pas été fournie explicitement dans les données du véhicule. Le titre fait au maximum 120 caractères. La description fait entre 30 et 500 caractères, en français, dans un ton clair et factuel, sans superlatifs exagérés ni promesses non vérifiables.',
-      messages: [{ role: "user", content: JSON.stringify(input) }],
-    }),
+  const text = await callAnthropicMessages({
+    maxTokens: 500,
+    system:
+      'Tu rédiges des annonces de vente de véhicules d\'occasion en Algérie pour la plateforme Souq Auto. Réponds UNIQUEMENT avec un objet JSON de la forme {"title": string, "description": string}, sans aucun texte avant ou après. N\'invente JAMAIS une caractéristique qui ne t\'a pas été fournie explicitement dans les données du véhicule. Le titre fait au maximum 120 caractères. La description fait entre 30 et 500 caractères, en français, dans un ton clair et factuel, sans superlatifs exagérés ni promesses non vérifiables.',
+    messages: [{ role: "user", content: JSON.stringify(input) }],
   });
-
-  if (!res.ok) return null;
-
-  const data = (await res.json()) as { content?: { text?: string }[] };
-  const text = data.content?.[0]?.text;
   if (!text) return null;
 
   const parsed = JSON.parse(text) as { title?: unknown; description?: unknown };

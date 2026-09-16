@@ -5,6 +5,7 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { CompareToggle } from "@/components/compare/CompareToggle";
 import type { PriceBadge } from "@/lib/price-badge";
 import { PRICE_BADGE_STYLE, PRICE_BADGE_KEY } from "@/lib/price-badge-style";
+import { resolveListingLabels } from "@/lib/site";
 
 type CardListing = {
   id: string;
@@ -61,9 +62,7 @@ export async function ListingCard({
   const tPriceBadge = await getTranslations("PriceBadge");
   const tPro = await getTranslations("Pro");
 
-  const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
-  const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
-  const wilayaLabel = locale === "ar" ? listing.wilaya.nomAr : listing.wilaya.nomFr;
+  const { brandLabel, modelLabel, wilayaLabel } = resolveListingLabels(listing, locale);
   const communeLabel = listing.commune ? (locale === "ar" ? listing.commune.nomAr : listing.commune.nomFr) : null;
   const locationLabel = communeLabel ? `${communeLabel}, ${wilayaLabel}` : wilayaLabel;
 

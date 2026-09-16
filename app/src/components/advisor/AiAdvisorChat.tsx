@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { resolveListingLabels } from "@/lib/site";
 
 type Role = "user" | "assistant";
 
@@ -126,9 +127,7 @@ export function AiAdvisorChat() {
 // que l'acheteur reconnaisse l'annonce et clique vers la vraie fiche (où se
 // trouvent favoris/comparateur réels).
 function AdvisorListingCard({ listing, locale }: { listing: AdvisorListing; locale: string }) {
-  const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
-  const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
-  const wilayaLabel = locale === "ar" ? listing.wilaya.nomAr : listing.wilaya.nomFr;
+  const { brandLabel, modelLabel, wilayaLabel } = resolveListingLabels(listing, locale);
 
   return (
     <Link

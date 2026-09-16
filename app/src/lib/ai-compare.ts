@@ -9,6 +9,8 @@
 // est configurée, avec un repli honnête sinon (pas de paragraphe, seulement
 // les faits saillants structurés, affichés via les traductions existantes).
 
+import { callAnthropicMessages } from "./anthropic-client";
+
 export type ComparableListingFacts = {
   id: string;
   price: number;
@@ -63,25 +65,12 @@ export function computeCompareHighlights(listings: ComparableListingFacts[]): Co
 type NarrativeListing = ComparableListingFacts & { title: string };
 
 async function callAnthropicForNarrative(listings: NarrativeListing[], locale: string): Promise<string | null> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 400,
-      system: `Tu résumes une comparaison entre véhicules d'occasion pour la plateforme Souq Auto (Algérie). Réponds UNIQUEMENT avec un paragraphe de 2 à 4 phrases en ${locale === "ar" ? "arabe" : "français"}, factuel et neutre, sans superlatifs marketing. N'invente JAMAIS une caractéristique absente des données fournies. Ne donne pas de conseil d'achat définitif, seulement une synthèse des différences.`,
-      messages: [{ role: "user", content: JSON.stringify(listings) }],
-    }),
+  const text = await callAnthropicMessages({
+    maxTokens: 400,
+    system: `Tu résumes une comparaison entre véhicules d'occasion pour la plateforme Souq Auto (Algérie). Réponds UNIQUEMENT avec un paragraphe de 2 à 4 phrases en ${locale === "ar" ? "arabe" : "français"}, factuel et neutre, sans superlatifs marketing. N'invente JAMAIS une caractéristique absente des données fournies. Ne donne pas de conseil d'achat définitif, seulement une synthèse des différences.`,
+    messages: [{ role: "user", content: JSON.stringify(listings) }],
   });
-
-  if (!res.ok) return null;
-  const data = (await res.json()) as { content?: { text?: string }[] };
-  const text = data.content?.[0]?.text;
-  return typeof text === "string" && text.trim() ? text.trim().slice(0, 1000) : null;
+  return text ? text.trim().slice(0, 1000) : null;
 }
 
 export type CompareSummary = {

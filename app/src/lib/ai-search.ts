@@ -6,6 +6,8 @@
 // aucune régression pour les visiteurs de ce site tant qu'aucune clé n'est
 // fournie.
 
+import { callAnthropicMessages } from "./anthropic-client";
+
 export type ParsedSearchFilters = Partial<
   Record<
     | "q"
@@ -84,25 +86,11 @@ async function callAnthropic(
     .join(", ");
   const wilayaList = catalog.wilayas.map((w) => `${w.id}:${w.nomFr}`).join(", ");
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 300,
-      system: `Tu extrais des critères de recherche de véhicule d'occasion depuis une phrase en français ou en arabe algérien, pour la plateforme Souq Auto. Réponds UNIQUEMENT avec un objet JSON, sans aucun texte autour, ne contenant QUE les clés dont tu es raisonnablement certain (omets toute clé incertaine) parmi : brandId (nombre, choisi EXACTEMENT dans cette liste id:nom — ${brandList}), modelId (nombre, choisi EXACTEMENT dans cette liste id:marque modèle — ${modelList} — uniquement si la marque correspondante est aussi identifiée), wilayaId (nombre, choisi EXACTEMENT dans cette liste id:nom — ${wilayaList}), category (une valeur EXACTE parmi ${CATEGORIES.join(", ")}), fuelType (${FUEL_TYPES.join(", ")}), gearbox (${GEARBOXES.join(", ")}), condition (${CONDITIONS.join(", ")}), priceMin/priceMax (nombres en dinars algériens), yearMin/yearMax (années). N'invente JAMAIS un id absent des listes fournies — omets le champ plutôt que d'approximer. Si la phrase contient un terme de recherche libre non couvert par ces champs (ex: un mot dans le titre de l'annonce), inclus-le dans "q", sinon omets "q".`,
-      messages: [{ role: "user", content: query }],
-    }),
+  const text = await callAnthropicMessages({
+    maxTokens: 300,
+    system: `Tu extrais des critères de recherche de véhicule d'occasion depuis une phrase en français ou en arabe algérien, pour la plateforme Souq Auto. Réponds UNIQUEMENT avec un objet JSON, sans aucun texte autour, ne contenant QUE les clés dont tu es raisonnablement certain (omets toute clé incertaine) parmi : brandId (nombre, choisi EXACTEMENT dans cette liste id:nom — ${brandList}), modelId (nombre, choisi EXACTEMENT dans cette liste id:marque modèle — ${modelList} — uniquement si la marque correspondante est aussi identifiée), wilayaId (nombre, choisi EXACTEMENT dans cette liste id:nom — ${wilayaList}), category (une valeur EXACTE parmi ${CATEGORIES.join(", ")}), fuelType (${FUEL_TYPES.join(", ")}), gearbox (${GEARBOXES.join(", ")}), condition (${CONDITIONS.join(", ")}), priceMin/priceMax (nombres en dinars algériens), yearMin/yearMax (années). N'invente JAMAIS un id absent des listes fournies — omets le champ plutôt que d'approximer. Si la phrase contient un terme de recherche libre non couvert par ces champs (ex: un mot dans le titre de l'annonce), inclus-le dans "q", sinon omets "q".`,
+    messages: [{ role: "user", content: query }],
   });
-
-  if (!res.ok) return null;
-
-  const data = (await res.json()) as { content?: { text?: string }[] };
-  const text = data.content?.[0]?.text;
   if (!text) return null;
 
   const parsed = JSON.parse(text);

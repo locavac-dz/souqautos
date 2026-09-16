@@ -131,50 +131,51 @@ export async function getFraudSignalsForListings(
 ): Promise<Map<string, FraudSignals>> {
   const currentYear = new Date().getFullYear();
 
+  // Ces 4 requêtes ne dépendent que de `listings` (jamais du résultat d'une
+  // autre) — lancées ensemble via Promise.all plutôt que séquentiellement,
+  // un seul aller-retour réseau de plus que la plus lente d'entre elles au
+  // lieu de la somme des quatre (Lot 97).
   const allHashes = Array.from(
     new Set(listings.flatMap((l) => l.photos.map((p) => p.sha256)).filter((h) => h !== ""))
   );
-
-  const matchingPhotos =
-    allHashes.length === 0
-      ? []
-      : await prisma.listingPhoto.findMany({
-          where: { sha256: { in: allHashes } },
-          select: { sha256: true, listing: { select: { sellerId: true } } },
-        });
-  const otherPhotos = matchingPhotos.map((p) => ({ sha256: p.sha256, sellerId: p.listing.sellerId }));
-
   const allContentHashes = Array.from(new Set(listings.map((l) => l.contentHash).filter((h) => h !== "")));
-  const matchingContent =
-    allContentHashes.length === 0
-      ? []
-      : await prisma.listing.findMany({
-          where: { contentHash: { in: allContentHashes } },
-          select: { contentHash: true, sellerId: true },
-        });
-
   const pairs = new Map<string, { brandId: number; modelId: number }>();
   for (const listing of listings) {
     if (listing.brandId && listing.modelId) {
       pairs.set(`${listing.brandId}-${listing.modelId}`, { brandId: listing.brandId, modelId: listing.modelId });
     }
   }
-  const rowsByPair = new Map<string, Awaited<ReturnType<typeof loadComparableRows>>>();
-  await Promise.all(
-    Array.from(pairs.entries()).map(async ([key, { brandId, modelId }]) => {
-      rowsByPair.set(key, await loadComparableRows(brandId, modelId));
-    })
-  );
-
   const sellerIds = Array.from(new Set(listings.map((l) => l.sellerId)));
-  const rejectionGroups =
+
+  const [matchingPhotos, matchingContent, rowsByPairEntries, rejectionGroups] = await Promise.all([
+    allHashes.length === 0
+      ? Promise.resolve([])
+      : prisma.listingPhoto.findMany({
+          where: { sha256: { in: allHashes } },
+          select: { sha256: true, listing: { select: { sellerId: true } } },
+        }),
+    allContentHashes.length === 0
+      ? Promise.resolve([])
+      : prisma.listing.findMany({
+          where: { contentHash: { in: allContentHashes } },
+          select: { contentHash: true, sellerId: true },
+        }),
+    Promise.all(
+      Array.from(pairs.entries()).map(
+        async ([key, { brandId, modelId }]) => [key, await loadComparableRows(brandId, modelId)] as const
+      )
+    ),
     sellerIds.length === 0
-      ? []
-      : await prisma.listing.groupBy({
+      ? Promise.resolve([])
+      : prisma.listing.groupBy({
           by: ["sellerId"],
           where: { sellerId: { in: sellerIds }, status: { in: ["REFUSEE", "SUSPENDUE"] } },
           _count: { _all: true },
-        });
+        }),
+  ]);
+
+  const otherPhotos = matchingPhotos.map((p) => ({ sha256: p.sha256, sellerId: p.listing.sellerId }));
+  const rowsByPair = new Map(rowsByPairEntries);
   const rejectionCountBySeller = new Map(rejectionGroups.map((g) => [g.sellerId, g._count._all]));
 
   const results = new Map<string, FraudSignals>();
