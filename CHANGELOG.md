@@ -1923,3 +1923,25 @@ Prochain lot proposé : à définir avec le porteur de projet — le paiement re
 - **Recherche/affichage** (`SearchFilters.tsx`, `ListingCard.tsx`, page annonce) inchangés — déjà neutres vis-à-vis de la catégorie, aucune incohérence nouvelle introduite.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.
+
+## Lot 105 — Passage à 69 wilayas (loi n° 26-06 du 4 avril 2026) (2026-09-18)
+
+Signalé par le porteur de projet : le découpage officiel compte désormais **69 wilayas** et non plus 58. Approuvées en Conseil des ministres le 16 novembre 2025, les 11 nouvelles wilayas (codes 59 à 69) ont été officialisées par la loi n° 26-06 du 4 avril 2026 (JORADP n° 25 du 5 avril 2026), déjà wilayas déléguées depuis la réforme de 2022. Le nombre total de communes reste **1 541** : elles sont seulement rattachées à de nouvelles wilayas.
+
+**Source des données** : les listes de communes viennent du texte officiel lui-même (JORADP n° 25, versions française et arabe, art. 52 bis 10 à 52 bis 20 de la loi 84-09), extraites du PDF puis appariées avec la base — aucune commune inventée ni déduite de sources secondaires (qui divergeaient d'ailleurs entre elles sur certaines wilayas-mères).
+
+**Livré**
+- `prisma/seed.ts` : les 11 wilayas ajoutées (Aflou 59, Barika 60, El Kantara 61, Bir El Ater 62, El Aricha 63, Ksar Chellala 64, Aïn Ouessara 65, Messaad 66, Ksar El Boukhari 67, Bou Saâda 68, El Abiodh Sidi Cheikh 69), noms FR/AR.
+- `prisma/commune-data.ts` : 108 communes rattachées à leur nouvelle wilaya (12 + 8 + 5 + 4 + 4 + 6 + 10 + 8 + 21 + 23 + 7). Seule la ligne `wilayaId` de chacune change, noms inchangés. Wilayas-mères réduites : Laghouat, Batna, Biskra, Tébessa, Tlemcen, Tiaret, Djelfa (deux wilayas créées : Aïn Ouessara et Messaad), Médéa, M'Sila, El Bayadh.
+- `tests/commune-data.test.ts` : passe à 69 wilayas et encode les effectifs officiels des 11 nouvelles wilayas **et** de leurs 10 wilayas-mères (12/53/22/24/49/36/18/43/24/15) — une erreur de rattachement fait désormais échouer les tests. 487/487 au vert.
+
+**Vérification**
+- Contrôle croisé avant modification : sur les 108 communes, 104 appariées automatiquement par le nom arabe officiel, 4 par variante d'orthographe vérifiée à la main (« Azil Abedelkader », « Serghine », « Ouled Emaaraf », « Sidi Demed »), puis les 21 effectifs (nouvelles wilayas + mères) recalculés et comparés à ceux que la loi fixe elle-même pour les wilayas-mères réduites : tous identiques.
+- Base de développement mise à jour par le seed idempotent : 69 wilayas, 1 541 communes, effectifs conformes ; utilisateurs (9) et annonces (24) inchangés.
+- En conditions réelles : `/fr/wilaya` liste 69 wilayas dont les 11 nouvelles, `/fr/wilaya/bou-saada` s'affiche, `/ar/wilaya` contient les 11 noms arabes, le sitemap expose 69 URLs de wilayas.
+
+**Point d'attention** : aucune annonce existante ne référence une des 108 communes déplacées (vérifié : 0 ligne), donc rien à migrer aujourd'hui. Si des annonces réelles existaient au moment d'une future bascule en production, une annonce dont la commune a changé de wilaya garderait l'ancienne wilaya-mère dans `Listing.wilayaId` : il faudrait alors la réaligner sur `Commune.wilayaId`.
+
+**Hors périmètre** : les communes elles-mêmes ne sont pas renommées (les orthographes du référentiel existant sont conservées). Le texte de la loi prévoit que les wilayas-mères continuent d'exercer les prérogatives des nouvelles jusqu'au 31 décembre 2026 au plus tard — sans effet sur les données d'une petite-annonce.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.

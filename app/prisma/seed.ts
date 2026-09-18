@@ -13,7 +13,8 @@ const prisma = new PrismaClient();
 const ADMIN_EMAIL = "admin@souqauto.dz";
 const ADMIN_PASSWORD = "AdminSouqAuto2026!";
 
-// Les 58 wilayas officielles d'Algérie (découpage 2019).
+// Les 69 wilayas officielles d'Algérie : 58 (découpage 2019) + 11 créées par la
+// loi n° 26-06 du 4 avril 2026 (JORADP n° 25), codes 59 à 69.
 const wilayas: { id: number; code: string; nomFr: string; nomAr: string }[] = [
   { id: 1, code: "01", nomFr: "Adrar", nomAr: "أدرار" },
   { id: 2, code: "02", nomFr: "Chlef", nomAr: "الشلف" },
@@ -73,6 +74,17 @@ const wilayas: { id: number; code: string; nomFr: string; nomAr: string }[] = [
   { id: 56, code: "56", nomFr: "Djanet", nomAr: "جانت" },
   { id: 57, code: "57", nomFr: "El M'Ghair", nomAr: "المغير" },
   { id: 58, code: "58", nomFr: "El Meniaa", nomAr: "المنيعة" },
+  { id: 59, code: "59", nomFr: "Aflou", nomAr: "آفلو" },
+  { id: 60, code: "60", nomFr: "Barika", nomAr: "بريكة" },
+  { id: 61, code: "61", nomFr: "El Kantara", nomAr: "القنطرة" },
+  { id: 62, code: "62", nomFr: "Bir El Ater", nomAr: "بئر العاتر" },
+  { id: 63, code: "63", nomFr: "El Aricha", nomAr: "العريشة" },
+  { id: 64, code: "64", nomFr: "Ksar Chellala", nomAr: "قصر الشلالة" },
+  { id: 65, code: "65", nomFr: "Aïn Ouessara", nomAr: "عين وسارة" },
+  { id: 66, code: "66", nomFr: "Messaad", nomAr: "مسعد" },
+  { id: 67, code: "67", nomFr: "Ksar El Boukhari", nomAr: "قصر البخاري" },
+  { id: 68, code: "68", nomFr: "Bou Saâda", nomAr: "بوسعادة" },
+  { id: 69, code: "69", nomFr: "El Abiodh Sidi Cheikh", nomAr: "الأبيض سيدي الشيخ" },
 ];
 
 async function main() {
