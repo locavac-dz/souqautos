@@ -29,3 +29,20 @@ export function canReplyToProReviews(access: ProAccess): boolean {
 export function canManageCollaborators(access: ProAccess): boolean {
   return access.isOwner;
 }
+
+// Le badge « Vérifié » est posé à la main par un admin après contrôle d'une
+// entreprise précise : changer de nom commercial sur un compte vérifié ne doit
+// pas permettre de garder le badge sous une autre identité. Seule une vraie
+// modification retire le badge — corriger la casse ou les espaces (« auto sara
+// motors » → « Auto Sara Motors ») ne compte pas.
+function normalizeBusinessName(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+export function shouldRevokeVerifiedBadge(input: {
+  badgeVerifie: boolean;
+  currentName: string;
+  nextName: string;
+}): boolean {
+  return input.badgeVerifie && normalizeBusinessName(input.currentName) !== normalizeBusinessName(input.nextName);
+}

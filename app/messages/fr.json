@@ -748,7 +748,13 @@
     "bannerUploading": "Envoi en cours…",
     "bannerErrorTooLarge": "L'image dépasse 8 Mo.",
     "bannerErrorInvalidType": "Format d'image non pris en charge (JPEG, PNG ou WebP uniquement).",
-    "bannerErrorGeneric": "Une erreur est survenue. Réessayez."
+    "bannerErrorGeneric": "Une erreur est survenue. Réessayez.",
+    "profileSectionTitle": "Informations de la boutique",
+    "profileSave": "Enregistrer",
+    "profileSaving": "Enregistrement…",
+    "profileSaved": "Modifications enregistrées.",
+    "profileBadgeWarning": "Modifier le nom commercial retirera votre badge « Vérifié » : l'équipe devra le contrôler de nouveau.",
+    "profileBadgeRevoked": "Modifications enregistrées. Le badge « Vérifié » a été retiré car le nom commercial a changé."
   },
   "ProLanding": {
     "breadcrumbHome": "Accueil",

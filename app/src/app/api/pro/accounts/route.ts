@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-const bodySchema = z.object({
-  nomCommercial: z.string().trim().min(2).max(100),
-  presentation: z.string().trim().max(2000).optional(),
-  horaires: z.string().trim().max(200).optional(),
-  wilayaId: z.number().int().optional(),
-});
+import { proAccountFieldsSchema as bodySchema } from "@/lib/validation/pro-account";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();

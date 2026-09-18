@@ -6,6 +6,7 @@ import { canManageCollaborators, canManageProListings, canViewProDashboard } fro
 import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions";
 import { ProCollaboratorsManager } from "@/components/ProCollaboratorsManager";
 import { ProBrandingUpload } from "@/components/ProBrandingUpload";
+import { ProProfileForm } from "@/components/ProProfileForm";
 import { ProSubscriptionUpgrade } from "@/components/ProSubscriptionUpgrade";
 import { hasAdvancedProTools, getSubscriptionStatus, priceForTier } from "@/lib/pro-subscription";
 import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
@@ -57,7 +58,7 @@ export default async function ProDashboardPage() {
     );
   }
 
-  const [listingCount, viewsAgg, conversationCount, collaborators, subscriptionStatus, paymentSettings, subscriptionSettings] =
+  const [listingCount, viewsAgg, conversationCount, collaborators, subscriptionStatus, paymentSettings, subscriptionSettings, wilayas] =
     await Promise.all([
       prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } }),
       prisma.listing.aggregate({ where: { sellerId: account.userId }, _sum: { views: true } }),
@@ -71,6 +72,9 @@ export default async function ProDashboardPage() {
       getSubscriptionStatus(account.userId),
       getPaymentSettings(),
       getProSubscriptionSettings(),
+      isOwner
+        ? prisma.wilaya.findMany({ orderBy: { id: "asc" }, select: { id: true, nomFr: true, nomAr: true } })
+        : Promise.resolve([]),
     ]);
 
   // Lot 79 — palier supérieurs proposés à l'upgrade : tous les paliers payants
@@ -93,6 +97,22 @@ export default async function ProDashboardPage() {
         <div className="grid sm:grid-cols-2 gap-4 mt-6">
           <ProBrandingUpload accountId={account.id} kind="logo" initialUrl={account.logoUrl} />
           <ProBrandingUpload accountId={account.id} kind="banner" initialUrl={account.bannerUrl} />
+        </div>
+      )}
+
+      {isOwner && (
+        <div className="mt-4">
+          <ProProfileForm
+            accountId={account.id}
+            initial={{
+              nomCommercial: account.nomCommercial,
+              presentation: account.presentation,
+              horaires: account.horaires,
+              wilayaId: account.wilayaId,
+            }}
+            badgeVerifie={account.badgeVerifie}
+            wilayas={wilayas}
+          />
         </div>
       )}
 

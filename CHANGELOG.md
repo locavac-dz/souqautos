@@ -1945,3 +1945,22 @@ Signalé par le porteur de projet : le découpage officiel compte désormais **6
 **Hors périmètre** : les communes elles-mêmes ne sont pas renommées (les orthographes du référentiel existant sont conservées). Le texte de la loi prévoit que les wilayas-mères continuent d'exercer les prérogatives des nouvelles jusqu'au 31 décembre 2026 au plus tard — sans effet sur les données d'une petite-annonce.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.
+
+## Lot 106 — Édition des informations d'un compte professionnel (2026-09-18)
+
+Trou trouvé en explorant le code au Lot 103 : nom commercial, présentation, horaires et wilaya d'un compte pro n'étaient saisis qu'**une seule fois, à la création** — aucune route ni écran ne permettait de les corriger ensuite (une faute dans le nom d'un concessionnaire restait définitive).
+
+**Livré**
+- `PATCH /api/pro/accounts/[id]` (`src/app/api/pro/accounts/[id]/route.ts`) : réservé au **propriétaire** du compte (même règle que logo/bannière et collaborateurs), rate-limité (20/h), remplacement complet des champs — un champ optionnel omis ou vide est effacé. Vérifie que la wilaya existe.
+- `src/lib/validation/pro-account.ts` : schéma zod **partagé** entre la création (`POST /api/pro/accounts`, adapté) et l'édition, pour qu'ils ne divergent jamais. `badgeVerifie` n'en fait volontairement pas partie : impossible de se l'accorder soi-même en l'envoyant dans la requête.
+- **Règle d'intégrité sur le badge « Vérifié »** (`shouldRevokeVerifiedBadge`, `src/lib/pro-account.ts`) : le badge est posé à la main par un admin après contrôle d'une entreprise précise ; changer de nom commercial sur un compte vérifié le retire, sinon on pourrait le conserver sous une autre identité. Corriger seulement la casse ou les espaces ne le retire pas. Décision de ma part, non demandée explicitement : à inverser si tu préfères que l'admin tranche au cas par cas.
+- `ProProfileForm.tsx`, ajouté au tableau de bord pro (propriétaire uniquement, sous logo/bannière) : formulaire prérempli, avertissement orange dès que le nom change sur un compte vérifié, message distinct si le badge a été retiré. Clés i18n FR/AR.
+- 4 nouveaux tests unitaires sur la règle du badge. 491/491 au vert au total.
+
+**Vérification de bout en bout en conditions réelles** (deux comptes de test jetables, cookies de session réels) : modification de tous les champs (dont la wilaya 68, Bou Saâda — nouvelle depuis le Lot 105) → effacement des champs optionnels → nom trop court `400` → wilaya inconnue `400` → `badgeVerifie: true` glissé dans le corps **ignoré** → autre utilisateur `403` et nom inchangé → anonyme `403` → vérification par un admin via la vraie route → renommage casse/espaces seul : badge conservé → vrai renommage : badge retiré (`badgeRevoked: true`). Puis en interface : formulaire prérempli, avertissement affiché, enregistrement, message de badge retiré, et boutique publique à jour (nouveau nom, présentation, Bou Saâda, plus de badge).
+
+**Nettoyage** : comptes de test et lignes du journal d'audit associées supprimés ; `prisma/dev.db` revenu à son état d'origine (9 utilisateurs, 1 compte pro, 24 annonces).
+
+**Hors périmètre** : les collaborateurs ne peuvent pas modifier ces informations (propriétaire seul, comme logo/bannière) ; pas de journal d'audit de ces modifications côté propriétaire (le journal existant ne trace que des actions d'admin).
+
+Prochain lot proposé : annuaire des concessionnaires (page listant les showrooms par wilaya, avec carte/téléphone), dans la suite directe des Lots 103 et 106.

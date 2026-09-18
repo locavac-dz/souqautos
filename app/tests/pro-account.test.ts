@@ -4,6 +4,7 @@ import {
   canManageProListings,
   canReplyToProReviews,
   canViewProDashboard,
+  shouldRevokeVerifiedBadge,
 } from "@/lib/pro-account";
 
 const bothPermissions = { gererAnnonces: true, repondreAvis: true };
@@ -76,5 +77,25 @@ describe("canManageCollaborators", () => {
 
   it("blocks a stranger", () => {
     expect(canManageCollaborators({ isOwner: false, permissions: null })).toBe(false);
+  });
+});
+
+describe("shouldRevokeVerifiedBadge", () => {
+  const verified = { badgeVerifie: true, currentName: "Auto Sara Motors" };
+
+  it("revokes the badge when a verified account really changes its business name", () => {
+    expect(shouldRevokeVerifiedBadge({ ...verified, nextName: "Garage Central" })).toBe(true);
+  });
+
+  it("keeps the badge when only case or spacing changes", () => {
+    expect(shouldRevokeVerifiedBadge({ ...verified, nextName: "  auto   sara motors " })).toBe(false);
+  });
+
+  it("keeps the badge when the name is unchanged", () => {
+    expect(shouldRevokeVerifiedBadge({ ...verified, nextName: "Auto Sara Motors" })).toBe(false);
+  });
+
+  it("has nothing to revoke on an account that is not verified", () => {
+    expect(shouldRevokeVerifiedBadge({ badgeVerifie: false, currentName: "A", nextName: "B" })).toBe(false);
   });
 });

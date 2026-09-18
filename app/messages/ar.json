@@ -748,7 +748,13 @@
     "bannerUploading": "جارٍ الإرسال…",
     "bannerErrorTooLarge": "حجم الصورة يتجاوز 8 ميغابايت.",
     "bannerErrorInvalidType": "صيغة الصورة غير مدعومة (JPEG أو PNG أو WebP فقط).",
-    "bannerErrorGeneric": "حدث خطأ. حاول مرة أخرى."
+    "bannerErrorGeneric": "حدث خطأ. حاول مرة أخرى.",
+    "profileSectionTitle": "معلومات المتجر",
+    "profileSave": "حفظ",
+    "profileSaving": "جارٍ الحفظ…",
+    "profileSaved": "تم حفظ التعديلات.",
+    "profileBadgeWarning": "تغيير الاسم التجاري سيؤدي إلى إزالة شارة «موثّق»، وسيتعيّن على الفريق التحقق منها من جديد.",
+    "profileBadgeRevoked": "تم حفظ التعديلات. أُزيلت شارة «موثّق» لأن الاسم التجاري تغيّر."
   },
   "ProLanding": {
     "breadcrumbHome": "الرئيسية",
