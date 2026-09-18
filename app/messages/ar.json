@@ -734,7 +734,21 @@
     "noListings": "لا يوجد إعلان منشور حاليًا.",
     "viewIndividualReputation": "عرض السمعة الفردية للبائع",
     "companyReviewsTitle": "تقييمات هذه المؤسسة",
-    "viewShopLink": "عرض متجر {name}"
+    "viewShopLink": "عرض متجر {name}",
+    "logoSectionTitle": "شعار الشركة",
+    "logoChangeAction": "تغيير الشعار",
+    "logoRemoveAction": "إزالة الشعار",
+    "logoUploading": "جارٍ الإرسال…",
+    "logoErrorTooLarge": "حجم الصورة يتجاوز 4 ميغابايت.",
+    "logoErrorInvalidType": "صيغة الصورة غير مدعومة (JPEG أو PNG أو WebP فقط).",
+    "logoErrorGeneric": "حدث خطأ. حاول مرة أخرى.",
+    "bannerSectionTitle": "الصورة العلوية للمتجر",
+    "bannerChangeAction": "تغيير الصورة العلوية",
+    "bannerRemoveAction": "إزالة الصورة العلوية",
+    "bannerUploading": "جارٍ الإرسال…",
+    "bannerErrorTooLarge": "حجم الصورة يتجاوز 8 ميغابايت.",
+    "bannerErrorInvalidType": "صيغة الصورة غير مدعومة (JPEG أو PNG أو WebP فقط).",
+    "bannerErrorGeneric": "حدث خطأ. حاول مرة أخرى."
   },
   "ProLanding": {
     "breadcrumbHome": "الرئيسية",

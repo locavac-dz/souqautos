@@ -734,7 +734,21 @@
     "noListings": "Aucune annonce publiée pour le moment.",
     "viewIndividualReputation": "Voir la réputation individuelle du vendeur",
     "companyReviewsTitle": "Avis sur cette entreprise",
-    "viewShopLink": "Voir la boutique {name}"
+    "viewShopLink": "Voir la boutique {name}",
+    "logoSectionTitle": "Logo de l'entreprise",
+    "logoChangeAction": "Changer le logo",
+    "logoRemoveAction": "Retirer le logo",
+    "logoUploading": "Envoi en cours…",
+    "logoErrorTooLarge": "L'image dépasse 4 Mo.",
+    "logoErrorInvalidType": "Format d'image non pris en charge (JPEG, PNG ou WebP uniquement).",
+    "logoErrorGeneric": "Une erreur est survenue. Réessayez.",
+    "bannerSectionTitle": "Bannière de la boutique",
+    "bannerChangeAction": "Changer la bannière",
+    "bannerRemoveAction": "Retirer la bannière",
+    "bannerUploading": "Envoi en cours…",
+    "bannerErrorTooLarge": "L'image dépasse 8 Mo.",
+    "bannerErrorInvalidType": "Format d'image non pris en charge (JPEG, PNG ou WebP uniquement).",
+    "bannerErrorGeneric": "Une erreur est survenue. Réessayez."
   },
   "ProLanding": {
     "breadcrumbHome": "Accueil",

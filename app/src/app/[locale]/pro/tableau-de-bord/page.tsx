@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageCollaborators, canManageProListings, canViewProDashboard } from "@/lib/pro-account";
 import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions";
 import { ProCollaboratorsManager } from "@/components/ProCollaboratorsManager";
+import { ProBrandingUpload } from "@/components/ProBrandingUpload";
 import { ProSubscriptionUpgrade } from "@/components/ProSubscriptionUpgrade";
 import { hasAdvancedProTools, getSubscriptionStatus, priceForTier } from "@/lib/pro-subscription";
 import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
@@ -87,6 +88,13 @@ export default async function ProDashboardPage() {
         <h1 className="text-2xl font-semibold text-slate-900">{account.nomCommercial}</h1>
         {account.badgeVerifie && <span className="text-emerald-700 text-sm">{t("verifiedBadge")}</span>}
       </div>
+
+      {isOwner && (
+        <div className="grid sm:grid-cols-2 gap-4 mt-6">
+          <ProBrandingUpload accountId={account.id} kind="logo" initialUrl={account.logoUrl} />
+          <ProBrandingUpload accountId={account.id} kind="banner" initialUrl={account.bannerUrl} />
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-4 mt-6">
         <StatCard label={t("statListings")} value={listingCount} />

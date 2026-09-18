@@ -1881,3 +1881,23 @@ Referme le dernier point mineur laissé en suspens à l'audit sécurité (Lot 98
 **Hors périmètre** : aucun — le point identifié au Lot 98 est traité. Reste ouvert : la décision sur `X-Forwarded-For`/reverse proxy (dépend du choix d'hébergement, toujours pas connu).
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.
+
+## Lot 103 — Logo et bannière pour les comptes professionnels (2026-09-18)
+
+Demandé par le porteur de projet après un état des lieux des pages dédiées aux concessionnaires/garages/showrooms : la boutique publique (`/pro/[id]`) et la page marketing existaient déjà (Lot 13), mais sans aucune identité visuelle — le schéma `ProfessionalAccount` n'avait ni `logoUrl` ni `bannerUrl`.
+
+**Livré**
+- `ProfessionalAccount.logoUrl`/`bannerUrl` (`prisma/schema.prisma`), migration réelle appliquée sans erreur.
+- `src/lib/uploads.ts` : `saveProLogo` (cadrage carré 400×400, mêmes règles de sécurité que `saveAvatar` — octets réels validés via `file-type`, jamais le mime déclaré par le client, nom physique généré) et `saveProBanner` (cadrage bandeau fixe 1600×400, pour un rendu cohérent en haut de la boutique quelle que soit la photo source).
+- `POST`/`DELETE /api/pro/accounts/[id]/logo` et `.../banner` : réservés au **propriétaire** du compte (jamais délégable à un collaborateur, même règle que la gestion des collaborateurs eux-mêmes — l'identité visuelle n'est pas une tâche opérationnelle), rate-limité (10/h/compte, même gabarit que l'avatar).
+- `ProBrandingUpload.tsx` : un seul composant paramétré par `kind` (`"logo" | "banner"`) plutôt que deux copies quasi identiques, branché dans le tableau de bord pro.
+- Boutique publique (`/pro/[id]`) : bannière pleine largeur en haut de page, logo rond à côté du nom commercial — tous deux optionnels, layout inchangé si absents.
+- Clés i18n FR/AR (namespace `Pro`), gabarit repris de `ProfileEdit` (avatar).
+
+**Vérification de bout en bout en conditions réelles** : un compte de test dédié créé via le flux d'inscription normal (jamais le compte de démonstration `sara.hamdi@example.dz`, pour ne pas risquer de le verrouiller — Lot 102) → upload réel d'un logo et d'une bannière via l'API authentifiée (cookie de session réel, pas de simulation) → fichiers confirmés sur disque avec les bonnes dimensions traitées (400×400 et 1600×400) → rendu confirmé à l'écran sur le tableau de bord et sur la boutique publique → suppression réelle testée (fichier et champ base supprimés) → type de fichier invalide rejeté (`400 photo_invalid_type`) → tentative de modification du compte pro d'un tiers rejetée (`403 forbidden`), confirmant que la restriction au propriétaire fonctionne réellement, pas seulement en théorie.
+
+**Nettoyage après vérification** : compte de test et sa cascade (compte pro, fichiers uploadés) supprimés ; `prisma/dev.db` confirmé revenu à son état d'origine (24 annonces, 9 utilisateurs, 1 compte pro — Auto Sara Motors). Seul effet de bord mineur laissé volontairement : le compteur d'échecs de connexion de `sara.hamdi@example.dz` reste à 2 (mes propres tentatives avec un mauvais mot de passe avant de basculer sur un compte de test dédié) — très en dessous du seuil de verrouillage (5, Lot 102) et remis à zéro automatiquement à sa prochaine connexion réussie, aucune action requise.
+
+**Hors périmètre délibéré** : recadrage/zoom manuel avant envoi (le cadrage `cover` automatique peut mal centrer une image non carrée/non 4:1) ; pas de limite de nombre de changements au-delà du rate limit générique.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.

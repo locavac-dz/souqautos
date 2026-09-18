@@ -707,6 +707,8 @@ model ProfessionalAccount {
   nomCommercial String
   presentation  String?
   horaires      String?
+  logoUrl       String?
+  bannerUrl     String?
   wilayaId      Int?
   wilaya        Wilaya?           @relation(fields: [wilayaId], references: [id])
   badgeVerifie  Boolean           @default(false)

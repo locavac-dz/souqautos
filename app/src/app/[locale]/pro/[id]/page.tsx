@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -108,10 +109,29 @@ export default async function ProShowcasePage({
   const wilayaLabel = account.wilaya ? (locale === "ar" ? account.wilaya.nomAr : account.wilaya.nomFr) : null;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900">{account.nomCommercial}</h1>
-        {account.badgeVerifie && <span className="text-emerald-700 text-sm">{t("verifiedBadge")}</span>}
+    <div>
+      {account.bannerUrl && (
+        <div className="relative h-40 sm:h-56 w-full">
+          <Image src={account.bannerUrl} alt="" fill sizes="100vw" className="object-cover" priority />
+        </div>
+      )}
+      <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="flex items-center gap-3">
+        {account.logoUrl && (
+          <div className="relative h-14 w-14 shrink-0">
+            <Image
+              src={account.logoUrl}
+              alt=""
+              fill
+              sizes="56px"
+              className="rounded-full object-cover border border-slate-200"
+            />
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-semibold text-slate-900">{account.nomCommercial}</h1>
+          {account.badgeVerifie && <span className="text-emerald-700 text-sm">{t("verifiedBadge")}</span>}
+        </div>
       </div>
       {wilayaLabel && <p className="text-sm text-slate-500 mt-1">{wilayaLabel}</p>}
       {account.horaires && <p className="text-sm text-slate-500 mt-1">{account.horaires}</p>}
@@ -187,6 +207,7 @@ export default async function ProShowcasePage({
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

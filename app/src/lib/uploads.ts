@@ -12,6 +12,11 @@ const MAX_PHOTO_WIDTH = 1600;
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024; // 4 Mo
 const AVATAR_SIZE = 400;
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024; // 5 Mo
+const MAX_LOGO_BYTES = 4 * 1024 * 1024; // 4 Mo
+const LOGO_SIZE = 400;
+const MAX_BANNER_BYTES = 8 * 1024 * 1024; // 8 Mo
+const BANNER_WIDTH = 1600;
+const BANNER_HEIGHT = 400;
 
 export class PhotoValidationError extends Error {}
 
@@ -42,7 +47,7 @@ async function readValidatedImage(file: File, maxBytes: number): Promise<Buffer>
 // photo, seulement lui faire perdre le partage entre instances pour CETTE
 // photo précise, jusqu'au prochain upload réussi vers S3.
 export async function storeProcessedImage(
-  subdir: "listings" | "avatars" | "messages",
+  subdir: "listings" | "avatars" | "messages" | "pro-logos" | "pro-banners",
   filename: string,
   bytes: Buffer
 ): Promise<string> {
@@ -142,4 +147,37 @@ export async function saveMessageAttachment(file: File): Promise<string> {
 
   const filename = `${randomUUID()}.jpg`;
   return storeProcessedImage("messages", filename, output);
+}
+
+// Lot 103 — logo de compte professionnel (concessionnaire/garage/showroom) :
+// mêmes règles de sécurité que saveAvatar, cadrage carré identique (un logo
+// se présente comme un avatar, pas comme une photo d'annonce).
+export async function saveProLogo(file: File): Promise<string> {
+  const buffer = await readValidatedImage(file, MAX_LOGO_BYTES);
+
+  const output = await sharp(buffer)
+    .rotate()
+    .resize({ width: LOGO_SIZE, height: LOGO_SIZE, fit: "cover" })
+    .jpeg({ quality: 85 })
+    .toBuffer();
+
+  const filename = `${randomUUID()}.jpg`;
+  return storeProcessedImage("pro-logos", filename, output);
+}
+
+// Lot 103 — bannière de compte professionnel : cadrage large fixe (format
+// bandeau) plutôt que le simple plafond de largeur d'une photo d'annonce, pour
+// un rendu cohérent en haut de la boutique publique quelle que soit la photo
+// source envoyée par le vendeur.
+export async function saveProBanner(file: File): Promise<string> {
+  const buffer = await readValidatedImage(file, MAX_BANNER_BYTES);
+
+  const output = await sharp(buffer)
+    .rotate()
+    .resize({ width: BANNER_WIDTH, height: BANNER_HEIGHT, fit: "cover" })
+    .jpeg({ quality: 85 })
+    .toBuffer();
+
+  const filename = `${randomUUID()}.jpg`;
+  return storeProcessedImage("pro-banners", filename, output);
 }
