@@ -19,6 +19,9 @@ export async function SiteFooter() {
         <Link href="/professionnels" className="hover:text-slate-700 hover:underline">
           {t("professionals")}
         </Link>
+        <Link href="/concessionnaires" className="hover:text-slate-700 hover:underline">
+          {t("professionalsDirectory")}
+        </Link>
         <Link href="/mentions-legales" className="hover:text-slate-700 hover:underline">
           {t("legalNotice")}
         </Link>

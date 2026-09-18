@@ -69,6 +69,7 @@
     "browseWilayas": "جميع الولايات",
     "blog": "مجلة سوق أوتو",
     "professionals": "البائعون المحترفون",
+    "professionalsDirectory": "دليل الوكلاء والمعارض",
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
     "legalNotice": "الإشعار القانوني",
     "privacyPolicy": "سياسة الخصوصية",
@@ -755,6 +756,17 @@
     "profileSaved": "تم حفظ التعديلات.",
     "profileBadgeWarning": "تغيير الاسم التجاري سيؤدي إلى إزالة شارة «موثّق»، وسيتعيّن على الفريق التحقق منها من جديد.",
     "profileBadgeRevoked": "تم حفظ التعديلات. أُزيلت شارة «موثّق» لأن الاسم التجاري تغيّر."
+  },
+  "ProDirectory": {
+    "breadcrumbHome": "الرئيسية",
+    "title": "الوكلاء والمرائب والمعارض",
+    "subtitle": "المهنيون في مجال السيارات في الجزائر الذين لديهم إعلانات منشورة على سوق أوتو.",
+    "wilayaFilterLabel": "الولاية",
+    "allWilayas": "كل الولايات",
+    "filterSubmit": "تصفية",
+    "resultsCount": "النتائج: {count}",
+    "empty": "لا يوجد بعد أي مهني لديه إعلان منشور.",
+    "emptyFiltered": "لا يوجد أي مهني لديه إعلان منشور في هذه الولاية."
   },
   "ProLanding": {
     "breadcrumbHome": "الرئيسية",

@@ -69,6 +69,7 @@
     "browseWilayas": "Toutes les wilayas",
     "blog": "Souq Auto Mag",
     "professionals": "Vendeurs professionnels",
+    "professionalsDirectory": "Annuaire des concessionnaires",
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
     "legalNotice": "Mentions légales",
     "privacyPolicy": "Politique de confidentialité",
@@ -755,6 +756,17 @@
     "profileSaved": "Modifications enregistrées.",
     "profileBadgeWarning": "Modifier le nom commercial retirera votre badge « Vérifié » : l'équipe devra le contrôler de nouveau.",
     "profileBadgeRevoked": "Modifications enregistrées. Le badge « Vérifié » a été retiré car le nom commercial a changé."
+  },
+  "ProDirectory": {
+    "breadcrumbHome": "Accueil",
+    "title": "Concessionnaires, garages et showrooms",
+    "subtitle": "Les professionnels de l'automobile en Algérie ayant des annonces publiées sur Souq Auto.",
+    "wilayaFilterLabel": "Wilaya",
+    "allWilayas": "Toutes les wilayas",
+    "filterSubmit": "Filtrer",
+    "resultsCount": "Résultats : {count}",
+    "empty": "Aucun professionnel n'a encore d'annonce publiée.",
+    "emptyFiltered": "Aucun professionnel avec une annonce publiée dans cette wilaya."
   },
   "ProLanding": {
     "breadcrumbHome": "Accueil",

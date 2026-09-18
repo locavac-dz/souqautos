@@ -1964,3 +1964,34 @@ Trou trouvé en explorant le code au Lot 103 : nom commercial, présentation, ho
 **Hors périmètre** : les collaborateurs ne peuvent pas modifier ces informations (propriétaire seul, comme logo/bannière) ; pas de journal d'audit de ces modifications côté propriétaire (le journal existant ne trace que des actions d'admin).
 
 Prochain lot proposé : annuaire des concessionnaires (page listant les showrooms par wilaya, avec carte/téléphone), dans la suite directe des Lots 103 et 106.
+
+## Lot 107 — Annuaire des concessionnaires (2026-09-18)
+
+Les comptes professionnels avaient une vitrine `/pro/[id]` (Lot 13), un logo et une bannière (Lot 103) et des informations éditables (Lot 106), mais **rien ne permettait de les découvrir** : on ne trouvait une vitrine que si on en connaissait déjà l'identifiant. Suite directe des Lots 103 et 106.
+
+**Décisions prises avec le porteur de projet**
+- **Classement** : vérifiés d'abord, puis plus grand nombre d'annonces publiées, puis ordre alphabétique. **Aucun avantage lié à l'abonnement** — la page `/professionnels` ne promet pas de placement payant.
+- **Inclusion** : seulement les comptes ayant **au moins une annonce publiée**. N'importe qui peut créer un compte pro sans contrôle ; exiger une annonce publiée (donc modérée) évite de lister des coquilles vides dans un annuaire public et indexable.
+
+**Livré**
+- `/concessionnaires` (`src/app/[locale]/concessionnaires/page.tsx`), sur le modèle de `/wilaya` : fil d'Ariane + JSON-LD, métadonnées avec URL canonique, filtre par wilaya (`?wilaya=<slug>`, formulaire GET qui fonctionne sans JavaScript, ne propose que les wilayas ayant au moins un professionnel, avec compteur), cartes (logo ou initiale, nom, badge Vérifié, wilaya, nombre d'annonces, note moyenne) menant à la vitrine, pagination par 12, états vides distincts (aucun professionnel / aucun dans cette wilaya). FR et AR (RTL).
+- `src/lib/professional-directory.ts` : requêtes **batchées** (comptes, `groupBy` des annonces publiées, avis — jamais une requête par compte) et fonctions pures `assembleDirectoryEntries`, `sortDirectoryEntries`, `filterByWilaya`, `countByWilaya`, `paginate`, `directoryParamsSchema`.
+- `Pagination.tsx` : prop optionnelle `basePath` (défaut `/recherche`, comportement de la recherche inchangé) ; `numeric` exporté depuis `validation/search.ts` pour être réutilisé ; lien dans le pied de page ; entrée dans le sitemap ; namespace `ProDirectory` FR/AR.
+- 18 nouveaux tests unitaires (`tests/professional-directory.test.ts`). 509/509 au vert.
+
+**Sécurité / confidentialité** : la requête est faite **sans** `include: { user }` — le téléphone est chiffré en base et n'a aucune raison d'atterrir dans le HTML d'une page publique crawlable. Vérifié sur le HTML réel : aucun lien `tel:`, aucun numéro (le seul motif « 0555123456 » trouvé est le texte d'exemple d'un champ de formulaire, embarqué dans les traductions de la page).
+
+**Vérification de bout en bout en conditions réelles** : 15 comptes pro de test créés directement en base (l'inscription publique est limitée à 10 par IP et 15 minutes — je n'ai volontairement pas contourné cette limite), tous marqués par un domaine d'e-mail dédié, répartis sur 4 wilayas dont deux nouvelles (Bou Saâda, Aflou), avec 3 comptes vérifiés, un compte sans annonce et un compte dont la seule annonce est en attente de modération. Confirmé : 14 résultats (13 + le compte de démonstration) sur 2 pages de 12 ; les deux comptes à exclure absents ; ordre exact attendu (vérifiés par stock décroissant, puis non vérifiés par stock puis alphabétique) ; compteurs du filtre justes ; page 2 (2 professionnels) atteinte par un vrai clic sur « Suivant » ; filtres Bou Saâda (3) et Aflou (2) ; wilaya sans professionnel → message dédié ; slug inconnu → liste complète ; `page=abc` ignoré ; `page=99` ramené à la dernière page ; rendu arabe en RTL ; lien du pied de page ; entrée du sitemap ; carte → vitrine (200).
+
+**Correctif trouvé pendant la vérification** : un slug de wilaya inconnu se retrouvait dans l'URL canonique alors que la page affichait la liste complète — le canonical ne reprend désormais que des valeurs valides.
+
+**Nettoyage** : les 15 comptes, leurs annonces et comptes pro supprimés ; `prisma/dev.db` revenu à 9 utilisateurs, 1 compte pro, 24 annonces.
+
+**Hors périmètre délibéré**
+- **Aucun numéro de téléphone ni bouton d'appel** : aucune route de révélation limitée en débit n'existe (`PhoneReveal.tsx` reçoit le numéro en clair dans le HTML/RSC), donc l'afficher ici l'exposerait aux scrapers. Contact via la vitrine et la messagerie existantes.
+- **Pas de carte** : aucune adresse ni coordonnée n'est stockée sur `ProfessionalAccount`.
+- Pas de recherche par nom, pas de page par wilaya en chemin (`/concessionnaires/[wilaya]`) ; `/pro/[id]` n'a toujours ni `generateMetadata` ni entrée de sitemap.
+- Tri et pagination faits en mémoire : adapté à un annuaire de professionnels (centaines), à revoir si le volume devenait très supérieur.
+- Le libellé « 1 annonces disponibles » (clé `Catalogue.statsCount`, sans forme singulière) est celui déjà utilisé sur `/wilaya`, laissé tel quel.
+
+Prochain lot proposé : vitrine `/pro/[id]` (métadonnées SEO, entrée de sitemap) pour terminer le parcours de découverte ; ou le paiement, seul grand chantier d'infrastructure non engagé.

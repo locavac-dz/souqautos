@@ -38,6 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry("/wilaya"),
     localizedEntry("/mag"),
     localizedEntry("/professionnels"),
+    localizedEntry("/concessionnaires"),
   ];
 
   const brandEntries = brands.map((brand) => localizedEntry(`/voitures/${brand.slug}`));

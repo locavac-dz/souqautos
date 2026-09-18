@@ -5,10 +5,12 @@ export async function Pagination({
   page,
   totalPages,
   searchParams,
+  basePath = "/recherche",
 }: {
   page: number;
   totalPages: number;
   searchParams: Record<string, string | undefined>;
+  basePath?: string;
 }) {
   if (totalPages <= 1) return null;
   const t = await getTranslations("Search");
@@ -20,7 +22,7 @@ export async function Pagination({
     });
     if (p > 1) query.set("page", String(p));
     const qs = query.toString();
-    return `/recherche${qs ? `?${qs}` : ""}`;
+    return `${basePath}${qs ? `?${qs}` : ""}`;
   }
 
   return (

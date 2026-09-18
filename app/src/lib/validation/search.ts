@@ -4,7 +4,7 @@ import { listingCategories, fuelTypes, gearboxes, conditions } from "./listing";
 export const sortOptions = ["recent", "price_asc", "price_desc"] as const;
 export type SortOption = (typeof sortOptions)[number];
 
-const numeric = () =>
+export const numeric = () =>
   z
     .string()
     .trim()
