@@ -60,6 +60,45 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput) {
   };
 }
 
+export type AutoDealerJsonLdInput = {
+  name: string;
+  url: string;
+  description?: string;
+  image?: string;
+  region?: string;
+  ratingAverage: number;
+  ratingCount: number;
+};
+
+// Lot 108 — schema.org AutoDealer pour la vitrine d'un compte pro. Volontairement
+// sans téléphone ni horaires : le numéro n'a rien à faire dans une page publique
+// crawlable (cf. Lot 107), et `horaires` est un texte libre, pas un format
+// schema.org. `aggregateRating` seulement s'il existe au moins un avis.
+export function buildAutoDealerJsonLd(input: AutoDealerJsonLdInput) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "AutoDealer",
+    name: input.name,
+    url: input.url,
+    ...(input.description ? { description: input.description } : {}),
+    ...(input.image ? { image: input.image } : {}),
+    address: {
+      "@type": "PostalAddress",
+      ...(input.region ? { addressRegion: input.region } : {}),
+      addressCountry: "DZ",
+    },
+    ...(input.ratingCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: input.ratingAverage,
+            reviewCount: input.ratingCount,
+          },
+        }
+      : {}),
+  };
+}
+
 export function buildVehicleJsonLd(input: VehicleJsonLdInput) {
   return {
     "@context": "https://schema.org",

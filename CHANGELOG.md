@@ -1995,3 +1995,24 @@ Les comptes professionnels avaient une vitrine `/pro/[id]` (Lot 13), un logo et 
 - Le libellé « 1 annonces disponibles » (clé `Catalogue.statsCount`, sans forme singulière) est celui déjà utilisé sur `/wilaya`, laissé tel quel.
 
 Prochain lot proposé : vitrine `/pro/[id]` (métadonnées SEO, entrée de sitemap) pour terminer le parcours de découverte ; ou le paiement, seul grand chantier d'infrastructure non engagé.
+
+## Lot 108 — SEO de la vitrine professionnelle (2026-09-18)
+
+Suite du Lot 107 : l'annuaire renvoie désormais vers des vitrines `/pro/[id]`, mais celles-ci n'avaient **ni métadonnées, ni données structurées, ni entrée de sitemap**, et un compte inexistant répondait `200` avec un simple message (un « soft 404 » qu'un moteur de recherche indexe comme une page valide).
+
+**Livré**
+- `generateMetadata` sur `/pro/[id]` : titre (`Nom — Wilaya — Souq Auto`), description (la présentation du compte, ramenée sur une ligne et coupée à 160 caractères, à défaut une phrase de repli FR/AR), URL canonique, OpenGraph avec image de partage (bannière, à défaut le logo).
+- **Vrai 404** pour un compte inexistant (`notFound()`, HTTP 404) à la place de la page `200` avec message ; clé `showcaseNotFound` supprimée (FR/AR), devenue sans usage.
+- **`noindex, follow`** tant que le compte n'a aucune annonce publiée : même règle que l'annuaire, pour ne pas indexer de pages creuses. La page reste accessible.
+- Données structurées : `BreadcrumbList` (Accueil › Concessionnaires › nom) et **`AutoDealer`** (`buildAutoDealerJsonLd`, `src/lib/structured-data.ts`) avec adresse (région = wilaya, pays DZ), logo et `aggregateRating` **seulement s'il existe au moins un avis**. Volontairement sans téléphone ni horaires (numéro : cf. Lot 107 ; horaires : texte libre, pas un format schema.org). Sérialisé par `safeJsonLdStringify`, comme tous les blocs JSON-LD du projet.
+- Fil d'Ariane visible en haut de la vitrine, avec lien vers l'annuaire (maillage interne dans les deux sens).
+- Sitemap : les vitrines des comptes ayant au moins une annonce publiée, obtenues via `getDirectoryEntries()` — exactement l'ensemble des vitrines indexables et des cartes de l'annuaire, une seule définition.
+- `src/lib/pro-showcase-seo.ts` (`buildShowcaseDescription`, `isShowcaseIndexable`) ; 10 nouveaux tests (JSON-LD, description, règle d'indexation). 519/519 au vert.
+
+**Vérification de bout en bout en conditions réelles** (comptes de test jetables, domaine d'e-mail dédié) : vitrine indexable avec présentation sur plusieurs lignes, logo, wilaya nouvelle (Bou Saâda) et 2 avis → titre, description aplatie, canonical, `og:image`, fil d'Ariane, les deux blocs JSON-LD parsés et valides, note 4,5 sur 2 avis ; même page en arabe (nom de wilaya en arabe) ; compte sans annonce → `200`, `noindex, follow`, description de repli, absent du sitemap ; identifiant inexistant → **HTTP 404** ; sitemap = exactement les 2 vitrines indexables (le compte de démonstration et le compte de test, pas le compte vide) ; rendu visuel contrôlé.
+
+**Nettoyage** : comptes, annonce et avis de test supprimés ; `prisma/dev.db` revenu à 9 utilisateurs, 1 compte pro, 24 annonces, 0 avis.
+
+**Hors périmètre** : `hreflang` reste porté par le sitemap uniquement (convention actuelle du projet, pas de `alternates.languages` dans les métadonnées) ; pas d'image de partage générée dynamiquement quand ni bannière ni logo n'existent.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.

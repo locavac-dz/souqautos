@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildBreadcrumbJsonLd, buildVehicleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
+import {
+  buildAutoDealerJsonLd,
+  buildBreadcrumbJsonLd,
+  buildVehicleJsonLd,
+  safeJsonLdStringify,
+} from "@/lib/structured-data";
 
 describe("buildBreadcrumbJsonLd", () => {
   it("numbers items starting at 1 in order", () => {
@@ -92,5 +97,40 @@ describe("safeJsonLdStringify", () => {
   it("produit un JSON strictement identique à JSON.stringify pour un contenu sans '<'", () => {
     const data = { a: 1, b: "texte normal" };
     expect(safeJsonLdStringify(data)).toBe(JSON.stringify(data));
+  });
+});
+
+describe("buildAutoDealerJsonLd", () => {
+  const base = { name: "Auto Sara Motors", url: "https://example.com/fr/pro/abc", ratingAverage: 0, ratingCount: 0 };
+
+  it("sets the AutoDealer type and an Algerian address", () => {
+    const result = buildAutoDealerJsonLd(base);
+    expect(result["@type"]).toBe("AutoDealer");
+    expect(result.address).toMatchObject({ "@type": "PostalAddress", addressCountry: "DZ" });
+  });
+
+  it("omits the rating when the account has no review", () => {
+    expect(buildAutoDealerJsonLd(base)).not.toHaveProperty("aggregateRating");
+  });
+
+  it("adds the aggregate rating once there is at least one review", () => {
+    const result = buildAutoDealerJsonLd({ ...base, ratingAverage: 4.5, ratingCount: 2 });
+    expect(result.aggregateRating).toMatchObject({ ratingValue: 4.5, reviewCount: 2 });
+  });
+
+  it("only includes the optional fields that are provided", () => {
+    const bare = buildAutoDealerJsonLd(base);
+    expect(bare).not.toHaveProperty("description");
+    expect(bare).not.toHaveProperty("image");
+    expect(bare.address).not.toHaveProperty("addressRegion");
+
+    const full = buildAutoDealerJsonLd({ ...base, description: "d", image: "https://example.com/l.jpg", region: "Alger" });
+    expect(full.description).toBe("d");
+    expect(full.image).toBe("https://example.com/l.jpg");
+    expect(full.address).toMatchObject({ addressRegion: "Alger" });
+  });
+
+  it("never exposes a phone number", () => {
+    expect(JSON.stringify(buildAutoDealerJsonLd({ ...base, ratingAverage: 5, ratingCount: 1 }))).not.toMatch(/telephone|phone/i);
   });
 });

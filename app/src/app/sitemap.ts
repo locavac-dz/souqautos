@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
 import { routing } from "@/i18n/routing";
+import { getDirectoryEntries } from "@/lib/professional-directory";
 
 function localizedEntry(path: string, lastModified?: Date) {
   const [defaultLocale] = routing.locales;
@@ -17,7 +18,7 @@ function localizedEntry(path: string, lastModified?: Date) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [brands, wilayas, listings, articles] = await Promise.all([
+  const [brands, wilayas, listings, articles, proShowcases] = await Promise.all([
     prisma.brand.findMany({ include: { models: true } }),
     prisma.wilaya.findMany(),
     prisma.listing.findMany({
@@ -28,6 +29,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { publishedAt: { not: null } },
       select: { slug: true, updatedAt: true },
     }),
+    // Seules les vitrines indexables (au moins une annonce publiée, cf.
+    // isShowcaseIndexable) : exactement celles de l'annuaire.
+    getDirectoryEntries(),
   ]);
 
   const staticEntries = [
@@ -57,8 +61,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry(`/mag/${article.slug}`, article.updatedAt)
   );
 
+  const proShowcaseEntries = proShowcases.map((entry) => localizedEntry(`/pro/${entry.id}`));
+
   return [
     ...staticEntries,
+    ...proShowcaseEntries,
     ...brandEntries,
     ...modelEntries,
     ...wilayaEntries,

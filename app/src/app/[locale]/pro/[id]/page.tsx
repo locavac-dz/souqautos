@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
+import { buildAutoDealerJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
+import { buildShowcaseDescription, isShowcaseIndexable } from "@/lib/pro-showcase-seo";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { ListingCard } from "@/components/search/ListingCard";
 import { estimatePricesForListings } from "@/lib/price-estimation";
@@ -14,6 +20,45 @@ import { isStaff } from "@/lib/auth-server/roles";
 import { canReplyToProReviews } from "@/lib/pro-account";
 import { parseProPermissions } from "@/lib/pro-permissions";
 
+// Lot 108 — SEO de la vitrine : métadonnées, image de partage (bannière, à
+// défaut le logo), et noindex tant que le compte n'a aucune annonce publiée.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string; locale: string }>;
+}): Promise<Metadata> {
+  const { id, locale } = await params;
+  const account = await prisma.professionalAccount.findUnique({ where: { id }, include: { wilaya: true } });
+  if (!account) return {};
+
+  const t = await getTranslations({ locale, namespace: "Pro" });
+  const publishedCount = await prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } });
+  const wilayaLabel = account.wilaya ? (locale === "ar" ? account.wilaya.nomAr : account.wilaya.nomFr) : null;
+
+  const title = wilayaLabel ? `${account.nomCommercial} — ${wilayaLabel}` : account.nomCommercial;
+  const description =
+    buildShowcaseDescription(account.presentation) ??
+    (wilayaLabel
+      ? t("showcaseMetaDescriptionWilaya", { name: account.nomCommercial, wilaya: wilayaLabel })
+      : t("showcaseMetaDescription", { name: account.nomCommercial }));
+  const canonical = `${SITE_URL}/${locale}/pro/${account.id}`;
+  const image = account.bannerUrl ?? account.logoUrl;
+
+  return {
+    title: `${title} — Souq Auto`,
+    description,
+    alternates: { canonical },
+    ...(isShowcaseIndexable(publishedCount) ? {} : { robots: { index: false, follow: true } }),
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "website",
+      images: image ? [resolveAbsolutePhotoUrl(image)] : undefined,
+    },
+  };
+}
+
 export default async function ProShowcasePage({
   params,
 }: {
@@ -23,19 +68,16 @@ export default async function ProShowcasePage({
   const locale = await getLocale();
   const t = await getTranslations("Pro");
   const tReview = await getTranslations("Review");
+  const tDirectory = await getTranslations("ProDirectory");
 
   const [account, currentUser] = await Promise.all([
     prisma.professionalAccount.findUnique({ where: { id }, include: { wilaya: true } }),
     getCurrentUser(),
   ]);
 
-  if (!account) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-slate-600">{t("showcaseNotFound")}</p>
-      </div>
-    );
-  }
+  // Un vrai 404 (et non une page 200 avec un message) : un « soft 404 » serait
+  // indexé comme une page valide.
+  if (!account) notFound();
 
   const [listings, reviews] = await Promise.all([
     prisma.listing.findMany({
@@ -108,6 +150,22 @@ export default async function ProShowcasePage({
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "medium" });
   const wilayaLabel = account.wilaya ? (locale === "ar" ? account.wilaya.nomAr : account.wilaya.nomFr) : null;
 
+  const showcaseUrl = `${SITE_URL}/${locale}/pro/${account.id}`;
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: tDirectory("breadcrumbHome"), url: `${SITE_URL}/${locale}` },
+    { name: tDirectory("title"), url: `${SITE_URL}/${locale}/concessionnaires` },
+    { name: account.nomCommercial, url: showcaseUrl },
+  ]);
+  const dealerJsonLd = buildAutoDealerJsonLd({
+    name: account.nomCommercial,
+    url: showcaseUrl,
+    description: buildShowcaseDescription(account.presentation),
+    image: account.logoUrl ? resolveAbsolutePhotoUrl(account.logoUrl) : undefined,
+    region: wilayaLabel ?? undefined,
+    ratingAverage: average,
+    ratingCount: count,
+  });
+
   return (
     <div>
       {account.bannerUrl && (
@@ -116,6 +174,15 @@ export default async function ProShowcasePage({
         </div>
       )}
       <div className="mx-auto max-w-4xl px-4 py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(dealerJsonLd) }} />
+      <Breadcrumbs
+        items={[
+          { name: tDirectory("breadcrumbHome"), href: "/" },
+          { name: tDirectory("title"), href: "/concessionnaires" },
+          { name: account.nomCommercial },
+        ]}
+      />
       <div className="flex items-center gap-3">
         {account.logoUrl && (
           <div className="relative h-14 w-14 shrink-0">
