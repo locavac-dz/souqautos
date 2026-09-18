@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { hasCarBodyFields } from "@/lib/listing-category-fields";
 import type {
   Listing,
   FuelType,
@@ -447,23 +448,68 @@ export function ListingEditForm({
         </div>
       </div>
 
-      <div>
-        <label htmlFor="edit-transmission" className="block text-sm font-medium text-slate-700 mb-1">
-          {tWizard("transmission")}
-        </label>
-        <select
-          id="edit-transmission"
-          value={transmission}
-          onChange={(e) => setTransmission(e.target.value as Transmission | "")}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
-        >
-          <option value="">{tWizard("transmissionNone")}</option>
-          <option value="QUATRE_X_DEUX">{tWizard("transmission4x2")}</option>
-          <option value="QUATRE_X_QUATRE">{tWizard("transmission4x4")}</option>
-        </select>
-      </div>
+      {hasCarBodyFields(category) && (
+        <div>
+          <label htmlFor="edit-transmission" className="block text-sm font-medium text-slate-700 mb-1">
+            {tWizard("transmission")}
+          </label>
+          <select
+            id="edit-transmission"
+            value={transmission}
+            onChange={(e) => setTransmission(e.target.value as Transmission | "")}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          >
+            <option value="">{tWizard("transmissionNone")}</option>
+            <option value="QUATRE_X_DEUX">{tWizard("transmission4x2")}</option>
+            <option value="QUATRE_X_QUATRE">{tWizard("transmission4x4")}</option>
+          </select>
+        </div>
+      )}
 
-      <div className="grid grid-cols-3 gap-4">
+      {hasCarBodyFields(category) ? (
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="edit-color" className="block text-sm font-medium text-slate-700 mb-1">
+              {tWizard("color")}
+            </label>
+            <input
+              id="edit-color"
+              type="text"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-doors" className="block text-sm font-medium text-slate-700 mb-1">
+              {tWizard("doors")}
+            </label>
+            <input
+              id="edit-doors"
+              type="number"
+              min={1}
+              max={7}
+              value={doors}
+              onChange={(e) => setDoors(e.target.value ? Number(e.target.value) : "")}
+              className="w-full rounded-md border border-slate-300 px-3 py-2"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-seats" className="block text-sm font-medium text-slate-700 mb-1">
+              {tWizard("seats")}
+            </label>
+            <input
+              id="edit-seats"
+              type="number"
+              min={1}
+              max={9}
+              value={seats}
+              onChange={(e) => setSeats(e.target.value ? Number(e.target.value) : "")}
+              className="w-full rounded-md border border-slate-300 px-3 py-2"
+            />
+          </div>
+        </div>
+      ) : (
         <div>
           <label htmlFor="edit-color" className="block text-sm font-medium text-slate-700 mb-1">
             {tWizard("color")}
@@ -476,35 +522,7 @@ export function ListingEditForm({
             className="w-full rounded-md border border-slate-300 px-3 py-2"
           />
         </div>
-        <div>
-          <label htmlFor="edit-doors" className="block text-sm font-medium text-slate-700 mb-1">
-            {tWizard("doors")}
-          </label>
-          <input
-            id="edit-doors"
-            type="number"
-            min={1}
-            max={7}
-            value={doors}
-            onChange={(e) => setDoors(e.target.value ? Number(e.target.value) : "")}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
-          />
-        </div>
-        <div>
-          <label htmlFor="edit-seats" className="block text-sm font-medium text-slate-700 mb-1">
-            {tWizard("seats")}
-          </label>
-          <input
-            id="edit-seats"
-            type="number"
-            min={1}
-            max={9}
-            value={seats}
-            onChange={(e) => setSeats(e.target.value ? Number(e.target.value) : "")}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
-          />
-        </div>
-      </div>
+      )}
 
       <div>
         <label htmlFor="edit-power" className="block text-sm font-medium text-slate-700 mb-1">

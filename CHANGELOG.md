@@ -1901,3 +1901,25 @@ Demandé par le porteur de projet après un état des lieux des pages dédiées 
 **Hors périmètre délibéré** : recadrage/zoom manuel avant envoi (le cadrage `cover` automatique peut mal centrer une image non carrée/non 4:1) ; pas de limite de nombre de changements au-delà du rate limit générique.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.
+
+## Lot 104 — Adapte l'assistant de publication aux catégories utilitaire/moto (2026-09-18)
+
+`ListingCategory` (`VOITURE`/`UTILITAIRE`/`POIDS_LOURD`/`DEUX_ROUES`/`AUTRE`) existait déjà dans le schéma et les filtres de recherche, mais aucune étape de l'assistant de publication ne s'y adaptait : publier une annonce « Deux-roues » forçait à voir des champs sans rapport (portes, places, transmission 4x2/4x4). Recherche préalable (2 agents Explore) : `mileage`/`fuelType`/`gearbox` restent pertinents pour toutes les catégories (une moto a aussi kilométrage/carburant/boîte) — seuls portes/places/transmission sont réellement incohérents pour un deux-roues, et ils étaient déjà `nullable` en base, donc aucune migration ni changement de schéma Zod n'était nécessaire.
+
+**Livré**
+- `src/lib/listing-category-fields.ts` (nouveau) : `hasCarBodyFields(category)`, `false` uniquement pour `DEUX_ROUES`.
+- Étape 3 de l'assistant (`src/app/[locale]/publier/etape-3/page.tsx`) et formulaire d'édition (`src/components/ListingEditForm.tsx`) : transmission et portes/places masqués quand la catégorie est Deux-roues, dans les deux parcours (publication et édition ultérieure) pour rester cohérents.
+- Étape 9 (aperçu) : vérifiée, n'affichait déjà ni portes/places/transmission pour aucune catégorie — rien à changer.
+- `UTILITAIRE`/`POIDS_LOURD` gardent le même jeu de champs que `VOITURE` (un utilitaire/camion a bien portes, places, et peut être 4x2/4x4) — seule `DEUX_ROUES` reçoit un traitement spécial.
+
+**Vérification de bout en bout en conditions réelles** : compte de test dédié créé via l'inscription normale (jamais le compte de démonstration) → assistant parcouru en choisissant catégorie « Deux-roues » à l'étape 2 (marque/modèle en texte libre, « Yamaha »/« MT-07 » — catalogue toujours voiture uniquement) → étape 3 confirmée sans transmission/portes/places, uniquement année/kilométrage/carburant/boîte/couleur/puissance → publication réelle via l'API (`POST /api/listings`) → ligne `Listing` confirmée en base avec `doors`/`seats`/`transmission` à `null` et `category: DEUX_ROUES` → annonce approuvée via le vrai circuit de modération admin (`POST /api/admin/listings/[id]/moderate`) → page publique de l'annonce chargée sans erreur → formulaire d'édition rouvert sur cette même annonce, transmission/portes/places confirmés absents également en édition.
+
+**Nettoyage après vérification** : annonce, photo et compte de test supprimés ; `prisma/dev.db` confirmé revenu à son état d'origine (24 annonces, 9 utilisateurs).
+
+**Hors périmètre délibéré** :
+- **Pas de catalogue marque/modèle moto ou utilitaire** — `Brand`/`Model`/`Generation` restent 100 % voitures. Le repli texte libre (`brandFreeText`/`modelFreeText`) est déjà pleinement fonctionnel de bout en bout et un commentaire du schéma anticipait déjà ce cas ; un vrai catalogue moto/camion demanderait une liste de marques/modèles vérifiée, à traiter dans un lot dédié plutôt qu'improvisée ici.
+- **Pas de filtrage de la liste d'équipements** (`prisma/equipment-data.ts`) selon la catégorie — certains items (sièges chauffants, vitres électriques...) n'ont clairement pas de sens pour une moto, mais décider lesquels exclure est un jugement de contenu risqué sans source fiable ; laissé sélectionnable tel quel, imperfection mineure et cosmétique.
+- **Pas de nouveau champ « cylindrée »** pour les motos — `powerHp` reste le seul champ de puissance.
+- **Recherche/affichage** (`SearchFilters.tsx`, `ListingCard.tsx`, page annonce) inchangés — déjà neutres vis-à-vis de la catégorie, aucune incohérence nouvelle introduite.
+
+Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.
