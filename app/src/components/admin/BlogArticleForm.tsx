@@ -1,8 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+
+type ArticleKind = "ARTICLE" | "ESSAI";
+
+type ExistingRoadTest = {
+  brandId: number | null;
+  modelId: number | null;
+  generationId: number | null;
+  rating: number;
+  prosFr: string;
+  prosAr: string;
+  consFr: string;
+  consAr: string;
+  verdictFr: string;
+  verdictAr: string;
+  testedVersion: string | null;
+  testedAt: Date | null;
+};
 
 type ExistingArticle = {
   id: string;
@@ -13,11 +30,46 @@ type ExistingArticle = {
   contentFr: string;
   contentAr: string;
   publishedAt: Date | null;
+  roadTest?: ExistingRoadTest | null;
 };
 
-export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
+type CatalogueBrand = {
+  id: number;
+  name: string;
+  models: { id: number; name: string; generations: { id: number; name: string }[] }[];
+};
+
+type PublicationMode = "draft" | "now" | "scheduled";
+
+// État de l'article à l'ouverture du formulaire, calculé côté serveur (un
+// composant client ne doit pas lire l'horloge pendant son rendu).
+type InitialStatus = "draft" | "scheduled" | "published";
+
+const RATING_OPTIONS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+
+// <input type="datetime-local"> attend l'heure locale au format « AAAA-MM-JJTHH:mm ».
+function toDatetimeLocal(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+const inputClass = "w-full rounded-md border border-slate-300 px-3 py-2";
+
+export function BlogArticleForm({
+  kind = "ARTICLE",
+  article,
+  status = "draft",
+  brands = [],
+}: {
+  kind?: ArticleKind;
+  article?: ExistingArticle;
+  status?: InitialStatus;
+  brands?: CatalogueBrand[];
+}) {
   const t = useTranslations("AdminBlog");
+  const tRt = useTranslations("AdminRoadTest");
   const router = useRouter();
+  const isEssai = kind === "ESSAI";
 
   const [titleFr, setTitleFr] = useState(article?.titleFr ?? "");
   const [titleAr, setTitleAr] = useState(article?.titleAr ?? "");
@@ -25,16 +77,84 @@ export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
   const [excerptAr, setExcerptAr] = useState(article?.excerptAr ?? "");
   const [contentFr, setContentFr] = useState(article?.contentFr ?? "");
   const [contentAr, setContentAr] = useState(article?.contentAr ?? "");
-  const [published, setPublished] = useState(Boolean(article?.publishedAt));
+
+  const initialPublishedAt = article?.publishedAt ?? null;
+  const initialMode: PublicationMode = status === "published" ? "now" : status === "scheduled" ? "scheduled" : "draft";
+  const [mode, setMode] = useState<PublicationMode>(initialMode);
+  const [scheduledAt, setScheduledAt] = useState(
+    initialPublishedAt && initialMode === "scheduled" ? toDatetimeLocal(initialPublishedAt) : ""
+  );
+
+  const rt = article?.roadTest;
+  const [brandId, setBrandId] = useState(rt?.brandId ? String(rt.brandId) : "");
+  const [modelId, setModelId] = useState(rt?.modelId ? String(rt.modelId) : "");
+  const [generationId, setGenerationId] = useState(rt?.generationId ? String(rt.generationId) : "");
+  const [rating, setRating] = useState(rt ? String(rt.rating) : "");
+  const [prosFr, setProsFr] = useState(rt?.prosFr ?? "");
+  const [prosAr, setProsAr] = useState(rt?.prosAr ?? "");
+  const [consFr, setConsFr] = useState(rt?.consFr ?? "");
+  const [consAr, setConsAr] = useState(rt?.consAr ?? "");
+  const [verdictFr, setVerdictFr] = useState(rt?.verdictFr ?? "");
+  const [verdictAr, setVerdictAr] = useState(rt?.verdictAr ?? "");
+  const [testedVersion, setTestedVersion] = useState(rt?.testedVersion ?? "");
+  const [testedAt, setTestedAt] = useState(rt?.testedAt ? rt.testedAt.toISOString().slice(0, 10) : "");
+
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const models = useMemo(
+    () => brands.find((b) => String(b.id) === brandId)?.models ?? [],
+    [brands, brandId]
+  );
+  const generations = useMemo(
+    () => models.find((m) => String(m.id) === modelId)?.generations ?? [],
+    [models, modelId]
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
 
-    const payload = { titleFr, titleAr, excerptFr, excerptAr, contentFr, contentAr, published };
+    const publication =
+      mode === "scheduled"
+        ? scheduledAt
+          ? { mode, at: new Date(scheduledAt).toISOString() }
+          : null
+        : { mode };
+    if (!publication) {
+      setPending(false);
+      setError(t("scheduledAtRequired"));
+      return;
+    }
+
+    const payload = {
+      kind,
+      titleFr,
+      titleAr,
+      excerptFr,
+      excerptAr,
+      contentFr,
+      contentAr,
+      publication,
+      ...(isEssai && {
+        roadTest: {
+          brandId: brandId ? Number(brandId) : undefined,
+          modelId: modelId ? Number(modelId) : undefined,
+          generationId: generationId ? Number(generationId) : undefined,
+          rating: Number(rating),
+          prosFr,
+          prosAr,
+          consFr,
+          consAr,
+          verdictFr,
+          verdictAr,
+          testedVersion: testedVersion.trim() || undefined,
+          testedAt: testedAt || undefined,
+        },
+      }),
+    };
+
     const res = article
       ? await fetch(`/api/admin/blog/${article.id}`, {
           method: "PATCH",
@@ -49,11 +169,11 @@ export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
 
     setPending(false);
     if (res.ok) {
-      router.push("/admin/mag");
+      router.push(isEssai ? "/admin/essais" : "/admin/mag");
       router.refresh();
       return;
     }
-    setError(t("errorGeneric"));
+    setError(isEssai ? tRt("errorGeneric") : t("errorGeneric"));
   }
 
   return (
@@ -69,7 +189,7 @@ export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
             value={titleFr}
             onChange={(e) => setTitleFr(e.target.value)}
             maxLength={150}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className={inputClass}
           />
         </div>
         <div>
@@ -83,7 +203,7 @@ export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
             value={titleAr}
             onChange={(e) => setTitleAr(e.target.value)}
             maxLength={150}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className={inputClass}
           />
         </div>
       </div>
@@ -99,7 +219,7 @@ export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
             onChange={(e) => setExcerptFr(e.target.value)}
             maxLength={300}
             rows={2}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className={inputClass}
           />
         </div>
         <div>
@@ -113,10 +233,188 @@ export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
             onChange={(e) => setExcerptAr(e.target.value)}
             maxLength={300}
             rows={2}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className={inputClass}
           />
         </div>
       </div>
+
+      {isEssai && (
+        <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900">{tRt("sectionVehicle")}</legend>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="rtBrand" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("brandLabel")}
+              </label>
+              <select
+                id="rtBrand"
+                value={brandId}
+                onChange={(e) => {
+                  setBrandId(e.target.value);
+                  setModelId("");
+                  setGenerationId("");
+                }}
+                className={`${inputClass} bg-white`}
+              >
+                <option value="">{tRt("noneOption")}</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="rtModel" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("modelLabel")}
+              </label>
+              <select
+                id="rtModel"
+                value={modelId}
+                disabled={!brandId}
+                onChange={(e) => {
+                  setModelId(e.target.value);
+                  setGenerationId("");
+                }}
+                className={`${inputClass} bg-white disabled:bg-slate-50`}
+              >
+                <option value="">{tRt("noneOption")}</option>
+                {models.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="rtGeneration" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("generationLabel")}
+              </label>
+              <select
+                id="rtGeneration"
+                value={generationId}
+                disabled={!modelId || generations.length === 0}
+                onChange={(e) => setGenerationId(e.target.value)}
+                className={`${inputClass} bg-white disabled:bg-slate-50`}
+              >
+                <option value="">{tRt("noneOption")}</option>
+                {generations.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 -mt-2">{tRt("vehicleHelp")}</p>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="rtRating" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("ratingLabel")}
+              </label>
+              <select
+                id="rtRating"
+                value={rating}
+                onChange={(e) => setRating(e.target.value)}
+                className={`${inputClass} bg-white`}
+              >
+                <option value="" disabled>
+                  —
+                </option>
+                {RATING_OPTIONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r} / 5
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="rtVersion" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("testedVersionLabel")}
+              </label>
+              <input
+                id="rtVersion"
+                type="text"
+                value={testedVersion}
+                onChange={(e) => setTestedVersion(e.target.value)}
+                maxLength={120}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="rtDate" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("testedAtLabel")}
+              </label>
+              <input
+                id="rtDate"
+                type="date"
+                value={testedAt}
+                onChange={(e) => setTestedAt(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="rtProsFr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("prosFrLabel")}
+              </label>
+              <textarea id="rtProsFr" value={prosFr} onChange={(e) => setProsFr(e.target.value)} rows={4} className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="rtProsAr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("prosArLabel")}
+              </label>
+              <textarea id="rtProsAr" dir="rtl" value={prosAr} onChange={(e) => setProsAr(e.target.value)} rows={4} className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="rtConsFr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("consFrLabel")}
+              </label>
+              <textarea id="rtConsFr" value={consFr} onChange={(e) => setConsFr(e.target.value)} rows={4} className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="rtConsAr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("consArLabel")}
+              </label>
+              <textarea id="rtConsAr" dir="rtl" value={consAr} onChange={(e) => setConsAr(e.target.value)} rows={4} className={inputClass} />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 -mt-2">{tRt("listHelp")}</p>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="rtVerdictFr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("verdictFrLabel")}
+              </label>
+              <textarea
+                id="rtVerdictFr"
+                value={verdictFr}
+                onChange={(e) => setVerdictFr(e.target.value)}
+                maxLength={400}
+                rows={3}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="rtVerdictAr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tRt("verdictArLabel")}
+              </label>
+              <textarea
+                id="rtVerdictAr"
+                dir="rtl"
+                value={verdictAr}
+                onChange={(e) => setVerdictAr(e.target.value)}
+                maxLength={400}
+                rows={3}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </fieldset>
+      )}
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
@@ -129,7 +427,7 @@ export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
             onChange={(e) => setContentFr(e.target.value)}
             maxLength={20000}
             rows={16}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm"
+            className={`${inputClass} font-mono text-sm`}
           />
         </div>
         <div>
@@ -143,16 +441,36 @@ export function BlogArticleForm({ article }: { article?: ExistingArticle }) {
             onChange={(e) => setContentAr(e.target.value)}
             maxLength={20000}
             rows={16}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm"
+            className={`${inputClass} font-mono text-sm`}
           />
         </div>
       </div>
       <p className="text-xs text-slate-500 -mt-4">{t("contentHelp")}</p>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
-        <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
-        {t("publishedLabel")}
-      </label>
+      <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
+        <legend className="px-1 text-sm font-medium text-slate-900">{t("publicationLabel")}</legend>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input type="radio" name="publication" checked={mode === "draft"} onChange={() => setMode("draft")} />
+          {t("publicationDraft")}
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input type="radio" name="publication" checked={mode === "now"} onChange={() => setMode("now")} />
+          {initialMode === "now" ? t("publicationPublished") : t("publicationNow")}
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input type="radio" name="publication" checked={mode === "scheduled"} onChange={() => setMode("scheduled")} />
+          {t("publicationScheduled")}
+          <input
+            type="datetime-local"
+            value={scheduledAt}
+            disabled={mode !== "scheduled"}
+            onChange={(e) => setScheduledAt(e.target.value)}
+            aria-label={t("publicationScheduled")}
+            className="rounded-md border border-slate-300 px-2 py-1 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          />
+        </label>
+        <p className="text-xs text-slate-500">{t("publicationHelp")}</p>
+      </fieldset>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

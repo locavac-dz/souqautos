@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { BlogArticleForm } from "@/components/admin/BlogArticleForm";
+import { articleStatus } from "@/lib/blog-publication";
 
 export default async function EditBlogArticlePage({
   params,
@@ -22,11 +23,16 @@ export default async function EditBlogArticlePage({
   const t = await getTranslations("AdminBlog");
   const article = await prisma.blogArticle.findUnique({ where: { id } });
   if (!article) notFound();
+  // Lot 110 — un essai s'édite dans sa propre rubrique (fiche d'essai).
+  if (article.kind === "ESSAI") {
+    redirect({ href: `/admin/essais/${article.id}/modifier`, locale });
+    return null;
+  }
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("editArticle")}</h1>
-      <BlogArticleForm article={article} />
+      <BlogArticleForm article={article} status={articleStatus(article.publishedAt, new Date())} />
     </div>
   );
 }

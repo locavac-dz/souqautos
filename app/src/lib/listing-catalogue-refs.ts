@@ -25,7 +25,14 @@ export type CatalogueRefsError =
 
 export type CatalogueRefsValidation = { ok: true } | { ok: false; error: CatalogueRefsError };
 
-export async function validateCatalogueRefs(data: CatalogueRefsInput): Promise<CatalogueRefsValidation> {
+// Lot 110 — la partie marque/modèle/génération est aussi utilisée par les essais
+// auto (qui n'ont ni wilaya, ni commune, ni équipements) : extraite ici plutôt
+// que dupliquée.
+export async function validateVehicleRefs(data: {
+  brandId?: number;
+  modelId?: number;
+  generationId?: number;
+}): Promise<CatalogueRefsValidation> {
   if (data.brandId) {
     const brand = await prisma.brand.findUnique({ where: { id: data.brandId } });
     if (!brand) return { ok: false, error: "unknown_brand" };
@@ -42,6 +49,12 @@ export async function validateCatalogueRefs(data: CatalogueRefsInput): Promise<C
       return { ok: false, error: "unknown_generation" };
     }
   }
+  return { ok: true };
+}
+
+export async function validateCatalogueRefs(data: CatalogueRefsInput): Promise<CatalogueRefsValidation> {
+  const vehicle = await validateVehicleRefs(data);
+  if (!vehicle.ok) return vehicle;
 
   const wilaya = await prisma.wilaya.findUnique({ where: { id: data.wilayaId } });
   if (!wilaya) return { ok: false, error: "unknown_wilaya" };

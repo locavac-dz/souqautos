@@ -83,18 +83,9 @@ export function countByWilaya(entries: DirectoryEntry[]): Map<number, number> {
   return counts;
 }
 
-// Une page demandée au-delà de la dernière est ramenée à la dernière plutôt
-// que d'afficher une page vide.
-export function paginate<T>(items: T[], page: number | undefined, pageSize: number) {
-  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-  const current = Math.min(Math.max(1, page ?? 1), totalPages);
-  return {
-    items: items.slice((current - 1) * pageSize, current * pageSize),
-    page: current,
-    totalPages,
-    totalCount: items.length,
-  };
-}
+// La pagination vit dans `@/lib/pagination` depuis le Lot 110 (partagée avec les
+// essais) ; ré-exportée ici pour ne pas changer les imports existants.
+export { paginate } from "@/lib/pagination";
 
 // Requêtes batchées (jamais une par compte). Volontairement sans `include:
 // { user }` : le téléphone est chiffré en base et n'a rien à faire dans le HTML

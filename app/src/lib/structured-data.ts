@@ -126,3 +126,48 @@ export function buildVehicleJsonLd(input: VehicleJsonLdInput) {
     },
   };
 }
+
+export type ReviewJsonLdInput = {
+  url: string;
+  title: string;
+  verdict: string;
+  // Nom du véhicule testé (« Marque Modèle »), à défaut le titre de l'essai.
+  itemName: string;
+  brandName?: string;
+  ratingValue: number;
+  authorName: string;
+  // Person quand l'essai est signé d'un nom, Organization quand il est signé « Souq Auto ».
+  authorIsPerson: boolean;
+  datePublished: string;
+  dateModified: string;
+  image?: string;
+};
+
+// Lot 110 — schema.org Review pour un essai auto : `itemReviewed` de type Car,
+// note sur 5 (`bestRating` 5, `worstRating` 1). Seule la note réellement
+// attribuée par la rédaction est publiée, jamais une note agrégée inventée.
+export function buildReviewJsonLd(input: ReviewJsonLdInput) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Review",
+    name: input.title,
+    url: input.url,
+    reviewBody: input.verdict,
+    itemReviewed: {
+      "@type": "Car",
+      name: input.itemName,
+      ...(input.brandName ? { brand: { "@type": "Brand", name: input.brandName } } : {}),
+    },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: input.ratingValue,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    author: { "@type": input.authorIsPerson ? "Person" : "Organization", name: input.authorName },
+    publisher: { "@type": "Organization", name: "Souq Auto" },
+    datePublished: input.datePublished,
+    dateModified: input.dateModified,
+    ...(input.image ? { image: input.image } : {}),
+  };
+}

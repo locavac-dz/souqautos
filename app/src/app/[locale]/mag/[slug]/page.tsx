@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { publishedNow } from "@/lib/blog-publication";
 import { SITE_URL } from "@/lib/site";
 import { buildBreadcrumbJsonLd, buildArticleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
+// Publié = date de parution atteinte (Lot 110 : un article programmé reste
+// invisible, et renvoie un 404, jusqu'à sa date).
 async function getPublishedArticle(slug: string) {
-  const article = await prisma.blogArticle.findUnique({ where: { slug } });
-  if (!article || !article.publishedAt) return null;
-  return article;
+  return prisma.blogArticle.findFirst({ where: { slug, ...publishedNow(new Date()) } });
 }
 
 export async function generateMetadata({
@@ -41,6 +43,12 @@ export default async function BlogArticlePage({
   const { locale, slug } = await params;
   const article = await getPublishedArticle(slug);
   if (!article) notFound();
+  // Les articles et les essais partagent le même espace de slugs : un essai
+  // ouvert par son ancienne adresse /mag est renvoyé vers /essais.
+  if (article.kind === "ESSAI") {
+    redirect({ href: `/essais/${article.slug}`, locale });
+    return null;
+  }
 
   const t = await getTranslations("Blog");
   const title = locale === "ar" ? article.titleAr : article.titleFr;

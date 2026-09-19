@@ -27,6 +27,9 @@ export async function SiteHeader({
       <Link href="/cote-souq-auto" className="text-slate-700 hover:text-slate-900">
         {tNav("estimate")}
       </Link>
+      <Link href="/essais" className="text-slate-700 hover:text-slate-900">
+        {tNav("roadTests")}
+      </Link>
       {user ? (
         <>
           <Link href="/vendre" className="text-slate-700 hover:text-slate-900">

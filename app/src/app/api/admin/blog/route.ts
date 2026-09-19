@@ -5,6 +5,9 @@ import { isAdmin } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
 import { slugify } from "@/lib/slugify";
 import { generateUniqueSlug } from "@/lib/blog";
+import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
+import { toRoadTestData } from "@/lib/road-test-data";
+import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
 import { writeAuditLog } from "@/lib/audit-log";
 
 // Réservé à ADMIN : le blog est un contenu public engageant l'image de la
@@ -23,14 +26,35 @@ export async function POST(request: NextRequest) {
   }
   const data = parsed.data;
 
+  // Lot 110 — marque/modèle/génération d'un essai : jamais un identifiant
+  // fabriqué côté client accepté tel quel. La marque se déduit du modèle choisi.
+  let brandIdFromModel: number | undefined;
+  if (data.roadTest) {
+    const refs = await validateVehicleRefs(data.roadTest);
+    if (!refs.ok) {
+      return NextResponse.json({ error: refs.error }, { status: 400 });
+    }
+    if (data.roadTest.modelId && !data.roadTest.brandId) {
+      const model = await prisma.model.findUnique({
+        where: { id: data.roadTest.modelId },
+        select: { brandId: true },
+      });
+      brandIdFromModel = model?.brandId;
+    }
+  }
+
   const existingSlugs = (await prisma.blogArticle.findMany({ select: { slug: true } })).map(
     (a) => a.slug
   );
   const slug = generateUniqueSlug(slugify(data.titleFr), existingSlugs);
 
+  const now = new Date();
+  const publishedAt = resolvePublishedAt(data.publication, null, now);
+
   const article = await prisma.blogArticle.create({
     data: {
       slug,
+      kind: data.kind,
       titleFr: data.titleFr,
       titleAr: data.titleAr,
       excerptFr: data.excerptFr,
@@ -38,7 +62,8 @@ export async function POST(request: NextRequest) {
       contentFr: data.contentFr,
       contentAr: data.contentAr,
       authorId: user.id,
-      publishedAt: data.published ? new Date() : null,
+      publishedAt,
+      roadTest: data.roadTest ? { create: toRoadTestData(data.roadTest, brandIdFromModel) } : undefined,
     },
     select: { id: true, slug: true },
   });
@@ -48,7 +73,7 @@ export async function POST(request: NextRequest) {
     action: "blog_article.create",
     targetType: "BlogArticle",
     targetId: article.id,
-    details: { titleFr: data.titleFr, published: data.published },
+    details: { titleFr: data.titleFr, kind: data.kind, status: articleStatus(publishedAt, now) },
   });
 
   return NextResponse.json({ article }, { status: 201 });

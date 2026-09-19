@@ -138,6 +138,7 @@ model Brand {
   nameAr String?
   models Model[]
   listings Listing[]
+  roadTests RoadTest[]
 }
 
 model Model {
@@ -155,6 +156,7 @@ model Model {
   nameAr String?
   listings Listing[]
   generations Generation[]
+  roadTests RoadTest[]
 
   @@unique([brandId, slug])
 }
@@ -177,6 +179,7 @@ model Generation {
   // date de fin inventée pour une génération encore en production.
   yearEnd   Int?
   listings  Listing[]
+  roadTests RoadTest[]
 
   @@index([modelId])
   @@unique([modelId, name])
@@ -930,9 +933,47 @@ model BlogArticle {
   contentAr   String
   authorId    String
   author      User      @relation(fields: [authorId], references: [id])
+  // Lot 110 — un essai auto est un article enrichi (RoadTest, 1-1) : même
+  // stockage, même administration, même publication programmée. `publishedAt`
+  // dans le futur = programmé (visible seulement une fois la date atteinte).
+  kind        ArticleKind @default(ARTICLE)
+  roadTest    RoadTest?
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([publishedAt])
+  @@index([kind, publishedAt])
+}
+
+enum ArticleKind {
+  ARTICLE
+  ESSAI
+}
+
+// Lot 110 — fiche d'un essai auto. Seulement des données réellement saisies par
+// la rédaction : aucune consommation/prix « mesuré » inventé. Note sur 5 par
+// demi-point ; points forts/faibles = un élément par ligne (même convention
+// « liste dans une String » que le reste du schéma).
+model RoadTest {
+  articleId     String      @id
+  article       BlogArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  brandId       Int?
+  brand         Brand?      @relation(fields: [brandId], references: [id])
+  modelId       Int?
+  model         Model?      @relation(fields: [modelId], references: [id])
+  generationId  Int?
+  generation    Generation? @relation(fields: [generationId], references: [id])
+  rating        Float
+  prosFr        String
+  prosAr        String
+  consFr        String
+  consAr        String
+  verdictFr     String
+  verdictAr     String
+  testedVersion String?
+  testedAt      DateTime?
+
+  @@index([brandId])
+  @@index([modelId])
 }

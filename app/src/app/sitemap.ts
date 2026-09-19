@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
 import { routing } from "@/i18n/routing";
 import { getDirectoryEntries } from "@/lib/professional-directory";
+import { publishedNow } from "@/lib/blog-publication";
+
+// Lot 110 — sans cette ligne Next fige le sitemap au moment du build (rien ne
+// lui indique que la base est lue) : un essai programmé n'y apparaîtrait jamais
+// une fois sa date atteinte, et une nouvelle annonce non plus.
+export const dynamic = "force-dynamic";
 
 function localizedEntry(path: string, lastModified?: Date) {
   const [defaultLocale] = routing.locales;
@@ -26,8 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       select: { id: true, createdAt: true },
     }),
     prisma.blogArticle.findMany({
-      where: { publishedAt: { not: null } },
-      select: { slug: true, updatedAt: true },
+      where: publishedNow(new Date()),
+      select: { slug: true, kind: true, updatedAt: true },
     }),
     // Seules les vitrines indexables (au moins une annonce publiée, cf.
     // isShowcaseIndexable) : exactement celles de l'annuaire.
@@ -43,6 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry("/mag"),
     localizedEntry("/professionnels"),
     localizedEntry("/concessionnaires"),
+    localizedEntry("/essais"),
   ];
 
   const brandEntries = brands.map((brand) => localizedEntry(`/voitures/${brand.slug}`));
@@ -58,7 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   const articleEntries = articles.map((article) =>
-    localizedEntry(`/mag/${article.slug}`, article.updatedAt)
+    localizedEntry(`${article.kind === "ESSAI" ? "/essais" : "/mag"}/${article.slug}`, article.updatedAt)
   );
 
   const proShowcaseEntries = proShowcases.map((entry) => localizedEntry(`/pro/${entry.id}`));

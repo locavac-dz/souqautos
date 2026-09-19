@@ -7,6 +7,8 @@ import { SITE_URL } from "@/lib/site";
 import { getListingStats } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RoadTestCard } from "@/components/RoadTestCard";
+import { publishedNow } from "@/lib/blog-publication";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { estimateFromRows } from "@/lib/price-estimation";
@@ -56,8 +58,9 @@ export default async function ModelPage({
   const { brand, model } = found;
 
   const t = await getTranslations("Catalogue");
+  const tRoadTest = await getTranslations("RoadTest");
 
-  const [stats, listings, currentUser] = await Promise.all([
+  const [stats, listings, currentUser, roadTests] = await Promise.all([
     getListingStats({ brandId: brand.id, modelId: model.id }),
     prisma.listing.findMany({
       where: { brandId: brand.id, modelId: model.id, status: "PUBLIEE" },
@@ -73,6 +76,22 @@ export default async function ModelPage({
       },
     }),
     getCurrentUser(),
+    // Lot 110 — essais parus de ce modèle (les 3 derniers).
+    prisma.blogArticle.findMany({
+      where: { kind: "ESSAI", ...publishedNow(new Date()), roadTest: { modelId: model.id } },
+      orderBy: { publishedAt: "desc" },
+      take: 3,
+      select: {
+        id: true,
+        slug: true,
+        titleFr: true,
+        titleAr: true,
+        excerptFr: true,
+        excerptAr: true,
+        publishedAt: true,
+        roadTest: { select: { rating: true, brand: { select: { name: true } }, model: { select: { name: true } } } },
+      },
+    }),
   ]);
 
   const favoriteIds = currentUser
@@ -159,6 +178,17 @@ export default async function ModelPage({
           {t("estimateLink", { brand: brand.name, model: model.name })}
         </Link>
       </div>
+
+      {roadTests.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-slate-900">{tRoadTest("modelRoadTestsTitle")}</h2>
+          <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {roadTests.map((article) => (
+              <RoadTestCard key={article.id} article={article} locale={locale} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {listings.length > 0 && (
         <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

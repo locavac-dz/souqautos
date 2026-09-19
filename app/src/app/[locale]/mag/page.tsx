@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { publishedNow } from "@/lib/blog-publication";
 
 export async function generateMetadata({
   params,
@@ -27,8 +28,10 @@ export default async function BlogIndexPage() {
   const locale = await getLocale();
   const t = await getTranslations("Blog");
 
+  // Lot 110 — seulement les articles (les essais ont leur rubrique /essais) et
+  // seulement ceux dont la date de parution est atteinte (publication programmée).
   const articles = await prisma.blogArticle.findMany({
-    where: { publishedAt: { not: null } },
+    where: { kind: "ARTICLE", ...publishedNow(new Date()) },
     orderBy: { publishedAt: "desc" },
   });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildAutoDealerJsonLd,
   buildBreadcrumbJsonLd,
+  buildReviewJsonLd,
   buildVehicleJsonLd,
   safeJsonLdStringify,
 } from "@/lib/structured-data";
@@ -132,5 +133,43 @@ describe("buildAutoDealerJsonLd", () => {
 
   it("never exposes a phone number", () => {
     expect(JSON.stringify(buildAutoDealerJsonLd({ ...base, ratingAverage: 5, ratingCount: 1 }))).not.toMatch(/telephone|phone/i);
+  });
+});
+
+describe("buildReviewJsonLd", () => {
+  const base = {
+    url: "https://example.com/fr/essais/citroen-c4",
+    title: "Essai Citroën C4",
+    verdict: "Une compacte confortable et bien équipée.",
+    itemName: "Citroën C4",
+    ratingValue: 3.5,
+    authorName: "Souq Auto",
+    authorIsPerson: false,
+    datePublished: "2026-09-01T08:00:00.000Z",
+    dateModified: "2026-09-05T08:00:00.000Z",
+  };
+
+  it("describes a review of a Car with a rating out of 5", () => {
+    const result = buildReviewJsonLd(base);
+    expect(result["@type"]).toBe("Review");
+    expect(result.itemReviewed).toMatchObject({ "@type": "Car", name: "Citroën C4" });
+    expect(result.reviewRating).toEqual({ "@type": "Rating", ratingValue: 3.5, bestRating: 5, worstRating: 1 });
+  });
+
+  it("signs with a Person when the essai has a named author, an Organization otherwise", () => {
+    expect(buildReviewJsonLd(base).author).toEqual({ "@type": "Organization", name: "Souq Auto" });
+    expect(buildReviewJsonLd({ ...base, authorName: "Sara Hamdi", authorIsPerson: true }).author).toEqual({
+      "@type": "Person",
+      name: "Sara Hamdi",
+    });
+  });
+
+  it("only includes the brand and image when provided", () => {
+    const bare = buildReviewJsonLd(base);
+    expect(bare.itemReviewed).not.toHaveProperty("brand");
+    expect(bare).not.toHaveProperty("image");
+    const full = buildReviewJsonLd({ ...base, brandName: "Citroën", image: "https://example.com/c4.jpg" });
+    expect(full.itemReviewed).toMatchObject({ brand: { "@type": "Brand", name: "Citroën" } });
+    expect(full.image).toBe("https://example.com/c4.jpg");
   });
 });
