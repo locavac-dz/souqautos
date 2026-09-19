@@ -2453,3 +2453,28 @@ Le site sait maintenant **ce qui est lu**, sans cookie, sans identifiant et donc
 - Le site doit connaître son domaine (`NEXT_PUBLIC_SITE_URL`) : le plan du site et la provenance « interne » en dépendent (déjà contrôlé par `launch:check`).
 
 **Reste du bloc 4** : guides d'achat par modèle et outil de suivi du rythme éditorial (revue de presse, essais). Le contenu, lui, reste à rédiger par votre équipe : je ne fabrique ni essais ni guides.
+
+## Lot 125 — Vraies photos de voitures sur les annonces de démonstration (2026-09-19)
+
+Les 24 annonces de démonstration n'affichaient que des cartes de couleur portant le nom de la marque en texte. Elles montrent maintenant une **vraie photo du modèle**, avec son crédit.
+
+**Livré**
+- **24 photos** de Wikimedia Commons, sous licence libre (CC BY-SA 3.0, 3.0 de ou 4.0, et CC0 pour la Sandero), choisies pour la **génération** correspondant à l'année de l'annonce quand elle existe. Rangées dans le dépôt (`prisma/demo-photos/`, 13 Mo) avec `CREDITS.json` et un `README.md` qui liste photo, auteur, licence et page source : `npm run db:seed:demo` n'a besoin d'aucun accès réseau.
+- **Même traitement que la photo d'un vendeur** : elles passent par `savePhoto` (orientation, 1 600 px, JPEG, empreinte anti-fraude, indicateurs de qualité). Les 24 empreintes sont distinctes, aucun indicateur de qualité levé.
+- **Crédit enregistré et affiché** : nouvelles colonnes `creditAuthor`, `creditLicense`, `creditLicenseUrl`, `creditSourceUrl` sur `ListingPhoto` (migration `20260919240000_listing_photo_credits`). La page de l'annonce montre sous la photo « Photo d'illustration du modèle (annonce de démonstration), pas du véhicule décrit. Photo : auteur · licence · Wikimedia Commons », avec liens vers le texte de la licence et la page de la photo (FR et AR). Rien n'est affiché pour une photo de vendeur. Seuls les liens vers Wikimedia Commons et Creative Commons en https sont acceptés : un lien écrit en base ne peut pas mener ailleurs.
+- **`npm run db:demo-photos`** met à niveau une base existante : remplace le visuel de texte des annonces des comptes de démonstration (`@example.dz`), supprime l'ancien fichier du stockage, ne refait pas ce qui est déjà en place (idempotent).
+- **Correctifs de la fiche d'annonce**, révélés par de vraies photos : la première photo (deux colonnes sur trois) était demandée au serveur à un tiers de la largeur puis agrandie, donc **floue** ; elle est maintenant servie à la bonne taille (750 px sur ordinateur, 828 px sur téléphone haute densité) et chargée en priorité. Le cadrage 4:3 **coupait** les photos panoramiques (pare-chocs et plaque disparus) : la galerie passe en 16:10.
+- **63 nouveaux tests** (956 → 1 019) : logique des crédits (liens refusés hors Commons/Creative Commons, auteur et licence obligatoires, pas de doublon), et un garde-fou sur le dossier de photos (un fichier par crédit et inversement, vrais octets JPEG, paysage, poids raisonnable, dimensions conformes aux crédits, licences autorisées sans clause NC/ND, liens https, couverture de **tous** les modèles du script de démonstration, chaque photo citée dans le README). Ce garde-fou a d'ailleurs trouvé un lien de licence CC0 en http, corrigé.
+
+**Vérification en conditions réelles** (base et serveur de développement)
+- Les 24 photos ont d'abord été **regardées une par une** (planches-contact étiquetées) : 6 principales écartées — Clio vue de dos au milieu d'une foule, Duster aux couleurs des pompiers, Tucson de dos, Mégane minuscule au loin, Fiesta d'un concessionnaire, Tiggo 7 prise à travers un pare-brise — et remplacées par des remplaçantes ; une remplaçante était en réalité un **Captur** et a été écartée.
+- Application sur la base : 24 remplacées, 24 crédits, 24 empreintes et 24 chemins distincts ; le nombre de fichiers du stockage est resté à 800 (24 supprimés, 24 ajoutés) ; second passage : 0 remplacé, 24 déjà en place.
+- Liste de recherche : 23 images sur 23 chargées, aucune erreur, aucune réponse en erreur. Fiche : photo, mention d'illustration, crédit et liens corrects (`target=_blank`, `rel="noopener noreferrer"`, `rel=license` sur la licence), en français, en arabe (RTL) et à 390 px sans défilement horizontal.
+- 1 019 tests, `npm run test:e2e` 6/6, `npm run test:e2e:pwa` 7/7, types et lint propres.
+
+**Points d'attention**
+- **Ce sont des photos d'illustration du modèle**, pas du véhicule décrit (couleur, finition, année peuvent différer) : la mention le dit sur chaque annonce. Deux choix approchants : la **Fiesta** est une génération plus récente (2017 et après) que l'annonce (2016), les trois photos disponibles étant de cette génération ; la **Duster** est une vue arrière d'une Duster II sans inscription, faute de meilleure photo dans l'enveloppe téléchargée.
+- **Plaques d'immatriculation** : plusieurs photos montrent une plaque lisible (publiées telles quelles par leurs auteurs sur Wikimedia Commons). Pour un site de démonstration cela pose peu de question ; à revoir avant toute mise en ligne publique de ces annonces.
+- **Licences** : CC BY-SA impose de conserver le crédit et la licence (fait, page de l'annonce et `prisma/demo-photos/README.md`) et de publier toute adaptation sous la même licence ; à faire valider par votre juriste si ces annonces deviennent publiques. **En production, ces annonces n'existent pas** (le compte de démonstration et `db:seed:demo` sont refusés par `launch:check`).
+- Le crédit s'affiche sur la fiche, pas sur les cartes de la liste : la licence admet un lien vers la page où figure le crédit.
+- Les photos des vendeurs ne sont pas concernées : elles leur appartiennent et n'ont ni crédit ni mention.

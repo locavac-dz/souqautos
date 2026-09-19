@@ -16,6 +16,7 @@
     "test:e2e:pwa": "playwright test -c playwright.pwa.config.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo-listings.ts",
+    "db:demo-photos": "tsx prisma/apply-demo-photos.ts",
     "launch:check": "tsx scripts/launch-check.ts",
     "push:keys": "node scripts/generate-vapid-keys.mjs",
     "db:backup": "node scripts/backup-db.mjs",

@@ -20,6 +20,8 @@ import {
 import { ListingLifecycleActions } from "@/components/ListingLifecycleActions";
 import { ListingPriceEditor } from "@/components/ListingPriceEditor";
 import { ContactButtons } from "@/components/ContactButtons";
+import { PhotoCredits } from "@/components/PhotoCredits";
+import { collectPhotoCredits } from "@/lib/photo-credit";
 import { estimatePrice } from "@/lib/price-estimation";
 import { computePriceBadge } from "@/lib/price-badge";
 import { PRICE_BADGE_STYLE, PRICE_BADGE_KEY } from "@/lib/price-badge-style";
@@ -362,19 +364,25 @@ export default async function ListingDetailPage({
           {listing.photos.map((photo, i) => (
             <div
               key={photo.id}
-              className={`relative aspect-[4/3] ${i === 0 ? "col-span-2 sm:col-span-2 sm:row-span-2" : ""}`}
+              className={`relative aspect-[16/10] ${i === 0 ? "col-span-2 sm:col-span-2 sm:row-span-2" : ""}`}
             >
               <Image
                 src={photo.path}
                 alt={listing.title}
                 fill
                 className="rounded-md object-cover border border-slate-200"
-                sizes="(max-width: 640px) 50vw, 33vw"
+                // La première photo occupe deux colonnes sur trois (toute la largeur sur téléphone) : sans
+                // cette indication, le site en servait une version au tiers de la largeur, agrandie donc floue.
+                sizes={i === 0 ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"}
+                // C'est l'image principale de la page : chargée sans attendre (Lot 125).
+                loading={i === 0 ? "eager" : undefined}
+                fetchPriority={i === 0 ? "high" : undefined}
               />
             </div>
           ))}
         </div>
       )}
+      <PhotoCredits credits={collectPhotoCredits(listing.photos)} />
 
       <div className="grid sm:grid-cols-3 gap-8">
         <div className="sm:col-span-2">

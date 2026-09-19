@@ -241,6 +241,9 @@
   },
   "Listing": {
     "notFound": "Cette annonce est introuvable ou n'est plus disponible.",
+    "photoIllustrative": "Photo d'illustration du modèle (annonce de démonstration), pas du véhicule décrit.",
+    "photoBy": "Photo :",
+    "photoSource": "Wikimedia Commons",
     "backHome": "Retour à l'accueil",
     "publishedOn": "Publiée le {date}",
     "seller": "Vendeur",

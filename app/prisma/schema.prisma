@@ -882,6 +882,14 @@ model ListingPhoto {
   // photo/annonce copiée), sans prétendre détecter un recadrage ou une
   // recompression différente — ce n'est pas un hash perceptuel.
   sha256    String   @default("")
+  // Lot 125 — crédit d'une photo publiée sous licence libre (annonces de démonstration, photos de
+  // Wikimedia Commons). Les licences CC BY / CC BY-SA imposent de nommer l'auteur, d'indiquer la
+  // licence et de renvoyer à la source : ces quatre champs sont affichés sous la photo. Tous vides
+  // pour une photo envoyée par un vendeur (elle lui appartient).
+  creditAuthor     String?
+  creditLicense    String?
+  creditLicenseUrl String?
+  creditSourceUrl  String?
   // Lot 86 — analyse qualité photo (docs/ARCHITECTURE.md §36) : liste JSON de
   // PhotoQualityFlag (cf. src/lib/photo-quality.ts), calculée une seule fois à
   // l'upload sur les octets déjà traités par sharp. Purement indicative pour

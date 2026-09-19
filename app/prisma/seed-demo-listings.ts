@@ -9,10 +9,12 @@
 // une seule fois avec `npx tsx prisma/seed-demo-listings.ts` (nécessite que
 // `npm run seed` ait déjà tourné pour peupler le catalogue marques/modèles).
 //
-// Photos : aucune vraie photo de véhicule utilisée (aucune source fiable/
-// libre de droits disponible sur cette machine) — un visuel de substitution
-// généré localement (fond coloré + nom marque/modèle) est utilisé à la place,
-// honnêtement un placeholder, jamais présenté comme une vraie photo.
+// Photos (Lot 125) : chaque annonce reçoit une vraie photo du modèle, publiée sous licence libre
+// sur Wikimedia Commons (dossier prisma/demo-photos/, crédits dans CREDITS.json et README.md ; auteur,
+// licence et liens sont enregistrés avec la photo et affichés sur l'annonce). Ce sont des photos
+// d'illustration du MODÈLE, pas du véhicule décrit. Un modèle sans photo dans ce dossier garde un
+// visuel de substitution généré localement (fond coloré + nom marque/modèle), jamais présenté comme
+// une vraie photo. Pour mettre à niveau une base créée avant ce lot : npm run db:demo-photos.
 
 import { PrismaClient, type FuelType, type Gearbox, type ListingCondition, type ListingFormula } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -22,6 +24,7 @@ import { computeExpiryDate } from "../src/lib/listing-lifecycle";
 import { formulaValidityDays } from "../src/lib/payment-orders";
 import { storeProcessedImage } from "../src/lib/uploads";
 import { slugify } from "./catalogue-data";
+import { storeDemoPhoto } from "./demo-photo-store";
 
 const prisma = new PrismaClient();
 
@@ -272,8 +275,13 @@ async function main() {
       },
     });
 
-    const photoPath = await generatePlaceholderPhoto(item.brand, item.model);
-    await prisma.listingPhoto.create({ data: { listingId: listing.id, path: photoPath, position: 0 } });
+    const realPhoto = await storeDemoPhoto(item.brand, item.model);
+    if (realPhoto) {
+      await prisma.listingPhoto.create({ data: { listingId: listing.id, position: 0, ...realPhoto } });
+    } else {
+      const photoPath = await generatePlaceholderPhoto(item.brand, item.model);
+      await prisma.listingPhoto.create({ data: { listingId: listing.id, path: photoPath, position: 0 } });
+    }
 
     created += 1;
   }

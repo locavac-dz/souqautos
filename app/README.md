@@ -25,6 +25,8 @@ npm run dev
 
 App sur http://localhost:5184 (redirige vers `/fr`).
 
+**Annonces de démonstration** (développement et recette seulement, jamais en production) : `npm run db:seed:demo` crée des comptes vendeurs et 24 annonces avec une **vraie photo du modèle**. Ces photos viennent de Wikimedia Commons sous licence libre (dossier `prisma/demo-photos/`, crédits dans `CREDITS.json` et `README.md`) ; l'auteur, la licence et le lien source sont affichés sous la photo de l'annonce, comme les licences CC BY / CC BY-SA l'exigent. Sur une base créée avant le Lot 125, `npm run db:demo-photos` remplace les anciens visuels de texte par ces photos (sans effet s'ils y sont déjà).
+
 ### Sans accès administrateur à PostgreSQL (Windows)
 
 Si le mot de passe du compte `postgres` de l'installation est inconnu, on peut créer un serveur PostgreSQL indépendant, dédié au projet (dossier de données dans le profil utilisateur, hors du dépôt, port 5433, accessible seulement depuis ce PC, tri français ICU) avec les outils déjà installés :
