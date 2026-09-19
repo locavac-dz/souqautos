@@ -8,6 +8,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getSubscriptionStatus, isWithinQuota } from "@/lib/pro-subscription";
 import { computeListingContentHash } from "@/lib/fraud-signals";
 import { validateCatalogueRefs } from "@/lib/listing-catalogue-refs";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
@@ -65,7 +66,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "phone_required" }, { status: 400 });
   }
   if (!user.phone && data.phone) {
-    await prisma.user.update({ where: { id: user.id }, data: { phone: data.phone } });
+    // Le numéro est unique : s'il appartient déjà à un autre compte, répondre par une erreur claire
+    // (comme la route du profil) plutôt que de laisser la base lever une erreur 500.
+    try {
+      await prisma.user.update({ where: { id: user.id }, data: { phone: data.phone } });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        return NextResponse.json({ error: "phone_taken" }, { status: 409 });
+      }
+      throw error;
+    }
   }
 
   // Lot 79 — quota d'annonces actives par palier d'abonnement pro (§4-B).

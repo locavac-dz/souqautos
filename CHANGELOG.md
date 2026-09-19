@@ -2356,3 +2356,31 @@ Une alerte de recherche qui correspond à une nouvelle annonce n'arrive plus seu
 - Le sous-titre de « Mes alertes » parle encore d'« un email » : à harmoniser avec l'encadré si vous le souhaitez.
 
 **Reste possible dans ce bloc** : notification pour les nouveaux messages (mêmes briques, `sendPushToUser` est prêt).
+
+## Lot 122 — Bloc 3 : statistiques pour les professionnels (2026-09-19)
+
+Un compte professionnel voit ce que produisent ses annonces : vues, contacts (numéro affiché, WhatsApp, messages), favoris, sur 7, 30 ou 90 jours, avec des courbes par jour. Le détail annonce par annonce est réservé aux abonnements Pro et Premium (de quoi justifier un abonnement).
+
+**Livré**
+- **Page `/pro/statistiques`** (lien « Statistiques détaillées » dans le tableau de bord pro) : cinq indicateurs (vues, contacts avec le détail appels / WhatsApp / messages, ajouts aux favoris, conversations, taux de contact), deux histogrammes par jour (vues, contacts), tableau par annonce (vues, favoris, appels, WhatsApp, messages, taux de contact ; les annonces vendues, expirées ou suspendues y figurent, étiquetées). Propriétaire **et collaborateurs** du compte (même règle que le tableau de bord) ; visiteur non connecté redirigé vers la connexion ; personne sans compte pro : invitation à en créer un. FR et AR (RTL), sans bibliothèque de graphiques (HTML/CSS accessible : chaque barre porte sa valeur, chaque graphique une description).
+- **Vues par jour** : nouveau modèle `ListingViewDay` (migration `20260919210000_listing_view_days`) — un compteur par annonce et par jour civil algérien, **sans adresse IP, sans identifiant de visiteur, sans heure de visite**. Incrémenté avec `Listing.views` dans **une seule transaction**, par un `INSERT … ON CONFLICT … count + 1` atomique.
+- **Vues plus justes** : ne sont plus comptés le vendeur lui-même (déjà le cas), **ni les robots** d'indexation, d'aperçu de lien (Facebook, WhatsApp, Skype…), de supervision, ni les bibliothèques HTTP (curl, requests, axios…), ni une requête sans `User-Agent`. Cela vaut aussi pour le compteur total affiché sur les annonces, qui pourra donc croître un peu moins vite qu'avant. Comptage après l'envoi de la page (`after()`), sans jamais faire échouer l'affichage.
+- **Taux de contact** = (numéros affichés + conversations) ÷ vues, **affiché seulement à partir de 30 vues** (« 2 contacts sur 3 vues » ne veut rien dire) et plafonné à 100 %.
+- **Palier** : `hasDetailedStatistics` (dans `pro-subscription.ts`) reprend aujourd'hui la règle des « outils avancés » (Pro et Premium) ; fonction séparée pour pouvoir changer ce palier sans toucher à l'export ni au renouvellement automatique. Textes de la page publique des abonnements et de l'indice « verrouillé » du tableau de bord mis à jour en conséquence.
+- **Correction en passant** : publier une annonce avec un numéro **déjà utilisé par un autre compte** provoquait une erreur 500 (contrainte d'unicité non gérée). La route répond maintenant `409 phone_taken`, sans créer d'annonce ni modifier le numéro, et l'assistant de publication affiche un message clair (FR/AR), comme le formulaire de profil.
+- 27 nouveaux tests unitaires (828 → 855) : fenêtres et jours en heure d'Algérie (changement de mois, année bissextile, 23 h UTC = jour suivant), périodes acceptées, taux, tri, agrégation en base simulée, détection des robots, atomicité du comptage.
+
+**Vérification en conditions réelles** (base et serveur de développement, comptes jetables supprimés ensuite)
+- Vues : 25 visites de navigateur comptées ; **3 visites Googlebot, curl, facebookexternalhit et le vendeur exclus** ; jour enregistré = jour civil algérien ; total global +25 ; **40 visites simultanées toutes comptées** (65 = 25 + 40, une seule ligne par jour).
+- Contacts réels par la route publique (2 appels, 1 WhatsApp, 1 appel sur une autre annonce), 4 favoris, 2 conversations : la page affiche exactement 75 vues, 6 contacts (3 appels, 1 WhatsApp, 2 messages), 4 favoris, 2 conversations, taux 8 % ; par annonce 65 vues / 3 favoris / 2 appels / 1 WhatsApp / 1 message / 6,2 % ; `—` sous 30 vues.
+- Période : une vue et un contact d'il y a 60 jours n'apparaissent que sur 90 jours (82 vues, 7 contacts) ; `?jours=abc` retombe sur 30 jours.
+- Accès : compte Pro → tableau détaillé ; compte Starter → totaux et courbes, **tableau verrouillé** ; collaborateur sans aucune permission → même vue que le propriétaire ; compte sans espace pro → invitation ; anonyme → 307 vers `/fr/connexion`.
+- Rendu en français, en arabe (RTL) et sur téléphone (390 px) : aucun défilement horizontal de la page, aucune erreur de console. 855 tests unitaires, `npm run test:e2e` 6/6, `npm run test:e2e:pwa` 7/7 (qui compile aussi la version de production), types et lint propres.
+
+**Points d'attention**
+- **Historique** : les vues d'avant ce lot n'ont pas de détail par jour ; les courbes commencent à la mise en service. Le total de chaque annonce, lui, est conservé.
+- **Palier** : c'est une décision commerciale prise par défaut (détail par annonce = Pro et Premium, totaux et courbes pour tous les comptes pro) ; elle se change en une ligne.
+- **Taux de contact** : il ne compte que les contacts que le site voit (numéro affiché, message). Un visiteur qui note l'annonce et appelle par un autre moyen n'y figure pas ; un numéro « affiché » n'est pas un appel passé.
+- Les contacts (`ContactEvent`) et conversations sont relus sur la période en une requête chacun : sans souci pour les volumes actuels ; à agréger en base si un compte dépasse plusieurs dizaines de milliers de contacts par période.
+
+**Reste du bloc 3** : suivi des contacts (liste de prospects par annonce, avec statut et note) ; paiement SATIM, en attente de l'ouverture du compte marchand (le virement manuel existe déjà).

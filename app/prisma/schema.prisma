@@ -324,6 +324,7 @@ model Listing {
   reports      Report[]
   priceHistory ListingPriceHistory[]
   renewals     ListingRenewal[]
+  viewDays     ListingViewDay[]
   searchAlertNotifications SearchAlertNotification[]
   paymentOrders PaymentOrder[]
   // Lot 72 — comble l'écart documenté depuis le Lot 4/45 (docs/ARCHITECTURE.md
@@ -1084,6 +1085,20 @@ model ContactEvent {
   createdAt DateTime       @default(now())
 
   @@index([listingId, createdAt])
+}
+
+// Lot 122 — vues d'une annonce PAR JOUR, pour les statistiques des professionnels. `Listing.views`
+// ne garde que le total : impossible d'en tirer une évolution. Compteur agrégé seulement — ni adresse
+// IP, ni identifiant de visiteur, ni date de visite précise : on ne sait pas QUI a vu, seulement
+// combien de fois par jour. `day` est la date civile en Algérie (UTC+1, sans heure d'été). Incrémenté
+// en une seule requête atomique (voir src/lib/view-tracking.ts). Les vues d'avant ce lot n'ont pas de détail.
+model ListingViewDay {
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  day       DateTime @db.Date
+  count     Int      @default(0)
+
+  @@id([listingId, day])
 }
 
 // Lot 121 — abonnement aux notifications sur UN appareil (navigateur ou application installée).

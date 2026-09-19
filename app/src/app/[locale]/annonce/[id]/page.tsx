@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { headers } from "next/headers";
+import { after } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { computeAverageRating } from "@/lib/reviews";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isLikelyBot, recordListingView } from "@/lib/view-tracking";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
@@ -121,11 +124,11 @@ export default async function ListingDetailPage({
     );
   }
 
-  if (!isOwner) {
-    await prisma.listing.update({
-      where: { id: listing.id },
-      data: { views: { increment: 1 } },
-    });
+  // Lot 122 — ni le vendeur, ni les robots (indexation, aperçus de liens, supervision) : leurs passages
+  // fausseraient les vues et le taux de contact des statistiques. Compté après l'envoi de la page.
+  if (!isOwner && !isLikelyBot((await headers()).get("user-agent"))) {
+    const listingId = listing.id;
+    after(() => recordListingView(listingId));
   }
 
   const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";

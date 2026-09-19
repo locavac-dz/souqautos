@@ -62,6 +62,8 @@ export default function Step11Page() {
     const body = await res.json().catch(() => null);
     if (body?.error === "photo_invalid_type" || body?.error === "photo_too_large") {
       setError(t("errorValidation"));
+    } else if (body?.error === "phone_taken") {
+      setError(t("errorPhoneTaken"));
     } else {
       setError(t("errorGeneric"));
     }

@@ -119,6 +119,15 @@ export function hasAdvancedProTools(tier: ProSubscriptionTier): boolean {
   return ADVANCED_TOOLS_TIERS.has(tier);
 }
 
+// Lot 122 — statistiques DÉTAILLÉES par annonce (vues, favoris, appels, WhatsApp, conversations,
+// taux de contact). Les totaux et courbes de la période restent visibles à tous les comptes pro : le
+// détail par annonce est ce qui justifie un abonnement. Fonction distincte de hasAdvancedProTools pour
+// pouvoir changer ce palier sans toucher au renouvellement automatique ni à l'export ; elle en reprend
+// aujourd'hui la règle (Pro et Premium).
+export function hasDetailedStatistics(tier: ProSubscriptionTier): boolean {
+  return hasAdvancedProTools(tier);
+}
+
 export type SubscriptionStatus = {
   tier: ProSubscriptionTier; // effectif, après expiration éventuelle
   quota: number | null;
