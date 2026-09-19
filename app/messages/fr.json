@@ -844,6 +844,9 @@
     "phoneCurrentlyVerified": "✓ Ce numéro est vérifié.",
     "phoneChangeWarning": "Changer de numéro annulera la vérification actuelle — vous devrez le revérifier.",
     "bioLabel": "Présentation (optionnel)",
+    "whatsappLabel": "Je suis joignable sur WhatsApp à ce numéro",
+    "whatsappHelp": "Un bouton « Écrire sur WhatsApp » sera proposé aux acheteurs sur vos annonces. Votre numéro n'apparaît pas dans la page : il n'est transmis qu'au clic.",
+    "whatsappNeedsPhone": "Renseignez un numéro de téléphone pour activer WhatsApp.",
     "submit": "Enregistrer",
     "saved": "Profil mis à jour.",
     "phoneTaken": "Ce numéro de téléphone est déjà utilisé par un autre compte.",
@@ -1227,6 +1230,15 @@
     "errorGeneric": "Une erreur est survenue.",
     "errorReasonRequired": "Un refus exige un motif de 5 à 300 caractères.",
     "errorAlreadyModerated": "Cet avis a déjà été traité par un autre membre de l'équipe."
+  },
+  "Contact": {
+    "showPhone": "Afficher le numéro",
+    "call": "Appeler {phone}",
+    "whatsapp": "Écrire sur WhatsApp",
+    "loading": "Chargement…",
+    "errorRateLimited": "Trop de demandes de numéro pour le moment. Réessayez plus tard ou utilisez la messagerie.",
+    "errorUnavailable": "Le contact par téléphone n'est pas disponible pour cette annonce.",
+    "errorGeneric": "Une erreur est survenue. Réessayez."
   },
   "PressReview": {
     "sectionTitle": "Revue de presse",

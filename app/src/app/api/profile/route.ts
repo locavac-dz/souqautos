@@ -37,6 +37,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Lot 119 — WhatsApp n'a de sens qu'avec un numéro ; sans numéro, l'option est désactivée.
+  if (parsed.data.whatsappEnabled && !newPhone) {
+    return NextResponse.json({ error: "whatsapp_needs_phone" }, { status: 400 });
+  }
+  const whatsappEnabled = newPhone ? parsed.data.whatsappEnabled : false;
+
   const resetPhoneVerification = shouldResetPhoneVerification({ oldPhone: user.phone, newPhone });
 
   try {
@@ -53,6 +59,7 @@ export async function POST(request: NextRequest) {
         where: { id: user.id },
         data: {
           phone: newPhone,
+          ...(whatsappEnabled !== undefined ? { whatsappEnabled } : {}),
           ...(resetPhoneVerification ? { phoneVerifiedAt: null } : {}),
         },
       }),

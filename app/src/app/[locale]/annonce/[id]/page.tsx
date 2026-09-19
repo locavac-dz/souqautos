@@ -16,7 +16,7 @@ import {
 } from "@/lib/listing-lifecycle";
 import { ListingLifecycleActions } from "@/components/ListingLifecycleActions";
 import { ListingPriceEditor } from "@/components/ListingPriceEditor";
-import { PhoneReveal } from "@/components/PhoneReveal";
+import { ContactButtons } from "@/components/ContactButtons";
 import { estimatePrice } from "@/lib/price-estimation";
 import { computePriceBadge } from "@/lib/price-badge";
 import { PRICE_BADGE_STYLE, PRICE_BADGE_KEY } from "@/lib/price-badge-style";
@@ -539,8 +539,10 @@ export default async function ListingDetailPage({
             {!isOwner && (
               <div className="mt-4 space-y-2">
                 <ContactSellerButton listingId={listing.id} isLoggedIn={Boolean(currentUser)} />
+                {/* Lot 119 — le numéro n'est JAMAIS envoyé avec la page : seul le fait qu'il existe
+                    (et le choix WhatsApp du vendeur) est transmis ; le numéro est demandé au clic. */}
                 {listing.seller.phone && (
-                  <PhoneReveal phone={listing.seller.phone} label={tListing("showPhone")} />
+                  <ContactButtons listingId={listing.id} whatsappEnabled={listing.seller.whatsappEnabled} />
                 )}
                 <div className="pt-2 text-right">
                   <ReportListingButton

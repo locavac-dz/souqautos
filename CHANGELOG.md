@@ -2262,3 +2262,29 @@ Suite du bloc « préparation du lancement » : que l'équipe sache quand du con
 - Pas d'outil de suivi d'erreurs (Sentry…) ni de service de supervision externe : `/api/health` est prêt pour l'un comme pour l'autre, mais ils restent à choisir et à configurer.
 
 **Reste du bloc 1 (hors code)** : environnement de recette à créer avec l'hébergeur ; démarches de conformité juridique ; choix de l'hébergement et service d'email réel (fournisseur, domaine, SPF/DKIM).
+
+## Lot 119 — Bloc 2 : contact rapide (appel, WhatsApp) sans numéro dans la page (2026-09-19)
+
+Premier lot du bloc 2 « faire revenir les visiteurs » : un contact plus direct pour l'acheteur, et un numéro que la page n'expose plus. Traité avant la PWA parce que l'analyse a révélé un défaut réel.
+
+**Ce que la vérification a montré (et une correction de ma propre mesure)**
+- La page d'une annonce passait `seller.phone` à un composant client (`PhoneReveal`). Or le numéro est chiffré au repos par une extension Prisma qui **ne s'applique qu'aux requêtes directes sur `user`** : lu depuis l'annonce (`select` ou `include` imbriqué), il reste chiffré. Mesuré sur une annonce de test : chaque visiteur recevait dans la page **le numéro chiffré** (`"phone":"p5GCtn…"`), identique pour un même numéro donc traçable d'une annonce à l'autre, et le bouton « Afficher le numéro » aurait affiché ce texte illisible à la place d'un numéro. **Personne ne l'avait vu : aucun vendeur de démonstration n'a de téléphone.**
+- Ma première mesure annonçait le numéro *en clair* dans la page (« 1 occurrence ») : c'était **un faux positif** — le texte d'exemple « Ex : 0555123456 » d'un message de traduction embarqué dans la page. Corrigé avant de conclure ; la mesure finale exclut ce texte et cherche aussi le numéro chiffré.
+
+**Livré**
+- **Le numéro n'est plus dans la page.** Il est demandé au clic à `POST /api/listings/[id]/contact` (`TELEPHONE` ou `WHATSAPP`, langue du visiteur). La page ne transmet que le fait qu'un numéro existe et le choix WhatsApp du vendeur. Le numéro est lu par une requête **directe** sur `user` (donc déchiffré) ; un test verrouille cette règle pour qu'elle ne puisse pas être défaite par un refactoring.
+- **Limites de débit** : visiteur non connecté 30 demandes/heure par adresse et 6/heure par annonce et par adresse ; compte connecté 100/heure. L'adresse suit `TRUSTED_PROXY_HOPS` (Lot 117) : la limite n'est plus contournable par un en-tête falsifié une fois la variable définie.
+- **Refus indiscernables** (404, sans dire pourquoi) : annonce non publiée, suspendue, vendue ; vendeur suspendu ou supprimé ; vendeur sans numéro ou numéro dans un format inattendu (jamais un lien cassé) ; vendeur qui a **bloqué** l'acheteur (même règle que la messagerie). Le vendeur lui-même reçoit `own_listing`.
+- **WhatsApp** : bouton proposé **seulement si le vendeur l'a choisi** (case « Je suis joignable sur WhatsApp à ce numéro » dans son profil, désactivée par défaut, impossible sans numéro et remise à zéro si le numéro est retiré). Lien `https://wa.me/213…` avec un **message pré-rempli** (français ou arabe) qui nomme l'annonce et y renvoie. Numéro converti au format international (`0555…` et `+213555…`), jamais fabriqué : un format invalide donne un refus.
+- **Comptage des contacts** (`ContactEvent`, migration `20260919190000_contact_events`) : annonce, canal, utilisateur connecté éventuel, date — **jamais l'adresse IP ni le numéro**. Prépare les statistiques pour les professionnels (bloc 3).
+- Profil : option WhatsApp, présente aussi dans l'export des données personnelles. FR et AR.
+- 24 nouveaux tests : liens de contact (formats, encodage, impossibilité de détourner le numéro ou l'hôte par le texte du message), route (numéro lu directement, 404 sans raison, blocage, limites, comptage sans IP), validation du profil.
+
+**Vérification en conditions réelles (PostgreSQL)**, sur un vendeur jetable avec numéro fictif et une annonce publiée : page servie à un anonyme → **0 occurrence du numéro, en clair comme chiffré** ; appel révélé à la demande (`tel:+213555123456`) et compté ; WhatsApp refusé (404) avant activation puis servi après, message en français et en arabe ; activation sans numéro refusée (`whatsapp_needs_phone`) sans effacer le numéro ; corps invalide 400 ; annonce inconnue, en attente, suspendue, refusée, vendue et vendeur suspendu → 404 ; vendeur qui a bloqué l'acheteur → 404 ; **6 demandes autorisées puis 429** pour une même adresse et une même annonce, une autre adresse non affectée ; clic réel dans le navigateur → « Appeler 0555123456 » et bouton WhatsApp. Comptes, annonce, événements et photo de test supprimés. `next build`, `npm run test:e2e` 6/6, types et lint propres, **727 tests**.
+
+**Points d'attention**
+- **Un numéro reste récupérable à la main** : quiconque clique voit le numéro, et un robot patient peut le faire dans la limite de débit (30/h par adresse, 6/h par annonce). Le but est de supprimer la lecture passive de la page et de borner la collecte, pas de l'empêcher totalement. Exiger un compte connecté, ou un défi anti-robot, serait plus strict au prix d'un frein pour les acheteurs.
+- **Ouverture de WhatsApp** : la fenêtre est ouverte pendant le clic (les navigateurs bloquent une ouverture faite après l'attente réseau) puis redirigée ; non testé sur mobile réel avec l'application WhatsApp installée.
+- Les numéros déjà enregistrés ne changent pas ; aucun vendeur n'a encore choisi WhatsApp.
+
+**À suivre (bloc 2)** : application installable (PWA) ; notifications pour les alertes de recherche (nécessite une clé d'envoi de notifications et une dépendance, à valider).

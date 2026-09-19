@@ -77,6 +77,10 @@ model User {
   proSubscriptionOrders         ProSubscriptionOrder[] @relation("ProSubscriptionOrderAuthor")
   proSubscriptionOrdersReviewed ProSubscriptionOrder[] @relation("ProSubscriptionOrderReviewer")
   ownerReviews                  OwnerReview[]
+  // Lot 119 — le vendeur indique que son numéro est joignable sur WhatsApp ; sans
+  // ce choix explicite, aucun bouton WhatsApp n'est proposé aux acheteurs.
+  whatsappEnabled               Boolean @default(false)
+  contactEvents                 ContactEvent[]
 }
 
 model Profile {
@@ -355,6 +359,7 @@ model Listing {
   @@index([contentHash])
   @@index([communeId])
   @@index([generationId])
+  contactEvents ContactEvent[]
 }
 
 // Lot 45 — historique des prix (écart documenté depuis le Lot 4). Une entrée
@@ -1056,4 +1061,26 @@ model OwnerReview {
   @@unique([userId, modelId])
   @@index([modelId, status])
   @@index([status, createdAt])
+}
+
+// Lot 119 — contact rapide depuis une annonce (appel, WhatsApp). Le numéro n'est
+// plus envoyé avec la page : il est demandé au serveur au moment du clic, ce qui
+// permet de limiter le débit et de compter les contacts (statistiques pour les
+// professionnels). Seuls l'annonce, le canal, l'éventuel utilisateur connecté et
+// la date sont conservés — jamais l'adresse IP ni le numéro.
+enum ContactChannel {
+  TELEPHONE
+  WHATSAPP
+}
+
+model ContactEvent {
+  id        String         @id @default(cuid())
+  listingId String
+  listing   Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  channel   ContactChannel
+  userId    String?
+  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime       @default(now())
+
+  @@index([listingId, createdAt])
 }

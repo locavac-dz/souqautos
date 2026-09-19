@@ -92,6 +92,7 @@ export async function GET() {
       id: user.id,
       email: user.email,
       telephone: user.phone,
+      joignableSurWhatsapp: user.whatsappEnabled,
       role: user.role,
       langue: user.locale,
       creeLe: user.createdAt,

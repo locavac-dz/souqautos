@@ -34,6 +34,7 @@ export default async function EditProfilePage() {
         initialWilayaId={user.profile?.wilayaId ?? null}
         initialPhone={user.phone}
         initialBio={user.profile?.bio ?? null}
+        initialWhatsappEnabled={user.whatsappEnabled}
         phoneVerified={Boolean(user.phoneVerifiedAt)}
       />
       <div className="mt-10 border-t border-slate-200 pt-6">

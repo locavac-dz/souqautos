@@ -7,6 +7,8 @@ export const profileUpdateSchema = z.object({
   wilayaId: z.number().int().positive().max(INT4_MAX).optional(),
   phone: z.string().trim().regex(algerianPhoneRegex).optional(),
   bio: z.string().trim().max(500).optional(),
+  // Lot 119 — numéro joignable sur WhatsApp (bouton proposé aux acheteurs).
+  whatsappEnabled: z.boolean().optional(),
 });
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;

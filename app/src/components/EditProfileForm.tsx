@@ -10,6 +10,7 @@ export function EditProfileForm({
   initialWilayaId,
   initialPhone,
   initialBio,
+  initialWhatsappEnabled,
   phoneVerified,
 }: {
   wilayas: { id: number; nomFr: string; nomAr: string }[];
@@ -17,6 +18,7 @@ export function EditProfileForm({
   initialWilayaId: number | null;
   initialPhone: string | null;
   initialBio: string | null;
+  initialWhatsappEnabled: boolean;
   phoneVerified: boolean;
 }) {
   const t = useTranslations("ProfileEdit");
@@ -26,6 +28,7 @@ export function EditProfileForm({
   const [wilayaId, setWilayaId] = useState(initialWilayaId ? String(initialWilayaId) : "");
   const [phone, setPhone] = useState(initialPhone ?? "");
   const [bio, setBio] = useState(initialBio ?? "");
+  const [whatsappEnabled, setWhatsappEnabled] = useState(initialWhatsappEnabled);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -46,6 +49,7 @@ export function EditProfileForm({
         wilayaId: wilayaId ? Number(wilayaId) : undefined,
         phone: phone.trim() || undefined,
         bio: bio.trim() || undefined,
+        whatsappEnabled: phone.trim() ? whatsappEnabled : false,
       }),
     });
 
@@ -58,7 +62,13 @@ export function EditProfileForm({
     }
 
     const body = await res.json().catch(() => null);
-    setError(body?.error === "phone_taken" ? t("phoneTaken") : t("errorGeneric"));
+    setError(
+      body?.error === "phone_taken"
+        ? t("phoneTaken")
+        : body?.error === "whatsapp_needs_phone"
+          ? t("whatsappNeedsPhone")
+          : t("errorGeneric")
+    );
   }
 
   return (
@@ -105,6 +115,19 @@ export function EditProfileForm({
         {phoneVerified && phoneChanged && (
           <span className="mt-1 block text-xs text-amber-700">{t("phoneChangeWarning")}</span>
         )}
+      </label>
+      <label className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          checked={whatsappEnabled && phone.trim() !== ""}
+          disabled={phone.trim() === ""}
+          onChange={(e) => setWhatsappEnabled(e.target.checked)}
+          className="mt-1"
+        />
+        <span className="text-sm text-slate-700">
+          {t("whatsappLabel")}
+          <span className="block text-xs text-slate-500">{t("whatsappHelp")}</span>
+        </span>
       </label>
       <label className="block">
         <span className="text-sm text-slate-700">{t("bioLabel")}</span>
