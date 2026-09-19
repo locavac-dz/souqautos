@@ -26,9 +26,8 @@ import { getE2eDatabaseUrl } from "./e2e-database";
 // node_modules/playwright/lib/runner/index.js). Le hook `pretest` npm, lui,
 // se termine avant que `playwright test` ne démarre quoi que ce soit.
 const appRoot = path.resolve(__dirname, "..");
-const databaseUrl = getE2eDatabaseUrl();
 
-async function dropAndRecreateSchema() {
+async function dropAndRecreateSchema(databaseUrl: string) {
   const prisma = new PrismaClient({ datasourceUrl: databaseUrl });
   try {
     await prisma.$executeRawUnsafe("DROP SCHEMA IF EXISTS public CASCADE");
@@ -38,14 +37,18 @@ async function dropAndRecreateSchema() {
   }
 }
 
-const env = { ...process.env, DATABASE_URL: databaseUrl };
-// Arguments tous statiques (aucune entrée utilisateur) — execSync avec une
-// commande jointe évite l'avertissement de dépréciation DEP0190 d'un tableau
-// d'arguments non échappé sous `shell: true`.
-const run = (command: string) => execSync(command, { cwd: appRoot, env, stdio: "inherit" });
-
 async function main() {
-  await dropAndRecreateSchema();
+  // Appelé ici (et non au chargement du module) pour qu'un refus du garde-fou
+  // passe par le `catch` ci-dessous et s'affiche comme un message, pas comme
+  // une trace d'exception.
+  const databaseUrl = getE2eDatabaseUrl();
+  const env = { ...process.env, DATABASE_URL: databaseUrl };
+  // Arguments tous statiques (aucune entrée utilisateur) — execSync avec une
+  // commande jointe évite l'avertissement de dépréciation DEP0190 d'un tableau
+  // d'arguments non échappé sous `shell: true`.
+  const run = (command: string) => execSync(command, { cwd: appRoot, env, stdio: "inherit" });
+
+  await dropAndRecreateSchema(databaseUrl);
   run("npx prisma migrate deploy");
   run("npx tsx prisma/seed.ts");
   run("npx tsx prisma/seed-demo-listings.ts");

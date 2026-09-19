@@ -2016,3 +2016,36 @@ Suite du Lot 107 : l'annuaire renvoie désormais vers des vitrines `/pro/[id]`, 
 **Hors périmètre** : `hreflang` reste porté par le sitemap uniquement (convention actuelle du projet, pas de `alternates.languages` dans les métadonnées) ; pas d'image de partage générée dynamiquement quand ni bannière ni logo n'existent.
 
 Prochain lot proposé : à définir avec le porteur de projet — le paiement reste le seul grand chantier d'infrastructure non engagé.
+
+## Lot 109 — Bascule de la base de données de SQLite vers PostgreSQL (2026-09-19)
+
+Le schéma Prisma était codé en dur sur `provider = "sqlite"` alors que `.env.example`, `docs/ARCHITECTURE.md` et la fiche d'hébergement remise au prestataire visent PostgreSQL. Objectif : **un seul moteur partout** (développement, tests de bout en bout, production), pour tester ce qui sera réellement déployé. Préparation commitée le 2026-09-18 (`ee88739`), vérifiée et complétée ici.
+
+**Livré**
+- `prisma/schema.prisma` en PostgreSQL ; les **45 migrations SQLite** (`PRAGMA`, reconstructions de tables, `DATETIME`, `AUTOINCREMENT`) sont remplacées par **une baseline unique** (l'historique reste dans git), générée par `prisma migrate diff --from-empty` puis complétée à la main avec ce que Prisma ne modélise pas : les **3 index uniques partiels** `IdentityVerificationRequest_pending_unique`, `PaymentOrder_pending_unique`, `ProSubscriptionOrder_pending_unique` (ils protègent contre les doubles demandes en attente ; 4 routes interceptent `P2002`) et la ligne `singleton` de `ModerationSettings`. Les deux `UPDATE` de rattrapage de l'ancien historique (expiration, permissions) sont abandonnés : sans effet sur une base vide.
+- **Recherche libre insensible à la casse** (`mode: "insensitive"` sur les 7 `contains` de `src/lib/search.ts`) : sous PostgreSQL `contains` distingue majuscules et minuscules, alors que SQLite non.
+- **Entiers saisis bornés à 32 bits** (`src/lib/validation/int-bounds.ts`) : PostgreSQL n'a que des `Int` de 32 bits, donc `/recherche?priceMax=99999999999` provoquait une erreur 500 (SQLite, 64 bits, l'acceptait). `numeric()` écarte désormais toute valeur hors bornes (comme il écartait déjà une valeur non numérique) ; identifiants bornés dans `auth`, `profile`, `pro-account`, `listing` ; `estimate.ts` réutilise le `numeric()` partagé au lieu d'en dupliquer une version non bornée (la page `/cote-souq-auto` avait le même défaut).
+- **Tests de bout en bout** : `e2e/reset-db.ts` vide et recrée le schéma `public` de la base dédiée (au lieu de supprimer un fichier), avec un **garde-fou** — refus si le nom de la base ne finit pas par `_e2e`, si elle est identique à `DATABASE_URL`, ou si `E2E_DATABASE_URL` manque. L'URL est lue à un seul endroit (`e2e/e2e-database.ts`) par `reset-db.ts` et `playwright.config.ts`. Le schéma est vidé par SQL plutôt que par `prisma migrate reset`, verrouillé par Prisma quand il est lancé par un agent IA.
+- `.env.example` (URL PostgreSQL, paramètres de pool `connection_limit`/`pool_timeout`, mention de la collation), `.gitignore`, `README.md`, et `scripts/dev-db.ps1` (démarrer/arrêter/état d'un serveur PostgreSQL de développement dédié).
+- 6 nouveaux tests unitaires (bornes 32 bits de la recherche et de l'estimation, `mode: "insensitive"` sur les 7 champs). 525/525 au vert.
+
+**Point d'attention : mot de passe `postgres` inconnu.** PostgreSQL 17 tournait déjà sur le poste, mais son compte administrateur était inaccessible. Plutôt que de modifier sa configuration de sécurité, un **serveur PostgreSQL indépendant** a été créé avec les mêmes outils (`initdb`) : dossier de données dans le profil utilisateur (hors du dépôt), port **5433**, écoute limitée à `localhost`, tri français ICU (`fr-FR`), aucun droit administrateur. L'installation d'origine n'a pas été touchée. Ce serveur **ne redémarre pas seul avec Windows** : `powershell -File scripts/dev-db.ps1 start` (documenté dans le README).
+
+**Vérification de bout en bout en conditions réelles (PostgreSQL 17.11)**
+- `prisma migrate deploy` sans erreur ; **`prisma migrate diff` base → schéma : « empty migration »** — les index partiels non modélisés ne créent aucune dérive (`migrate dev` ne cherchera pas à les supprimer). Requêtes de contrôle : les 3 index existent avec leur condition `WHERE status = 'EN_ATTENTE'`, la ligne `ModerationSettings` (3/3) est présente, 14 types énumérés, base créée avec la collation ICU `fr-FR`.
+- Seeds : 69 wilayas, 1 541 communes, 24 marques / 108 modèles / 67 générations / 20 équipements, compte admin, 24 annonces de démonstration.
+- Recherche : `q=bmw`, `BMW` et `Bmw` donnent le même résultat, de même `alger`/`ALGER` (9 annonces). `priceMax=99999999999`, `brandId=99999999999&page=999…9`, `equipmentIds=1,99999999999` et `/cote-souq-auto?brandId=99999999999…` répondent tous **200** (erreur 500 sans le correctif).
+- Tri de `/fr/wilaya` : `Aïn Defla` avant `Alger`, `Béchar`/`Béjaïa` parmi les B (pas après `Z`) — 69 wilayas.
+- Parcours par l'API : inscription, doublon d'e-mail (`409`), connexion, création d'un compte pro (wilaya 68, Bou Saâda), publication d'une annonce avec photo, approbation par l'admin, présence dans l'annuaire, vitrine `200`, recherche libre de l'annonce.
+- **Index partiels** : un second virement `EN_ATTENTE` pour la même annonce est refusé par la base (`P2002`) ; données de test nettoyées.
+- **`npm run test:e2e` : 6/6** sur `souq_auto_e2e` (inscription/connexion, publication en 11 étapes, messagerie, conseiller IA en français et en arabe). Le garde-fou refuse bien les trois cas (nom sans `_e2e`, URL identique à `DATABASE_URL`, variable absente), avec un message clair et le code de sortie 1. Next n'acceptant qu'un serveur de développement à la fois dans un dossier, il faut arrêter `npm run dev` avant `npm run test:e2e`.
+
+**Observation (existant, non corrigé)** : sur `/recherche`, quand toutes les annonces trouvées sont des annonces « en avant », le bloc « Annonces en avant » s'affiche mais le message « Aucune annonce ne correspond à votre recherche » apparaît aussi (la liste principale les exclut, `page.tsx` teste `listings.length === 0`). Sans lien avec la bascule ; correctif d'une ligne à faire à part.
+
+**Hors périmètre, pistes** :
+- **Verrouillage de compte non atomique** (`login/route.ts`) : avec de vrais écrivains parallèles, des tentatives simultanées peuvent sous-compter les échecs ; un `increment` atomique règle cela (périmètre du Lot 102).
+- **Courses « vérifier puis créer »** sans interception de `P2002` (inscription, changement d'e-mail, création de marque, avis, compte pro) : renvoient 500 au lieu de 409 en cas de course, plus probables en parallèle.
+- E-mails non normalisés en minuscules (latent, identique sous SQLite) ; identifiants des routes d'administration lus par `Number(id)` sans borne (accès admin seulement).
+- Les données de `prisma/dev.db` (SQLite) ne sont pas migrées : la base de démonstration est recréée par les seeds. L'ancien fichier reste sur disque, ignoré par git.
+
+Prochain lot proposé : la rubrique « Essais » (plan validé, Lots 110 et 111).

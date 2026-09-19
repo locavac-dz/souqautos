@@ -25,6 +25,23 @@ npm run dev
 
 App sur http://localhost:5184 (redirige vers `/fr`).
 
+### Sans accès administrateur à PostgreSQL (Windows)
+
+Si le mot de passe du compte `postgres` de l'installation est inconnu, on peut créer un serveur PostgreSQL indépendant, dédié au projet (dossier de données dans le profil utilisateur, hors du dépôt, port 5433, accessible seulement depuis ce PC, tri français ICU) avec les outils déjà installés :
+
+```powershell
+$bin = "C:\Program Files\PostgreSQL\17\bin"
+"le-mot-de-passe-du-rôle-souq_auto" | Set-Content $env:TEMP\pw.txt -NoNewline
+& "$bin\initdb.exe" -D "$env:USERPROFILE\souq-auto-pgdata" -U souq_auto --pwfile=$env:TEMP\pw.txt -A scram-sha-256 -E UTF8 --locale=C --locale-provider=icu --icu-locale=fr-FR
+Remove-Item $env:TEMP\pw.txt
+powershell -File scripts/dev-db.ps1 start
+$env:PGPASSWORD = "le-mot-de-passe-du-rôle-souq_auto"
+& "$bin\createdb.exe" -h localhost -p 5433 -U souq_auto souq_auto
+& "$bin\createdb.exe" -h localhost -p 5433 -U souq_auto souq_auto_e2e
+```
+
+Ensuite `DATABASE_URL` / `E2E_DATABASE_URL` pointent sur `localhost:5433`. Ce serveur ne redémarre pas seul avec Windows : `powershell -File scripts/dev-db.ps1 start` (aussi `stop` et `status`) avant de lancer le site. Attention : Next n'accepte qu'un seul serveur de développement à la fois dans ce dossier, donc arrêter `npm run dev` avant `npm run test:e2e`.
+
 ## Tests
 
 ```bash
