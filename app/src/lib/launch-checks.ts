@@ -1,6 +1,7 @@
 import { resolveMailConfig, DEFAULT_MAIL_FROM } from "@/lib/mail-config";
 import { parseTrustedProxyHops } from "@/lib/client-ip";
 import { resolvePushConfig, vapidKeysMatch } from "@/lib/push";
+import { verificationStatus } from "@/lib/seo-verification";
 
 // Lot 117 — contrôle de préparation à la mise en ligne (`npm run launch:check`).
 //
@@ -137,6 +138,20 @@ function checkPush(env: Env): CheckResult {
   return { id: "push", level: "ok", message: "Notifications push configurées (clés VAPID cohérentes)." };
 }
 
+// Lot 124 — Google Search Console : sans code de vérification publié sur la page d'accueil, il est
+// impossible de prouver que le site vous appartient, donc de soumettre le plan du site ou de voir
+// comment Google l'explore. Non bloquant : le site fonctionne sans, mais le référencement se pilote à l'aveugle.
+function checkSearchConsole(env: Env): CheckResult {
+  const status = verificationStatus(env.GOOGLE_SITE_VERIFICATION);
+  if (status === "valid") {
+    return { id: "search-console", level: "ok", message: "Code de vérification Google Search Console défini." };
+  }
+  if (status === "invalid") {
+    return { id: "search-console", level: "warning", message: "GOOGLE_SITE_VERIFICATION n'a pas la forme d'un code de vérification : la balise ne sera pas publiée.", fix: "Copier uniquement la valeur content=\"…\" fournie par Search Console (méthode « balise HTML »)." };
+  }
+  return { id: "search-console", level: "warning", message: "Pas de code de vérification Google Search Console : impossible de soumettre le plan du site ni de suivre l'exploration par Google.", fix: "Ajouter la propriété du site dans Search Console (méthode « balise HTML »), puis définir GOOGLE_SITE_VERIFICATION." };
+}
+
 function checkInfrastructure(env: Env): CheckResult[] {
   const results: CheckResult[] = [];
 
@@ -195,6 +210,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkSiteUrl(env),
     ...checkMail(env),
     checkPush(env),
+    checkSearchConsole(env),
     ...checkInfrastructure(env),
     ...checkFacts(facts),
   ];

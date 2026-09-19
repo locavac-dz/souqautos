@@ -28,6 +28,7 @@ const goodEnv = {
   VAPID_PUBLIC_KEY: vapid.publicKey,
   VAPID_PRIVATE_KEY: vapid.privateKey,
   VAPID_SUBJECT: "mailto:contact@souqauto.example",
+  GOOGLE_SITE_VERIFICATION: "abcDEF1234567890_-abcDEF1234567890",
 };
 
 const level = (results: ReturnType<typeof evaluateLaunchReadiness>, id: string) => results.filter((r) => r.id === id).map((r) => r.level);
@@ -127,5 +128,29 @@ describe("evaluateLaunchReadiness", () => {
     const results = evaluateLaunchReadiness({ env: { ...goodEnv, VAPID_PRIVATE_KEY: other.privateKey }, facts: goodFacts });
     expect(level(results, "push")).toEqual(["error"]);
     expect(results.find((r) => r.id === "push")?.message).toContain("ne correspond pas");
+  });
+});
+
+describe("evaluateLaunchReadiness — Search Console (Lot 124)", () => {
+  const withoutCode = () => {
+    const { GOOGLE_SITE_VERIFICATION, ...rest } = goodEnv;
+    void GOOGLE_SITE_VERIFICATION;
+    return rest;
+  };
+
+  it("warns, without blocking, when no Search Console verification code is set", () => {
+    const results = evaluateLaunchReadiness({ env: withoutCode(), facts: goodFacts });
+    expect(level(results, "search-console")).toEqual(["warning"]);
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+  });
+
+  it("warns when the value is not a token (a whole <meta> tag pasted by mistake would not be published)", () => {
+    const results = evaluateLaunchReadiness({ env: { ...withoutCode(), GOOGLE_SITE_VERIFICATION: '<meta name="google-site-verification" content="abc">' }, facts: goodFacts });
+    expect(level(results, "search-console")).toEqual(["warning"]);
+    expect(results.find((r) => r.id === "search-console")?.fix).toBeTruthy();
+  });
+
+  it("is fine with a valid code", () => {
+    expect(level(evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts }), "search-console")).toEqual(["ok"]);
   });
 });

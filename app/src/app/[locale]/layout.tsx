@@ -12,6 +12,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { CompareProvider } from "@/components/compare/CompareContext";
 import { CompareTray } from "@/components/compare/CompareTray";
 import { PwaRegister } from "@/components/PwaRegister";
+import { PageViewTracker } from "@/components/PageViewTracker";
+import { buildSearchEngineVerification } from "@/lib/seo-verification";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -34,6 +36,9 @@ export async function generateMetadata({
     // Lot 120 — application installable (le manifeste est servi par src/app/manifest.ts).
     applicationName: t("name"),
     appleWebApp: { capable: true, title: t("name"), statusBarStyle: "default" },
+    // Lot 124 — preuve de propriété du site pour Google Search Console et Bing Webmaster Tools
+    // (variables GOOGLE_SITE_VERIFICATION / BING_SITE_VERIFICATION ; rien n'est émis si elles sont absentes).
+    ...buildSearchEngineVerification(process.env),
   };
 }
 
@@ -84,6 +89,7 @@ export default async function LocaleLayout({
             <SiteFooter />
             <CompareTray />
             <PwaRegister />
+            <PageViewTracker />
           </CompareProvider>
         </NextIntlClientProvider>
       </body>

@@ -46,6 +46,11 @@ export default async function PrivacyPolicyPage() {
         </section>
 
         <section>
+          <h2 className="text-base font-medium text-slate-900 mb-2">{t("audienceTitle")}</h2>
+          <p>{t("audienceBody")}</p>
+        </section>
+
+        <section>
           <h2 className="text-base font-medium text-slate-900 mb-2">{t("recipientsTitle")}</h2>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>{t("recipientsHosting")}</li>

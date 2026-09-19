@@ -1127,6 +1127,29 @@ model ProspectFollowUp {
   updatedBy      User?          @relation(fields: [updatedById], references: [id], onDelete: SetNull)
 }
 
+// Lot 124 — mesure d'audience du site, SANS cookie et SANS identifiant. Une ligne = un nombre de pages
+// vues pour un jour civil algérien, une page (modèle d'adresse, jamais l'adresse réelle), une langue,
+// un type d'appareil et une catégorie de provenance. On ne stocke ni adresse IP, ni User-Agent, ni
+// paramètres d'adresse, ni identifiant de visiteur ou de session : il est impossible de savoir QUI a
+// vu QUOI, ni de suivre une personne d'une page ou d'un jour à l'autre. Les colonnes texte valent ""
+// plutôt que NULL pour faire partie de la clé primaire. Conservé 25 mois au plus (voir src/lib/analytics-record.ts).
+model PageViewDay {
+  day      DateTime @db.Date
+  // Modèle d'adresse sans la langue : "/recherche", "/annonce/[id]", "/mag/[slug]"…
+  page     String
+  // Pour les pages de contenu seulement (article, essai, marque, modèle, wilaya) : l'identifiant public
+  // dans l'adresse, vérifié comme existant avant d'être gardé. "" sinon.
+  detail   String   @default("")
+  locale   String
+  // "mobile" | "tablette" | "ordinateur"
+  device   String
+  // "direct" | "interne" | "recherche" | "reseaux" | "autre" — jamais le site de provenance lui-même.
+  referrer String
+  count    Int      @default(0)
+
+  @@id([day, page, detail, locale, device, referrer])
+}
+
 // Lot 121 — abonnement aux notifications sur UN appareil (navigateur ou application installée).
 // `endpoint` désigne le service de notification du navigateur (Google, Mozilla, Apple, Microsoft) ;
 // `p256dh` et `auth` sont les clés publiques qui permettent de chiffrer chaque message pour cet
