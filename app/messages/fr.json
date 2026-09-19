@@ -888,6 +888,10 @@
     "targetDescriptionListing": "l'annonce « {title} »",
     "targetDescriptionUser": "un profil utilisateur",
     "targetDescriptionOwnerReview": "un avis de propriétaire",
+    "pushSearchAlertTitle": "Nouvelle annonce pour votre alerte",
+    "pushSearchAlertBody": "{title} — {price} DA",
+    "pushTestTitle": "Notification d'essai",
+    "pushTestBody": "Tout fonctionne : vous recevrez ici vos alertes de recherche.",
     "ownerReviewApprovedSubject": "Votre avis est en ligne — Souq Auto",
     "ownerReviewApprovedBody": "Votre avis sur le modèle {vehicle} a été relu par notre équipe et est maintenant visible par tous. Merci de votre contribution.",
     "ownerReviewRejectedSubject": "Votre avis n'a pas été publié — Souq Auto",
@@ -1230,6 +1234,22 @@
     "errorGeneric": "Une erreur est survenue.",
     "errorReasonRequired": "Un refus exige un motif de 5 à 300 caractères.",
     "errorAlreadyModerated": "Cet avis a déjà été traité par un autre membre de l'équipe."
+  },
+  "PushNotifications": {
+    "title": "Notifications sur cet appareil",
+    "help": "Recevez vos alertes de recherche directement sur cet appareil, même quand le site est fermé. Sur iPhone et iPad, installez d'abord l'application (Partager, puis « Sur l'écran d'accueil »).",
+    "enable": "Activer les notifications",
+    "disable": "Désactiver",
+    "test": "Envoyer une notification d'essai",
+    "statusOn": "Notifications activées sur cet appareil.",
+    "denied": "Les notifications sont bloquées dans votre navigateur. Autorisez-les dans les réglages du site, puis rechargez la page.",
+    "unsupported": "Cet appareil ou ce navigateur ne permet pas les notifications. Vos alertes continuent d'arriver par email.",
+    "unavailable": "Les notifications ne sont pas disponibles pour le moment. Vos alertes continuent d'arriver par email.",
+    "noWorker": "Les notifications sont disponibles sur la version en ligne du site.",
+    "errorGeneric": "Une erreur est survenue. Réessayez.",
+    "testSent": "Notification d'essai envoyée : elle doit apparaître dans quelques secondes.",
+    "testNoDelivery": "Aucune notification n'a pu être envoyée à vos appareils. Désactivez puis réactivez les notifications.",
+    "testRateLimited": "Trop d'essais pour le moment. Réessayez plus tard."
   },
   "Pwa": {
     "install": "Installer l'application",

@@ -3,6 +3,7 @@ import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { DeleteAlertButton } from "@/components/DeleteAlertButton";
+import { PushToggle } from "@/components/PushToggle";
 
 const FUEL_KEY: Record<string, string> = {
   ESSENCE: "fuelEssence",
@@ -72,6 +73,8 @@ export default async function SearchAlertsPage() {
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("title")}</h1>
       <p className="text-sm text-slate-500 mb-6">{t("subtitle")}</p>
+
+      <PushToggle />
 
       {alerts.length === 0 ? (
         <div className="text-center py-12">

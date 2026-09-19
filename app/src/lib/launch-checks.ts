@@ -1,5 +1,6 @@
 import { resolveMailConfig, DEFAULT_MAIL_FROM } from "@/lib/mail-config";
 import { parseTrustedProxyHops } from "@/lib/client-ip";
+import { resolvePushConfig, vapidKeysMatch } from "@/lib/push";
 
 // Lot 117 — contrôle de préparation à la mise en ligne (`npm run launch:check`).
 //
@@ -122,6 +123,20 @@ function checkMail(env: Env): CheckResult[] {
   return results;
 }
 
+function checkPush(env: Env): CheckResult {
+  const config = resolvePushConfig(env);
+  if (config.mode === "error") {
+    return { id: "push", level: "error", message: `Notifications : ${config.reason}`, fix: "Générer une paire de clés : npm run push:keys (voir .env.example)." };
+  }
+  if (config.mode === "disabled") {
+    return { id: "push", level: "warning", message: "Notifications push désactivées (pas de clés VAPID) : les alertes de recherche n'arrivent que par email.", fix: "Générer une paire de clés : npm run push:keys, puis définir VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY et VAPID_SUBJECT." };
+  }
+  if (!vapidKeysMatch(config.publicKey, config.privateKey)) {
+    return { id: "push", level: "error", message: "VAPID_PRIVATE_KEY ne correspond pas à VAPID_PUBLIC_KEY : tous les envois de notifications seraient refusés.", fix: "Régénérer la paire complète : npm run push:keys." };
+  }
+  return { id: "push", level: "ok", message: "Notifications push configurées (clés VAPID cohérentes)." };
+}
+
 function checkInfrastructure(env: Env): CheckResult[] {
   const results: CheckResult[] = [];
 
@@ -179,6 +194,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     ...checkDatabase(env),
     checkSiteUrl(env),
     ...checkMail(env),
+    checkPush(env),
     ...checkInfrastructure(env),
     ...checkFacts(facts),
   ];

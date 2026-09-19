@@ -55,7 +55,7 @@ npm run test:e2e:pwa # application installable : service worker et mode hors con
 Ne jamais réutiliser la base de développement : elle contient des comptes et des annonces de démonstration.
 
 1. **Base neuve** sur le serveur PostgreSQL de production, avec une collation française/Unicode et un rôle dédié au mot de passe fort.
-2. **Configuration** : partir de `.env.example` (section « Mise en production ») — `DATABASE_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`, `NEXT_PUBLIC_SITE_URL` (https), `SMTP_*`, `TRUSTED_PROXY_HOPS`, `ADMIN_EMAIL` / `ADMIN_PASSWORD`, et si possible `REDIS_URL` et `S3_*`.
+2. **Configuration** : partir de `.env.example` (section « Mise en production ») — `DATABASE_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`, `NEXT_PUBLIC_SITE_URL` (https), `SMTP_*`, `TRUSTED_PROXY_HOPS`, `VAPID_*` (notifications push, `npm run push:keys -- --print`), `ADMIN_EMAIL` / `ADMIN_PASSWORD`, et si possible `REDIS_URL` et `S3_*`.
 3. **Schéma et données de référence** : `npx prisma migrate deploy` puis `npm run db:seed` (wilayas, communes, catalogue, équipements et **votre** compte administrateur). **Jamais** `npm run db:seed:demo`.
 4. **Contrôle** : `npm run launch:check` (ou `npm run launch:check -- --env chemin/du/fichier.env`). Il doit répondre « Prêt » : chaque point bloquant (✗) est expliqué avec sa correction.
 5. **Démarrage** : `npm run build` puis `npm run start`, derrière un serveur web en https.

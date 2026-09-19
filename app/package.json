@@ -17,6 +17,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo-listings.ts",
     "launch:check": "tsx scripts/launch-check.ts",
+    "push:keys": "node scripts/generate-vapid-keys.mjs",
     "db:backup": "node scripts/backup-db.mjs",
     "db:restore-check": "node scripts/restore-check.mjs"
   },
@@ -38,6 +39,7 @@
     "react-dom": "19.2.8",
     "react-markdown": "^10.1.0",
     "sharp": "^0.35.4",
+    "web-push": "^3.6.7",
     "zod": "^4.5.4"
   },
   "devDependencies": {
@@ -48,6 +50,7 @@
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^6.1.1",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",

@@ -27,7 +27,7 @@ function classifyRequest(request, origin) {
   let url;
   try {
     url = new URL(request.url);
-  } catch (e) {
+  } catch {
     return "ignore";
   }
   if (url.origin !== origin) return "ignore";
@@ -49,7 +49,84 @@ function classifyRequest(request, origin) {
   return "ignore";
 }
 
+/**
+ * Lot 121 — notifications. Le contenu vient du serveur, mais il est validé ici quand même : un
+ * message mal formé ne doit jamais produire une notification vide ni ouvrir une autre adresse.
+ * @param {string} text corps JSON du message reçu
+ * @returns {{ title: string, body: string, url: string, tag: string, lang: "fr" | "ar" }}
+ */
+function parsePushPayload(text) {
+  let data = {};
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === "object") data = parsed;
+  } catch {
+    /* message non JSON : notification par défaut */
+  }
+  const str = function (value, max) {
+    return typeof value === "string" ? value.slice(0, max) : "";
+  };
+  return {
+    title: str(data.title, 120) || "Souq Auto",
+    body: str(data.body, 200),
+    url: typeof data.url === "string" ? data.url : "/",
+    tag: str(data.tag, 80) || "souq-auto",
+    lang: data.lang === "ar" ? "ar" : "fr",
+  };
+}
+
+/**
+ * Adresse à ouvrir au clic : toujours une page DU SITE (chemin + paramètres), jamais une autre
+ * origine ni un schéma comme `javascript:`.
+ * @param {unknown} url
+ * @param {string} origin
+ * @returns {string}
+ */
+function safeTargetUrl(url, origin) {
+  if (typeof url !== "string") return "/";
+  try {
+    const target = new URL(url, origin);
+    return target.origin === origin ? target.pathname + target.search + target.hash : "/";
+  } catch {
+    return "/";
+  }
+}
+
 if (typeof self !== "undefined" && typeof self.addEventListener === "function") {
+  self.addEventListener("push", function (event) {
+    const payload = parsePushPayload(event.data ? event.data.text() : "");
+    event.waitUntil(
+      self.registration.showNotification(payload.title, {
+        body: payload.body,
+        icon: "/icons/icon-192.png",
+        tag: payload.tag,
+        lang: payload.lang,
+        dir: payload.lang === "ar" ? "rtl" : "ltr",
+        data: { url: safeTargetUrl(payload.url, self.location.origin) },
+      })
+    );
+  });
+
+  self.addEventListener("notificationclick", function (event) {
+    event.notification.close();
+    const origin = self.location.origin;
+    const target = safeTargetUrl(event.notification.data && event.notification.data.url, origin);
+    event.waitUntil(
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (windows) {
+        // Un onglet du site est déjà ouvert : on l'utilise plutôt que d'en empiler un autre.
+        for (let i = 0; i < windows.length; i++) {
+          const client = windows[i];
+          if (new URL(client.url).origin === origin && "focus" in client) {
+            return client.focus().then(function (focused) {
+              return focused && "navigate" in focused ? focused.navigate(target) : self.clients.openWindow(target);
+            });
+          }
+        }
+        return self.clients.openWindow(target);
+      })
+    );
+  });
+
   self.addEventListener("install", function (event) {
     event.waitUntil(
       caches
@@ -118,5 +195,5 @@ if (typeof self !== "undefined" && typeof self.addEventListener === "function") 
 
 // Utilisé par les tests (Node) ; sans effet dans le navigateur.
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { classifyRequest, STATIC_CACHE, OFFLINE_URL, PRECACHE, VERSION };
+  module.exports = { classifyRequest, parsePushPayload, safeTargetUrl, STATIC_CACHE, OFFLINE_URL, PRECACHE, VERSION };
 }

@@ -5,6 +5,7 @@ import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
 import { searchParamsSchema } from "@/lib/validation/search";
 import { buildListingWhere } from "@/lib/search";
+import { sendPushToUser } from "@/lib/push-send";
 
 // Déclenché une seule fois, au moment précis où une annonce devient PUBLIEE
 // (approbation en modération) — un vrai événement métier, pas un balayage
@@ -62,6 +63,21 @@ async function notifyOneSearchAlert(
   if (emailResult?.previewUrl) {
     console.log(`[EMAIL alerte recherche] ${emailResult.previewUrl}`);
   }
+
+  // Lot 121 — même alerte sur les appareils abonnés aux notifications (sans effet si la
+  // personne n'en a activé aucune, ou si les clés du site ne sont pas configurées). Ne lève
+  // jamais d'exception : l'email ci-dessus est déjà parti.
+  const locale = alert.user.locale === "ar" ? "ar" : "fr";
+  await sendPushToUser(alert.userId, {
+    title: t("pushSearchAlertTitle"),
+    body: t("pushSearchAlertBody", {
+      title: listing.title,
+      price: listing.price.toLocaleString(locale === "ar" ? "ar-DZ" : "fr-DZ"),
+    }),
+    url: `/${locale}/annonce/${listing.id}`,
+    tag: `alert-${alert.id}-${listing.id}`,
+    lang: locale,
+  });
 }
 
 export async function notifyMatchingSearchAlerts(listing: Listing): Promise<void> {

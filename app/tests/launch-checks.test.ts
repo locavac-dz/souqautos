@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { generateKeyPairSync } from "node:crypto";
 import { evaluateLaunchReadiness, summarizeChecks, type LaunchFacts } from "@/lib/launch-checks";
 
 const goodFacts: LaunchFacts = { dbReachable: true, adminUsesDevPassword: false, demoAccounts: 0, migrationsOnDisk: 8, migrationsApplied: 8 };
 const key = Buffer.alloc(32, 7).toString("base64");
+// Paire VAPID valide, créée à la volée (jamais une clé réelle dans le dépôt).
+function makeVapidPair() {
+  const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  const priv = privateKey.export({ format: "jwk" }).d as string;
+  const pubJwk = publicKey.export({ format: "jwk" });
+  const pub = Buffer.concat([Buffer.from([4]), Buffer.from(pubJwk.x as string, "base64url"), Buffer.from(pubJwk.y as string, "base64url")]).toString("base64url");
+  return { publicKey: pub, privateKey: priv };
+}
+const vapid = makeVapidPair();
 const goodEnv = {
   JWT_SECRET: "a".repeat(48),
   ENCRYPTION_KEY: key,
@@ -15,6 +25,9 @@ const goodEnv = {
   TRUSTED_PROXY_HOPS: "1",
   REDIS_URL: "redis://redis.internal:6379",
   S3_BUCKET: "souq-auto-photos",
+  VAPID_PUBLIC_KEY: vapid.publicKey,
+  VAPID_PRIVATE_KEY: vapid.privateKey,
+  VAPID_SUBJECT: "mailto:contact@souqauto.example",
 };
 
 const level = (results: ReturnType<typeof evaluateLaunchReadiness>, id: string) => results.filter((r) => r.id === id).map((r) => r.level);
@@ -91,5 +104,28 @@ describe("evaluateLaunchReadiness", () => {
     for (const r of results.filter((x) => x.level !== "ok")) {
       expect(r.fix, r.id).toBeTruthy();
     }
+  });
+
+  it("warns, without blocking, when push notifications are not configured", () => {
+    const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT, ...noPush } = goodEnv;
+    void VAPID_PUBLIC_KEY; void VAPID_PRIVATE_KEY; void VAPID_SUBJECT;
+    const results = evaluateLaunchReadiness({ env: noPush, facts: goodFacts });
+    expect(level(results, "push")).toEqual(["warning"]);
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+  });
+
+  it("blocks on half-configured or malformed VAPID keys", () => {
+    const { VAPID_PRIVATE_KEY, ...onlyPublic } = goodEnv;
+    void VAPID_PRIVATE_KEY;
+    expect(level(evaluateLaunchReadiness({ env: onlyPublic, facts: goodFacts }), "push")).toEqual(["error"]);
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, VAPID_PUBLIC_KEY: "trop-court" }, facts: goodFacts }), "push")).toEqual(["error"]);
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, VAPID_SUBJECT: "contact" }, facts: goodFacts }), "push")).toEqual(["error"]);
+  });
+
+  it("blocks when the private key does not belong to the public key (every send would be refused)", () => {
+    const other = makeVapidPair();
+    const results = evaluateLaunchReadiness({ env: { ...goodEnv, VAPID_PRIVATE_KEY: other.privateKey }, facts: goodFacts });
+    expect(level(results, "push")).toEqual(["error"]);
+    expect(results.find((r) => r.id === "push")?.message).toContain("ne correspond pas");
   });
 });

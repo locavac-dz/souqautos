@@ -81,6 +81,7 @@ model User {
   // ce choix explicite, aucun bouton WhatsApp n'est proposé aux acheteurs.
   whatsappEnabled               Boolean @default(false)
   contactEvents                 ContactEvent[]
+  pushSubscriptions             PushSubscription[]
 }
 
 model Profile {
@@ -1083,4 +1084,24 @@ model ContactEvent {
   createdAt DateTime       @default(now())
 
   @@index([listingId, createdAt])
+}
+
+// Lot 121 — abonnement aux notifications sur UN appareil (navigateur ou application installée).
+// `endpoint` désigne le service de notification du navigateur (Google, Mozilla, Apple, Microsoft) ;
+// `p256dh` et `auth` sont les clés publiques qui permettent de chiffrer chaque message pour cet
+// appareil seulement. Un appareil = une ligne (`endpoint` unique) : si un autre compte se connecte
+// sur le même appareil, la ligne change de propriétaire. Supprimée dès que le service de
+// notification répond que l'appareil n'existe plus (404 ou 410).
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastSentAt DateTime?
+
+  @@index([userId])
 }
