@@ -27,6 +27,7 @@ export default async function AdminReportsPage() {
     include: {
       listing: { include: { photos: { orderBy: { position: "asc" }, take: 1 } } },
       reportedUser: { include: { profile: true } },
+      ownerReview: { include: { model: { include: { brand: true } } } },
       author: { include: { profile: true } },
     },
   });
@@ -46,7 +47,7 @@ export default async function AdminReportsPage() {
                 <Thumbnail path={report.listing.photos[0]?.path} title={report.listing.title} />
               ) : (
                 <div className="h-20 w-28 rounded bg-slate-100 shrink-0 flex items-center justify-center text-xs text-slate-400">
-                  {t("userReportBadge")}
+                  {report.ownerReview ? t("ownerReviewReportBadge") : t("userReportBadge")}
                 </div>
               )}
               <div className="flex-1">
@@ -57,6 +58,18 @@ export default async function AdminReportsPage() {
                   >
                     {report.listing.title}
                   </Link>
+                ) : report.ownerReview ? (
+                  <>
+                    <Link
+                      href={`/voitures/${report.ownerReview.model.brand.slug}/${report.ownerReview.model.slug}`}
+                      className="font-medium text-slate-900 hover:underline"
+                    >
+                      {report.ownerReview.model.brand.name} {report.ownerReview.model.name}
+                    </Link>
+                    <p className="mt-1 whitespace-pre-line rounded bg-slate-50 p-2 text-sm text-slate-600" dir="auto">
+                      {report.ownerReview.comment}
+                    </p>
+                  </>
                 ) : (
                   report.reportedUser && (
                     <Link

@@ -32,6 +32,8 @@ type ExistingArticle = {
   contentAr: string;
   publishedAt: Date | null;
   coverImageUrl?: string | null;
+  sourceName?: string | null;
+  sourceUrl?: string | null;
   roadTest?: ExistingRoadTest | null;
 };
 
@@ -106,6 +108,9 @@ export function BlogArticleForm({
   const [testedVersion, setTestedVersion] = useState(rt?.testedVersion ?? "");
   const [testedAt, setTestedAt] = useState(rt?.testedAt ? rt.testedAt.toISOString().slice(0, 10) : "");
 
+  const [sourceName, setSourceName] = useState(article?.sourceName ?? "");
+  const [sourceUrl, setSourceUrl] = useState(article?.sourceUrl ?? "");
+
   const [coverUrl, setCoverUrl] = useState<string | null>(article?.coverImageUrl ?? null);
   const [coverPending, setCoverPending] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
@@ -171,6 +176,8 @@ export function BlogArticleForm({
       contentFr,
       contentAr,
       publication,
+      // Lot 115 — source d'un article du magazine (jamais pour un essai).
+      ...(!isEssai && { sourceName: sourceName.trim() || null, sourceUrl: sourceUrl.trim() || null }),
       ...(isEssai && {
         coverImageUrl: coverUrl,
         roadTest: {
@@ -520,6 +527,43 @@ export function BlogArticleForm({
         </div>
       </div>
       <p className="text-xs text-slate-500 -mt-4">{isEssai ? tRt("markdownHelp") : t("contentHelp")}</p>
+
+      {!isEssai && (
+        <fieldset className="space-y-3 rounded-lg border border-slate-200 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900">{t("sourceSection")}</legend>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="sourceName" className="block text-sm font-medium text-slate-700 mb-1">
+                {t("sourceNameLabel")}
+              </label>
+              <input
+                id="sourceName"
+                type="text"
+                value={sourceName}
+                onChange={(e) => setSourceName(e.target.value)}
+                maxLength={120}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="sourceUrl" className="block text-sm font-medium text-slate-700 mb-1">
+                {t("sourceUrlLabel")}
+              </label>
+              <input
+                id="sourceUrl"
+                type="url"
+                inputMode="url"
+                value={sourceUrl}
+                onChange={(e) => setSourceUrl(e.target.value)}
+                maxLength={500}
+                placeholder="https://…"
+                className={inputClass}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">{t("sourceHelp")}</p>
+        </fieldset>
+      )}
 
       <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
         <legend className="px-1 text-sm font-medium text-slate-900">{t("publicationLabel")}</legend>

@@ -79,6 +79,7 @@ export default async function BlogArticlePage({
     authorName: "Souq Auto",
     datePublished: article.publishedAt!.toISOString(),
     dateModified: article.updatedAt.toISOString(),
+    isBasedOn: article.sourceUrl ?? undefined,
   });
 
   return (
@@ -99,6 +100,30 @@ export default async function BlogArticlePage({
           <p key={index}>{paragraph}</p>
         ))}
       </div>
+
+      {article.sourceName && (
+        <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">
+          {article.sourceUrl ? (
+            <>
+              {t("sourceLabel")}{" "}
+              <a
+                href={article.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="underline hover:text-slate-800"
+              >
+                {article.sourceName}
+              </a>
+            </>
+          ) : (
+            <>
+              {t("sourceLabel")} {article.sourceName}
+            </>
+          )}
+          {" — "}
+          {t("sourceNote")}
+        </p>
+      )}
     </div>
   );
 }

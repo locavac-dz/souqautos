@@ -32,6 +32,7 @@ export async function GET() {
     blocksInitiated,
     identityRequests,
     proCollaborations,
+    ownerReviewsWritten,
   ] = await Promise.all([
     prisma.listing.findMany({
       where: { sellerId: user.id },
@@ -76,6 +77,11 @@ export async function GET() {
     prisma.proCollaborator.findMany({
       where: { userId: user.id },
       include: { professionalAccount: { select: { nomCommercial: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.ownerReview.findMany({
+      where: { userId: user.id },
+      include: { model: { include: { brand: true } } },
       orderBy: { createdAt: "asc" },
     }),
   ]);
@@ -166,8 +172,18 @@ export async function GET() {
       reponse: r.reply,
       recuLe: r.createdAt,
     })),
+    avisProprietaire: ownerReviewsWritten.map((r) => ({
+      vehicule: `${r.model.brand.name} ${r.model.name}`,
+      note: r.rating,
+      commentaire: r.comment,
+      anneeAchat: r.purchaseYear,
+      kilometrage: r.mileageKm,
+      statut: r.status,
+      motif: r.rejectionReason,
+      redigeLe: r.createdAt,
+    })),
     signalementsEffectues: reportsAuthored.map((r) => ({
-      cible: r.listingId ? "annonce" : "utilisateur",
+      cible: r.listingId ? "annonce" : r.ownerReviewId ? "avis_proprietaire" : "utilisateur",
       motif: r.reason,
       commentaire: r.comment,
       statut: r.status,

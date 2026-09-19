@@ -65,6 +65,10 @@ export async function POST(request: NextRequest) {
           }),
         ]
       : []),
+    // Lot 116 — les avis de propriétaire de la personne sont supprimés (avec les
+    // signalements qui les visaient) : un texte personnel ne reste pas en ligne
+    // sous un nom anonymisé, et n'aurait plus d'auteur pour le modifier.
+    prisma.ownerReview.deleteMany({ where: { userId: user.id } }),
     // Retire du marché toute annonce encore active — un compte supprimé ne
     // peut plus jamais répondre à un acheteur ni compléter un brouillon.
     prisma.listing.updateMany({

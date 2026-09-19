@@ -10,6 +10,7 @@ import { toRoadTestData } from "@/lib/road-test-data";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
 import { isBlogCoverUrl } from "@/lib/blog-cover";
 import { isUniqueViolation } from "@/lib/prisma-errors";
+import { resolveSource } from "@/lib/blog-source";
 import { writeAuditLog } from "@/lib/audit-log";
 
 // Réservé à ADMIN : le blog est un contenu public engageant l'image de la
@@ -27,6 +28,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "validation" }, { status: 400 });
   }
   const data = parsed.data;
+
+  // Lot 115 — source facultative (nom + lien https normalisé).
+  const source = resolveSource(data);
+  if (!source.ok) {
+    return NextResponse.json({ error: source.error }, { status: 400 });
+  }
 
   // Lot 111 — la couverture doit être un fichier issu de /api/admin/blog/cover.
   if (data.coverImageUrl && !isBlogCoverUrl(data.coverImageUrl, process.env.S3_PUBLIC_URL)) {
@@ -74,6 +81,8 @@ export async function POST(request: NextRequest) {
         contentAr: data.contentAr,
         authorId: user.id,
         coverImageUrl: data.coverImageUrl || null,
+        sourceName: source.sourceName,
+        sourceUrl: source.sourceUrl,
         publishedAt,
         roadTest: data.roadTest ? { create: toRoadTestData(data.roadTest, brandIdFromModel) } : undefined,
       },

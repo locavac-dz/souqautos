@@ -7,6 +7,7 @@ import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
 import { toRoadTestData } from "@/lib/road-test-data";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
 import { isBlogCoverUrl } from "@/lib/blog-cover";
+import { resolveSource } from "@/lib/blog-source";
 import { deleteStoredFile } from "@/lib/uploads";
 import { writeAuditLog } from "@/lib/audit-log";
 
@@ -35,6 +36,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "validation" }, { status: 400 });
   }
   const data = parsed.data;
+
+  const source = resolveSource(data);
+  if (!source.ok) {
+    return NextResponse.json({ error: source.error }, { status: 400 });
+  }
 
   if (data.coverImageUrl && !isBlogCoverUrl(data.coverImageUrl, process.env.S3_PUBLIC_URL)) {
     return NextResponse.json({ error: "invalid_cover" }, { status: 400 });
@@ -85,6 +91,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       contentFr: data.contentFr,
       contentAr: data.contentAr,
       coverImageUrl: newCover,
+      sourceName: source.sourceName,
+      sourceUrl: source.sourceUrl,
       publishedAt,
       roadTest: roadTestData ? { upsert: { create: roadTestData, update: roadTestData } } : undefined,
     },

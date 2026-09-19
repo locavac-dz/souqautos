@@ -56,8 +56,15 @@ export const blogArticleSchema = z
     // appartenance à notre stockage est vérifiée par les routes (isBlogCoverUrl,
     // qui dépend de la configuration S3). `null` = pas de couverture.
     coverImageUrl: z.string().trim().max(500).nullish(),
+    // Lot 115 — source d'un article du magazine (cf. src/lib/blog-source.ts,
+    // qui la valide et normalise l'adresse).
+    sourceName: z.string().max(200).nullish(),
+    sourceUrl: z.string().max(600).nullish(),
   })
   .superRefine((value, ctx) => {
+    if ((value.sourceName?.trim() || value.sourceUrl?.trim()) && value.kind === "ESSAI") {
+      ctx.addIssue({ code: "custom", path: ["sourceName"], message: "Un essai décrit un véhicule testé par la rédaction : pas de source externe." });
+    }
     if (value.coverImageUrl && value.kind !== "ESSAI") {
       ctx.addIssue({ code: "custom", path: ["coverImageUrl"], message: "Seul un essai porte une photo de couverture." });
     }

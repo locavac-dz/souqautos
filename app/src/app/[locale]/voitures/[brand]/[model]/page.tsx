@@ -9,6 +9,7 @@ import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-dat
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RoadTestCard } from "@/components/RoadTestCard";
 import { PressReviewCard } from "@/components/PressReviewCard";
+import { OwnerReviewsSection } from "@/components/OwnerReviewsSection";
 import { publishedNow } from "@/lib/blog-publication";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -215,6 +216,13 @@ export default async function ModelPage({
           </div>
         </section>
       )}
+
+      <OwnerReviewsSection
+        modelId={model.id}
+        locale={locale}
+        viewer={currentUser ? { id: currentUser.id, emailVerified: Boolean(currentUser.emailVerifiedAt) } : null}
+        currentYear={new Date().getFullYear()}
+      />
 
       {listings.length > 0 && (
         <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

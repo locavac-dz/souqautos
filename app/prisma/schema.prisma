@@ -76,6 +76,7 @@ model User {
   paymentOrdersReviewed        PaymentOrder[] @relation("PaymentOrderReviewer")
   proSubscriptionOrders         ProSubscriptionOrder[] @relation("ProSubscriptionOrderAuthor")
   proSubscriptionOrdersReviewed ProSubscriptionOrder[] @relation("ProSubscriptionOrderReviewer")
+  ownerReviews                  OwnerReview[]
 }
 
 model Profile {
@@ -159,6 +160,7 @@ model Model {
   generations Generation[]
   roadTests RoadTest[]
   pressReviews PressReview[]
+  ownerReviews OwnerReview[]
 
   @@unique([brandId, slug])
 }
@@ -610,6 +612,9 @@ model Report {
   listing        Listing?     @relation(fields: [listingId], references: [id], onDelete: Cascade)
   reportedUserId String?
   reportedUser   User?        @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  // Lot 116 — un signalement peut aussi viser un avis de propriétaire publié.
+  ownerReviewId  String?
+  ownerReview    OwnerReview? @relation(fields: [ownerReviewId], references: [id], onDelete: Cascade)
   authorId       String
   author         User         @relation("ReportAuthor", fields: [authorId], references: [id])
   reason         ReportReason
@@ -622,6 +627,7 @@ model Report {
 
   @@unique([listingId, authorId])
   @@unique([reportedUserId, authorId])
+  @@unique([ownerReviewId, authorId])
   @@index([status])
 }
 
@@ -943,6 +949,12 @@ model BlogArticle {
   // Lot 111 — photo de couverture (essais), toujours un fichier de notre propre
   // stockage « blog-covers » (jamais une URL externe, cf. src/lib/blog-cover.ts).
   coverImageUrl String?
+  // Lot 115 — source d'un article du magazine rédigé à partir d'un document
+  // externe (typiquement un dossier de presse de constructeur) : nom affiché et
+  // lien facultatif. Jamais pour un essai, qui décrit un véhicule testé par la
+  // rédaction. L'adresse est normalisée (src/lib/press-review.ts).
+  sourceName    String?
+  sourceUrl     String?
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -1007,4 +1019,41 @@ model PressReview {
 
   @@index([publishedAt])
   @@index([modelId, publishedAt])
+}
+
+// Lot 116 — avis d'un propriétaire sur un modèle du catalogue.
+//
+// Avis de « propriétaire DÉCLARÉ » : aucune preuve de possession n'est demandée,
+// et l'affichage le dit. Publié seulement après validation par l'équipe
+// (`EN_ATTENTE` → `PUBLIE` ou `REFUSE`). Un auteur modifie ou retire son avis ;
+// toute modification le remet en attente (on ne publie pas un texte, puis on le
+// remplace par un autre sans relecture). Un seul avis par personne et par modèle.
+enum OwnerReviewStatus {
+  EN_ATTENTE
+  PUBLIE
+  REFUSE
+}
+
+model OwnerReview {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modelId         Int
+  model           Model             @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  rating          Int
+  comment         String
+  purchaseYear    Int?
+  mileageKm       Int?
+  status          OwnerReviewStatus @default(EN_ATTENTE)
+  // Motif communiqué à l'auteur (refus, ou retrait après signalement confirmé).
+  rejectionReason String?
+  moderatedAt     DateTime?
+  publishedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  reports         Report[]
+
+  @@unique([userId, modelId])
+  @@index([modelId, status])
+  @@index([status, createdAt])
 }

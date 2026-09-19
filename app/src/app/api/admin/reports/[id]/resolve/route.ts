@@ -14,6 +14,8 @@ import { writeAuditLog } from "@/lib/audit-log";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { sendAccountSuspendedEmail } from "@/lib/account-suspension-email";
 import { getModerationSettings } from "@/lib/moderation-settings";
+import { removedAfterReportUpdate } from "@/lib/owner-review";
+import { sendOwnerReviewDecisionEmail } from "@/lib/owner-review-email";
 
 const bodySchema = z.object({
   action: z.enum(["resolve", "dismiss"]),
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const report = await prisma.report.findUnique({
     where: { id },
-    include: { author: true, listing: true },
+    include: { author: true, listing: true, ownerReview: true },
   });
   if (!report) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -64,6 +66,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     details: {
       listingId: report.listingId,
       reportedUserId: report.reportedUserId,
+      ownerReviewId: report.ownerReviewId,
       previousStatus: report.status,
       newStatus: transition.newStatus,
       note: parsed.data.note ?? null,
@@ -76,7 +79,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const t = await getTranslations({ locale: report.author.locale, namespace: "Notifications" });
   const targetDescription = report.listing
     ? t("targetDescriptionListing", { title: escapeHtml(report.listing.title) })
-    : t("targetDescriptionUser");
+    : report.ownerReviewId
+      ? t("targetDescriptionOwnerReview")
+      : t("targetDescriptionUser");
   const subject = action === "resolve" ? t("reportResolvedSubject") : t("reportDismissedSubject");
   const bodyText =
     action === "resolve"
@@ -93,6 +98,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   });
   if (emailResult?.previewUrl) {
     console.log(`[EMAIL notification signalement traité] ${emailResult.previewUrl}`);
+  }
+
+  // Lot 116 — signalement CONFIRMÉ d'un avis de propriétaire : l'avis est retiré
+  // (jamais sur un signalement seulement ouvert ou rejeté), son auteur en est
+  // informé avec le motif. Idempotent : un avis déjà retiré n'est pas retraité.
+  if (action === "resolve" && report.ownerReviewId && report.ownerReview?.status === "PUBLIE") {
+    await prisma.ownerReview.update({
+      where: { id: report.ownerReviewId },
+      data: removedAfterReportUpdate(new Date()),
+    });
+    await writeAuditLog({
+      adminId: user.id,
+      action: "owner_review.remove_after_report",
+      targetType: "OwnerReview",
+      targetId: report.ownerReviewId,
+      details: { triggeredByReportId: id },
+    });
+    await sendOwnerReviewDecisionEmail(report.ownerReviewId, "removed");
   }
 
   // Suspension automatique : uniquement pour les annonces (aucune notion de

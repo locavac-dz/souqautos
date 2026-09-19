@@ -43,6 +43,8 @@ export type ArticleJsonLdInput = {
   datePublished: string;
   dateModified: string;
   authorName: string;
+  // Lot 115 — adresse du document externe dont l'article est tiré, si elle existe.
+  isBasedOn?: string;
 };
 
 // Lot 76 — schema.org Article pour le blog (docs/ARCHITECTURE.md §37 :
@@ -57,6 +59,8 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput) {
     datePublished: input.datePublished,
     dateModified: input.dateModified,
     author: { "@type": "Organization", name: input.authorName },
+    // Lot 115 — document externe dont l'article est tiré (dossier de presse…).
+    ...(input.isBasedOn ? { isBasedOn: input.isBasedOn } : {}),
   };
 }
 

@@ -79,6 +79,16 @@ export default async function TermsPage() {
         </section>
 
         <section>
+          <h2 className="text-base font-medium text-slate-900 mb-2">{t("ownerReviewsTitle")}</h2>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>{t("ownerReviewsDeclared")}</li>
+            <li>{t("ownerReviewsContent")}</li>
+            <li>{t("ownerReviewsModeration")}</li>
+            <li>{t("ownerReviewsData")}</li>
+          </ul>
+        </section>
+
+        <section>
           <h2 className="text-base font-medium text-slate-900 mb-2">{t("terminationTitle")}</h2>
           <p>{t("terminationBody")}</p>
         </section>
