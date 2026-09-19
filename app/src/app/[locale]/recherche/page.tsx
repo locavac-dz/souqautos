@@ -190,22 +190,27 @@ export default async function SearchPage({
           <SortSelect current={params.sort ?? "recent"} />
         </div>
 
-        {listings.length === 0 ? (
+        {/* « Aucune annonce » seulement s'il n'y a vraiment rien à afficher : quand
+            toutes les annonces correspondantes sont déjà en avant (ci-dessus, et donc
+            exclues de la liste normale), la liste normale est vide mais la page ne l'est pas. */}
+        {allListings.length === 0 ? (
           <p className="text-slate-500 py-12 text-center">{t("noResults")}</p>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {listings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                isLoggedIn={Boolean(currentUser)}
-                isFavorited={favoriteIds.has(listing.id)}
-                priceBadge={priceBadges.get(listing.id)}
-                sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
-                professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
-              />
-            ))}
-          </div>
+          listings.length > 0 && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {listings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  isLoggedIn={Boolean(currentUser)}
+                  isFavorited={favoriteIds.has(listing.id)}
+                  priceBadge={priceBadges.get(listing.id)}
+                  sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
+                  professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
+                />
+              ))}
+            </div>
+          )
         )}
 
         <Pagination page={page} totalPages={pages} searchParams={flatParams} />

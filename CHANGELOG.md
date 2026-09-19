@@ -2155,3 +2155,10 @@ Les quatre points de robustesse relevés lors des audits précédents (Lots 98�
 - La limite en mémoire (repli sans Redis) n'est pas purgée des clés expirées : sans importance avec Redis (clés à durée de vie), à reprendre si le déploiement se fait sans.
 
 **Hors périmètre** : vérification puis création d'une demande de changement d'email (aucune contrainte d'unicité concernée) ; brouillons d'annonce (`upsert` sur clé simple, natif côté base) ; correction de `getClientIp` (voir ci-dessus).
+
+## Lot 113 — Correctif : message « Aucune annonce » de /recherche (2026-09-19)
+
+- **Défaut** (repéré au Lot 66, laissé ouvert) : quand toutes les annonces correspondant à une recherche sont des annonces **en avant** (Premium / Premium+, affichées en tête de la première page et exclues de la liste normale pour ne pas les répéter), la liste normale est vide. La page affichait alors « 1 annonces trouvées », l'annonce en avant… et, juste dessous, « Aucune annonce ne correspond à votre recherche ».
+- **Correctif** (`src/app/[locale]/recherche/page.tsx`) : le message n'apparaît que s'il n'y a vraiment rien à afficher (ni annonce en avant, ni annonce normale) ; la grille normale n'est rendue que si elle contient quelque chose.
+- **Vérification** : sur la recherche `brandId=5&modelId=27` (Hyundai Tucson, une seule annonce publiée, en avant) — *sans* le correctif : « 1 annonces trouvées » + message ; *avec* : l'annonce en avant seule, sans message. Une recherche sans résultat (`q=zzzzintrouvable`) affiche toujours le message ; la page sans filtre (24 annonces) est inchangée. Types, lint et 609 tests au vert.
+- **Non traité** : « 1 annonces trouvées » (pas de singulier) — le texte `Search.resultsCount` est une chaîne simple en français comme en arabe ; un vrai pluriel demande les formes ICU (l'arabe en a six) et une relecture de la traduction.
