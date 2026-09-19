@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -57,6 +58,9 @@ export async function POST(request: NextRequest) {
     }
     throw error;
   }
+
+  // Lot 118 — prévient l'équipe (après la réponse).
+  after(() => notifyStaffOfPending("identity"));
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

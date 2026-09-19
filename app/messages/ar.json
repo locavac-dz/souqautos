@@ -525,6 +525,7 @@
     "identityRequests": "طلبات التحقق من الهوية",
     "noIdentityRequests": "لا يوجد طلب تحقق من الهوية في الانتظار.",
     "viewIdentityDocument": "عرض وثيقة الهوية",
+    "pendingOwnerReviews": "آراء المالكين في الانتظار",
     "pendingIdentityRequests": "طلبات التحقق من الهوية المعلّقة",
     "navCatalogue": "الماركات والموديلات",
     "navStatistics": "الإحصائيات",

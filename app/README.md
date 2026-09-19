@@ -49,6 +49,17 @@ npm test            # tests unitaires (aucun n'accède à la base)
 npm run test:e2e    # tests de bout en bout Playwright, sur la base E2E_DATABASE_URL (vidée à chaque exécution)
 ```
 
+## Mise en production
+
+Ne jamais réutiliser la base de développement : elle contient des comptes et des annonces de démonstration.
+
+1. **Base neuve** sur le serveur PostgreSQL de production, avec une collation française/Unicode et un rôle dédié au mot de passe fort.
+2. **Configuration** : partir de `.env.example` (section « Mise en production ») — `DATABASE_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`, `NEXT_PUBLIC_SITE_URL` (https), `SMTP_*`, `TRUSTED_PROXY_HOPS`, `ADMIN_EMAIL` / `ADMIN_PASSWORD`, et si possible `REDIS_URL` et `S3_*`.
+3. **Schéma et données de référence** : `npx prisma migrate deploy` puis `npm run db:seed` (wilayas, communes, catalogue, équipements et **votre** compte administrateur). **Jamais** `npm run db:seed:demo`.
+4. **Contrôle** : `npm run launch:check` (ou `npm run launch:check -- --env chemin/du/fichier.env`). Il doit répondre « Prêt » : chaque point bloquant (✗) est expliqué avec sa correction.
+5. **Démarrage** : `npm run build` puis `npm run start`, derrière un serveur web en https.
+6. **Supervision** : surveiller `GET /api/health` (200 = base joignable, 503 = base injoignable ; Redis absent ou en panne ne fait pas échouer le contrôle).
+
 ## Notes
 
 - `.env` contient un `JWT_SECRET` de dev généré aléatoirement — à régénérer en production (`openssl rand -base64 48`).
@@ -57,5 +68,5 @@ npm run test:e2e    # tests de bout en bout Playwright, sur la base E2E_DATABASE
 - Schéma Lot 1 volontairement minimal (`User`, `Profile`, `Wilaya`) — `communes` et les autres tables du cahier d'architecture arriveront avec les modules qui en ont besoin.
 - Photos d'annonces stockées localement sous `public/uploads/` (gitignoré) — à migrer vers un stockage S3-compatible en staging/prod (cf. docs/ARCHITECTURE.md §06).
 - Si `next build` a été lancé, vider `.next` avant de relancer `npm run dev` (les caches de build et de dev de Turbopack ne sont pas interchangeables).
-- Compte admin de dev créé par `npm run db:seed` : `admin@souqauto.dz` / `AdminSouqAuto2026!` — à régénérer avant tout déploiement réel (convention groupe : `admin@<nom-court>.dz`).
+- Compte admin de dev créé par `npm run db:seed` : `admin@souqauto.dz` / `AdminSouqAuto2026!` (convention groupe : `admin@<nom-court>.dz`). **En production**, ce compte n'est jamais créé : `ADMIN_EMAIL` et `ADMIN_PASSWORD` sont obligatoires (Lot 117).
 - Depuis le Lot 7, toute nouvelle annonce est créée en statut `EN_ATTENTE` et doit être approuvée dans `/admin/annonces` avant d'apparaître dans la recherche.

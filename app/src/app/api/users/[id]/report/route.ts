@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -67,6 +68,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     throw error;
   }
+
+  // Lot 118 — prévient l'équipe (après la réponse).
+  after(() => notifyStaffOfPending("report"));
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

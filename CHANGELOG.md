@@ -2220,3 +2220,45 @@ Dernière partie de l'option « contenus autorisés » : de vrais retours d'util
 - Le plafond de 20 envois par jour compte aussi les tentatives refusées.
 
 **Hors périmètre** : avis par génération ou version, photos, réponse de la rédaction à un avis, vote « utile », classement des modèles par note.
+
+## Lot 117 — Préparation du lancement : configuration de production, comptes, emails, adresse IP, santé (2026-09-19)
+
+Premier bloc du plan « évolution du site » retenu par le porteur de projet : rendre le site prêt à être ouvert au public. Chaque point ci-dessous est un **risque réel constaté dans le code**, pas une précaution théorique.
+
+**Constats et correctifs**
+- **Emails vers une boîte de test en production** (`src/lib/mail-config.ts`, `mailer.ts`) : sans `SMTP_HOST`, l'application basculait silencieusement vers un compte Ethereal de test, y compris en production — vérifications d'adresse, décisions de modération et notifications auraient été « envoyées » sans jamais arriver. **En production, un SMTP non configuré est désormais une erreur explicite.** Ajout de `SMTP_FROM`, `SMTP_SECURE` (TLS implicite déduit du port 465), refus d'un identifiant sans mot de passe et d'un port invalide. L'expéditeur n'est plus codé en dur.
+- **Administrateur de développement créé partout** (`src/lib/admin-bootstrap.ts`, `prisma/seed.ts`) : `db:seed` créait toujours `admin@souqauto.dz` avec le mot de passe publié dans le dépôt. **En production, `ADMIN_EMAIL` et `ADMIN_PASSWORD` sont obligatoires** (12 caractères minimum, différent du mot de passe du README) ; sinon le compte n'est pas créé et le seed sort en erreur. Le comportement de développement est inchangé.
+- **Adresse IP falsifiable** (`src/lib/client-ip.ts`, `http.ts`) : l'adresse du visiteur était la **première** valeur de `X-Forwarded-For`, écrite par le client, donc toutes les limites par IP se contournaient (constaté au Lot 112). Nouvelle variable **`TRUSTED_PROXY_HOPS`** (nombre de serveurs intermédiaires de confiance : 1 pour un nginx, 2 pour un CDN puis nginx) : l'adresse retenue est celle que le premier serveur de confiance a vue. Une falsification à gauche de cette valeur est sans effet. **La décision d'hébergement devient une valeur de configuration.** Sans la variable : ancien comportement, signalé comme bloquant par le contrôle ci-dessous.
+- **Contrôle de mise en ligne** (`npm run launch:check`, `src/lib/launch-checks.ts`, `scripts/launch-check.ts`) : juge la configuration **comme pour la production** et ne modifie rien. Vérifie `JWT_SECRET` et `ENCRYPTION_KEY` (présence, longueur, 32 octets en base64), mot de passe de base, adresse publique en https et non locale, SMTP, `TRUSTED_PROXY_HOPS`, migrations appliquées, mot de passe administrateur (compare le hash au mot de passe publié), comptes de démonstration (`@example.*`) ; avertit pour Redis, S3 et un expéditeur par défaut. Code de sortie 1 s'il reste un bloquant ; chaque point explique sa correction. Sur cette machine de développement : 5 bloquants, 1 avertissement — le diagnostic attendu.
+- **Point de contrôle pour la supervision** : `GET /api/health` → 200 si la base répond, 503 sinon ; Redis absent ou en panne n'est **pas** une panne (limites en mémoire) ; aucune donnée sensible ni message d'erreur détaillé dans la réponse ; jamais mis en cache.
+- **Documentation** : section « Mise en production » du README (base neuve, configuration, `migrate deploy`, `db:seed` sans jamais `db:seed:demo`, contrôle, démarrage, supervision), variables documentées dans `.env.example`.
+- 37 nouveaux tests (configuration d'email, sélection de l'adresse IP dont la falsification, administrateur de production, règles du contrôle, route de santé avec base ou Redis simulés en panne).
+
+**Vérification en conditions réelles** : `npm run launch:check` sur la configuration de développement (5 bloquants attendus, mot de passe administrateur publié détecté, 7 comptes de test détectés) ; `GET /api/health` → 200 avec base et Redis en ordre, `POST` → 405 ; `next build` (route dynamique) ; `npm run test:e2e` 6/6 sur une base neuve.
+
+**Points d'attention**
+- **Purge des données de démonstration** : aucun outil de suppression n'a été écrit, volontairement. Effacer des comptes et leurs annonces dans une base de production est dangereux ; la règle est de **ne jamais y mettre de données de démonstration** (base neuve + `db:seed` seul), et `launch:check` bloque si elles y sont.
+- `TRUSTED_PROXY_HOPS` doit correspondre à la **réalité de l'hébergement** : trop grand, l'adresse retenue est celle du premier mandataire (tous les visiteurs partageraient les mêmes limites) ; trop petit, elle reste falsifiable. À fixer avec l'hébergeur.
+- La conformité juridique (protection des données personnelles, déclarations) n'est pas du code : à faire valider par un juriste.
+
+## Lot 118 — Exploitation : alertes de modération, compteur, sauvegardes vérifiées (2026-09-19)
+
+Suite du bloc « préparation du lancement » : que l'équipe sache quand du contenu attend, et que les données survivent à un incident.
+
+**Livré**
+- **Alertes de modération** (`src/lib/staff-alerts.ts`) : quand une annonce, un avis de propriétaire (dépôt **ou modification**), une demande de vérification d'identité ou un signalement passe « en attente », l'équipe reçoit un courriel (`STAFF_ALERT_EMAILS`, adresses séparées par des virgules, 10 au plus). **Un courriel par type et par 30 minutes au plus** ; il donne l'état de **toute** la file avec un lien par ligne, le type déclencheur en tête. Envoyé **après** la réponse à l'utilisateur (`after()` de Next) et **sans jamais lever d'exception** : un serveur d'email en panne ne gêne ni le dépôt d'une annonce ni le reste. Sans la variable : aucune alerte (comportement d'avant).
+- **Tableau de bord** : compteur « Avis propriétaires à valider » (il manquait), FR et AR.
+- **Sauvegarde** (`npm run db:backup`, `scripts/backup-db.mjs`) : `pg_dump` compressé horodaté, **relu** (`pg_restore --list`) pour vérifier qu'il est exploitable, empreinte SHA-256, suppression des sauvegardes de plus de 14 jours (jamais un fichier étranger), option `--with-uploads` pour les photos. Multiplateforme, retrouve seul les outils PostgreSQL (dont ceux de Windows hors PATH) ; le mot de passe n'est jamais affiché. Dossier `backups/` ignoré par git.
+- **Test de restauration** (`npm run db:restore-check`) : restaure la dernière sauvegarde dans une base **temporaire**, compare 15 tables clés avec la base réelle, supprime la base temporaire dans tous les cas. Ne touche jamais à la base réelle.
+- **Guide d'exploitation** (`docs/EXPLOITATION.md`) : contrôle avant mise en ligne, sauvegardes (planification, copie hors serveur, test mensuel, restauration réelle, protection de `ENCRYPTION_KEY`), supervision, environnement de recette, sécurité d'exploitation, marche à suivre en cas d'incident.
+- 13 nouveaux tests d'alertes (liste des destinataires, contenu et ordre du courriel, accord du genre, limite de fréquence, robustesse aux pannes de base, de Redis et du serveur d'email).
+
+**Vérification en conditions réelles** : sauvegarde de la base de développement (291 objets, archive relue, 151 Ko) puis **restauration réelle dans une base temporaire : les 15 tables clés sont identiques à la base réelle** (dont 1 541 communes, 108 modèles, 88 lignes d'audit), base temporaire supprimée. **Cas d'échec** : une archive tronquée est détectée (« restauration non conforme », code de sortie 1) et la base temporaire est nettoyée quand même. **Alertes** : avec `STAFF_ALERT_EMAILS` renseigné temporairement (puis retiré), deux comptes jetables à email vérifié par le vrai parcours déposent chacun un avis → **un seul courriel** part, dont le contenu a été relu ; cette relecture a fait trouver et corriger une faute (« nouvelle avis » → « nouvel avis », « Un(e) » → « À traiter : »). Comptes de test et clé de limite supprimés, `.env` remis à l'identique. `next build`, `npm run test:e2e` 6/6, types et lint propres, **703 tests**.
+
+**Points d'attention**
+- **L'alerte reflète l'état au moment de l'envoi** : elle peut annoncer « 1 élément » alors qu'un second arrive une minute plus tard (limite de 30 minutes). Un récapitulatif périodique (résumé quotidien) demanderait une tâche planifiée, non incluse.
+- **Rien n'est planifié automatiquement** : la sauvegarde nocturne et le test mensuel sont à programmer sur le serveur (cron / planificateur de tâches, exemple dans le guide) ; **la copie hors serveur est indispensable**.
+- Le rôle de base de ce poste est super-utilisateur ; ce ne doit pas être le cas en production (noté dans le guide).
+- Pas d'outil de suivi d'erreurs (Sentry…) ni de service de supervision externe : `/api/health` est prêt pour l'un comme pour l'autre, mais ils restent à choisir et à configurer.
+
+**Reste du bloc 1 (hors code)** : environnement de recette à créer avec l'hébergeur ; démarches de conformité juridique ; choix de l'hébergement et service d'email réel (fournisseur, domaine, SPF/DKIM).

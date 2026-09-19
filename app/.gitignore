@@ -57,3 +57,6 @@ next-env.d.ts
 # pièces d'identité (vérification, Lot 14) — jamais sous /public, servies uniquement
 # via une route API authentifiée réservée au staff ; supprimées après décision de review
 /private-uploads/
+
+# Sauvegardes de la base (Lot 118) : données personnelles, jamais dans git
+/backups/

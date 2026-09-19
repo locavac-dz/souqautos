@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { listingSchema } from "@/lib/validation/listing";
@@ -132,6 +133,9 @@ export async function POST(request: NextRequest) {
     },
     select: { id: true },
   });
+
+  // Lot 118 — prévient l'équipe (après la réponse : n'allonge pas la requête).
+  after(() => notifyStaffOfPending("listing"));
 
   return NextResponse.json({ listing }, { status: 201 });
 }

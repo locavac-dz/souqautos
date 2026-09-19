@@ -525,6 +525,7 @@
     "identityRequests": "Demandes de vérification d'identité",
     "noIdentityRequests": "Aucune demande de vérification d'identité en attente.",
     "viewIdentityDocument": "Voir la pièce d'identité",
+    "pendingOwnerReviews": "Avis propriétaires à valider",
     "pendingIdentityRequests": "Vérifications d'identité en attente",
     "navCatalogue": "Marques & modèles",
     "navStatistics": "Statistiques",

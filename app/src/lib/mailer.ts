@@ -1,29 +1,45 @@
 import nodemailer from "nodemailer";
+import { resolveMailConfig } from "@/lib/mail-config";
 
-// Aucun fournisseur réel configuré (SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS) :
-// on utilise un compte de test Ethereal, qui accepte réellement le protocole
-// SMTP et expose un aperçu web consultable — jamais une simulation en mémoire.
-// En production, définir les variables SMTP_* pour basculer vers un vrai
-// fournisseur (Resend, AWS SES, Mailgun...) sans changer le reste du code —
-// même principe d'abstraction indépendante du prestataire que PaymentProvider
-// (cf. docs/ARCHITECTURE.md §11).
+// Configuration résolue par src/lib/mail-config.ts (testée sans réseau) :
+//  - SMTP_HOST défini : vrai fournisseur (Resend, AWS SES, Mailgun, serveur du
+//    groupe…) ; SMTP_PORT, SMTP_USER/SMTP_PASS, SMTP_SECURE et SMTP_FROM
+//    l'ajustent, sans changer le reste du code (même principe d'abstraction que
+//    PaymentProvider, cf. docs/ARCHITECTURE.md §11).
+//  - SMTP_HOST absent EN DÉVELOPPEMENT : compte de test Ethereal, qui accepte
+//    réellement le protocole SMTP et expose un aperçu web consultable — jamais
+//    une simulation en mémoire.
+//  - SMTP_HOST absent EN PRODUCTION : erreur explicite (Lot 117). Auparavant, le
+//    repli vers Ethereal aurait fait « envoyer » tous les courriels vers une
+//    boîte de test que personne ne lit, sans aucune erreur visible.
 let transporterPromise: ReturnType<typeof createTransporter> | null = null;
 
 async function createTransporter() {
-  if (process.env.SMTP_HOST) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT ?? 587),
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
+  const config = resolveMailConfig(process.env);
+  if (config.mode === "error") {
+    throw new Error(`[mailer] ${config.reason}`);
+  }
+  if (config.mode === "smtp") {
+    return {
+      from: config.from,
+      transport: nodemailer.createTransport({
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        auth: config.auth,
+      }),
+    };
   }
   const account = await nodemailer.createTestAccount();
-  return nodemailer.createTransport({
-    host: account.smtp.host,
-    port: account.smtp.port,
-    secure: account.smtp.secure,
-    auth: { user: account.user, pass: account.pass },
-  });
+  return {
+    from: config.from,
+    transport: nodemailer.createTransport({
+      host: account.smtp.host,
+      port: account.smtp.port,
+      secure: account.smtp.secure,
+      auth: { user: account.user, pass: account.pass },
+    }),
+  };
 }
 
 function getTransporter() {
@@ -60,9 +76,9 @@ export async function sendEmail({
   subject: string;
   html: string;
 }): Promise<{ previewUrl?: string }> {
-  const transporter = await getTransporter();
-  const info = await transporter.sendMail({
-    from: "Souq Auto <no-reply@souqauto.dz>",
+  const { transport, from } = await getTransporter();
+  const info = await transport.sendMail({
+    from,
     to,
     subject,
     html,

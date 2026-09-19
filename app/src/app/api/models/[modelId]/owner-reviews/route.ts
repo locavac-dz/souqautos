@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -59,6 +60,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
       select: { id: true, status: true },
     });
+    // Lot 118 — prévient l'équipe (après la réponse).
+    after(() => notifyStaffOfPending("ownerReview"));
     return NextResponse.json({ review }, { status: 201 });
   } catch (error) {
     // Un seul avis par personne et par modèle, même si deux envois partent en
@@ -117,6 +120,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       ...editedByAuthorUpdate(),
     },
   });
+
+  // Une modification remet l'avis en file : l'équipe en est prévenue aussi.
+  after(() => notifyStaffOfPending("ownerReview"));
 
   return NextResponse.json({ ok: true, status: "EN_ATTENTE" });
 }

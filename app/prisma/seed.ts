@@ -4,14 +4,13 @@ import { catalogue, slugify } from "./catalogue-data";
 import { equipmentCatalogue } from "./equipment-data";
 import { communes } from "./commune-data";
 import { generations } from "./generation-data";
+import { resolveAdminBootstrap } from "../src/lib/admin-bootstrap";
 
 const prisma = new PrismaClient();
 
-// Convention du groupe INGENICA : chaque app fille a son admin@<nom-court>.dz
-// (cf. mémoire de session « Convention emails admin apps filles »).
-// Mot de passe de dev documenté (README) — à régénérer avant tout déploiement réel.
-const ADMIN_EMAIL = "admin@souqauto.dz";
-const ADMIN_PASSWORD = "AdminSouqAuto2026!";
+// Compte administrateur : voir src/lib/admin-bootstrap.ts. Développement : convention
+// du groupe INGENICA (admin@<nom-court>.dz) et mot de passe du README. Production :
+// ADMIN_EMAIL et ADMIN_PASSWORD obligatoires (le mot de passe de développement est refusé).
 
 // Les 69 wilayas officielles d'Algérie : 58 (découpage 2019) + 11 créées par la
 // loi n° 26-06 du 4 avril 2026 (JORADP n° 25), codes 59 à 69.
@@ -146,6 +145,15 @@ async function main() {
   }
   console.log(`Seed OK — ${equipmentCatalogue.length} équipements.`);
 
+  const admin = resolveAdminBootstrap(process.env);
+  if (!admin.ok) {
+    console.error(`Seed — compte admin NON créé : ${admin.error}`);
+    process.exitCode = 1;
+    return;
+  }
+  const ADMIN_EMAIL = admin.email;
+  const ADMIN_PASSWORD = admin.password;
+
   const existingAdmin = await prisma.user.findUnique({ where: { email: ADMIN_EMAIL } });
   if (!existingAdmin) {
     const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
@@ -157,7 +165,11 @@ async function main() {
         profile: { create: { displayName: "Administrateur Souq Auto" } },
       },
     });
-    console.log(`Seed OK — compte admin créé (${ADMIN_EMAIL} / voir README pour le mot de passe de dev).`);
+    console.log(
+      admin.usesDevDefaults
+        ? `Seed OK — compte admin de DÉVELOPPEMENT créé (${ADMIN_EMAIL} / voir README pour le mot de passe de dev).`
+        : `Seed OK — compte admin créé (${ADMIN_EMAIL}).`
+    );
   } else if (existingAdmin.role !== "ADMIN") {
     await prisma.user.update({ where: { id: existingAdmin.id }, data: { role: "ADMIN" } });
     console.log(`Seed OK — rôle ADMIN réappliqué à ${ADMIN_EMAIL}.`);

@@ -4,20 +4,28 @@ import { prisma } from "@/lib/prisma";
 export default async function AdminDashboardPage() {
   const t = await getTranslations("Admin");
 
-  const [pendingCount, publishedCount, userCount, openReportsCount, unverifiedProCount, pendingIdentityCount] =
-    await Promise.all([
+  const [
+    pendingCount,
+    publishedCount,
+    userCount,
+    openReportsCount,
+    unverifiedProCount,
+    pendingIdentityCount,
+    pendingOwnerReviewsCount,
+  ] = await Promise.all([
       prisma.listing.count({ where: { status: "EN_ATTENTE" } }),
       prisma.listing.count({ where: { status: "PUBLIEE" } }),
       prisma.user.count(),
       prisma.report.count({ where: { status: "OUVERT" } }),
       prisma.professionalAccount.count({ where: { badgeVerifie: false } }),
       prisma.identityVerificationRequest.count({ where: { status: "EN_ATTENTE" } }),
+      prisma.ownerReview.count({ where: { status: "EN_ATTENTE" } }),
     ]);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("dashboardTitle")}</h1>
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
         <StatCard label={t("pendingListings")} value={pendingCount} highlight={pendingCount > 0} />
         <StatCard label={t("publishedListings")} value={publishedCount} />
         <StatCard label={t("totalUsers")} value={userCount} />
@@ -27,6 +35,11 @@ export default async function AdminDashboardPage() {
           label={t("pendingIdentityRequests")}
           value={pendingIdentityCount}
           highlight={pendingIdentityCount > 0}
+        />
+        <StatCard
+          label={t("pendingOwnerReviews")}
+          value={pendingOwnerReviewsCount}
+          highlight={pendingOwnerReviewsCount > 0}
         />
       </div>
     </div>
