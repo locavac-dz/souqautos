@@ -2079,3 +2079,16 @@ Demandé par le porteur de projet à partir de deux captures d'une rubrique d'es
 **Hors périmètre** : photo de couverture, mise en forme Markdown et flux RSS (Lot 111) ; avis de propriétaires par modèle (il faudrait un système d'avis rattaché aux modèles, absent ici) et « Comprendre la note » (je n'invente pas de méthodologie de notation) ; galerie de photos, versions multiples d'un essai, génération automatique de contenu.
 
 Prochain lot proposé : Lot 111 — photo de couverture, mise en forme du texte et flux RSS.
+
+## Lot 110 bis — Filtres de recherche en menus déroulants (2026-09-19)
+
+Demandé par le porteur de projet à partir d'une capture de la page de recherche : les champs libres « Prix (DA) », « Année » et « Kilométrage max » (qui affichait « 0 ») deviennent des menus déroulants. (Numéroté « bis » pour ne pas décaler le Lot 111 annoncé pour les essais.)
+
+**Livré**
+- **Menus** (`SearchFilters.tsx`, `src/lib/search-filter-options.ts`) : prix mini/maxi par paliers de 500 000 à 30 000 000 DA, année mini/maxi de l'année courante à 1990 (la plus récente d'abord), kilométrage maxi de 10 000 à 300 000 km. Première option « Min » / « Max » / « Indifférent » = aucun filtre. Nombres formatés selon la langue (FR/AR), sans suffixe « DA » dans les options (il tronquait le libellé dans la colonne étroite).
+- **Aucun changement côté serveur ni dans les adresses** : les menus lisent et écrivent les mêmes paramètres entiers (`priceMin`, `priceMax`, `yearMin`, `yearMax`, `mileageMax`), donc les liens existants, les recherches sauvegardées, les alertes et le conseiller IA continuent de fonctionner. Une valeur d'adresse qui n'est pas un palier (ex. `priceMax=1234567`) est ajoutée au menu et affichée telle quelle plutôt qu'effacée ou remplacée par un palier voisin. `mileageMax=0` s'affiche « Indifférent » (le serveur l'ignorait déjà).
+- 7 nouveaux tests unitaires (paliers croissants, années, normalisation, valeur d'adresse hors palier, ordre décroissant des années). 572/572 au vert ; types et lint propres.
+
+**Vérification dans le navigateur** : plus aucun champ numérique sur la page ; sélection prix 3 000 000 → 6 000 000, année 2019+, kilométrage 100 000 km → adresse `?priceMax=6000000&mileageMax=100000&priceMin=3000000&yearMin=2019` et 8 résultats, identiques au décompte en base ; réouverture de cette adresse : les menus affichent les bonnes valeurs.
+
+**Point d'attention** : les paliers fixes remplacent la saisie libre (un budget de 2 750 000 DA se choisit désormais par 2 500 000 ou 3 000 000) ; les listes sont faciles à ajuster dans `search-filter-options.ts`.

@@ -3,6 +3,13 @@
 import { cloneElement, isValidElement, useState, type ReactElement } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import {
+  MILEAGE_STEPS_KM,
+  PRICE_STEPS_DZD,
+  normalizeFilterValue,
+  optionsWithCurrent,
+  yearOptions,
+} from "@/lib/search-filter-options";
 
 type ModelRow = { id: number; name: string; brandId: number };
 type BrandRow = { id: number; name: string; models: ModelRow[] };
@@ -36,6 +43,11 @@ const CATEGORY_KEY: Record<string, string> = {
   AUTRE: "categoryAutre",
 };
 
+// Au niveau du module (et non dans le rendu) : un composant ne doit pas lire
+// l'horloge pendant son rendu.
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_STEPS = yearOptions(CURRENT_YEAR);
+
 const EQUIPMENT_CATEGORY_ORDER = ["CONFORT", "SECURITE", "MULTIMEDIA", "EXTERIEUR"] as const;
 const EQUIPMENT_CATEGORY_KEY: Record<string, string> = {
   CONFORT: "equipmentCategoryConfort",
@@ -61,6 +73,7 @@ export function SearchFilters({
   const tWizard = useTranslations("Wizard");
   const locale = useLocale();
   const router = useRouter();
+  const numberLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
   const [values, setValues] = useState<SearchFilterValues>(initialValues);
 
   const selectedBrand = brands.find((b) => b.id === Number(values.brandId));
@@ -228,57 +241,60 @@ export function SearchFilters({
 
           <Field label={t("priceRange")}>
             <div className="flex gap-2">
-              <input
-                type="number"
-                min={0}
-                placeholder={t("min")}
-                aria-label={`${t("priceRange")} ${t("min")}`}
-                value={values.priceMin ?? ""}
-                onChange={(e) => set("priceMin", e.target.value)}
-                className="w-1/2 rounded-md border border-slate-300 px-3 py-2"
+              <NumberSelect
+                value={values.priceMin}
+                steps={PRICE_STEPS_DZD}
+                emptyLabel={t("min")}
+                ariaLabel={`${t("priceRange")} ${t("min")}`}
+                format={(n) => n.toLocaleString(numberLocale)}
+                onChange={(v) => set("priceMin", v)}
+                className="w-1/2"
               />
-              <input
-                type="number"
-                min={0}
-                placeholder={t("max")}
-                aria-label={`${t("priceRange")} ${t("max")}`}
-                value={values.priceMax ?? ""}
-                onChange={(e) => set("priceMax", e.target.value)}
-                className="w-1/2 rounded-md border border-slate-300 px-3 py-2"
+              <NumberSelect
+                value={values.priceMax}
+                steps={PRICE_STEPS_DZD}
+                emptyLabel={t("max")}
+                ariaLabel={`${t("priceRange")} ${t("max")}`}
+                format={(n) => n.toLocaleString(numberLocale)}
+                onChange={(v) => set("priceMax", v)}
+                className="w-1/2"
               />
             </div>
           </Field>
 
           <Field label={t("yearRange")}>
             <div className="flex gap-2">
-              <input
-                type="number"
-                min={1970}
-                placeholder={t("min")}
-                aria-label={`${t("yearRange")} ${t("min")}`}
-                value={values.yearMin ?? ""}
-                onChange={(e) => set("yearMin", e.target.value)}
-                className="w-1/2 rounded-md border border-slate-300 px-3 py-2"
+              <NumberSelect
+                value={values.yearMin}
+                steps={YEAR_STEPS}
+                order="desc"
+                emptyLabel={t("min")}
+                ariaLabel={`${t("yearRange")} ${t("min")}`}
+                format={(n) => String(n)}
+                onChange={(v) => set("yearMin", v)}
+                className="w-1/2"
               />
-              <input
-                type="number"
-                min={1970}
-                placeholder={t("max")}
-                aria-label={`${t("yearRange")} ${t("max")}`}
-                value={values.yearMax ?? ""}
-                onChange={(e) => set("yearMax", e.target.value)}
-                className="w-1/2 rounded-md border border-slate-300 px-3 py-2"
+              <NumberSelect
+                value={values.yearMax}
+                steps={YEAR_STEPS}
+                order="desc"
+                emptyLabel={t("max")}
+                ariaLabel={`${t("yearRange")} ${t("max")}`}
+                format={(n) => String(n)}
+                onChange={(v) => set("yearMax", v)}
+                className="w-1/2"
               />
             </div>
           </Field>
 
           <Field id="filter-mileage" label={t("mileageMax")}>
-            <input
-              type="number"
-              min={0}
-              value={values.mileageMax ?? ""}
-              onChange={(e) => set("mileageMax", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+            <NumberSelect
+              value={values.mileageMax}
+              steps={MILEAGE_STEPS_KM}
+              emptyLabel={t("any")}
+              format={(n) => `${n.toLocaleString(numberLocale)} km`}
+              onChange={(v) => set("mileageMax", v)}
+              className="w-full"
             />
           </Field>
 
@@ -381,5 +397,47 @@ function Field({
         ? cloneElement(children as ReactElement<{ id?: string }>, { id })
         : children}
     </div>
+  );
+}
+
+// Menu de paliers pour un filtre numérique. `id` est injecté par `Field` quand le
+// menu est seul dans son champ (lien étiquette ↔ menu).
+function NumberSelect({
+  id,
+  value,
+  steps,
+  order = "asc",
+  emptyLabel,
+  ariaLabel,
+  format,
+  onChange,
+  className,
+}: {
+  id?: string;
+  value: string | undefined;
+  steps: number[];
+  order?: "asc" | "desc";
+  emptyLabel: string;
+  ariaLabel?: string;
+  format: (n: number) => string;
+  onChange: (value: string) => void;
+  className: string;
+}) {
+  const options = optionsWithCurrent(steps, value, order);
+  return (
+    <select
+      id={id}
+      value={normalizeFilterValue(value)}
+      aria-label={ariaLabel}
+      onChange={(e) => onChange(e.target.value)}
+      className={`${className} rounded-md border border-slate-300 px-3 py-2 bg-white`}
+    >
+      <option value="">{emptyLabel}</option>
+      {options.map((n) => (
+        <option key={n} value={n}>
+          {format(n)}
+        </option>
+      ))}
+    </select>
   );
 }
