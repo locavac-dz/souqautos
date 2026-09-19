@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { BlogArticleForm } from "@/components/admin/BlogArticleForm";
 import { articleStatus } from "@/lib/blog-publication";
+import { articleAdminSection } from "@/lib/blog";
 
 export default async function EditBlogArticlePage({
   params,
@@ -23,9 +24,9 @@ export default async function EditBlogArticlePage({
   const t = await getTranslations("AdminBlog");
   const article = await prisma.blogArticle.findUnique({ where: { id } });
   if (!article) notFound();
-  // Lot 110 — un essai s'édite dans sa propre rubrique (fiche d'essai).
-  if (article.kind === "ESSAI") {
-    redirect({ href: `/admin/essais/${article.id}/modifier`, locale });
+  // Lot 110 — un essai (ou, Lot 126, un guide) s'édite dans sa propre rubrique (sa fiche).
+  if (article.kind === "ESSAI" || article.kind === "GUIDE") {
+    redirect({ href: `/admin/${articleAdminSection(article.kind)}/${article.id}/modifier`, locale });
     return null;
   }
 

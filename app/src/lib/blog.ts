@@ -16,3 +16,15 @@ export function generateUniqueSlug(baseSlug: string, existingSlugs: string[]): s
 // fixes de la rubrique Essais (`/essais/revue-de-presse`, Lot 114) qui seraient
 // sinon masquées par la page de l'article.
 export const RESERVED_SLUGS = ["revue-de-presse"];
+
+// Lot 126 — adresse publique d'un article selon son type (sans la langue) : le magazine, les essais et
+// les guides d'achat partagent le même espace de slugs mais vivent dans trois rubriques.
+export function articlePublicPath(kind: "ARTICLE" | "ESSAI" | "GUIDE", slug: string): string {
+  const section = kind === "ESSAI" ? "essais" : kind === "GUIDE" ? "guides" : "mag";
+  return `/${section}/${slug}`;
+}
+
+// Rubrique d'administration où s'édite un article de ce type.
+export function articleAdminSection(kind: "ARTICLE" | "ESSAI" | "GUIDE"): "mag" | "essais" | "guides" {
+  return kind === "ESSAI" ? "essais" : kind === "GUIDE" ? "guides" : "mag";
+}

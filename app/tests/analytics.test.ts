@@ -22,6 +22,9 @@ describe("classifyPublicPath — pages counted", () => {
     ["/fr/wilaya/alger", "fr", "/wilaya/[wilaya]", "alger"],
     ["/fr/mag/comment-acheter-une-occasion", "fr", "/mag/[slug]", "comment-acheter-une-occasion"],
     ["/ar/essais/essai-clio-4", "ar", "/essais/[slug]", "essai-clio-4"],
+    ["/fr/guides", "fr", "/guides", ""],
+    ["/fr/guides/acheter-une-clio-4-d-occasion", "fr", "/guides/[slug]", "acheter-une-clio-4-d-occasion"],
+    ["/ar/guides/guide-clio", "ar", "/guides/[slug]", "guide-clio"],
     ["/fr/pro/cmabc123", "fr", "/pro/[id]", ""],
     ["/fr/vendeur/cmabc123", "fr", "/vendeur/[id]", ""],
     ["/fr/professionnels", "fr", "/professionnels", ""],
@@ -88,6 +91,8 @@ describe("classifyPublicPath — privacy of the address", () => {
     for (const path of [
       "/fr/mag/Article%20Avec%20Espaces",
       "/fr/mag/UPPERCASE",
+      "/fr/guides/Guide%20Avec%20Espaces",
+      "/fr/guides/..%2fadmin",
       "/fr/mag/a_b",
       "/fr/mag/%2e%2e",
       "/fr/mag/..%2fadmin",

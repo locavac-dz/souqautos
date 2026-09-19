@@ -4,6 +4,7 @@ import { SITE_URL } from "@/lib/site";
 import { routing } from "@/i18n/routing";
 import { getDirectoryEntries } from "@/lib/professional-directory";
 import { publishedNow } from "@/lib/blog-publication";
+import { articlePublicPath } from "@/lib/blog";
 
 // Lot 110 — sans cette ligne Next fige le sitemap au moment du build (rien ne
 // lui indique que la base est lue) : un essai programmé n'y apparaîtrait jamais
@@ -50,6 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry("/professionnels"),
     localizedEntry("/concessionnaires"),
     localizedEntry("/essais"),
+    localizedEntry("/guides"),
   ];
 
   const brandEntries = brands.map((brand) => localizedEntry(`/voitures/${brand.slug}`));
@@ -65,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   const articleEntries = articles.map((article) =>
-    localizedEntry(`${article.kind === "ESSAI" ? "/essais" : "/mag"}/${article.slug}`, article.updatedAt)
+    localizedEntry(articlePublicPath(article.kind, article.slug), article.updatedAt)
   );
 
   const proShowcaseEntries = proShowcases.map((entry) => localizedEntry(`/pro/${entry.id}`));

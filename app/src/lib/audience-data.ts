@@ -72,6 +72,8 @@ export function contentHref(page: string, detail: string): string | null {
       return `/mag/${detail}`;
     case "/essais/[slug]":
       return `/essais/${detail}`;
+    case "/guides/[slug]":
+      return `/guides/${detail}`;
     case "/voitures/[marque]":
     case "/voitures/[marque]/[modele]":
       return `/voitures/${detail}`;

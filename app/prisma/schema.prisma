@@ -146,6 +146,7 @@ model Brand {
   models Model[]
   listings Listing[]
   roadTests RoadTest[]
+  buyingGuides BuyingGuide[]
   pressReviews PressReview[]
 }
 
@@ -165,6 +166,7 @@ model Model {
   listings Listing[]
   generations Generation[]
   roadTests RoadTest[]
+  buyingGuides BuyingGuide[]
   pressReviews PressReview[]
   ownerReviews OwnerReview[]
 
@@ -190,6 +192,7 @@ model Generation {
   yearEnd   Int?
   listings  Listing[]
   roadTests RoadTest[]
+  buyingGuides BuyingGuide[]
 
   @@index([modelId])
   @@unique([modelId, name])
@@ -963,6 +966,7 @@ model BlogArticle {
   // dans le futur = programmé (visible seulement une fois la date atteinte).
   kind        ArticleKind @default(ARTICLE)
   roadTest    RoadTest?
+  guide       BuyingGuide?
   // Lot 111 — photo de couverture (essais), toujours un fichier de notre propre
   // stockage « blog-covers » (jamais une URL externe, cf. src/lib/blog-cover.ts).
   coverImageUrl String?
@@ -983,6 +987,7 @@ model BlogArticle {
 enum ArticleKind {
   ARTICLE
   ESSAI
+  GUIDE
 }
 
 // Lot 110 — fiche d'un essai auto. Seulement des données réellement saisies par
@@ -1010,6 +1015,29 @@ model RoadTest {
 
   @@index([brandId])
   @@index([modelId])
+}
+
+// Lot 126 — guide d'achat PAR MODÈLE : un article de fond (texte Markdown, comme un essai) rattaché à un
+// modèle du catalogue, avec deux éléments structurés — une liste « à vérifier avant d'acheter » (une
+// ligne par point, 1 à 12) et « notre conseil ». Le contenu est rédigé par l'équipe : le site ne fournit
+// aucun texte de départ. Le modèle est obligatoire (c'est ce qui relie le guide à sa page modèle et aux
+// annonces de ce modèle) ; la marque se déduit du modèle ; la génération est facultative.
+model BuyingGuide {
+  articleId    String      @id
+  article      BlogArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  brandId      Int
+  brand        Brand       @relation(fields: [brandId], references: [id])
+  modelId      Int
+  model        Model       @relation(fields: [modelId], references: [id])
+  generationId Int?
+  generation   Generation? @relation(fields: [generationId], references: [id])
+  checklistFr  String
+  checklistAr  String
+  adviceFr     String
+  adviceAr     String
+
+  @@index([modelId])
+  @@index([brandId])
 }
 
 // Lot 114 — revue de presse : un LIEN vers un essai publié par un autre média,

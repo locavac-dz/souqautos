@@ -25,6 +25,8 @@ async function contentExists(page: PublicPage, detail: string, now: Date): Promi
       return (await prisma.blogArticle.findFirst({ where: { slug: detail, kind: "ARTICLE", ...publishedNow(now) }, select: { id: true } })) !== null;
     case "/essais/[slug]":
       return (await prisma.blogArticle.findFirst({ where: { slug: detail, kind: "ESSAI", ...publishedNow(now) }, select: { id: true } })) !== null;
+    case "/guides/[slug]":
+      return (await prisma.blogArticle.findFirst({ where: { slug: detail, kind: "GUIDE", ...publishedNow(now) }, select: { id: true } })) !== null;
     case "/voitures/[marque]":
       return (await prisma.brand.findUnique({ where: { slug: detail }, select: { id: true } })) !== null;
     case "/voitures/[marque]/[modele]": {

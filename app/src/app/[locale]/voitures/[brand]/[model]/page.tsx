@@ -8,6 +8,7 @@ import { getListingStats } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RoadTestCard } from "@/components/RoadTestCard";
+import { GuideCard, guideCardSelect } from "@/components/GuideCard";
 import { PressReviewCard } from "@/components/PressReviewCard";
 import { OwnerReviewsSection } from "@/components/OwnerReviewsSection";
 import { publishedNow } from "@/lib/blog-publication";
@@ -61,9 +62,10 @@ export default async function ModelPage({
 
   const t = await getTranslations("Catalogue");
   const tRoadTest = await getTranslations("RoadTest");
+  const tGuide = await getTranslations("Guide");
   const tPress = await getTranslations("PressReview");
 
-  const [stats, listings, currentUser, roadTests, pressReviews] = await Promise.all([
+  const [stats, listings, currentUser, roadTests, guides, pressReviews] = await Promise.all([
     getListingStats({ brandId: brand.id, modelId: model.id }),
     prisma.listing.findMany({
       where: { brandId: brand.id, modelId: model.id, status: "PUBLIEE" },
@@ -95,6 +97,13 @@ export default async function ModelPage({
         coverImageUrl: true,
         roadTest: { select: { rating: true, brand: { select: { name: true } }, model: { select: { name: true } } } },
       },
+    }),
+    // Lot 126 — guides d'achat parus de ce modèle (les 2 derniers).
+    prisma.blogArticle.findMany({
+      where: { kind: "GUIDE", ...publishedNow(new Date()), guide: { modelId: model.id } },
+      orderBy: { publishedAt: "desc" },
+      take: 2,
+      select: guideCardSelect,
     }),
     // Lot 114 — ce qu'en dit la presse : liens vers des essais publiés ailleurs
     // (les 3 derniers de ce modèle).
@@ -193,6 +202,17 @@ export default async function ModelPage({
           {t("estimateLink", { brand: brand.name, model: model.name })}
         </Link>
       </div>
+
+      {guides.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-slate-900">{tGuide("modelSectionTitle")}</h2>
+          <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {guides.map((article) => (
+              <GuideCard key={article.id} article={article} locale={locale} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {roadTests.length > 0 && (
         <section className="mt-8">

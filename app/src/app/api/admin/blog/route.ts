@@ -7,6 +7,7 @@ import { slugify } from "@/lib/slugify";
 import { generateUniqueSlug, RESERVED_SLUGS } from "@/lib/blog";
 import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
 import { toRoadTestData } from "@/lib/road-test-data";
+import { toBuyingGuideData } from "@/lib/buying-guide";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
 import { isBlogCoverUrl } from "@/lib/blog-cover";
 import { isUniqueViolation } from "@/lib/prisma-errors";
@@ -57,6 +58,22 @@ export async function POST(request: NextRequest) {
     }
   }
 
+
+  // Lot 126 — guide d'achat : le modèle est obligatoire et la marque se déduit de lui (jamais lue du
+  // navigateur) ; la génération, si elle est donnée, doit appartenir à ce modèle.
+  let guideBrandId: number | undefined;
+  if (data.guide) {
+    const guideModel = await prisma.model.findUnique({ where: { id: data.guide.modelId }, select: { brandId: true } });
+    if (!guideModel) {
+      return NextResponse.json({ error: "unknown_model" }, { status: 400 });
+    }
+    const guideRefs = await validateVehicleRefs({ brandId: guideModel.brandId, modelId: data.guide.modelId, generationId: data.guide.generationId });
+    if (!guideRefs.ok) {
+      return NextResponse.json({ error: guideRefs.error }, { status: 400 });
+    }
+    guideBrandId = guideModel.brandId;
+  }
+
   const existingSlugs = (await prisma.blogArticle.findMany({ select: { slug: true } })).map(
     (a) => a.slug
   );
@@ -85,6 +102,7 @@ export async function POST(request: NextRequest) {
         sourceUrl: source.sourceUrl,
         publishedAt,
         roadTest: data.roadTest ? { create: toRoadTestData(data.roadTest, brandIdFromModel) } : undefined,
+        guide: data.guide && guideBrandId !== undefined ? { create: toBuyingGuideData(data.guide, guideBrandId) } : undefined,
       },
       select: { id: true, slug: true },
     });

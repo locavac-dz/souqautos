@@ -23,6 +23,8 @@ export const PUBLIC_PAGES = [
   "/mag/[slug]",
   "/essais",
   "/essais/[slug]",
+  "/guides",
+  "/guides/[slug]",
   "/cote-souq-auto",
   "/comparateur",
   "/professionnels",
@@ -44,7 +46,7 @@ const PRO_TOOL_SEGMENTS = new Set(["tableau-de-bord", "import", "statistiques", 
 
 // Pages dont le dernier segment est un identifiant public de CONTENU (et non un numéro d'annonce ou
 // de vendeur) : leur détail est gardé pour savoir quels articles, marques et modèles sont lus.
-const DETAIL_PAGES: ReadonlySet<PublicPage> = new Set(["/mag/[slug]", "/essais/[slug]", "/voitures/[marque]", "/voitures/[marque]/[modele]", "/wilaya/[wilaya]"]);
+const DETAIL_PAGES: ReadonlySet<PublicPage> = new Set(["/mag/[slug]", "/essais/[slug]", "/guides/[slug]", "/voitures/[marque]", "/voitures/[marque]/[modele]", "/wilaya/[wilaya]"]);
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,79}$/;
 
@@ -56,6 +58,7 @@ const SINGLE_SEGMENT_PAGES: Record<string, PublicPage> = {
   wilaya: "/wilaya",
   mag: "/mag",
   essais: "/essais",
+  guides: "/guides",
   "cote-souq-auto": "/cote-souq-auto",
   comparateur: "/comparateur",
   professionnels: "/professionnels",
@@ -83,6 +86,7 @@ function matchPage(segments: string[]): { page: PublicPage; detail: string } | n
       if (a === "pro") return PRO_TOOL_SEGMENTS.has(b) ? null : { page: "/pro/[id]", detail: "" };
       if (a === "mag") return { page: "/mag/[slug]", detail: b };
       if (a === "essais") return { page: "/essais/[slug]", detail: b };
+      if (a === "guides") return { page: "/guides/[slug]", detail: b };
       if (a === "voitures") return { page: "/voitures/[marque]", detail: b };
       if (a === "wilaya") return { page: "/wilaya/[wilaya]", detail: b };
       return null;

@@ -43,6 +43,11 @@ describe("isKnownContentDetail", () => {
     expect(articleFindFirst.mock.calls[1][0].where).toEqual({ slug: "essai-clio", kind: "ESSAI", publishedAt: { lte: NOW } });
   });
 
+  it("checks a guide against published GUIDE rows only", async () => {
+    await isKnownContentDetail("/guides/[slug]", "guide-clio", NOW);
+    expect(articleFindFirst.mock.calls[0][0].where).toEqual({ slug: "guide-clio", kind: "GUIDE", publishedAt: { lte: NOW } });
+  });
+
   it("checks brands, models (under their brand) and wilayas", async () => {
     await isKnownContentDetail("/voitures/[marque]", "renault", NOW);
     expect(brandFindUnique).toHaveBeenCalledWith({ where: { slug: "renault" }, select: { id: true } });

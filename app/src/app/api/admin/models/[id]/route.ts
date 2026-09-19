@@ -73,6 +73,12 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ error: "has_listings" }, { status: 409 });
   }
 
+  // Lot 126 — un guide d'achat est rattaché à son modèle : on le supprime d'abord (ou on en choisit un autre).
+  const guideCount = await prisma.buyingGuide.count({ where: { modelId } });
+  if (guideCount > 0) {
+    return NextResponse.json({ error: "has_guides" }, { status: 409 });
+  }
+
   await prisma.model.delete({ where: { id: modelId } });
 
   await writeAuditLog({

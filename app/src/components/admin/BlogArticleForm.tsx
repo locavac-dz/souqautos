@@ -5,7 +5,17 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 
-type ArticleKind = "ARTICLE" | "ESSAI";
+type ArticleKind = "ARTICLE" | "ESSAI" | "GUIDE";
+
+type ExistingGuide = {
+  brandId: number;
+  modelId: number;
+  generationId: number | null;
+  checklistFr: string;
+  checklistAr: string;
+  adviceFr: string;
+  adviceAr: string;
+};
 
 type ExistingRoadTest = {
   brandId: number | null;
@@ -35,6 +45,7 @@ type ExistingArticle = {
   sourceName?: string | null;
   sourceUrl?: string | null;
   roadTest?: ExistingRoadTest | null;
+  guide?: ExistingGuide | null;
 };
 
 const COVER_ERROR_KEY: Record<string, string> = {
@@ -77,8 +88,10 @@ export function BlogArticleForm({
 }) {
   const t = useTranslations("AdminBlog");
   const tRt = useTranslations("AdminRoadTest");
+  const tG = useTranslations("AdminGuide");
   const router = useRouter();
   const isEssai = kind === "ESSAI";
+  const isGuide = kind === "GUIDE";
 
   const [titleFr, setTitleFr] = useState(article?.titleFr ?? "");
   const [titleAr, setTitleAr] = useState(article?.titleAr ?? "");
@@ -95,9 +108,14 @@ export function BlogArticleForm({
   );
 
   const rt = article?.roadTest;
-  const [brandId, setBrandId] = useState(rt?.brandId ? String(rt.brandId) : "");
-  const [modelId, setModelId] = useState(rt?.modelId ? String(rt.modelId) : "");
-  const [generationId, setGenerationId] = useState(rt?.generationId ? String(rt.generationId) : "");
+  const gd = article?.guide;
+  const [brandId, setBrandId] = useState(rt?.brandId ? String(rt.brandId) : gd?.brandId ? String(gd.brandId) : "");
+  const [modelId, setModelId] = useState(rt?.modelId ? String(rt.modelId) : gd?.modelId ? String(gd.modelId) : "");
+  const [generationId, setGenerationId] = useState(rt?.generationId ? String(rt.generationId) : gd?.generationId ? String(gd.generationId) : "");
+  const [checklistFr, setChecklistFr] = useState(gd?.checklistFr ?? "");
+  const [checklistAr, setChecklistAr] = useState(gd?.checklistAr ?? "");
+  const [adviceFr, setAdviceFr] = useState(gd?.adviceFr ?? "");
+  const [adviceAr, setAdviceAr] = useState(gd?.adviceAr ?? "");
   const [rating, setRating] = useState(rt ? String(rt.rating) : "");
   const [prosFr, setProsFr] = useState(rt?.prosFr ?? "");
   const [prosAr, setProsAr] = useState(rt?.prosAr ?? "");
@@ -167,6 +185,12 @@ export function BlogArticleForm({
       return;
     }
 
+    if (isGuide && !modelId) {
+      setPending(false);
+      setError(tG("modelRequired"));
+      return;
+    }
+
     const payload = {
       kind,
       titleFr,
@@ -177,7 +201,18 @@ export function BlogArticleForm({
       contentAr,
       publication,
       // Lot 115 — source d'un article du magazine (jamais pour un essai).
-      ...(!isEssai && { sourceName: sourceName.trim() || null, sourceUrl: sourceUrl.trim() || null }),
+      ...(kind === "ARTICLE" && { sourceName: sourceName.trim() || null, sourceUrl: sourceUrl.trim() || null }),
+      ...(isGuide && {
+        coverImageUrl: coverUrl,
+        guide: {
+          modelId: Number(modelId),
+          generationId: generationId ? Number(generationId) : undefined,
+          checklistFr,
+          checklistAr,
+          adviceFr,
+          adviceAr,
+        },
+      }),
       ...(isEssai && {
         coverImageUrl: coverUrl,
         roadTest: {
@@ -211,11 +246,11 @@ export function BlogArticleForm({
 
     setPending(false);
     if (res.ok) {
-      router.push(isEssai ? "/admin/essais" : "/admin/mag");
+      router.push(isEssai ? "/admin/essais" : isGuide ? "/admin/guides" : "/admin/mag");
       router.refresh();
       return;
     }
-    setError(isEssai ? tRt("errorGeneric") : t("errorGeneric"));
+    setError(isEssai ? tRt("errorGeneric") : isGuide ? tG("errorGeneric") : t("errorGeneric"));
   }
 
   return (
@@ -280,7 +315,7 @@ export function BlogArticleForm({
         </div>
       </div>
 
-      {isEssai && (
+      {(isEssai || isGuide) && (
         <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
           <legend className="px-1 text-sm font-medium text-slate-900">{tRt("coverTitle")}</legend>
           <div className="flex items-center gap-4">
@@ -316,6 +351,110 @@ export function BlogArticleForm({
           </div>
           <p className="text-xs text-slate-500">{tRt("coverHelp")}</p>
           {coverError && <p className="text-sm text-red-600">{coverError}</p>}
+        </fieldset>
+      )}
+
+      {isGuide && (
+        <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900">{tG("sectionModel")}</legend>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="gBrand" className="block text-sm font-medium text-slate-700 mb-1">
+                {tG("brandLabel")}
+              </label>
+              <select
+                id="gBrand"
+                value={brandId}
+                onChange={(e) => {
+                  setBrandId(e.target.value);
+                  setModelId("");
+                  setGenerationId("");
+                }}
+                className={`${inputClass} bg-white`}
+              >
+                <option value="">{tG("chooseOption")}</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="gModel" className="block text-sm font-medium text-slate-700 mb-1">
+                {tG("modelLabel")}
+              </label>
+              <select
+                id="gModel"
+                value={modelId}
+                disabled={!brandId}
+                onChange={(e) => {
+                  setModelId(e.target.value);
+                  setGenerationId("");
+                }}
+                className={`${inputClass} bg-white disabled:bg-slate-50`}
+              >
+                <option value="">{tG("chooseOption")}</option>
+                {models.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="gGeneration" className="block text-sm font-medium text-slate-700 mb-1">
+                {tG("generationLabel")}
+              </label>
+              <select
+                id="gGeneration"
+                value={generationId}
+                disabled={!modelId || generations.length === 0}
+                onChange={(e) => setGenerationId(e.target.value)}
+                className={`${inputClass} bg-white disabled:bg-slate-50`}
+              >
+                <option value="">{tG("noneOption")}</option>
+                {generations.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 -mt-2">{tG("modelHelp")}</p>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="gChecklistFr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tG("checklistFrLabel")}
+              </label>
+              <textarea id="gChecklistFr" value={checklistFr} onChange={(e) => setChecklistFr(e.target.value)} rows={6} className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="gChecklistAr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tG("checklistArLabel")}
+              </label>
+              <textarea id="gChecklistAr" dir="rtl" value={checklistAr} onChange={(e) => setChecklistAr(e.target.value)} rows={6} className={inputClass} />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 -mt-2">{tG("checklistHelp")}</p>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="gAdviceFr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tG("adviceFrLabel")}
+              </label>
+              <textarea id="gAdviceFr" value={adviceFr} onChange={(e) => setAdviceFr(e.target.value)} maxLength={400} rows={3} className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="gAdviceAr" className="block text-sm font-medium text-slate-700 mb-1">
+                {tG("adviceArLabel")}
+              </label>
+              <textarea id="gAdviceAr" dir="rtl" value={adviceAr} onChange={(e) => setAdviceAr(e.target.value)} maxLength={400} rows={3} className={inputClass} />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 -mt-2">{tG("adviceHelp")}</p>
         </fieldset>
       )}
 
@@ -526,9 +665,9 @@ export function BlogArticleForm({
           />
         </div>
       </div>
-      <p className="text-xs text-slate-500 -mt-4">{isEssai ? tRt("markdownHelp") : t("contentHelp")}</p>
+      <p className="text-xs text-slate-500 -mt-4">{isEssai || isGuide ? tRt("markdownHelp") : t("contentHelp")}</p>
 
-      {!isEssai && (
+      {kind === "ARTICLE" && (
         <fieldset className="space-y-3 rounded-lg border border-slate-200 p-4">
           <legend className="px-1 text-sm font-medium text-slate-900">{t("sourceSection")}</legend>
           <div className="grid sm:grid-cols-2 gap-4">

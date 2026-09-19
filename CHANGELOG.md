@@ -2478,3 +2478,36 @@ Les 24 annonces de démonstration n'affichaient que des cartes de couleur portan
 - **Licences** : CC BY-SA impose de conserver le crédit et la licence (fait, page de l'annonce et `prisma/demo-photos/README.md`) et de publier toute adaptation sous la même licence ; à faire valider par votre juriste si ces annonces deviennent publiques. **En production, ces annonces n'existent pas** (le compte de démonstration et `db:seed:demo` sont refusés par `launch:check`).
 - Le crédit s'affiche sur la fiche, pas sur les cartes de la liste : la licence admet un lien vers la page où figure le crédit.
 - Les photos des vendeurs ne sont pas concernées : elles leur appartiennent et n'ont ni crédit ni mention.
+
+## Lot 126 — Bloc 4 : guides d'achat par modèle (2026-09-19)
+
+Un nouveau type de contenu éditorial : le **guide d'achat**, un article de fond rattaché à **un modèle** du catalogue. Il apparaît sur la page du modèle et sur chaque annonce de ce modèle (« Avant d'acheter, lisez notre guide »). **Livré vide : le contenu est à rédiger par votre équipe**, le site ne fournit aucun texte de départ et je n'en ai publié aucun.
+
+**Livré**
+- **Type `GUIDE`** (migration `20260919250000_buying_guides`) avec sa fiche `BuyingGuide` : le **modèle** (obligatoire — c'est ce qui relie le guide à ses annonces), la génération (facultative), une liste **« à vérifier avant d'acheter »** (une ligne par point, 1 à 12 points de 200 caractères) et **« notre conseil »** (20 à 400 caractères), dans les deux langues, plus le texte Markdown et une photo de couverture facultative, comme un essai. La marque n'est **jamais lue du navigateur** : elle se déduit du modèle (une marque falsifiée est ignorée).
+- **Pages publiques** : `/guides` (index paginé) et `/guides/[slug]` (liste de points cochés, conseil, texte, liens « Voir les annonces » et « Fiche du modèle », données structurées `Article` et fil d'Ariane), en français et en arabe (RTL) ; lien « Guides d'achat » dans le pied de page ; section « Guide d'achat » sur la page du modèle ; encart sur la fiche de chaque annonce de ce modèle (rien sur les annonces des autres modèles) ; entrées dans le plan du site (`/guides` et chaque guide, avec les variantes de langue).
+- **Même règles de publication** que le magazine et les essais : brouillon, publier maintenant ou **programmer**, « mis à jour le » ; un brouillon ou un guide programmé est un vrai 404, absent de l'index, de la page du modèle et du plan du site.
+- **Trois rubriques, un seul espace d'adresses** : le magazine liste seulement les articles, les essais seulement les essais, les guides seulement les guides ; l'ancienne adresse `/mag/…` d'un guide renvoie vers `/guides/…`, `/essais/…` répond 404 pour un guide.
+- **Administration** (ADMIN seulement, comme les essais) : `/admin/guides` (liste avec état brouillon / programmé / publié), création et modification avec le même formulaire que les autres contenus, entrée dans le menu du back-office ; l'édition d'un guide depuis `/admin/mag` redirige vers sa rubrique. Le type ne peut pas changer après la création.
+- **Suppression d'un modèle protégée** : un modèle qui a un guide ne peut plus être supprimé (« supprimez d'abord le guide »), au lieu d'une erreur de base de données.
+- **Audience (Lot 124)** : les pages `/guides` et `/guides/[slug]` sont comptées, et l'identifiant du guide n'est gardé que s'il est réellement paru — l'équipe verra quels guides sont lus.
+- **21 nouveaux tests** (1 019 → 1 040) : liste à vérifier, normalisation, règles de validation (un guide exige sa fiche et son modèle ; une fiche de guide est refusée sur un article ou un essai, et inversement ; pas de source externe ; couverture permise ; publication), chemins par type, suivi d'audience.
+
+**Vérification en conditions réelles** (base et serveur de développement, compte administrateur jetable ; guides de test **supprimés** ensuite)
+- Droits : anonyme et membre ordinaire → 403. **Onze refus** en 400 sans rien créer : sans fiche, sans modèle, modèle inconnu ou hors bornes, génération d'un autre modèle, fiche de guide sur un article, fiche d'essai en plus, source externe, 13 points, conseil trop court, type inconnu.
+- Création valide : type, modèle et marque déduite corrects, **marque falsifiée ignorée**, liste normalisée, publié. Modification : titre et conseil changés, adresse stable, changement de type refusé (`kind_mismatch`), changement de modèle accepté.
+- Pages : index, fiche (points, conseil, corps Markdown, liens, données structurées, adresse canonique), arabe en RTL, page du modèle, annonce d'un modèle concerné (oui) et d'un autre modèle (non), plan du site (rubrique, guide, variante arabe) ; le magazine et les essais ne le listent pas ; `/mag/…` renvoie 307 vers `/guides/…`.
+- Brouillon et guide programmé (dans 3 jours) : 404, absents de l'index, du plan du site et de la page du modèle.
+- Audience : le vrai guide garde son identifiant ; un identifiant inventé et un brouillon sont comptés **sans** détail.
+- Modèle jetable : suppression **refusée avec un guide (409)**, acceptée après suppression du guide ; la fiche de guide disparaît avec l'article (cascade).
+- Interface : liste, édition (modèle, liste et conseil relus depuis la base), création par le formulaire (**refus tant qu'aucun modèle n'est choisi**, puis création en brouillon rattachée à la Clio), redirection depuis `/admin/mag`, mobile sans défilement horizontal, aucune erreur de console.
+- 1 040 tests, `npm run test:e2e` 6/6, `npm run test:e2e:pwa` 7/7, types et lint propres, aucun écart de schéma.
+
+**Points d'attention**
+- **Aucun guide n'est publié** : l'index affiche « Aucun guide d'achat n'est encore publié ». Un guide utile demande de la matière réelle (points de contrôle, pannes connues, versions à privilégier) : à rédiger par des gens qui connaissent le modèle. Le formulaire impose la structure, pas le fond.
+- **Un guide par modèle n'est pas imposé** : plusieurs peuvent exister pour un même modèle ; la page du modèle en montre les deux plus récents, l'annonce le plus récent.
+- Le lien « Guides d'achat » n'est **que dans le pied de page** (l'en-tête est déjà chargé) ; on y accède aussi depuis chaque modèle et chaque annonce concernés.
+- **Journal d'audit** : les créations, modifications et suppressions de test ont laissé 17 lignes de journal (elles ne sont pas supprimables) ; le compte administrateur jetable, lié à ces lignes, n'a pas pu être supprimé : il a été **neutralisé** (rôle particulier, suspendu, mot de passe inutilisable).
+- Les textes de l'interface en arabe (dont la liste « ce qui est à vérifier ») n'ont pas été relus par un locuteur natif.
+
+**Reste du bloc 4** : suivi du rythme éditorial (revue de presse, essais, guides) : un tableau de bord pour l'équipe — dernière publication de chaque rubrique, contenus programmés, modèles populaires sans guide ni essai.

@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { publishedNow } from "@/lib/blog-publication";
 import { computeAverageRating } from "@/lib/reviews";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isLikelyBot, recordListingView } from "@/lib/view-tracking";
@@ -132,6 +133,15 @@ export default async function ListingDetailPage({
     const listingId = listing.id;
     after(() => recordListingView(listingId));
   }
+
+  // Lot 126 — guide d'achat de ce modèle, s'il en existe un de paru.
+  const modelGuide = listing.modelId
+    ? await prisma.blogArticle.findFirst({
+        where: { kind: "GUIDE", ...publishedNow(new Date()), guide: { modelId: listing.modelId } },
+        orderBy: { publishedAt: "desc" },
+        select: { slug: true, titleFr: true, titleAr: true },
+      })
+    : null;
 
   const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
   const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
@@ -391,6 +401,16 @@ export default async function ListingDetailPage({
             {brandLabel} {modelLabel} · {tListing("yearLabel", { value: listing.year })} ·{" "}
             {tListing("mileageUnit", { value: listing.mileage.toLocaleString() })}
           </p>
+
+          {modelGuide && (
+            <Link
+              href={`/guides/${modelGuide.slug}`}
+              className="mt-4 block rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 hover:border-emerald-300"
+            >
+              <span className="font-medium">{tListing("buyingGuideLabel")}</span>{" "}
+              <span className="underline">{locale === "ar" ? modelGuide.titleAr : modelGuide.titleFr}</span>
+            </Link>
+          )}
 
           <div className="mt-6">
             <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("descriptionTitle")}</h2>

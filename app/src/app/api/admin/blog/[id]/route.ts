@@ -5,6 +5,7 @@ import { isAdmin } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
 import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
 import { toRoadTestData } from "@/lib/road-test-data";
+import { toBuyingGuideData } from "@/lib/buying-guide";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
 import { isBlogCoverUrl } from "@/lib/blog-cover";
 import { resolveSource } from "@/lib/blog-source";
@@ -51,8 +52,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  // Lot 110 — le type (article / essai) est fixé à la création : passer de
-  // l'un à l'autre demanderait de créer ou supprimer la fiche d'essai.
+  // Lot 110 — le type (article / essai / guide) est fixé à la création : passer de
+  // l'un à l'autre demanderait de créer ou supprimer sa fiche.
   if (data.kind !== article.kind) {
     return NextResponse.json({ error: "kind_mismatch" }, { status: 400 });
   }
@@ -72,6 +73,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
   }
 
+
+  // Lot 126 — guide d'achat : le modèle est obligatoire et la marque se déduit de lui (jamais lue du
+  // navigateur) ; la génération, si elle est donnée, doit appartenir à ce modèle.
+  let guideBrandId: number | undefined;
+  if (data.guide) {
+    const guideModel = await prisma.model.findUnique({ where: { id: data.guide.modelId }, select: { brandId: true } });
+    if (!guideModel) {
+      return NextResponse.json({ error: "unknown_model" }, { status: 400 });
+    }
+    const guideRefs = await validateVehicleRefs({ brandId: guideModel.brandId, modelId: data.guide.modelId, generationId: data.guide.generationId });
+    if (!guideRefs.ok) {
+      return NextResponse.json({ error: guideRefs.error }, { status: 400 });
+    }
+    guideBrandId = guideModel.brandId;
+  }
+
   // La date est décidée côté serveur : « Publié » sur un article déjà paru
   // conserve sa date d'origine (jamais republié à chaque simple correction de
   // texte), « Programmé » prend la date demandée, « Brouillon » la retire.
@@ -79,6 +96,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const publishedAt = resolvePublishedAt(data.publication, article.publishedAt, now);
 
   const roadTestData = data.roadTest ? toRoadTestData(data.roadTest, brandIdFromModel) : undefined;
+  const guideData = data.guide && guideBrandId !== undefined ? toBuyingGuideData(data.guide, guideBrandId) : undefined;
   const newCover = data.coverImageUrl || null;
 
   await prisma.blogArticle.update({
@@ -95,6 +113,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       sourceUrl: source.sourceUrl,
       publishedAt,
       roadTest: roadTestData ? { upsert: { create: roadTestData, update: roadTestData } } : undefined,
+      guide: guideData ? { upsert: { create: guideData, update: guideData } } : undefined,
     },
   });
 

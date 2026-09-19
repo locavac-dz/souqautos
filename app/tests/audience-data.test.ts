@@ -77,6 +77,7 @@ describe("contentHref", () => {
   it("rebuilds the public address of a content from its page model and identifier", () => {
     expect(contentHref("/mag/[slug]", "mon-article")).toBe("/mag/mon-article");
     expect(contentHref("/essais/[slug]", "essai-clio")).toBe("/essais/essai-clio");
+    expect(contentHref("/guides/[slug]", "guide-clio")).toBe("/guides/guide-clio");
     expect(contentHref("/voitures/[marque]", "renault")).toBe("/voitures/renault");
     expect(contentHref("/voitures/[marque]/[modele]", "renault/clio")).toBe("/voitures/renault/clio");
     expect(contentHref("/wilaya/[wilaya]", "alger")).toBe("/wilaya/alger");

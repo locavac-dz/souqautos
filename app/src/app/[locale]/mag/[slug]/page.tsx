@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { articlePublicPath } from "@/lib/blog";
 import { publishedNow } from "@/lib/blog-publication";
 import { SITE_URL } from "@/lib/site";
 import { buildBreadcrumbJsonLd, buildArticleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
@@ -43,10 +44,10 @@ export default async function BlogArticlePage({
   const { locale, slug } = await params;
   const article = await getPublishedArticle(slug);
   if (!article) notFound();
-  // Les articles et les essais partagent le même espace de slugs : un essai
-  // ouvert par son ancienne adresse /mag est renvoyé vers /essais.
-  if (article.kind === "ESSAI") {
-    redirect({ href: `/essais/${article.slug}`, locale });
+  // Les articles, les essais et les guides partagent le même espace de slugs : un essai (ou un
+  // guide) ouvert par son ancienne adresse /mag est renvoyé vers sa rubrique.
+  if (article.kind === "ESSAI" || article.kind === "GUIDE") {
+    redirect({ href: articlePublicPath(article.kind, article.slug), locale });
     return null;
   }
 

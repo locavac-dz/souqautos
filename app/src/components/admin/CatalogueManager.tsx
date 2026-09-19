@@ -13,6 +13,7 @@ const ERROR_KEY: Record<string, string> = {
   slug_taken: "errorSlugTaken",
   has_models: "errorHasModels",
   has_listings: "errorHasListings",
+  has_guides: "errorHasGuides",
   forbidden: "errorGeneric",
   not_found: "errorGeneric",
   validation: "errorGeneric",
