@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { INT4_MAX } from "./int-bounds";
 
 export const registerSchema = z.object({
   displayName: z.string().trim().min(2).max(80),
   email: z.email().max(255),
   password: z.string().min(8).max(200),
-  wilayaId: z.number().int().positive().optional(),
+  wilayaId: z.number().int().positive().max(INT4_MAX).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

@@ -1,11 +1,13 @@
 // Lot 1 — Comptes & référentiel wilayas.
-// Dev local en SQLite ; cible staging/production PostgreSQL + PostGIS (cf. docs/ARCHITECTURE.md §06).
+// PostgreSQL partout (développement, tests de bout en bout, production — Lot 109).
+// PostGIS, prévu à l'origine (docs/ARCHITECTURE.md §06), n'est pas utilisé : la
+// recherche géographique se fait par wilaya/commune, sans rayon.
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

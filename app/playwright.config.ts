@@ -1,15 +1,17 @@
 import { defineConfig, devices } from "@playwright/test";
+import { getE2eDatabaseUrl } from "./e2e/e2e-database";
 
 // Port et base de données dédiés, distincts du serveur de dev habituel
-// (5184, prisma/dev.db) — un `npm run dev` manuel en parallèle ne doit
+// (5184, DATABASE_URL) — un `npm run dev` manuel en parallèle ne doit
 // jamais pouvoir être confondu avec le serveur de test, ni risquer de
 // pointer Playwright vers les vraies données de démonstration (Lot 101).
+// La base de test est E2E_DATABASE_URL (PostgreSQL depuis le Lot 109).
 const PORT = 5185;
 
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
-  // Une seule base de données partagée par tous les specs (prisma/e2e.db) —
+  // Une seule base de données partagée par tous les specs (E2E_DATABASE_URL) —
   // un seul worker pour éviter toute course entre eux (ex. deux specs qui
   // créeraient une annonce en même temps et se disputeraient la limite de
   // débit en mémoire). Suffisant pour la taille actuelle de la suite.
@@ -17,7 +19,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: "list",
-  // La base de test (prisma/e2e.db) est réinitialisée par le hook npm
+  // La base de test (E2E_DATABASE_URL) est réinitialisée par le hook npm
   // `pretest:e2e` (package.json, exécute e2e/reset-db.ts) AVANT que
   // `playwright test` ne démarre quoi que ce soit — jamais via l'option
   // `globalSetup` de Playwright, qui exécute son propre `webServer` avant
@@ -41,6 +43,6 @@ export default defineConfig({
     // persistant entre deux exécutions de la suite, causant des échecs
     // intermittents par épuisement de quota (trouvé en écrivant ce lot).
     // Repli mémoire honnête forcé, comme prévu.
-    env: { DATABASE_URL: "file:./e2e.db", REDIS_URL: "", S3_BUCKET: "" },
+    env: { DATABASE_URL: getE2eDatabaseUrl(), REDIS_URL: "", S3_BUCKET: "" },
   },
 });

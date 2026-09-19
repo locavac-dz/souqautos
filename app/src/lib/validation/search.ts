@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { listingCategories, fuelTypes, gearboxes, conditions } from "./listing";
+import { INT4_MAX } from "./int-bounds";
 
 export const sortOptions = ["recent", "price_asc", "price_desc"] as const;
 export type SortOption = (typeof sortOptions)[number];
@@ -10,6 +11,7 @@ export const numeric = () =>
     .trim()
     .regex(/^\d+$/)
     .transform(Number)
+    .refine((n) => n <= INT4_MAX)
     .optional()
     .catch(undefined);
 
@@ -27,7 +29,7 @@ const equipmentIdsParam = z
         value
           .split(",")
           .map(Number)
-          .filter((n) => Number.isInteger(n) && n > 0)
+          .filter((n) => Number.isInteger(n) && n > 0 && n <= INT4_MAX)
       )
     );
     return ids.length > 0 ? ids : undefined;

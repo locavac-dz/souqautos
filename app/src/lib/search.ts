@@ -20,15 +20,18 @@ export function buildListingWhere(params: SearchParams): Prisma.ListingWhereInpu
   const where: Prisma.ListingWhereInput = { status: "PUBLIEE" };
 
   if (params.q) {
-    const q = params.q;
+    // PostgreSQL : `contains` est sensible à la casse sans `mode: "insensitive"`
+    // (SQLite ne distinguait pas majuscules et minuscules). Aucun pliage des
+    // accents dans un cas comme dans l'autre.
+    const contains = { contains: params.q, mode: "insensitive" } as const;
     where.OR = [
-      { title: { contains: q } },
-      { brandFreeText: { contains: q } },
-      { modelFreeText: { contains: q } },
-      { brand: { name: { contains: q } } },
-      { model: { name: { contains: q } } },
-      { wilaya: { nomFr: { contains: q } } },
-      { wilaya: { nomAr: { contains: q } } },
+      { title: contains },
+      { brandFreeText: contains },
+      { modelFreeText: contains },
+      { brand: { name: contains } },
+      { model: { name: contains } },
+      { wilaya: { nomFr: contains } },
+      { wilaya: { nomAr: contains } },
     ];
   }
 

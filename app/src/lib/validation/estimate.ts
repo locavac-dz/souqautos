@@ -1,13 +1,5 @@
 import { z } from "zod";
-
-const numeric = () =>
-  z
-    .string()
-    .trim()
-    .regex(/^\d+$/)
-    .transform(Number)
-    .optional()
-    .catch(undefined);
+import { numeric } from "./search";
 
 export const estimateParamsSchema = z.object({
   brandId: numeric(),

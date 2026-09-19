@@ -41,7 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma (dev SQLite database)
+# anciennes bases SQLite locales (avant le passage à PostgreSQL, Lot 109) — conservées
+# sur disque à titre de sauvegarde, jamais commitées
 /prisma/dev.db
 /prisma/dev.db-journal
 /prisma/e2e.db

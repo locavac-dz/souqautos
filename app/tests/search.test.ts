@@ -56,6 +56,28 @@ describe("searchParamsSchema", () => {
     const result = searchParamsSchema.parse({ equipmentIds: "0,abc" });
     expect(result.equipmentIds).toBeUndefined();
   });
+
+  // PostgreSQL n'a que des entiers 32 bits : une valeur plus grande dans un
+  // filtre Prisma lèverait une erreur (500) au lieu d'être simplement ignorée.
+  it("keeps the largest 32-bit integer", () => {
+    expect(searchParamsSchema.parse({ priceMax: "2147483647" }).priceMax).toBe(2_147_483_647);
+  });
+
+  it("drops a numeric value beyond the 32-bit range instead of passing it to the database", () => {
+    const result = searchParamsSchema.parse({
+      priceMax: "2147483648",
+      brandId: "99999999999",
+      page: "9".repeat(400),
+    });
+    expect(result.priceMax).toBeUndefined();
+    expect(result.brandId).toBeUndefined();
+    expect(result.page).toBeUndefined();
+  });
+
+  it("drops equipment ids beyond the 32-bit range", () => {
+    const result = searchParamsSchema.parse({ equipmentIds: "1,2147483648,99999999999" });
+    expect(result.equipmentIds).toEqual([1]);
+  });
 });
 
 describe("buildListingWhere", () => {
@@ -68,6 +90,20 @@ describe("buildListingWhere", () => {
     const where = buildListingWhere({ q: "clio" });
     expect(Array.isArray(where.OR)).toBe(true);
     expect(where.OR).toHaveLength(7);
+  });
+
+  it("makes every free-text field case-insensitive (PostgreSQL `contains` is case-sensitive by default)", () => {
+    const where = buildListingWhere({ q: "Clio" });
+    const expected = { contains: "Clio", mode: "insensitive" };
+    expect(where.OR).toEqual([
+      { title: expected },
+      { brandFreeText: expected },
+      { modelFreeText: expected },
+      { brand: { name: expected } },
+      { model: { name: expected } },
+      { wilaya: { nomFr: expected } },
+      { wilaya: { nomAr: expected } },
+    ]);
   });
 
   it("omits the OR clause when no query text is given", () => {

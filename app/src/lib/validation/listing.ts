@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { algerianPhoneRegex } from "./phone";
+import { INT4_MAX } from "./int-bounds";
 
 export const listingCategories = [
   "VOITURE",
@@ -21,11 +22,11 @@ const currentYear = new Date().getFullYear();
 // dériver listingEditSchema (Lot 30) sans dupliquer chaque règle de champ.
 const listingBaseSchema = z.object({
   category: z.enum(listingCategories),
-  brandId: z.number().int().positive().optional(),
+  brandId: z.number().int().positive().max(INT4_MAX).optional(),
   brandFreeText: z.string().trim().min(2).max(60).optional(),
-  modelId: z.number().int().positive().optional(),
+  modelId: z.number().int().positive().max(INT4_MAX).optional(),
   modelFreeText: z.string().trim().min(1).max(60).optional(),
-  generationId: z.number().int().positive().optional(),
+  generationId: z.number().int().positive().max(INT4_MAX).optional(),
   title: z.string().trim().min(10).max(120),
   description: z.string().trim().min(30).max(5000),
   price: z.number().int().positive().max(999_999_999),
@@ -41,15 +42,15 @@ const listingBaseSchema = z.object({
   condition: z.enum(conditions),
   firstHand: z.boolean().default(false),
   accidented: z.boolean().default(false),
-  wilayaId: z.number().int().positive(),
-  communeId: z.number().int().positive().optional(),
+  wilayaId: z.number().int().positive().max(INT4_MAX),
+  communeId: z.number().int().positive().max(INT4_MAX).optional(),
   phone: z.string().trim().regex(algerianPhoneRegex).optional(),
 });
 
 // Lot 72/73 — équipements, ajoutés après coup (pas dans listingBaseSchema
 // d'origine) sur la création ET l'édition : extrait en constante partagée pour
 // ne jamais laisser diverger les deux bornes (max 30) entre les deux schémas.
-const equipmentIdsField = z.array(z.number().int().positive()).max(30).default([]);
+const equipmentIdsField = z.array(z.number().int().positive().max(INT4_MAX)).max(30).default([]);
 
 export const listingSchema = listingBaseSchema
   .extend({ equipmentIds: equipmentIdsField })
