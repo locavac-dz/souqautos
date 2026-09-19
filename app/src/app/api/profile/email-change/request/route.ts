@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { z } from "zod";
+import { emailSchema } from "@/lib/validation/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -8,7 +9,7 @@ import { sendEmail } from "@/lib/mailer";
 import { generateExpiry } from "@/lib/verification";
 import { SITE_URL } from "@/lib/site";
 
-const bodySchema = z.object({ newEmail: z.string().trim().toLowerCase().email() });
+const bodySchema = z.object({ newEmail: emailSchema });
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();

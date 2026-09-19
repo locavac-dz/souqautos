@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { profileUpdateSchema } from "@/lib/validation/profile";
 import { shouldResetPhoneVerification } from "@/lib/profile";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -38,23 +39,32 @@ export async function POST(request: NextRequest) {
 
   const resetPhoneVerification = shouldResetPhoneVerification({ oldPhone: user.phone, newPhone });
 
-  await prisma.$transaction([
-    prisma.profile.update({
-      where: { userId: user.id },
-      data: {
-        displayName: parsed.data.displayName,
-        wilayaId: parsed.data.wilayaId ?? null,
-        bio: parsed.data.bio?.trim() || null,
-      },
-    }),
-    prisma.user.update({
-      where: { id: user.id },
-      data: {
-        phone: newPhone,
-        ...(resetPhoneVerification ? { phoneVerifiedAt: null } : {}),
-      },
-    }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.profile.update({
+        where: { userId: user.id },
+        data: {
+          displayName: parsed.data.displayName,
+          wilayaId: parsed.data.wilayaId ?? null,
+          bio: parsed.data.bio?.trim() || null,
+        },
+      }),
+      prisma.user.update({
+        where: { id: user.id },
+        data: {
+          phone: newPhone,
+          ...(resetPhoneVerification ? { phoneVerifiedAt: null } : {}),
+        },
+      }),
+    ]);
+  } catch (error) {
+    // Le numéro a été pris par un autre compte entre la vérification et l'écriture ;
+    // la transaction est annulée en entier (le profil n'est pas modifié non plus).
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "phone_taken" }, { status: 409 });
+    }
+    throw error;
+  }
 
   return NextResponse.json({ ok: true });
 }

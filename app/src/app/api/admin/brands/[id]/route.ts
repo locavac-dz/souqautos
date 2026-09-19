@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { validateCatalogueName } from "@/lib/catalogue-admin";
 import { writeAuditLog } from "@/lib/audit-log";
+import { parsePositiveIntId } from "@/lib/validation/int-bounds";
 
 const bodySchema = z.object({ name: z.string() });
 
@@ -15,7 +16,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const { id } = await params;
-  const brandId = Number(id);
+  const brandId = parsePositiveIntId(id);
+  if (brandId === null) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
   const body = await request.json().catch(() => null);
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
@@ -55,7 +59,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   }
 
   const { id } = await params;
-  const brandId = Number(id);
+  const brandId = parsePositiveIntId(id);
+  if (brandId === null) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
 
   const brand = await prisma.brand.findUnique({ where: { id: brandId } });
   if (!brand) {

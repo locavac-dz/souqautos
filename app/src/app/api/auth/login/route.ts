@@ -5,7 +5,7 @@ import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/auth-server/password"
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, safeUser } from "@/lib/http";
-import { isAccountLocked, computeFailedLoginUpdate } from "@/lib/login-lockout";
+import { isAccountLocked, lockedUntilForAttempts, LOGIN_ACCOUNT_LIMIT } from "@/lib/login-lockout";
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
@@ -23,6 +23,13 @@ export async function POST(request: NextRequest) {
   }
 
   const { email, password } = parsed.data;
+
+  // Plafond par compte, contrôlé avant toute vérification de mot de passe et
+  // pour n'importe quelle adresse (existante ou non : la réponse ne renseigne
+  // pas sur l'existence du compte). Voir LOGIN_ACCOUNT_LIMIT.
+  if (!(await checkRateLimit(`login-account:${email}`, LOGIN_ACCOUNT_LIMIT))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   const user = await prisma.user.findUnique({ where: { email } });
   const now = new Date();
@@ -53,10 +60,17 @@ export async function POST(request: NextRequest) {
   }
 
   if (!passwordValid) {
-    const update = computeFailedLoginUpdate(user.failedLoginAttempts, now);
-    await prisma.user.update({ where: { id: user.id }, data: update });
-    if (update.lockedUntil) {
-      console.warn(`[auth] Compte verrouillé après ${update.failedLoginAttempts} échecs : ${user.email}`);
+    // Incrément fait PAR LA BASE (`x = x + 1`), pas « lire puis écrire » : des
+    // échecs simultanés lisaient tous la même valeur et n'en comptaient qu'un.
+    const { failedLoginAttempts } = await prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: { increment: 1 } },
+      select: { failedLoginAttempts: true },
+    });
+    const lockedUntil = lockedUntilForAttempts(failedLoginAttempts, now);
+    if (lockedUntil) {
+      await prisma.user.update({ where: { id: user.id }, data: { lockedUntil } });
+      console.warn(`[auth] Compte verrouillé après ${failedLoginAttempts} échecs : ${user.email}`);
     }
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
   }

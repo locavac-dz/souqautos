@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 import { checkReviewEligibility, isValidRating } from "@/lib/reviews";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
@@ -51,14 +52,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: eligibility.error }, { status: 400 });
   }
 
-  await prisma.review.create({
-    data: {
-      sellerId,
-      authorId: user.id,
-      rating: parsed.data.rating,
-      comment: parsed.data.comment?.trim() || null,
-    },
-  });
+  try {
+    await prisma.review.create({
+      data: {
+        sellerId,
+        authorId: user.id,
+        rating: parsed.data.rating,
+        comment: parsed.data.comment?.trim() || null,
+      },
+    });
+  } catch (error) {
+    // Deux avis simultanés du même auteur : un seul est retenu, et le vendeur
+    // n'est pas notifié deux fois.
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "already_reviewed" }, { status: 400 });
+    }
+    throw error;
+  }
 
   // Écart documenté depuis le Lot 27 (comme la notification de réponse
   // elle-même, comblée ensuite) : le vendeur n'était jamais informé qu'il

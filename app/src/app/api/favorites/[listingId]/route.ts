@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 
 export async function POST(
   _request: Request,
@@ -22,11 +23,18 @@ export async function POST(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  await prisma.favorite.upsert({
-    where: { userId_listingId: { userId: user.id, listingId } },
-    create: { userId: user.id, listingId },
-    update: {},
-  });
+  try {
+    await prisma.favorite.upsert({
+      where: { userId_listingId: { userId: user.id, listingId } },
+      create: { userId: user.id, listingId },
+      update: {},
+    });
+  } catch (error) {
+    // Deux requêtes simultanées (double clic) : l'une a déjà créé le favori, ce
+    // qui est exactement le résultat demandé. `upsert` sur une clé composée
+    // n'est pas atomique côté base.
+    if (!isUniqueViolation(error)) throw error;
+  }
 
   return NextResponse.json({ favorited: true }, { status: 201 });
 }

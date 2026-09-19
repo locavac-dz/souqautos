@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -18,11 +19,16 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  await prisma.block.upsert({
-    where: { blockerId_blockedId: { blockerId: user.id, blockedId } },
-    update: {},
-    create: { blockerId: user.id, blockedId },
-  });
+  try {
+    await prisma.block.upsert({
+      where: { blockerId_blockedId: { blockerId: user.id, blockedId } },
+      update: {},
+      create: { blockerId: user.id, blockedId },
+    });
+  } catch (error) {
+    // Requêtes simultanées : le blocage existe déjà, c'est le résultat demandé.
+    if (!isUniqueViolation(error)) throw error;
+  }
 
   return NextResponse.json({ blocked: true }, { status: 201 });
 }

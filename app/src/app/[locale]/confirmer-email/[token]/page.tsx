@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { isExpired } from "@/lib/verification";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 
 export default async function ConfirmEmailChangePage({
   params,
@@ -28,12 +29,18 @@ export default async function ConfirmEmailChangePage({
       } else {
         // Cliquer ce lien prouve la possession de la nouvelle adresse — elle
         // est donc considérée vérifiée dès l'activation, sans étape séparée.
-        await prisma.user.update({
-          where: { id: record.userId },
-          data: { email: record.newEmail, emailVerifiedAt: new Date() },
-        });
+        try {
+          await prisma.user.update({
+            where: { id: record.userId },
+            data: { email: record.newEmail.toLowerCase(), emailVerifiedAt: new Date() },
+          });
+          status = "success";
+        } catch (error) {
+          // L'adresse a été prise entre la vérification ci-dessus et l'écriture.
+          if (!isUniqueViolation(error)) throw error;
+          status = "taken";
+        }
         await prisma.emailChangeRequest.delete({ where: { id: record.id } });
-        status = "success";
       }
     }
   }

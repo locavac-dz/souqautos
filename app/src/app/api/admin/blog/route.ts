@@ -9,6 +9,7 @@ import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
 import { toRoadTestData } from "@/lib/road-test-data";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
 import { isBlogCoverUrl } from "@/lib/blog-cover";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 import { writeAuditLog } from "@/lib/audit-log";
 
 // Réservé à ADMIN : le blog est un contenu public engageant l'image de la
@@ -57,23 +58,33 @@ export async function POST(request: NextRequest) {
   const now = new Date();
   const publishedAt = resolvePublishedAt(data.publication, null, now);
 
-  const article = await prisma.blogArticle.create({
-    data: {
-      slug,
-      kind: data.kind,
-      titleFr: data.titleFr,
-      titleAr: data.titleAr,
-      excerptFr: data.excerptFr,
-      excerptAr: data.excerptAr,
-      contentFr: data.contentFr,
-      contentAr: data.contentAr,
-      authorId: user.id,
-      coverImageUrl: data.coverImageUrl || null,
-      publishedAt,
-      roadTest: data.roadTest ? { create: toRoadTestData(data.roadTest, brandIdFromModel) } : undefined,
-    },
-    select: { id: true, slug: true },
-  });
+  let article;
+  try {
+    article = await prisma.blogArticle.create({
+      data: {
+        slug,
+        kind: data.kind,
+        titleFr: data.titleFr,
+        titleAr: data.titleAr,
+        excerptFr: data.excerptFr,
+        excerptAr: data.excerptAr,
+        contentFr: data.contentFr,
+        contentAr: data.contentAr,
+        authorId: user.id,
+        coverImageUrl: data.coverImageUrl || null,
+        publishedAt,
+        roadTest: data.roadTest ? { create: toRoadTestData(data.roadTest, brandIdFromModel) } : undefined,
+      },
+      select: { id: true, slug: true },
+    });
+  } catch (error) {
+    // Deux articles au même titre créés en même temps : le slug (adresse
+    // publique) est unique, la base n'en retient qu'un.
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "slug_taken" }, { status: 409 });
+    }
+    throw error;
+  }
 
   await writeAuditLog({
     adminId: user.id,

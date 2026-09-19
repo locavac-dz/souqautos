@@ -5,9 +5,11 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageCollaborators } from "@/lib/pro-account";
 import { serializeProPermissions } from "@/lib/pro-permissions";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { emailSchema } from "@/lib/validation/auth";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 
 const bodySchema = z.object({
-  email: z.string().trim().email(),
+  email: emailSchema,
   permissions: z.object({
     gererAnnonces: z.boolean().default(false),
     repondreAvis: z.boolean().default(false),
@@ -58,13 +60,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "already_collaborator" }, { status: 400 });
   }
 
-  const collaborator = await prisma.proCollaborator.create({
-    data: {
-      professionalAccountId: id,
-      userId: targetUser.id,
-      permissions: serializeProPermissions(parsed.data.permissions),
-    },
-  });
-
-  return NextResponse.json({ collaborator }, { status: 201 });
+  try {
+    const collaborator = await prisma.proCollaborator.create({
+      data: {
+        professionalAccountId: id,
+        userId: targetUser.id,
+        permissions: serializeProPermissions(parsed.data.permissions),
+      },
+    });
+    return NextResponse.json({ collaborator }, { status: 201 });
+  } catch (error) {
+    // Deux invitations simultanées du même compte : la base a déjà retenu l'une.
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "already_collaborator" }, { status: 400 });
+    }
+    throw error;
+  }
 }

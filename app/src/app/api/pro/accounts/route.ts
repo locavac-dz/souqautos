@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 import { proAccountFieldsSchema as bodySchema } from "@/lib/validation/pro-account";
 
 export async function POST(request: NextRequest) {
@@ -30,19 +31,28 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const account = await prisma.$transaction(async (tx) => {
-    const created = await tx.professionalAccount.create({
-      data: {
-        userId: user.id,
-        nomCommercial: parsed.data.nomCommercial,
-        presentation: parsed.data.presentation || null,
-        horaires: parsed.data.horaires || null,
-        wilayaId: parsed.data.wilayaId ?? null,
-      },
+  try {
+    const account = await prisma.$transaction(async (tx) => {
+      const created = await tx.professionalAccount.create({
+        data: {
+          userId: user.id,
+          nomCommercial: parsed.data.nomCommercial,
+          presentation: parsed.data.presentation || null,
+          horaires: parsed.data.horaires || null,
+          wilayaId: parsed.data.wilayaId ?? null,
+        },
+      });
+      await tx.user.update({ where: { id: user.id }, data: { role: "PROFESSIONNEL" } });
+      return created;
     });
-    await tx.user.update({ where: { id: user.id }, data: { role: "PROFESSIONNEL" } });
-    return created;
-  });
 
-  return NextResponse.json({ account }, { status: 201 });
+    return NextResponse.json({ account }, { status: 201 });
+  } catch (error) {
+    // Double envoi du formulaire : un seul compte pro par utilisateur, la
+    // transaction de l'autre requête est annulée.
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "already_professional" }, { status: 400 });
+    }
+    throw error;
+  }
 }

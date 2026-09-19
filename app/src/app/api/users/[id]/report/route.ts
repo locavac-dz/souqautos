@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 import { checkCanReportUser, validateReportSubmission } from "@/lib/reports";
 
 const bodySchema = z.object({
@@ -50,14 +51,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "already_reported" }, { status: 409 });
   }
 
-  await prisma.report.create({
-    data: {
-      reportedUserId: id,
-      authorId: user.id,
-      reason: parsed.data.reason,
-      comment: parsed.data.comment?.trim() || null,
-    },
-  });
+  try {
+    await prisma.report.create({
+      data: {
+        reportedUserId: id,
+        authorId: user.id,
+        reason: parsed.data.reason,
+        comment: parsed.data.comment?.trim() || null,
+      },
+    });
+  } catch (error) {
+    // Deux signalements simultanés du même utilisateur : la base en retient un.
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "already_reported" }, { status: 409 });
+    }
+    throw error;
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

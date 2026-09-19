@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 import { checkReviewEligibility, isValidRating } from "@/lib/reviews";
 import { parseProPermissions } from "@/lib/pro-permissions";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
@@ -57,14 +58,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: eligibility.error }, { status: 400 });
   }
 
-  await prisma.review.create({
-    data: {
-      professionalAccountId: accountId,
-      authorId: user.id,
-      rating: parsed.data.rating,
-      comment: parsed.data.comment?.trim() || null,
-    },
-  });
+  try {
+    await prisma.review.create({
+      data: {
+        professionalAccountId: accountId,
+        authorId: user.id,
+        rating: parsed.data.rating,
+        comment: parsed.data.comment?.trim() || null,
+      },
+    });
+  } catch (error) {
+    // Voir /api/users/[id]/reviews : un seul avis retenu, une seule notification.
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "already_reviewed" }, { status: 400 });
+    }
+    throw error;
+  }
 
   // Même écart que pour un vendeur particulier (comblé ci-dessus dans
   // /api/users/[id]/reviews) — notifie le propriétaire ET les

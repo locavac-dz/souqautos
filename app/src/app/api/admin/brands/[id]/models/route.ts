@@ -6,6 +6,8 @@ import { isAdmin } from "@/lib/auth-server/roles";
 import { validateCatalogueName } from "@/lib/catalogue-admin";
 import { slugify } from "@/lib/slugify";
 import { writeAuditLog } from "@/lib/audit-log";
+import { parsePositiveIntId } from "@/lib/validation/int-bounds";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 
 const bodySchema = z.object({ name: z.string() });
 
@@ -16,7 +18,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const { id } = await params;
-  const brandId = Number(id);
+  const brandId = parsePositiveIntId(id);
+  if (brandId === null) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
   const brand = await prisma.brand.findUnique({ where: { id: brandId } });
   if (!brand) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -40,7 +45,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "slug_taken" }, { status: 409 });
   }
 
-  const model = await prisma.model.create({ data: { brandId, name, slug } });
+  let model;
+  try {
+    model = await prisma.model.create({ data: { brandId, name, slug } });
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "slug_taken" }, { status: 409 });
+    }
+    throw error;
+  }
 
   await writeAuditLog({
     adminId: user.id,

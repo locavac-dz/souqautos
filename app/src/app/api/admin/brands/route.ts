@@ -6,6 +6,7 @@ import { isAdmin } from "@/lib/auth-server/roles";
 import { validateCatalogueName } from "@/lib/catalogue-admin";
 import { slugify } from "@/lib/slugify";
 import { writeAuditLog } from "@/lib/audit-log";
+import { isUniqueViolation } from "@/lib/prisma-errors";
 
 const bodySchema = z.object({ name: z.string() });
 
@@ -33,7 +34,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "slug_taken" }, { status: 409 });
   }
 
-  const brand = await prisma.brand.create({ data: { name, slug } });
+  let brand;
+  try {
+    brand = await prisma.brand.create({ data: { name, slug } });
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return NextResponse.json({ error: "slug_taken" }, { status: 409 });
+    }
+    throw error;
+  }
 
   await writeAuditLog({
     adminId: user.id,

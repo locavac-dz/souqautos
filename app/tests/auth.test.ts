@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/auth-server/password";
 import { createSessionToken, verifySessionToken } from "@/lib/auth-server/session";
-import { registerSchema, loginSchema } from "@/lib/validation/auth";
+import { registerSchema, loginSchema, emailSchema } from "@/lib/validation/auth";
 
 describe("password hashing", () => {
   it("hashes a password and verifies it back", async () => {
@@ -69,5 +69,28 @@ describe("validation schemas", () => {
   it("rejects an invalid email on login", () => {
     const result = loginSchema.safeParse({ email: "not-an-email", password: "x" });
     expect(result.success).toBe(false);
+  });
+});
+
+// Lot 112 : « Ali@Example.DZ » et « ali@example.dz » sont la même adresse.
+describe("email normalisation", () => {
+  it("lowercases and trims the address on registration and on login, before validating it", () => {
+    const register = registerSchema.parse({ displayName: "Ali", email: "  Ali.Benali@Example.DZ ", password: "motdepasse1" });
+    expect(register.email).toBe("ali.benali@example.dz");
+    const login = loginSchema.parse({ email: "ALI.BENALI@EXAMPLE.DZ", password: "x" });
+    expect(login.email).toBe("ali.benali@example.dz");
+  });
+
+  it("gives the same result for every casing of an address, so they can only be one account", () => {
+    const variants = ["a@b.dz", "A@B.DZ", "A@b.dz", "a@B.dz"];
+    const emails = new Set(variants.map((email) => loginSchema.parse({ email, password: "x" }).email));
+    expect(emails.size).toBe(1);
+  });
+
+  it("still rejects an invalid or oversized address", () => {
+    expect(emailSchema.safeParse("pas-une-adresse").success).toBe(false);
+    expect(emailSchema.safeParse(`${"a".repeat(251)}@b.dz`).success).toBe(false); // 256 caractères
+    expect(emailSchema.safeParse(`${"a".repeat(250)}@b.dz`).success).toBe(true); // 255 : la limite exacte
+    expect(emailSchema.safeParse("").success).toBe(false);
   });
 });

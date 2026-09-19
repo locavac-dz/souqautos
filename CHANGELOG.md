@@ -2121,3 +2121,37 @@ Second lot de la rubrique Essais (le premier, Lot 110, posait le socle). Toujour
 - `package-lock.json` change nettement (la dépendance `react-markdown` apporte son arbre d'analyse Markdown) ; aucune autre dépendance directe n'a changé.
 
 **Hors périmètre** : couverture et Markdown pour le magazine (`/mag` inchangé), aperçu en direct, galerie de photos, avis de propriétaires par modèle, « Comprendre la note ».
+
+## Lot 112 — Durcissement : verrouillage de connexion, adresses email, doublons simultanés, identifiants (2026-09-19)
+
+Les quatre points de robustesse relevés lors des audits précédents (Lots 98–102) et laissés ouverts. Chacun a d'abord été **mesuré avant correction**, avec des requêtes réellement simultanées sur des comptes jetables (supprimés depuis).
+
+**1. Verrouillage de connexion contourné par des rafales** (`src/lib/login-lockout.ts`, `api/auth/login`)
+- *Avant* : 8 mauvais mots de passe envoyés en même temps → compteur d'échecs à **1**, aucun verrouillage. La route lisait le compteur, ajoutait 1 puis réécrivait : toutes les requêtes simultanées lisaient la même valeur. Un attaquant pouvait donc enchaîner des rafales de mots de passe sans jamais verrouiller le compte.
+- *Correctif* : incrément **fait par la base** (`failedLoginAttempts: { increment: 1 }`), le verrouillage se décide sur la valeur réellement comptée ; plus un **plafond par compte** (20 tentatives / 15 min, toutes adresses IP confondues, contrôlé avant toute vérification de mot de passe et appliqué de la même façon aux adresses inexistantes, donc sans révéler l'existence d'un compte).
+- *Après* : mêmes 8 requêtes → compteur à **8** et compte verrouillé. 25 rafales depuis 25 adresses IP différentes (usurpées) → 20 traitées, 5 refusées (429), identique pour une adresse inexistante.
+
+**2. Adresses email sensibles à la casse** (`src/lib/validation/auth.ts`, migration `20260919110000_normalize_emails`)
+- *Avant* : `Durc.Casse@Example.com` puis `durc.casse@example.com` créaient **deux comptes** ; se connecter avec une autre casse que celle de l'inscription échouait (401).
+- *Correctif* : `emailSchema` (espaces retirés, minuscules, puis validation) partagé par l'inscription, la connexion, l'invitation d'un collaborateur et le changement d'adresse. Migration : passe les adresses existantes en minuscules (elle **échoue volontairement** si deux comptes ne diffèrent que par la casse : à traiter à la main) et ajoute un **index unique sur `lower(email)`**, garde-fou de la base pour tout chemin d'écriture qui ne normaliserait pas. Prisma ne modélise pas cet index : ajouté à la main comme ceux du Lot 109 ; `prisma migrate diff` reste vide (aucune dérive).
+- *Après* : inscription en casse mixte puis en minuscules → 201 puis **409** ; connexion en MAJUSCULES → 200 ; `Prisma.user.create` direct avec `ADMIN@SouqAuto.dz` → refusé par la base (`P2002` sur `lower(email)`).
+
+**3. Doublons simultanés : 500 au lieu d'une réponse claire** (`src/lib/prisma-errors.ts`, `isUniqueViolation`)
+- *Avant* (12 requêtes identiques simultanées d'un même compte) : favoris 2 × 500, blocage **11** × 500, ouverture de conversation **11** × 500, avis 9 × 500, signalement 9 × 500, création de compte pro 4 × 500 ; inscription simultanée de la même adresse : 5 × 500. (`upsert` sur une clé composée n'est pas atomique côté base.)
+- *Correctif* : la base reste l'arbitre, la violation d'unicité (`P2002`) est traduite dans la même réponse que la vérification préalable — inscription et changement d'adresse (`email_taken` 409), téléphone (`phone_taken` 409), avis (`already_reviewed`), signalement (`already_reported` 409), collaborateur (`already_collaborator`), compte pro (`already_professional`), marque/modèle/article (`slug_taken` 409) ; favoris, blocage et conversation, idempotents, renvoient le résultat demandé (la conversation existante). La confirmation d'un changement d'email (page serveur) affiche « adresse déjà prise » au lieu de planter.
+- *Après* : les mêmes rafales ne produisent **plus aucun 500** — favoris 12 × 201, blocage 12 × 201, conversation 12 × 201 (même conversation), avis 1 × 201 puis refus, signalement 1 × 201 puis 409, inscription 1 × 201 + 5 × 409, création de marque 1 × 201 + 5 × 409.
+
+**4. Identifiants numériques des routes d'administration** (`parsePositiveIntId`, 5 routes : marques, modèles, modèles d'une marque)
+- *Avant* : `abc` et `99999999999` → 500 ; surtout `1.5` était **accepté** : la base l'arrondissait, si bien que `PATCH /api/admin/brands/1.5` **renommait réellement la marque 1** et `POST /api/admin/brands/1.5/models` créait un modèle (constaté ; catalogue de développement rétabli aussitôt à partir du journal d'audit).
+- *Correctif* : seuls sont acceptés les entiers positifs en chiffres, sans zéro de tête, tenant sur 32 bits ; tout le reste se comporte comme un identifiant inexistant (404).
+- *Après* : `0`, `-1`, `007`, `1.5`, `1e3`, `abc`, `99999999999` → 404 sur les cinq routes ; un identifiant valide fonctionne comme avant.
+
+**Tests** : 11 nouveaux tests unitaires (identifiants, détection de `P2002`, normalisation d'email, plafond de connexion ; tests du verrouillage réécrits pour le nouveau calcul). 609/609. `npm run test:e2e` 6/6 sur une base neuve (la migration s'y applique), `next build` propre, types et lint propres. Comptes et lignes de test supprimés (8 utilisateurs, 24 marques, 108 modèles, comme avant).
+
+**Points d'attention**
+- **Adresse IP du client (décision d'hébergement)** : `getClientIp` (`src/lib/http.ts`) prend la **première** valeur de `X-Forwarded-For`, que le client fixe lui-même. Tant que le serveur n'est pas derrière un mandataire qui l'écrase, toutes les limites « par IP » (connexion, inscription, envois…) se contournent en changeant cet en-tête — les mesures ci-dessus l'ont d'ailleurs utilisé. Les limites *par compte* de ce lot n'en dépendent pas. Le bon correctif dépend de l'hébergement (nombre de mandataires de confiance, présence d'un CDN) : à trancher avec la fiche d'hébergement, pas à deviner ici.
+- Le plafond par compte peut être atteint par quelqu'un qui tape volontairement des mots de passe erronés sur le compte d'autrui : l'effet est le même que le verrouillage déjà en place (15 minutes), pas plus.
+- Un bon mot de passe envoyé juste après une rafale reçoit 429 tant que la fenêtre de 15 minutes n'est pas écoulée.
+- La limite en mémoire (repli sans Redis) n'est pas purgée des clés expirées : sans importance avec Redis (clés à durée de vie), à reprendre si le déploiement se fait sans.
+
+**Hors périmètre** : vérification puis création d'une demande de changement d'email (aucune contrainte d'unicité concernée) ; brouillons d'annonce (`upsert` sur clé simple, natif côté base) ; correction de `getClientIp` (voir ci-dessus).

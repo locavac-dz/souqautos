@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   isAccountLocked,
-  computeFailedLoginUpdate,
+  lockedUntilForAttempts,
   LOCKOUT_THRESHOLD,
   LOCKOUT_DURATION_MS,
+  LOGIN_ACCOUNT_LIMIT,
 } from "@/lib/login-lockout";
 
 describe("isAccountLocked", () => {
@@ -22,26 +23,28 @@ describe("isAccountLocked", () => {
   });
 });
 
-describe("computeFailedLoginUpdate", () => {
+describe("lockedUntilForAttempts", () => {
   const now = new Date("2026-09-16T12:00:00Z");
 
-  it("increments the counter without locking below the threshold", () => {
-    for (let attempts = 0; attempts < LOCKOUT_THRESHOLD - 1; attempts++) {
-      const result = computeFailedLoginUpdate(attempts, now);
-      expect(result.failedLoginAttempts).toBe(attempts + 1);
-      expect(result.lockedUntil).toBeNull();
+  it("does not lock below the threshold", () => {
+    for (let attempts = 1; attempts < LOCKOUT_THRESHOLD; attempts++) {
+      expect(lockedUntilForAttempts(attempts, now)).toBeNull();
     }
   });
 
-  it("locks the account once the threshold is reached", () => {
-    const result = computeFailedLoginUpdate(LOCKOUT_THRESHOLD - 1, now);
-    expect(result.failedLoginAttempts).toBe(LOCKOUT_THRESHOLD);
-    expect(result.lockedUntil).toEqual(new Date(now.getTime() + LOCKOUT_DURATION_MS));
+  it("locks the account once the counted attempts reach the threshold", () => {
+    expect(lockedUntilForAttempts(LOCKOUT_THRESHOLD, now)).toEqual(new Date(now.getTime() + LOCKOUT_DURATION_MS));
   });
 
   it("keeps locking (and extending) past the threshold, never un-locks by itself", () => {
-    const result = computeFailedLoginUpdate(LOCKOUT_THRESHOLD, now);
-    expect(result.failedLoginAttempts).toBe(LOCKOUT_THRESHOLD + 1);
-    expect(result.lockedUntil).toEqual(new Date(now.getTime() + LOCKOUT_DURATION_MS));
+    expect(lockedUntilForAttempts(LOCKOUT_THRESHOLD + 3, now)).toEqual(new Date(now.getTime() + LOCKOUT_DURATION_MS));
+  });
+});
+
+describe("LOGIN_ACCOUNT_LIMIT", () => {
+  it("allows more attempts than the lockout threshold, so normal use never hits it, but stays a small bound", () => {
+    expect(LOGIN_ACCOUNT_LIMIT.limit).toBeGreaterThan(LOCKOUT_THRESHOLD);
+    expect(LOGIN_ACCOUNT_LIMIT.limit).toBeLessThanOrEqual(50);
+    expect(LOGIN_ACCOUNT_LIMIT.windowMs).toBe(15 * 60 * 1000);
   });
 });
