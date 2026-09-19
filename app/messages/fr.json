@@ -1231,6 +1231,10 @@
     "errorReasonRequired": "Un refus exige un motif de 5 à 300 caractères.",
     "errorAlreadyModerated": "Cet avis a déjà été traité par un autre membre de l'équipe."
   },
+  "Pwa": {
+    "install": "Installer l'application",
+    "iosHint": "Pour installer : touchez Partager, puis « Sur l'écran d'accueil »."
+  },
   "Contact": {
     "showPhone": "Afficher le numéro",
     "call": "Appeler {phone}",

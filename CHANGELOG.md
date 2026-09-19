@@ -2287,4 +2287,42 @@ Premier lot du bloc 2 « faire revenir les visiteurs » : un contact plus direct
 - **Ouverture de WhatsApp** : la fenêtre est ouverte pendant le clic (les navigateurs bloquent une ouverture faite après l'attente réseau) puis redirigée ; non testé sur mobile réel avec l'application WhatsApp installée.
 - Les numéros déjà enregistrés ne changent pas ; aucun vendeur n'a encore choisi WhatsApp.
 
-**À suivre (bloc 2)** : application installable (PWA) ; notifications pour les alertes de recherche (nécessite une clé d'envoi de notifications et une dépendance, à valider).
+**À suivre (bloc 2)** : application installable (PWA, Lot 120 ci-dessous) ; notifications pour les alertes de recherche (nécessite une clé d'envoi de notifications et une dépendance, à valider).
+
+## Lot 120 — Bloc 2 : application installable (PWA) (2026-09-19)
+
+Le site peut être installé sur l'écran d'accueil d'un téléphone ou d'un ordinateur, s'ouvre comme une application et affiche une page claire quand la connexion tombe. Conçu pour ne **jamais** mettre en cache de contenu personnalisé.
+
+**Livré**
+- **Manifeste** (`src/app/manifest.ts`, servi en `/manifest.webmanifest`) : nom « Souq Auto », mode application autonome, couleurs de la marque (`#12222e`), langue déduite du visiteur (`start_url: "/"`), trois raccourcis (rechercher, vendre, essais). Le `<head>` annonce le manifeste, la couleur de la barre du navigateur, le nom de l'application et les balises d'application pour iPhone.
+- **Icônes** (`public/icons/`, générées par `scripts/generate-pwa-icons.mjs` à partir du logo) : 192 et 512 pixels, plus une icône **« maskable »** dont le dessin tient dans la zone de sécurité de 80 % (le téléphone la découpe en cercle ou en carré arrondi) — vérifié pixel par pixel dans un test.
+- **Service worker** (`public/sw.js`, enregistré **seulement en production**) volontairement minimal :
+  - il ne met en cache que des **fichiers statiques immuables** (`/_next/static/`, `/icons/`) et la page hors connexion ;
+  - il ne touche **jamais** aux pages HTML, à l'API (`/api/`), ni aux échanges internes de Next entre pages (`RSC`, préchargements) : ils sont personnalisés et resteraient lisibles par la personne suivante sur un poste partagé, ou périmés ;
+  - il ne traite que les requêtes GET de la même origine ; les photos S3, WhatsApp, etc. lui échappent ;
+  - hors connexion, seule une **navigation** bascule sur `/offline.html` ; une erreur 4xx/5xx du serveur s'affiche telle quelle ; l'API échoue vraiment (aucune réponse simulée).
+  - La décision « que faire de cette requête » est isolée dans `classifyRequest`, testée directement sur le vrai fichier.
+- **Page hors connexion** (`public/offline.html`) : bilingue français / arabe (le second en lecture de droite à gauche), bouton « Réessayer », `noindex`, **aucune ressource externe** (elle doit s'afficher sans réseau).
+- **Installation** : bouton « Installer l'application » dans le pied de page quand le navigateur le permet (Chrome, Edge, Android) ; explication « Partager → Sur l'écran d'accueil » sur iPhone et iPad (Safari n'a pas de bouton) ; **rien** si l'application est déjà installée. FR et AR.
+- Le service worker est servi avec `Cache-Control: no-cache, no-store` (`next.config.ts`) : une mise à jour du site ne peut pas rester bloquée derrière une ancienne version.
+- 50 nouveaux tests : 26 unitaires (décisions du service worker, manifeste, icônes réellement présentes et à la bonne taille, page hors connexion sans dépendance externe, détection iOS et « déjà installée ») et **7 de bout en bout** dans un vrai navigateur.
+
+**Vérification en conditions réelles**
+- **Le navigateur intégré à l'application Claude ne permet pas de tester un service worker** : il échoue à télécharger *n'importe quel* script (même un fichier PNG donne « erreur inconnue » au lieu d'une erreur de type de fichier), alors que le serveur répond 200. Limite de cet outil, pas du code. La vérification a donc été faite avec le **Chromium de Playwright**, sur une version de production, en test permanent (`npm run test:e2e:pwa`, `e2e-pwa/`, port 5186, base de test) :
+  1. manifeste valide, icônes en PNG, couleur de la marque ;
+  2. le service worker s'enregistre (portée `/`, script `/sw.js`) et contrôle la page à la visite suivante ;
+  3. `sw.js` servi sans cache ;
+  4. après avoir visité connexion, recherche et appelé l'API, le seul cache (`souq-static-v1`) ne contient **que** `/offline.html`, `/icons/…` et `/_next/static/…` — **aucune page, aucune réponse d'API** ;
+  5. **hors connexion réelle** (`setOffline`) : la page prévue s'affiche en français et en arabe, sans aucune donnée du site ; connexion rétablie et « Réessayer » : la vraie page revient ;
+  6. hors connexion, un appel à l'API échoue réellement ;
+  7. aucun bouton d'installation sans invite du navigateur.
+- Serveur de production démarré à la main : manifeste `application/manifest+json`, `sw.js` sans cache, icônes et page hors connexion en 200, balises dans la page. `npm run test:e2e` 6/6, 753 tests unitaires, types et lint propres.
+
+**Points d'attention**
+- **Non testé sur un vrai téléphone** : ni l'invite d'installation (Chrome/Android), ni la procédure iPhone, ni l'aspect de l'icône découpée. Playwright vérifie le comportement, pas l'expérience sur l'appareil.
+- **Le bouton d'installation dépend de Chrome/Edge/Android** ; Safari (iPhone) n'a qu'une explication ; Firefox de bureau n'installe pas.
+- **Mise à jour du service worker** : changer la liste des fichiers pré-chargés ou la stratégie exige d'augmenter `VERSION` dans `public/sw.js` (les anciens caches `souq-*` sont alors supprimés à l'activation).
+- Le test de bout en bout de la PWA compile puis démarre le site (environ 1 minute) : il est séparé de `npm run test:e2e` pour cette raison.
+- Une ligne « The destination stream closed early » apparaît dans les journaux du serveur pendant ce test : c'est Next qui signale un navigateur ayant abandonné une réponse en cours (rechargement, mise hors connexion), sans effet.
+
+**Reste du bloc 2** : notifications pour les alertes de recherche (dépendance `web-push`, clés VAPID, abonnements — décision à valider).

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
@@ -11,11 +11,15 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CompareProvider } from "@/components/compare/CompareContext";
 import { CompareTray } from "@/components/compare/CompareTray";
+import { PwaRegister } from "@/components/PwaRegister";
 import "../globals.css";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+// Lot 120 — couleur de la barre du navigateur sur mobile et de l'application installée.
+export const viewport: Viewport = { themeColor: "#12222e" };
 
 export async function generateMetadata({
   params,
@@ -27,6 +31,9 @@ export async function generateMetadata({
   return {
     title: `${t("name")} — ${t("tagline")}`,
     description: t("tagline"),
+    // Lot 120 — application installable (le manifeste est servi par src/app/manifest.ts).
+    applicationName: t("name"),
+    appleWebApp: { capable: true, title: t("name"), statusBarStyle: "default" },
   };
 }
 
@@ -76,6 +83,7 @@ export default async function LocaleLayout({
             <main className="flex-1">{children}</main>
             <SiteFooter />
             <CompareTray />
+            <PwaRegister />
           </CompareProvider>
         </NextIntlClientProvider>
       </body>

@@ -47,6 +47,7 @@ Ensuite `DATABASE_URL` / `E2E_DATABASE_URL` pointent sur `localhost:5433`. Ce se
 ```bash
 npm test            # tests unitaires (aucun n'accède à la base)
 npm run test:e2e    # tests de bout en bout Playwright, sur la base E2E_DATABASE_URL (vidée à chaque exécution)
+npm run test:e2e:pwa # application installable : service worker et mode hors connexion, sur une version de PRODUCTION (compile puis démarre sur le port 5186)
 ```
 
 ## Mise en production

@@ -25,6 +25,19 @@ const s3HostIsLocalOrPrivateIp = s3PublicUrl
   : false;
 
 const nextConfig: NextConfig = {
+  // Lot 120 — le service worker doit toujours être revérifié : sinon une ancienne version
+  // pourrait rester active chez les visiteurs après une mise à jour du site.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+    ];
+  },
   // Un package.json préexistant dans le dossier utilisateur (hors de ce projet)
   // fait remonter Turbopack plus haut que nécessaire : on fixe la racine ici.
   turbopack: {

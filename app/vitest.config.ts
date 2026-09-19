@@ -9,6 +9,7 @@ export default defineConfig({
     // e2e/ contient les specs Playwright (e2e/*.spec.ts) — une API de test
     // différente (@playwright/test), jamais exécutées par vitest (Lot 101).
     // Étend la liste par défaut de vitest plutôt que de la remplacer.
-    exclude: [...defaultExclude, "e2e/**"],
+    // Lot 120 : e2e-pwa/ = specs Playwright de l'application installable (même raison).
+    exclude: [...defaultExclude, "e2e/**", "e2e-pwa/**"],
   },
 });

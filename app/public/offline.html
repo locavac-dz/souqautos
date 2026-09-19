@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#12222e">
+  <title>Hors connexion — Souq Auto | غير متصل</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 24px; background: #f8fafc; color: #12222e;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", Arial, sans-serif;
+    }
+    main { width: 100%; max-width: 420px; text-align: center; }
+    .logo { width: 72px; height: 72px; margin: 0 auto 20px; }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p { margin: 0 0 4px; color: #475569; line-height: 1.5; }
+    .ar { margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+    button {
+      margin-top: 24px; padding: 10px 20px; font: inherit; font-weight: 600; color: #fff;
+      background: #12222e; border: 0; border-radius: 8px; cursor: pointer;
+    }
+    button:hover { background: #1e3a4c; }
+  </style>
+</head>
+<body>
+  <main>
+    <svg class="logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Souq Auto">
+      <circle cx="26" cy="32" r="18" fill="none" stroke="#12222e" stroke-width="6.5"/>
+      <circle cx="40" cy="32" r="18" fill="none" stroke="#c1622b" stroke-width="6.5"/>
+    </svg>
+    <section lang="fr">
+      <h1>Vous êtes hors connexion</h1>
+      <p>Souq Auto a besoin d'Internet pour afficher les annonces.</p>
+      <p>Vérifiez votre connexion, puis réessayez.</p>
+    </section>
+    <section class="ar" lang="ar" dir="rtl">
+      <h1>أنت غير متصل بالإنترنت</h1>
+      <p>يحتاج سوق أوتو إلى الإنترنت لعرض الإعلانات.</p>
+      <p>تحقق من اتصالك ثم أعد المحاولة.</p>
+    </section>
+    <button type="button" onclick="location.reload()">Réessayer · إعادة المحاولة</button>
+  </main>
+</body>
+</html>
