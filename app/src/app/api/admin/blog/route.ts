@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
 import { slugify } from "@/lib/slugify";
-import { generateUniqueSlug } from "@/lib/blog";
+import { generateUniqueSlug, RESERVED_SLUGS } from "@/lib/blog";
 import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
 import { toRoadTestData } from "@/lib/road-test-data";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
@@ -53,7 +53,9 @@ export async function POST(request: NextRequest) {
   const existingSlugs = (await prisma.blogArticle.findMany({ select: { slug: true } })).map(
     (a) => a.slug
   );
-  const slug = generateUniqueSlug(slugify(data.titleFr), existingSlugs);
+  // `revue-de-presse` est une page fixe de /essais : un essai qui porterait ce
+  // slug serait masqué par elle.
+  const slug = generateUniqueSlug(slugify(data.titleFr), [...existingSlugs, ...RESERVED_SLUGS]);
 
   const now = new Date();
   const publishedAt = resolvePublishedAt(data.publication, null, now);

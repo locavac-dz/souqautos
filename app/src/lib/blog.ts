@@ -11,3 +11,8 @@ export function generateUniqueSlug(baseSlug: string, existingSlugs: string[]): s
   }
   return `${baseSlug}-${suffix}`;
 }
+
+// Slugs qu'aucun article ni essai ne peut prendre : ils désignent des pages
+// fixes de la rubrique Essais (`/essais/revue-de-presse`, Lot 114) qui seraient
+// sinon masquées par la page de l'article.
+export const RESERVED_SLUGS = ["revue-de-presse"];

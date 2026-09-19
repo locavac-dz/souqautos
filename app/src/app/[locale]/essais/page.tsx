@@ -7,11 +7,14 @@ import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-dat
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Pagination } from "@/components/search/Pagination";
 import { RoadTestCard } from "@/components/RoadTestCard";
+import { PressReviewCard } from "@/components/PressReviewCard";
+import { Link } from "@/i18n/navigation";
 import { publishedNow } from "@/lib/blog-publication";
 import { pageWindow } from "@/lib/pagination";
 import { numeric } from "@/lib/validation/search";
 
 const ESSAIS_PAGE_SIZE = 12;
+const PRESS_PREVIEW_SIZE = 6;
 const paramsSchema = z.object({ page: numeric() });
 
 type RawSearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -46,6 +49,7 @@ export async function generateMetadata({
 export default async function RoadTestsIndexPage({ searchParams }: { searchParams: RawSearchParams }) {
   const locale = await getLocale();
   const t = await getTranslations("RoadTest");
+  const tPress = await getTranslations("PressReview");
   const requestedPage = await parsePage(searchParams);
 
   // Seuls les essais parus (`publishedAt` atteint) : un essai programmé reste
@@ -53,6 +57,25 @@ export default async function RoadTestsIndexPage({ searchParams }: { searchParam
   const where = { kind: "ESSAI" as const, ...publishedNow(new Date()) };
   const totalCount = await prisma.blogArticle.count({ where });
   const { page, totalPages, skip } = pageWindow(totalCount, requestedPage, ESSAIS_PAGE_SIZE);
+
+  // Lot 114 — revue de presse : les derniers liens vers des essais publiés
+  // ailleurs, sur la première page seulement.
+  const pressWhere = publishedNow(new Date());
+  const [pressCount, pressItems] =
+    page === 1
+      ? await Promise.all([
+          prisma.pressReview.count({ where: pressWhere }),
+          prisma.pressReview.findMany({
+            where: pressWhere,
+            orderBy: { publishedAt: "desc" },
+            take: PRESS_PREVIEW_SIZE,
+            include: {
+              brand: { select: { name: true, slug: true } },
+              model: { select: { name: true, slug: true } },
+            },
+          }),
+        ])
+      : [0, []];
 
   const articles = await prisma.blogArticle.findMany({
     where,
@@ -104,6 +127,25 @@ export default async function RoadTestsIndexPage({ searchParams }: { searchParam
           </div>
           <Pagination page={page} totalPages={totalPages} searchParams={{}} basePath="/essais" />
         </>
+      )}
+
+      {pressItems.length > 0 && (
+        <section className="mt-12">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-xl font-semibold text-slate-900">{tPress("sectionTitle")}</h2>
+            {pressCount > pressItems.length && (
+              <Link href="/essais/revue-de-presse" className="text-sm text-slate-600 underline hover:text-slate-900">
+                {tPress("seeAll", { count: pressCount })}
+              </Link>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-slate-400">{tPress("disclaimer")}</p>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pressItems.map((item) => (
+              <PressReviewCard key={item.id} item={item} locale={locale} />
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );

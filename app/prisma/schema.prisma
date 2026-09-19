@@ -139,6 +139,7 @@ model Brand {
   models Model[]
   listings Listing[]
   roadTests RoadTest[]
+  pressReviews PressReview[]
 }
 
 model Model {
@@ -157,6 +158,7 @@ model Model {
   listings Listing[]
   generations Generation[]
   roadTests RoadTest[]
+  pressReviews PressReview[]
 
   @@unique([brandId, slug])
 }
@@ -979,4 +981,30 @@ model RoadTest {
 
   @@index([brandId])
   @@index([modelId])
+}
+
+// Lot 114 — revue de presse : un LIEN vers un essai publié par un autre média,
+// jamais son texte. Ne sont stockés que des faits (média, titre tel que publié,
+// adresse, date de parution chez lui) et la phrase que la rédaction écrit
+// elle-même dans chaque langue. `url` est unique (adresse normalisée, cf.
+// src/lib/press-review.ts) : le même article ne figure qu'une fois.
+// `publishedAt` : null = brouillon, date passée = en ligne (comme BlogArticle).
+model PressReview {
+  id                String    @id @default(cuid())
+  sourceName        String
+  url               String    @unique
+  title             String
+  sourcePublishedAt DateTime?
+  noteFr            String
+  noteAr            String
+  brandId           Int?
+  brand             Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  modelId           Int?
+  model             Model?    @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  publishedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([publishedAt])
+  @@index([modelId, publishedAt])
 }

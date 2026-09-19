@@ -8,6 +8,7 @@ import { getListingStats } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RoadTestCard } from "@/components/RoadTestCard";
+import { PressReviewCard } from "@/components/PressReviewCard";
 import { publishedNow } from "@/lib/blog-publication";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -59,8 +60,9 @@ export default async function ModelPage({
 
   const t = await getTranslations("Catalogue");
   const tRoadTest = await getTranslations("RoadTest");
+  const tPress = await getTranslations("PressReview");
 
-  const [stats, listings, currentUser, roadTests] = await Promise.all([
+  const [stats, listings, currentUser, roadTests, pressReviews] = await Promise.all([
     getListingStats({ brandId: brand.id, modelId: model.id }),
     prisma.listing.findMany({
       where: { brandId: brand.id, modelId: model.id, status: "PUBLIEE" },
@@ -91,6 +93,17 @@ export default async function ModelPage({
         publishedAt: true,
         coverImageUrl: true,
         roadTest: { select: { rating: true, brand: { select: { name: true } }, model: { select: { name: true } } } },
+      },
+    }),
+    // Lot 114 — ce qu'en dit la presse : liens vers des essais publiés ailleurs
+    // (les 3 derniers de ce modèle).
+    prisma.pressReview.findMany({
+      where: { ...publishedNow(new Date()), modelId: model.id },
+      orderBy: { publishedAt: "desc" },
+      take: 3,
+      include: {
+        brand: { select: { name: true, slug: true } },
+        model: { select: { name: true, slug: true } },
       },
     }),
   ]);
@@ -186,6 +199,18 @@ export default async function ModelPage({
           <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {roadTests.map((article) => (
               <RoadTestCard key={article.id} article={article} locale={locale} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {pressReviews.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold text-slate-900">{tPress("modelSectionTitle")}</h2>
+          <p className="mt-1 text-xs text-slate-400">{tPress("disclaimer")}</p>
+          <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pressReviews.map((item) => (
+              <PressReviewCard key={item.id} item={item} locale={locale} />
             ))}
           </div>
         </section>
