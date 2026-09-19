@@ -2384,3 +2384,38 @@ Un compte professionnel voit ce que produisent ses annonces : vues, contacts (nu
 - Les contacts (`ContactEvent`) et conversations sont relus sur la période en une requête chacun : sans souci pour les volumes actuels ; à agréger en base si un compte dépasse plusieurs dizaines de milliers de contacts par période.
 
 **Reste du bloc 3** : suivi des contacts (liste de prospects par annonce, avec statut et note) ; paiement SATIM, en attente de l'ouverture du compte marchand (le virement manuel existe déjà).
+
+## Lot 123 — Bloc 3 : suivi des prospects (2026-09-19)
+
+Un compte professionnel dispose d'une liste de ses **prospects** — les personnes identifiées qui lui ont écrit à propos d'une annonce — avec, pour chacune, un **statut** et une **note privée**. C'est le pendant « suivi » des statistiques du Lot 122.
+
+**Livré**
+- **Page `/pro/prospects`** (lien « Suivi des prospects » dans le tableau de bord pro) : une fiche par prospect (nom d'affichage, annonce, date du dernier échange, lien vers la conversation), statut et note modifiables, compteurs par statut, filtres par statut et par annonce, FR et AR (RTL), téléphone compris. Ceux qui **attendent une réponse** (le dernier message vient de l'acheteur) portent un badge et passent en tête, sauf s'ils sont soldés (vendu, perdu).
+- **Statuts** : Nouveau, À rappeler, En négociation, Vendu, Perdu. Sans suivi enregistré, un prospect est « Nouveau » : la ligne n'est créée qu'à la première modification.
+- **Modèle** `ProspectFollowUp` (migration `20260919220000_prospect_follow_ups`) : statut, note (500 caractères au plus), qui a modifié en dernier (propriétaire ou collaborateur). Supprimé avec la conversation. **Aucune donnée nouvelle sur l'acheteur** n'est stockée ni montrée : ni email, ni téléphone.
+- **Route** `PATCH /api/pro/prospects/[conversationId]` : statut, note, ou les deux (envoyer l'un ne touche pas à l'autre ; une note vide efface la note). 200 modifications par heure et par compte. Deux enregistrements simultanés d'un prospect encore sans suivi ne créent qu'une ligne.
+- **Qui a accès** : le propriétaire du compte pro et les collaborateurs autorisés à **gérer les annonces** — les mêmes personnes que celles qui peuvent lire la messagerie de ce compte. Un collaborateur en lecture seule voit « vous n'avez pas accès » (afficher les noms des prospects lui donnerait plus que ce que la messagerie lui montre). La route répond `404` identique pour une conversation inconnue et pour une conversation dont on n'a pas la gestion ; un vendeur sans compte pro (outil professionnel) ou l'acheteur lui-même obtiennent aussi `404`.
+- **Cohérence avec la messagerie** : une conversation que le vendeur a masquée n'apparaît plus ; elle revient, avec son statut conservé, dès que l'acheteur écrit de nouveau. Les messages supprimés ne comptent pas pour savoir qui a parlé en dernier.
+- 30 nouveaux tests unitaires (855 → 885) : statuts et filtres venus de l'adresse, validation (mise à jour vide, statut inconnu, champ interdit, note trop longue), tri, agrégation en base simulée (aucune donnée personnelle sélectionnée), route (accès, 404 uniformes, mise à jour partielle, reprise en cas de course).
+
+**Choix de conception à connaître**
+- **Seules les conversations sont des prospects.** Les visiteurs qui affichent un numéro de téléphone ne sont pas identifiés (ou pas de façon annoncée) : ils comptent dans les statistiques, pas dans cette liste. Les favoris restent privés. Montrer aux vendeurs qui a affiché leur numéro en étant connecté serait possible (le site l'enregistre), mais c'est un nouvel usage de cette donnée qu'il faudrait annoncer aux acheteurs et inscrire dans la politique de confidentialité : à décider avec votre juriste avant de le faire.
+- **Ouvert à tous les comptes pro**, sans palier (contrairement au détail des statistiques du Lot 122) : le suivi repose sur la messagerie que tous ont déjà. À réserver à un palier si vous le souhaitez.
+- **Notes privées mais non chiffrées** : elles sont lisibles en base par un administrateur technique comme n'importe quel texte de la base. Ne pas y saisir de données sensibles (numéro d'identité…) ; la page ne le dit pas encore.
+
+**Vérification en conditions réelles** (base et serveur de développement, conversations créées par la vraie messagerie, comptes jetables supprimés ensuite — aucun suivi ni compte de test restant)
+- Trois prospects sur deux annonces : celui qui attend une réponse en premier, badge visible pour lui seul ; les conversations d'un autre compte pro et d'un vendeur particulier n'apparaissent pas.
+- Modification dans l'interface : changer le statut l'enregistre (note restée vide en base) ; la note se nettoie (espaces retirés), se retrouve après rechargement, et se supprime en la vidant ; les compteurs suivent (Nouveau 3 → 2, À rappeler 0 → 1) ; auteur enregistré = le propriétaire, puis **le collaborateur** quand c'est lui qui modifie.
+- Filtres : par statut, par annonce ; l'annonce d'un **autre compte** ou une valeur inventée dans l'adresse sont ignorées ; « aucun résultat » affiché quand il y a lieu.
+- Accès : collaborateur gestionnaire → même liste ; collaborateur en lecture seule → « pas d'accès » ; sans compte pro → invitation ; anonyme → 307 vers la connexion ; lien du tableau de bord absent pour le lecture seule.
+- API : 401 anonyme ; 404 pour lecture seule, sans compte pro, autre compte pro, acheteur lui-même, vendeur particulier, conversation inconnue (réponse identique) ; 400 pour corps vide, statut inconnu, note de 501 caractères, champ interdit ; note de 500 caractères acceptée ; aucune écriture sur les conversations interdites ; **10 enregistrements simultanés → 10 réponses 200, une seule ligne en base**.
+- Conversation masquée puis nouveau message : disparue, puis revenue « attend votre réponse » avec le statut « En négociation » conservé ; suppression de la conversation : le suivi disparaît avec elle.
+- Rendu en français, en arabe (RTL) et à 390 px (aucun défilement horizontal de la page), aucune erreur de console. 885 tests unitaires, `npm run test:e2e` 6/6, `npm run test:e2e:pwa` 7/7, types et lint propres.
+
+**Points d'attention**
+- La liste lit au plus les **500 conversations** les plus récentes du compte (message affiché au-delà) ; les autres restent dans la messagerie.
+- Le statut ne change pas tout seul (une annonce marquée vendue ne passe pas les prospects en « Perdu ») : c'est volontaire, l'équipe sait à qui elle a vendu.
+- Le changement d'un statut recharge la liste (compteurs et ordre à jour) : la fiche modifiée peut donc changer de place.
+- Aucune notification ni relance automatique : le suivi est un carnet, pas un rappel.
+
+**Reste du bloc 3** : paiement SATIM, en attente de l'ouverture du compte marchand (le virement manuel existe déjà). Le bloc 3 est donc terminé côté code.

@@ -130,6 +130,11 @@ export default async function ProDashboardPage() {
           {t("statsLink")}
         </Link>
         {canManageProListings(access) && (
+          <Link href="/pro/prospects" className="text-sm text-slate-700 underline hover:text-slate-900">
+            {t("prospectsLink")}
+          </Link>
+        )}
+        {canManageProListings(access) && (
           <Link href="/compte/mes-annonces" className="text-sm text-slate-700 underline hover:text-slate-900">
             {t("manageListings")}
           </Link>

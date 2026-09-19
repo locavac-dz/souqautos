@@ -55,6 +55,7 @@ model User {
   auditLogs       AuditLog[]
   conversationsAsBuyer  Conversation[] @relation("BuyerConversations")
   conversationsAsSeller Conversation[] @relation("SellerConversations")
+  prospectUpdates       ProspectFollowUp[]
   messages              Message[]
   blocksInitiated       Block[]        @relation("BlockerRelation")
   blocksReceived        Block[]        @relation("BlockedRelation")
@@ -535,6 +536,7 @@ model Conversation {
   // horodatages, ce qui fait réapparaître la conversation pour tout le monde.
   hiddenByBuyerAt  DateTime?
   hiddenBySellerAt DateTime?
+  prospectFollowUp ProspectFollowUp?
 
   @@unique([listingId, buyerId])
   @@index([buyerId])
@@ -1099,6 +1101,30 @@ model ListingViewDay {
   count     Int      @default(0)
 
   @@id([listingId, day])
+}
+
+// Lot 123 — suivi des prospects d'un compte professionnel : le statut de la relation et une note
+// PRIVÉE, attachés à une conversation (un prospect = une personne identifiée qui a écrit au vendeur à
+// propos d'une annonce). Aucune donnée nouvelle sur l'acheteur n'est stockée ni exposée : seuls le
+// statut et la note saisis par l'équipe du vendeur. Sans ligne, le prospect est « NOUVEAU » (la ligne
+// n'est créée qu'à la première modification). Supprimée avec la conversation.
+enum ProspectStatus {
+  NOUVEAU
+  A_RAPPELER
+  EN_NEGOCIATION
+  GAGNE
+  PERDU
+}
+
+model ProspectFollowUp {
+  conversationId String         @id
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  status         ProspectStatus @default(NOUVEAU)
+  note           String?
+  updatedAt      DateTime       @updatedAt
+  // Qui a modifié en dernier (le propriétaire ou un collaborateur) ; effacé si le compte disparaît.
+  updatedById    String?
+  updatedBy      User?          @relation(fields: [updatedById], references: [id], onDelete: SetNull)
 }
 
 // Lot 121 — abonnement aux notifications sur UN appareil (navigateur ou application installée).
