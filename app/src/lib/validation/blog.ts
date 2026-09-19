@@ -52,8 +52,15 @@ export const blogArticleSchema = z
       ])
       .default({ mode: "draft" }),
     roadTest: roadTestSchema.optional(),
+    // Lot 111 — adresse d'une image déjà envoyée par /api/admin/blog/cover ; son
+    // appartenance à notre stockage est vérifiée par les routes (isBlogCoverUrl,
+    // qui dépend de la configuration S3). `null` = pas de couverture.
+    coverImageUrl: z.string().trim().max(500).nullish(),
   })
   .superRefine((value, ctx) => {
+    if (value.coverImageUrl && value.kind !== "ESSAI") {
+      ctx.addIssue({ code: "custom", path: ["coverImageUrl"], message: "Seul un essai porte une photo de couverture." });
+    }
     if (value.kind === "ESSAI" && !value.roadTest) {
       ctx.addIssue({ code: "custom", path: ["roadTest"], message: "Un essai exige sa fiche (note, points forts/faibles, verdict)." });
     }

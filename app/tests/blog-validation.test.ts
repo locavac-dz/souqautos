@@ -60,4 +60,17 @@ describe("blogArticleSchema", () => {
     const tooBig = { ...roadTest, modelId: 2_147_483_648 };
     expect(blogArticleSchema.safeParse({ ...articleBase, kind: "ESSAI", roadTest: tooBig }).success).toBe(false);
   });
+
+  it("accepts a cover on an essai, or none (absent or null)", () => {
+    const cover = "/uploads/blog-covers/0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d.jpg";
+    expect(blogArticleSchema.safeParse({ ...articleBase, kind: "ESSAI", roadTest, coverImageUrl: cover }).success).toBe(true);
+    expect(blogArticleSchema.safeParse({ ...articleBase, kind: "ESSAI", roadTest, coverImageUrl: null }).success).toBe(true);
+    expect(blogArticleSchema.safeParse({ ...articleBase, kind: "ESSAI", roadTest }).success).toBe(true);
+  });
+
+  it("refuses a cover on a simple article (only essais have one)", () => {
+    const cover = "/uploads/blog-covers/0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d.jpg";
+    expect(blogArticleSchema.safeParse({ ...articleBase, coverImageUrl: cover }).success).toBe(false);
+    expect(blogArticleSchema.safeParse({ ...articleBase, coverImageUrl: null }).success).toBe(true);
+  });
 });

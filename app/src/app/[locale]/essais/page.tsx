@@ -37,7 +37,8 @@ export async function generateMetadata({
   return {
     title: `${t("indexTitle")} — Souq Auto`,
     description: t("indexSubtitle"),
-    alternates: { canonical },
+    // Lot 111 — signale le flux RSS aux lecteurs et navigateurs.
+    alternates: { canonical, types: { "application/rss+xml": `${SITE_URL}/${locale}/essais/feed.xml` } },
     openGraph: { title: t("indexTitle"), url: canonical, type: "website" },
   };
 }
@@ -66,6 +67,7 @@ export default async function RoadTestsIndexPage({ searchParams }: { searchParam
       excerptFr: true,
       excerptAr: true,
       publishedAt: true,
+      coverImageUrl: true,
       roadTest: { select: { rating: true, brand: { select: { name: true } }, model: { select: { name: true } } } },
     },
   });
@@ -84,6 +86,12 @@ export default async function RoadTestsIndexPage({ searchParams }: { searchParam
 
       <h1 className="text-2xl font-semibold text-slate-900">{t("indexTitle")}</h1>
       <p className="mt-1 text-sm text-slate-500">{t("indexSubtitle")}</p>
+      <p className="mt-1 text-xs">
+        {/* Lien natif : un flux XML n'est pas une page de l'application (pas de préfixe de langue à ajouter). */}
+        <a href={`/${locale}/essais/feed.xml`} className="text-slate-500 underline hover:text-slate-900">
+          {t("rssLink")}
+        </a>
+      </p>
 
       {articles.length === 0 ? (
         <p className="mt-8 py-12 text-center text-slate-500">{t("empty")}</p>

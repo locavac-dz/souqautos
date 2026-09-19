@@ -1115,7 +1115,8 @@
     "updatedOn": "Mis à jour le {date}",
     "seeModel": "Voir les annonces {brand} {model}",
     "modelRoadTestsTitle": "Essais de ce modèle",
-    "readTest": "Lire l'essai"
+    "readTest": "Lire l'essai",
+    "rssLink": "Suivre les essais par flux RSS"
   },
   "AdminRoadTest": {
     "title": "Essais auto",
@@ -1139,6 +1140,16 @@
     "listHelp": "Un point par ligne : de 1 à 8 lignes, 200 caractères maximum chacune.",
     "verdictFrLabel": "Verdict (français)",
     "verdictArLabel": "Verdict (arabe)",
+    "markdownHelp": "Mise en forme : ## Titre, ### Sous-titre, **gras**, *italique*, une liste avec « - » ou « 1. » en début de ligne, [texte du lien](https://…). Séparez les paragraphes par une ligne vide. Le HTML et les images ne sont pas pris en compte.",
+    "coverTitle": "Photo de couverture",
+    "coverHelp": "Facultative. Recadrée en 16:9 ; JPEG, PNG ou WebP, 8 Mo maximum. Elle illustre la page, la carte de l'index et le partage sur les réseaux.",
+    "coverChange": "Choisir une photo",
+    "coverReplace": "Remplacer la photo",
+    "coverRemove": "Retirer la photo",
+    "coverUploading": "Envoi…",
+    "coverErrorTooLarge": "Photo trop lourde (8 Mo maximum).",
+    "coverErrorInvalidType": "Format non pris en charge : utilisez une photo JPEG, PNG ou WebP.",
+    "coverErrorGeneric": "L'envoi de la photo a échoué. Réessayez.",
     "errorGeneric": "Une erreur est survenue. Vérifiez la note, les points forts et faibles, le verdict et que tous les champs français et arabe sont remplis."
   },
   "Blog": {

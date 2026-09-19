@@ -89,6 +89,7 @@ export default async function ModelPage({
         excerptFr: true,
         excerptAr: true,
         publishedAt: true,
+        coverImageUrl: true,
         roadTest: { select: { rating: true, brand: { select: { name: true } }, model: { select: { name: true } } } },
       },
     }),

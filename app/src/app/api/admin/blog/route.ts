@@ -8,6 +8,7 @@ import { generateUniqueSlug } from "@/lib/blog";
 import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
 import { toRoadTestData } from "@/lib/road-test-data";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
+import { isBlogCoverUrl } from "@/lib/blog-cover";
 import { writeAuditLog } from "@/lib/audit-log";
 
 // Réservé à ADMIN : le blog est un contenu public engageant l'image de la
@@ -25,6 +26,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "validation" }, { status: 400 });
   }
   const data = parsed.data;
+
+  // Lot 111 — la couverture doit être un fichier issu de /api/admin/blog/cover.
+  if (data.coverImageUrl && !isBlogCoverUrl(data.coverImageUrl, process.env.S3_PUBLIC_URL)) {
+    return NextResponse.json({ error: "invalid_cover" }, { status: 400 });
+  }
 
   // Lot 110 — marque/modèle/génération d'un essai : jamais un identifiant
   // fabriqué côté client accepté tel quel. La marque se déduit du modèle choisi.
@@ -62,6 +68,7 @@ export async function POST(request: NextRequest) {
       contentFr: data.contentFr,
       contentAr: data.contentAr,
       authorId: user.id,
+      coverImageUrl: data.coverImageUrl || null,
       publishedAt,
       roadTest: data.roadTest ? { create: toRoadTestData(data.roadTest, brandIdFromModel) } : undefined,
     },

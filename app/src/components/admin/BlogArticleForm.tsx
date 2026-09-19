@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 
@@ -30,7 +31,13 @@ type ExistingArticle = {
   contentFr: string;
   contentAr: string;
   publishedAt: Date | null;
+  coverImageUrl?: string | null;
   roadTest?: ExistingRoadTest | null;
+};
+
+const COVER_ERROR_KEY: Record<string, string> = {
+  photo_too_large: "coverErrorTooLarge",
+  photo_invalid_type: "coverErrorInvalidType",
 };
 
 type CatalogueBrand = {
@@ -99,8 +106,35 @@ export function BlogArticleForm({
   const [testedVersion, setTestedVersion] = useState(rt?.testedVersion ?? "");
   const [testedAt, setTestedAt] = useState(rt?.testedAt ? rt.testedAt.toISOString().slice(0, 10) : "");
 
+  const [coverUrl, setCoverUrl] = useState<string | null>(article?.coverImageUrl ?? null);
+  const [coverPending, setCoverPending] = useState(false);
+  const [coverError, setCoverError] = useState<string | null>(null);
+
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // L'image est envoyée tout de suite (recadrée 16:9 côté serveur) ; son adresse
+  // n'est rattachée à l'article qu'à l'enregistrement du formulaire.
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setCoverPending(true);
+    setCoverError(null);
+    const formData = new FormData();
+    formData.append("cover", file);
+
+    const res = await fetch("/api/admin/blog/cover", { method: "POST", body: formData });
+    setCoverPending(false);
+    if (res.ok) {
+      const data = await res.json();
+      setCoverUrl(data.coverImageUrl);
+      return;
+    }
+    const data = await res.json().catch(() => null);
+    setCoverError(tRt(COVER_ERROR_KEY[data?.error] ?? "coverErrorGeneric"));
+  }
 
   const models = useMemo(
     () => brands.find((b) => String(b.id) === brandId)?.models ?? [],
@@ -138,6 +172,7 @@ export function BlogArticleForm({
       contentAr,
       publication,
       ...(isEssai && {
+        coverImageUrl: coverUrl,
         roadTest: {
           brandId: brandId ? Number(brandId) : undefined,
           modelId: modelId ? Number(modelId) : undefined,
@@ -237,6 +272,45 @@ export function BlogArticleForm({
           />
         </div>
       </div>
+
+      {isEssai && (
+        <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900">{tRt("coverTitle")}</legend>
+          <div className="flex items-center gap-4">
+            {coverUrl ? (
+              <div className="relative aspect-video w-40 shrink-0">
+                <Image src={coverUrl} alt="" fill sizes="160px" className="rounded-md border border-slate-200 object-cover" />
+              </div>
+            ) : (
+              <div className="aspect-video w-40 shrink-0 rounded-md border border-slate-200 bg-slate-100" />
+            )}
+            <div className="flex flex-col items-start gap-1">
+              <label className="cursor-pointer text-sm text-slate-700 underline hover:text-slate-900">
+                {coverPending ? tRt("coverUploading") : coverUrl ? tRt("coverReplace") : tRt("coverChange")}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleCoverUpload}
+                  disabled={coverPending}
+                  className="hidden"
+                />
+              </label>
+              {coverUrl && (
+                <button
+                  type="button"
+                  onClick={() => setCoverUrl(null)}
+                  disabled={coverPending}
+                  className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                >
+                  {tRt("coverRemove")}
+                </button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">{tRt("coverHelp")}</p>
+          {coverError && <p className="text-sm text-red-600">{coverError}</p>}
+        </fieldset>
+      )}
 
       {isEssai && (
         <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4">
@@ -445,7 +519,7 @@ export function BlogArticleForm({
           />
         </div>
       </div>
-      <p className="text-xs text-slate-500 -mt-4">{t("contentHelp")}</p>
+      <p className="text-xs text-slate-500 -mt-4">{isEssai ? tRt("markdownHelp") : t("contentHelp")}</p>
 
       <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
         <legend className="px-1 text-sm font-medium text-slate-900">{t("publicationLabel")}</legend>

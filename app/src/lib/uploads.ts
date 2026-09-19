@@ -17,6 +17,9 @@ const LOGO_SIZE = 400;
 const MAX_BANNER_BYTES = 8 * 1024 * 1024; // 8 Mo
 const BANNER_WIDTH = 1600;
 const BANNER_HEIGHT = 400;
+const MAX_COVER_BYTES = 8 * 1024 * 1024; // 8 Mo
+const COVER_WIDTH = 1600;
+const COVER_HEIGHT = 900; // 16:9
 
 export class PhotoValidationError extends Error {}
 
@@ -47,7 +50,7 @@ async function readValidatedImage(file: File, maxBytes: number): Promise<Buffer>
 // photo, seulement lui faire perdre le partage entre instances pour CETTE
 // photo précise, jusqu'au prochain upload réussi vers S3.
 export async function storeProcessedImage(
-  subdir: "listings" | "avatars" | "messages" | "pro-logos" | "pro-banners",
+  subdir: "listings" | "avatars" | "messages" | "pro-logos" | "pro-banners" | "blog-covers",
   filename: string,
   bytes: Buffer
 ): Promise<string> {
@@ -180,4 +183,21 @@ export async function saveProBanner(file: File): Promise<string> {
 
   const filename = `${randomUUID()}.jpg`;
   return storeProcessedImage("pro-banners", filename, output);
+}
+
+// Lot 111 — photo de couverture d'un essai : cadrage 16:9 fixe, pour que les
+// cartes, l'en-tête de page et l'image de partage gardent le même format quelle
+// que soit la photo envoyée. Mêmes règles de sécurité que les autres (octets
+// réels, nom physique généré).
+export async function saveBlogCover(file: File): Promise<string> {
+  const buffer = await readValidatedImage(file, MAX_COVER_BYTES);
+
+  const output = await sharp(buffer)
+    .rotate()
+    .resize({ width: COVER_WIDTH, height: COVER_HEIGHT, fit: "cover" })
+    .jpeg({ quality: 85 })
+    .toBuffer();
+
+  const filename = `${randomUUID()}.jpg`;
+  return storeProcessedImage("blog-covers", filename, output);
 }

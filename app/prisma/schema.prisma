@@ -938,6 +938,9 @@ model BlogArticle {
   // dans le futur = programmé (visible seulement une fois la date atteinte).
   kind        ArticleKind @default(ARTICLE)
   roadTest    RoadTest?
+  // Lot 111 — photo de couverture (essais), toujours un fichier de notre propre
+  // stockage « blog-covers » (jamais une URL externe, cf. src/lib/blog-cover.ts).
+  coverImageUrl String?
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

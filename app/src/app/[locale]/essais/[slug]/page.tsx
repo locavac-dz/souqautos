@@ -4,10 +4,11 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
 import { buildBreadcrumbJsonLd, buildReviewJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { StarRating } from "@/components/StarRating";
+import { ArticleBody } from "@/components/ArticleBody";
 import { publishedNow, shouldShowUpdatedDate } from "@/lib/blog-publication";
 import { formatRating, splitLines } from "@/lib/road-test";
 
@@ -49,6 +50,7 @@ export async function generateMetadata({
       type: "article",
       publishedTime: article.publishedAt.toISOString(),
       modifiedTime: article.updatedAt.toISOString(),
+      images: article.coverImageUrl ? [resolveAbsolutePhotoUrl(article.coverImageUrl)] : undefined,
     },
   };
 }
@@ -153,6 +155,12 @@ export default async function RoadTestPage({
         </div>
       </div>
 
+      {article.coverImageUrl && (
+        <div className="relative mt-6 aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+          <Image src={article.coverImageUrl} alt="" fill sizes="(min-width: 768px) 768px, 100vw" className="object-cover" priority />
+        </div>
+      )}
+
       <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
         <StarRating rating={rt.rating} size={26} label={t("ratingAria", { rating: ratingText })} />
         <span className="text-lg font-semibold text-slate-900">{t("ratingLabel", { rating: ratingText })}</span>
@@ -196,11 +204,7 @@ export default async function RoadTestPage({
         <p className="mt-1 text-slate-800">{verdict}</p>
       </section>
 
-      <div className="mt-8 space-y-4 text-sm leading-relaxed text-slate-700">
-        {content.split(/\n{2,}/).map((paragraph, index) => (
-          <p key={index}>{paragraph}</p>
-        ))}
-      </div>
+      <ArticleBody content={content} />
 
       {rt.brand && rt.model && (
         <Link

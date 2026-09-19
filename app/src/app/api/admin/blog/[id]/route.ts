@@ -6,7 +6,19 @@ import { blogArticleSchema } from "@/lib/validation/blog";
 import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
 import { toRoadTestData } from "@/lib/road-test-data";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
+import { isBlogCoverUrl } from "@/lib/blog-cover";
+import { deleteStoredFile } from "@/lib/uploads";
 import { writeAuditLog } from "@/lib/audit-log";
+
+// Supprime le fichier d'une couverture devenue inutile, sauf si un autre article
+// y fait encore référence (jamais retirer l'image d'un article qui l'utilise).
+async function deleteCoverIfUnused(url: string | null | undefined, exceptArticleId: string) {
+  if (!url) return;
+  const stillUsed = await prisma.blogArticle.count({
+    where: { coverImageUrl: url, NOT: { id: exceptArticleId } },
+  });
+  if (stillUsed === 0) await deleteStoredFile(url);
+}
 
 // Le slug n'est jamais recalculé à l'édition — une fois publié, son URL doit
 // rester stable (référencement, liens déjà partagés), même si le titre change.
@@ -23,6 +35,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "validation" }, { status: 400 });
   }
   const data = parsed.data;
+
+  if (data.coverImageUrl && !isBlogCoverUrl(data.coverImageUrl, process.env.S3_PUBLIC_URL)) {
+    return NextResponse.json({ error: "invalid_cover" }, { status: 400 });
+  }
 
   const article = await prisma.blogArticle.findUnique({ where: { id } });
   if (!article) {
@@ -57,6 +73,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const publishedAt = resolvePublishedAt(data.publication, article.publishedAt, now);
 
   const roadTestData = data.roadTest ? toRoadTestData(data.roadTest, brandIdFromModel) : undefined;
+  const newCover = data.coverImageUrl || null;
 
   await prisma.blogArticle.update({
     where: { id },
@@ -67,10 +84,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       excerptAr: data.excerptAr,
       contentFr: data.contentFr,
       contentAr: data.contentAr,
+      coverImageUrl: newCover,
       publishedAt,
       roadTest: roadTestData ? { upsert: { create: roadTestData, update: roadTestData } } : undefined,
     },
   });
+
+  // Ancienne couverture remplacée ou retirée : son fichier est supprimé une fois
+  // la base à jour (jamais avant, pour ne pas perdre l'image si l'écriture échoue).
+  if (article.coverImageUrl && article.coverImageUrl !== newCover) {
+    await deleteCoverIfUnused(article.coverImageUrl, id);
+  }
 
   await writeAuditLog({
     adminId: user.id,
@@ -96,6 +120,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   }
 
   await prisma.blogArticle.delete({ where: { id } });
+  await deleteCoverIfUnused(article.coverImageUrl, id);
 
   await writeAuditLog({
     adminId: user.id,

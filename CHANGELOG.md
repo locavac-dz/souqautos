@@ -2092,3 +2092,32 @@ Demandé par le porteur de projet à partir d'une capture de la page de recherch
 **Vérification dans le navigateur** : plus aucun champ numérique sur la page ; sélection prix 3 000 000 → 6 000 000, année 2019+, kilométrage 100 000 km → adresse `?priceMax=6000000&mileageMax=100000&priceMin=3000000&yearMin=2019` et 8 résultats, identiques au décompte en base ; réouverture de cette adresse : les menus affichent les bonnes valeurs.
 
 **Point d'attention** : les paliers fixes remplacent la saisie libre (un budget de 2 750 000 DA se choisit désormais par 2 500 000 ou 3 000 000) ; les listes sont faciles à ajuster dans `search-filter-options.ts`.
+
+## Lot 111 — Essais : photo de couverture, mise en forme du texte et flux RSS (2026-09-19)
+
+Second lot de la rubrique Essais (le premier, Lot 110, posait le socle). Toujours aucun contenu fabriqué : la rubrique reste vide tant que la rédaction n'a pas publié d'essai.
+
+**Livré**
+- **Photo de couverture** (essais uniquement) : `BlogArticle.coverImageUrl` (migration additive `20260919095200_blog_cover_image`). Envoi par `POST /api/admin/blog/cover` (ADMIN, limité à 30 envois/heure) : octets réels contrôlés (JPEG/PNG/WebP, 8 Mo), rotation EXIF, **recadrage 16:9 à 1600×900**, nom généré, stockage `blog-covers` (S3 ou disque, comme les autres photos). L'adresse renvoyée est jointe à l'article à l'enregistrement, et **revalidée par `isBlogCoverUrl`** : seuls sont acceptés les fichiers `blog-covers/<uuid>.jpg` de notre propre stockage — jamais une URL externe, un fichier d'un autre dossier (logo, photo d'annonce, messagerie) ni un chemin détourné. Le fichier remplacé, retiré ou appartenant à un essai supprimé est effacé du stockage, sauf si un autre essai l'utilise encore. Affichée en tête de la page de l'essai, sur les cartes de l'index et de la page du modèle, et comme image de partage OpenGraph.
+- **Mise en forme Markdown** (`ArticleBody`, dépendance `react-markdown` 10) : titres `##`/`###`, gras, italique, listes, citations, liens. **Rendu restreint** : le HTML brut est ignoré (`<script>`, `<iframe>` disparaissent), les images sont retirées (la seule image d'un essai est sa couverture), les adresses `javascript:`/`data:`/`vbscript:` sont neutralisées (le texte du lien reste, sans lien), les liens externes s'ouvrent avec `rel="noopener noreferrer nofollow"`, un `#` est ramené au niveau 2 (la page a déjà son unique `<h1>`). Un texte sans balisage particulier s'affiche comme avant. Le formulaire d'administration affiche l'aide de mise en forme sous le champ texte. **Le rendu du magazine (`/mag`) est inchangé.**
+- **Flux RSS** : `/fr/essais/feed.xml` et `/ar/essais/feed.xml` (RSS 2.0, 30 derniers essais **parus**, langue de l'adresse ; autre langue → 404). Construit par la fonction pure `buildRssFeed` (échappement XML, caractères interdits retirés, dates RFC 822, image de couverture en `media:content`). Lu à chaque requête (`force-dynamic`) : un essai programmé y entre à sa date sans reconstruire. Déclaré dans le `<head>` de `/essais` (`<link rel="alternate" type="application/rss+xml">`) et proposé par un lien visible sous le titre de l'index (FR/AR).
+- 26 nouveaux tests unitaires (contrôle d'adresse de couverture, schéma zod, flux RSS, rendu Markdown dont les tentatives d'injection). 598/598 au vert.
+
+**Vérification de bout en bout en conditions réelles (PostgreSQL)**
+- **Formulaire d'administration réellement utilisé** : envoi d'une image carrée 1000×1000 → fichier stocké en **JPEG 1600×900**, bandes haute et basse rognées, aperçu 16:9 dans le formulaire, essai créé avec sa couverture.
+- **Page de l'essai** : couverture en tête, `og:image` absolue, un seul `<h1>`, titres/listes/citation/liens rendus ; le `<script>`, l'`<iframe>`, l'image espion et le lien `javascript:` du texte de test **n'ont produit aucun élément** (le titre de la page n'a pas été modifié par le script).
+- **Refus de l'envoi** : SVG, faux PNG (texte), fichier de 9 Mo, envoi vide → 400 (`photo_invalid_type`, `photo_too_large`, `validation`) ; anonyme → 403.
+- **Refus de l'adresse** : URL externe, fichier du dossier `avatars`, chemin `../` → 400 `invalid_cover` ; couverture sur un article simple → 400.
+- **Cycle de vie du fichier** : remplacement → ancien fichier supprimé (404) ; retrait → fichier supprimé ; suppression de l'essai → fichier supprimé ; couverture partagée par deux essais → la suppression de l'un **garde** le fichier de l'autre.
+- **Flux RSS** : XML bien formé (analysé par `DOMParser`) en FR et AR, bon type MIME, image de couverture présente ; brouillon absent ; essai programmé à +40 s **absent du flux, de l'index et de sa page (404)**, puis présent partout sans aucune action (33 s d'attente) ; `/en/essais/feed.xml` → 404.
+- **Production** : `next build` (flux, page d'essai, sitemap et envoi de couverture sont bien dynamiques) puis `next start` : flux vide valide (200), envoi anonyme 403.
+- `npm run test:e2e` 6/6 ; types et lint propres. Fichiers de test supprimés du disque (`public/uploads/blog-covers` vide) et base revenue à 0 article, 0 essai.
+
+**Points d'attention**
+- L'image est envoyée **dès son choix**, pas à l'enregistrement : si l'administrateur abandonne le formulaire, le fichier reste orphelin sur le stockage (défaut mineur, toléré comme pour les autres envois).
+- Pas d'aperçu du Markdown dans l'administration : un brouillon (ou un essai programmé) n'a pas de page publique, donc le rendu ne se voit qu'une fois l'essai paru. Un aperçu dans le formulaire serait un ajout utile.
+- Un texte d'essai contenant des caractères Markdown (`*`, `_`, `#`, `-` ou `1.` en début de ligne) est désormais interprété comme mise en forme.
+- Onze lignes du journal d'audit (`blog_article.create/update/delete`) issues de cette vérification restent en base de développement : leur suppression a été refusée par le garde-fou de l'environnement, je ne l'ai pas contournée. Elles concernent des essais de test déjà supprimés (titres « Essai Renault Clio… », « Essai B/C/D… »).
+- `package-lock.json` change nettement (la dépendance `react-markdown` apporte son arbre d'analyse Markdown) ; aucune autre dépendance directe n'a changé.
+
+**Hors périmètre** : couverture et Markdown pour le magazine (`/mag` inchangé), aperçu en direct, galerie de photos, avis de propriétaires par modèle, « Comprendre la note ».
