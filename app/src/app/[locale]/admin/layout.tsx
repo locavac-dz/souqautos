@@ -80,6 +80,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
         )}
         {isAdmin(user.role) && (
+          <Link href="/admin/editorial" className="text-slate-600 hover:text-slate-900">
+            {t("navEditorial")}
+          </Link>
+        )}
+        {isAdmin(user.role) && (
           <Link href="/admin/revue-de-presse" className="text-slate-600 hover:text-slate-900">
             {t("navPressReviews")}
           </Link>

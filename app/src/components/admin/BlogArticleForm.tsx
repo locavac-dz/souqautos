@@ -80,11 +80,14 @@ export function BlogArticleForm({
   article,
   status = "draft",
   brands = [],
+  defaultModel,
 }: {
   kind?: ArticleKind;
   article?: ExistingArticle;
   status?: InitialStatus;
   brands?: CatalogueBrand[];
+  // Lot 127 — modèle proposé d'emblée à la création d'un guide (lien « Rédiger un guide »).
+  defaultModel?: { brandId: number; modelId: number };
 }) {
   const t = useTranslations("AdminBlog");
   const tRt = useTranslations("AdminRoadTest");
@@ -109,8 +112,8 @@ export function BlogArticleForm({
 
   const rt = article?.roadTest;
   const gd = article?.guide;
-  const [brandId, setBrandId] = useState(rt?.brandId ? String(rt.brandId) : gd?.brandId ? String(gd.brandId) : "");
-  const [modelId, setModelId] = useState(rt?.modelId ? String(rt.modelId) : gd?.modelId ? String(gd.modelId) : "");
+  const [brandId, setBrandId] = useState(rt?.brandId ? String(rt.brandId) : gd?.brandId ? String(gd.brandId) : defaultModel ? String(defaultModel.brandId) : "");
+  const [modelId, setModelId] = useState(rt?.modelId ? String(rt.modelId) : gd?.modelId ? String(gd.modelId) : defaultModel ? String(defaultModel.modelId) : "");
   const [generationId, setGenerationId] = useState(rt?.generationId ? String(rt.generationId) : gd?.generationId ? String(gd.generationId) : "");
   const [checklistFr, setChecklistFr] = useState(gd?.checklistFr ?? "");
   const [checklistAr, setChecklistAr] = useState(gd?.checklistAr ?? "");

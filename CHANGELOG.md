@@ -2511,3 +2511,32 @@ Un nouveau type de contenu éditorial : le **guide d'achat**, un article de fond
 - Les textes de l'interface en arabe (dont la liste « ce qui est à vérifier ») n'ont pas été relus par un locuteur natif.
 
 **Reste du bloc 4** : suivi du rythme éditorial (revue de presse, essais, guides) : un tableau de bord pour l'équipe — dernière publication de chaque rubrique, contenus programmés, modèles populaires sans guide ni essai.
+
+## Lot 127 — Bloc 4 : suivi du rythme éditorial (2026-09-20)
+
+Un tableau de bord pour l'équipe éditoriale (`/admin/editorial`, ADMIN seulement, entrée « Rythme éditorial » du back-office) : où en est chaque rubrique, ce qui est programmé, les brouillons oubliés, et **quels modèles attendent un guide**. Il ne crée aucun contenu : il dit où en écrire un. Termine le bloc 4.
+
+**Livré**
+- **Une carte par rubrique** (revue de presse, essais, magazine, guides d'achat) : dernière publication (« aujourd'hui », « hier » ou « il y a N jours »), pastille **À jour / En retard / Rien de publié** par rapport à un objectif de cadence, compteurs publiés / programmés / brouillons, liens « Gérer » et « Nouveau ». Bandeau quand une rubrique est en retard.
+- **Objectifs par défaut** : revue de presse **7 jours** (« renouvelée chaque semaine »), essais et magazine **30 jours**, guides **60 jours**. Ce sont des repères d'affichage, **rien n'est bloqué ni envoyé** ; ils se règlent dans `src/lib/editorial.ts` (à ajuster au rythme réel de la rédaction).
+- **Courbe de publication** des 12 dernières semaines (semaines commençant le lundi), tous contenus confondus ; un contenu programmé compte à sa date de parution, pas avant.
+- **Programmé** (le plus proche d'abord) et **Brouillons** (le plus ancien d'abord, avec « oublié ? » au bout de 14 jours sans modification), revue de presse incluse, chacun avec son lien d'édition ; mention « Seuls les 20 premiers sont listés (N au total) » quand la liste est plafonnée.
+- **Modèles qui attendent un guide** : les modèles les plus présents sur le site (annonces publiées) qui n'ont **pas de guide paru**, avec leurs annonces, leurs vues sur 30 jours (audience du Lot 124), et ce qui existe déjà (essais, revue de presse), plus la **couverture** (« X % des modèles présents sur le site ont un guide »). Chaque ligne a un lien **« Rédiger un guide »** qui ouvre le formulaire avec le modèle déjà choisi (valeur invalide ou inconnue simplement ignorée).
+- Les jours sont comptés en **jours calendaires, heure d'Algérie** : une publication de la veille à 23 h 30 s'affiche « hier », jamais « aujourd'hui » à côté de la date d'hier. Pluriels corrects en français et en arabe (« il y a 0 jours » et « 1 jours » évités), heure sur 24 h, arabe en RTL.
+- **25 nouveaux tests** (1 040 → 1 065) : fraîcheur par rapport à l'objectif, jours calendaires (frontières de mois, d'année, minuit d'Algérie), brouillon oublié, tri et couverture des lacunes, paramètre `?modele=`, et lecture en base simulée (comptes et dates par rubrique, ordre des programmés, brouillons, semaines, lacunes avec leurs colonnes, seuls les contenus **parus** comptent).
+
+**Vérification en conditions réelles** (base et serveur de développement, compte administrateur jetable ; contenus de test placés à des dates choisies puis **supprimés**)
+- Accès : anonyme → connexion, membre ordinaire → accueil, **modérateur → tableau de bord d'administration** (la page est réservée aux ADMIN), administrateur → page.
+- **Chiffres comparés à la base** : revue de presse 8 publiées / 1 programmée / 32 brouillons, 1 article, 1 essai, 1 guide publié + 1 programmé + 1 brouillon, 24 modèles sur le site : tout concorde. Magazine publié il y a 40 jours → **« En retard » de 10 jours** ; essai d'il y a 10 jours → À jour ; guide de la Duster publié → la **Duster sort des lacunes** ; couverture « 4 % (1 sur 24) » ; 11 contenus sur 12 semaines ; ordre du programmé (revue programmée demain avant le guide programmé dans 4 jours) ; brouillon de 30 jours « oublié ? », ceux d'aujourd'hui non.
+- « Rédiger un guide » ouvre le formulaire avec la bonne marque et le bon modèle ; `?modele=abc`, `0`, `-4`, `99999999`, `1;DROP` : formulaire normal, sans modèle choisi, sans erreur.
+- Rendu en français, en arabe (RTL) ; **la page débordait de 645 px sur un téléphone** (texte réservé aux lecteurs d'écran positionné en absolu hors du conteneur défilant du tableau, et longs titres de brouillons) : corrigé, aucun défilement horizontal à 390 px dans les deux langues ; aucune erreur de console. 1 065 tests, `npm run test:e2e` 6/6, `npm run test:e2e:pwa` 7/7, types et lint propres.
+
+**Points d'attention**
+- **Objectifs de cadence = mes valeurs par défaut**, tirées de ce que vous m'avez dit (revue de presse hebdomadaire) et de ce qui me semble raisonnable pour le reste. À corriger si la rédaction vise autre chose.
+- Le tableau ne connaît que ce qui est **dans le site** : il ne sait pas ce qui est en cours de rédaction ailleurs.
+- **La couverture ne compte que les modèles qui ont au moins une annonce publiée** : un modèle sans annonce n'apparaît pas dans les lacunes, même s'il mériterait un guide.
+- Les 32 brouillons de revue de presse saisis plus tôt s'affichent tels quels ; le décompte de la revue de presse (« 7 publiée(s) ») inclut donc ce qui a été publié depuis.
+- **Journal d'audit** : les créations et suppressions de test ont laissé des lignes non supprimables ; le compte administrateur jetable a été **neutralisé** (rôle particulier, suspendu, mot de passe inutilisable), les deux autres supprimés.
+- Textes de l'interface en arabe non relus par un locuteur natif.
+
+**Bloc 4 terminé** : mesure d'audience et référencement (Lot 124), photos des annonces de démonstration (Lot 125), guides d'achat (Lot 126), rythme éditorial (Lot 127). Le contenu — guides, essais, revue de presse — reste à rédiger par votre équipe.
