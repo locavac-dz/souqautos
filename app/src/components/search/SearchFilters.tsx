@@ -2,7 +2,9 @@
 
 import { cloneElement, isValidElement, useState, type ReactElement } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import type { ListingCategory } from "@prisma/client";
 import { useRouter } from "@/i18n/navigation";
+import { filterCatalogueByCategory, modelInCategory } from "@/lib/vehicle-catalogue";
 import {
   MILEAGE_STEPS_KM,
   PRICE_STEPS_DZD,
@@ -11,7 +13,7 @@ import {
   yearOptions,
 } from "@/lib/search-filter-options";
 
-type ModelRow = { id: number; name: string; brandId: number };
+type ModelRow = { id: number; name: string; brandId: number; categories: ListingCategory[] };
 type BrandRow = { id: number; name: string; models: ModelRow[] };
 type CommuneRow = { id: number; nomFr: string; nomAr: string };
 type WilayaRow = { id: number; nomFr: string; nomAr: string; communes: CommuneRow[] };
@@ -76,7 +78,9 @@ export function SearchFilters({
   const numberLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
   const [values, setValues] = useState<SearchFilterValues>(initialValues);
 
-  const selectedBrand = brands.find((b) => b.id === Number(values.brandId));
+  // Lot 130 — marques et modèles proposés selon la catégorie filtrée (les motos n'affichent pas les marques de camions).
+  const visibleBrands = filterCatalogueByCategory(brands, values.category as ListingCategory | undefined);
+  const selectedBrand = visibleBrands.find((b) => b.id === Number(values.brandId));
   const selectedWilaya = wilayas.find((w) => w.id === Number(values.wilayaId));
   const selectedEquipmentIds = values.equipmentIds ? values.equipmentIds.split(",").map(Number) : [];
   const equipmentsByCategory = new Map<string, EquipmentRow[]>();
@@ -94,12 +98,27 @@ export function SearchFilters({
   }
 
   function set<K extends keyof SearchFilterValues>(key: K, value: string) {
-    setValues((prev) => ({
-      ...prev,
-      [key]: value || undefined,
-      ...(key === "brandId" ? { modelId: undefined } : {}),
-      ...(key === "wilayaId" ? { communeId: undefined } : {}),
-    }));
+    setValues((prev) => {
+      const next = {
+        ...prev,
+        [key]: value || undefined,
+        ...(key === "brandId" ? { modelId: undefined } : {}),
+        ...(key === "wilayaId" ? { communeId: undefined } : {}),
+      } as SearchFilterValues;
+      if (key === "category") {
+        // Une marque ou un modèle devenu impossible dans la nouvelle catégorie est retiré du filtre.
+        const category = next.category as ListingCategory | undefined;
+        const brand = brands.find((b) => b.id === Number(next.brandId));
+        if (brand && filterCatalogueByCategory([brand], category).length === 0) {
+          next.brandId = undefined;
+          next.modelId = undefined;
+        } else {
+          const model = brand?.models.find((m) => m.id === Number(next.modelId));
+          if (model && !modelInCategory(model, category)) next.modelId = undefined;
+        }
+      }
+      return next;
+    });
   }
 
   function navigateWith(filters: Record<string, string | undefined>, aiAssisted: boolean) {
@@ -182,7 +201,7 @@ export function SearchFilters({
               className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
             >
               <option value="">{t("any")}</option>
-              {brands.map((b) => (
+              {visibleBrands.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
                 </option>

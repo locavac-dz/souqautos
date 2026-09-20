@@ -73,6 +73,35 @@ describe("mapCsvRowToListingInput", () => {
     expect(result).toEqual({ ok: false, error: "invalid_category" });
   });
 
+  describe("catégorie du véhicule (Lot 130)", () => {
+    const withCategories = (): ImportLookups => ({
+      brands: new Map([
+        ["renault", { id: 1, models: new Map([["clio", 10], ["kangoo", 11]]), modelCategories: new Map<number, readonly ("VOITURE" | "UTILITAIRE")[]>([[10, ["VOITURE"]], [11, ["VOITURE", "UTILITAIRE"]]]) }],
+      ]),
+      wilayas: new Map([["16", 16]]),
+    });
+
+    it("rejects a model that does not exist in the announced category", () => {
+      const result = mapCsvRowToListingInput(validRecord({ categorie: "UTILITAIRE" }), withCategories());
+      expect(result).toEqual({ ok: false, error: "wrong_category" });
+    });
+
+    it("accepts a dual-use model in either category", () => {
+      expect(mapCsvRowToListingInput(validRecord({ categorie: "UTILITAIRE", modele: "Kangoo" }), withCategories()).ok).toBe(true);
+      expect(mapCsvRowToListingInput(validRecord({ categorie: "VOITURE", modele: "Kangoo" }), withCategories()).ok).toBe(true);
+    });
+
+    it("rejects a known brand with a free-text model when the brand has nothing in that category", () => {
+      const result = mapCsvRowToListingInput(validRecord({ categorie: "DEUX_ROUES", modele: "Modèle inconnu" }), withCategories());
+      expect(result).toEqual({ ok: false, error: "wrong_category" });
+    });
+
+    it("does not check the category for « AUTRE », nor when the lookup carries no categories", () => {
+      expect(mapCsvRowToListingInput(validRecord({ categorie: "AUTRE" }), withCategories()).ok).toBe(true);
+      expect(mapCsvRowToListingInput(validRecord({ categorie: "DEUX_ROUES" }), makeLookups()).ok).toBe(true);
+    });
+  });
+
   it("rejects an invalid fuel type", () => {
     const result = mapCsvRowToListingInput(validRecord({ carburant: "NUCLEAIRE" }), makeLookups());
     expect(result).toEqual({ ok: false, error: "invalid_fuel_type" });

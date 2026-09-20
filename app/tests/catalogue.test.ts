@@ -32,7 +32,8 @@ describe("catalogue data", () => {
   it("never gives a model an empty Arabic name (Lot 94)", () => {
     for (const { models } of catalogue) {
       for (const model of models) {
-        if (typeof model !== "string") expect(model.nameAr.trim().length).toBeGreaterThan(0);
+        // Le nom arabe est facultatif (Lot 130 : les modèles ajoutés n'en ont pas), mais jamais vide s'il existe.
+        if (typeof model !== "string" && model.nameAr !== undefined) expect(model.nameAr.trim().length).toBeGreaterThan(0);
       }
     }
   });

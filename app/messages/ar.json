@@ -450,7 +450,14 @@
     "wilayaTitle": "سيارات مستعملة في {wilaya}",
     "noStatsWilaya": "لا يوجد إعلان منشور بعد في هذه الولاية.",
     "topBrandsTitle": "الماركات الأكثر عرضًا",
-    "viewAllWilayaListings": "عرض جميع الإعلانات في {wilaya}"
+    "viewAllWilayaListings": "عرض جميع الإعلانات في {wilaya}",
+    "filterLabel": "الفئة",
+    "filterAll": "الكل",
+    "categoryVOITURE": "سيارات",
+    "categoryUTILITAIRE": "مركبات نفعية",
+    "categoryPOIDS_LOURD": "شاحنات ثقيلة",
+    "categoryDEUX_ROUES": "دراجات نارية",
+    "emptyCategory": "لا توجد ماركات في هذه الفئة."
   },
   "Status": {
     "BROUILLON": "مسودة",
@@ -835,6 +842,7 @@
     "errorEmptyFile": "الملف لا يحتوي على أي سطر بيانات.",
     "errorTooManyRows": "الملف يحتوي على عدد كبير جدًا من الأسطر (500 كحد أقصى لكل استيراد).",
     "error_invalid_category": "فئة غير صالحة",
+    "error_wrong_category": "الماركة أو الموديل غير متوفر في هذه الفئة",
     "error_invalid_fuel_type": "نوع وقود غير صالح",
     "error_invalid_gearbox": "ناقل حركة غير صالح",
     "error_invalid_condition": "حالة غير صالحة",
@@ -991,6 +999,12 @@
     "errorHasModels": "تعذر الحذف: لا تزال هذه الماركة تحتوي على موديلات.",
     "errorHasListings": "تعذر الحذف: لا تزال إعلانات تستخدمه.",
     "errorHasGuides": "لا يمكن الحذف: يوجد دليل شراء مرتبط بهذا الطراز.",
+    "categoriesLabel": "فئات الموديل",
+    "categoryVOITURE": "سيارة",
+    "categoryUTILITAIRE": "مركبة نفعية",
+    "categoryPOIDS_LOURD": "شاحنة ثقيلة",
+    "categoryDEUX_ROUES": "دراجة نارية",
+    "errorCategories": "اختر فئة واحدة على الأقل.",
     "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى."
   },
   "AdminSettings": {

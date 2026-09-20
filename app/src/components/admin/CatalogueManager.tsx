@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { CATALOGUE_CATEGORIES, type CatalogueCategory } from "@/lib/vehicle-catalogue";
 
-type ModelRow = { id: number; name: string; slug: string; listingCount: number };
+type ModelRow = { id: number; name: string; slug: string; categories: string[]; listingCount: number };
 type BrandRow = { id: number; name: string; slug: string; listingCount: number; models: ModelRow[] };
 
 const ERROR_KEY: Record<string, string> = {
@@ -17,7 +18,40 @@ const ERROR_KEY: Record<string, string> = {
   forbidden: "errorGeneric",
   not_found: "errorGeneric",
   validation: "errorGeneric",
+  invalid_categories: "errorCategories",
 };
+
+const CATEGORY_LABEL: Record<CatalogueCategory, string> = {
+  VOITURE: "categoryVOITURE",
+  UTILITAIRE: "categoryUTILITAIRE",
+  POIDS_LOURD: "categoryPOIDS_LOURD",
+  DEUX_ROUES: "categoryDEUX_ROUES",
+};
+
+// Lot 130 — cases à cocher des catégories d'un modèle (au moins une).
+function CategoryChecks({ value, onChange, idPrefix }: { value: CatalogueCategory[]; onChange: (next: CatalogueCategory[]) => void; idPrefix: string }) {
+  const t = useTranslations("AdminCatalogue");
+  return (
+    <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <legend className="sr-only">{t("categoriesLabel")}</legend>
+      {CATALOGUE_CATEGORIES.map((category) => (
+        <label key={category} htmlFor={`${idPrefix}-${category}`} className="flex items-center gap-1 text-xs text-slate-600">
+          <input
+            id={`${idPrefix}-${category}`}
+            type="checkbox"
+            checked={value.includes(category)}
+            onChange={(e) => onChange(CATALOGUE_CATEGORIES.filter((c) => (c === category ? e.target.checked : value.includes(c))))}
+          />
+          {t(CATEGORY_LABEL[category])}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+function asCategories(values: string[]): CatalogueCategory[] {
+  return CATALOGUE_CATEGORIES.filter((c) => values.includes(c));
+}
 
 async function postJson(url: string, body: unknown) {
   const res = await fetch(url, {
@@ -111,6 +145,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
 
   const [addingModel, setAddingModel] = useState(false);
   const [newModelName, setNewModelName] = useState("");
+  const [newModelCategories, setNewModelCategories] = useState<CatalogueCategory[]>(["VOITURE"]);
   const [addModelError, setAddModelError] = useState<string | null>(null);
   const [addModelPending, setAddModelPending] = useState(false);
 
@@ -144,10 +179,11 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
     e.preventDefault();
     setAddModelPending(true);
     setAddModelError(null);
-    const result = await postJson(`/api/admin/brands/${brand.id}/models`, { name: newModelName });
+    const result = await postJson(`/api/admin/brands/${brand.id}/models`, { name: newModelName, categories: newModelCategories });
     setAddModelPending(false);
     if (result.ok) {
       setNewModelName("");
+      setNewModelCategories(["VOITURE"]);
       setAddingModel(false);
       router.refresh();
       return;
@@ -230,9 +266,10 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
                 placeholder={t("modelNameLabel")}
                 className="w-48 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
               />
+              <CategoryChecks value={newModelCategories} onChange={setNewModelCategories} idPrefix={`new-model-${brand.id}`} />
               <button
                 type="submit"
-                disabled={addModelPending}
+                disabled={addModelPending || newModelCategories.length === 0}
                 className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
               >
                 {t("saveAction")}
@@ -270,6 +307,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(model.name);
+  const [categories, setCategories] = useState<CatalogueCategory[]>(asCategories(model.categories));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -277,7 +315,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
     e.preventDefault();
     setPending(true);
     setError(null);
-    const result = await patchJson(`/api/admin/models/${model.id}`, { name });
+    const result = await patchJson(`/api/admin/models/${model.id}`, { name, categories });
     setPending(false);
     if (result.ok) {
       setEditing(false);
@@ -311,9 +349,10 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
             onChange={(e) => setName(e.target.value)}
             className="w-40 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
           />
+          <CategoryChecks value={categories} onChange={setCategories} idPrefix={`model-${model.id}`} />
           <button
             type="submit"
-            disabled={pending}
+            disabled={pending || categories.length === 0}
             className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
           >
             {t("saveAction")}
@@ -323,6 +362,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
             onClick={() => {
               setEditing(false);
               setName(model.name);
+              setCategories(asCategories(model.categories));
               setError(null);
             }}
             className="text-xs text-slate-400 hover:text-slate-600"
@@ -334,7 +374,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
         <div>
           <span className="text-slate-800">{model.name}</span>
           <span className="ml-2 text-xs text-slate-400">
-            {model.slug} · {t("listingCount", { count: model.listingCount })}
+            {model.slug} · {asCategories(model.categories).map((c) => t(CATEGORY_LABEL[c])).join(", ")} · {t("listingCount", { count: model.listingCount })}
           </span>
         </div>
       )}

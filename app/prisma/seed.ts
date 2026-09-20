@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { catalogue, slugify } from "./catalogue-data";
+import { catalogue, modelCategories, slugify } from "./catalogue-data";
 import { equipmentCatalogue } from "./equipment-data";
 import { communes } from "./commune-data";
 import { generations } from "./generation-data";
@@ -107,7 +107,8 @@ async function main() {
   console.log(`Seed OK — ${communes.length} communes.`);
 
   let modelCount = 0;
-  for (const { brand, nameAr, models } of catalogue) {
+  for (const entry of catalogue) {
+    const { brand, nameAr, models } = entry;
     const brandRow = await prisma.brand.upsert({
       where: { slug: slugify(brand) },
       update: { name: brand, nameAr: nameAr ?? null },
@@ -116,11 +117,13 @@ async function main() {
 
     for (const model of models) {
       const modelName = typeof model === "string" ? model : model.name;
-      const modelNameAr = typeof model === "string" ? null : model.nameAr;
+      const modelNameAr = typeof model === "string" ? null : (model.nameAr ?? null);
+      // Lot 130 — catégories d'annonce du modèle (voiture / utilitaire / poids lourd / deux-roues).
+      const categories = modelCategories(entry, model);
       await prisma.model.upsert({
         where: { brandId_slug: { brandId: brandRow.id, slug: slugify(modelName) } },
-        update: { name: modelName, nameAr: modelNameAr },
-        create: { brandId: brandRow.id, slug: slugify(modelName), name: modelName, nameAr: modelNameAr },
+        update: { name: modelName, nameAr: modelNameAr, categories },
+        create: { brandId: brandRow.id, slug: slugify(modelName), name: modelName, nameAr: modelNameAr, categories },
       });
       modelCount += 1;
     }

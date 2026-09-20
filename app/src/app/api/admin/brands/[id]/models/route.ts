@@ -8,8 +8,10 @@ import { slugify } from "@/lib/slugify";
 import { writeAuditLog } from "@/lib/audit-log";
 import { parsePositiveIntId } from "@/lib/validation/int-bounds";
 import { isUniqueViolation } from "@/lib/prisma-errors";
+import { normalizeModelCategories, type CatalogueCategory } from "@/lib/vehicle-catalogue";
 
-const bodySchema = z.object({ name: z.string() });
+// Lot 130 — `categories` (voiture, utilitaire, poids lourd, deux-roues) : facultatif, « voiture » par défaut.
+const bodySchema = z.object({ name: z.string(), categories: z.unknown().optional() });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -39,6 +41,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
+  let categories: CatalogueCategory[] = ["VOITURE"];
+  if (parsed.data.categories !== undefined) {
+    const normalized = normalizeModelCategories(parsed.data.categories);
+    if (!normalized) return NextResponse.json({ error: "invalid_categories" }, { status: 400 });
+    categories = normalized;
+  }
+
   const slug = slugify(name);
   const existing = await prisma.model.findUnique({ where: { brandId_slug: { brandId, slug } } });
   if (existing) {
@@ -47,7 +56,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   let model;
   try {
-    model = await prisma.model.create({ data: { brandId, name, slug } });
+    model = await prisma.model.create({ data: { brandId, name, slug, categories } });
   } catch (error) {
     if (isUniqueViolation(error)) {
       return NextResponse.json({ error: "slug_taken" }, { status: 409 });
@@ -60,7 +69,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     action: "model.create",
     targetType: "Model",
     targetId: String(model.id),
-    details: { brandId, name, slug },
+    details: { brandId, name, slug, categories },
   });
 
   return NextResponse.json({ model }, { status: 201 });

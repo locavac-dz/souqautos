@@ -5,18 +5,13 @@ import { useTranslations } from "next-intl";
 import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
 import type { ListingCategory } from "@prisma/client";
+import { filterCatalogueByCategory, LISTING_CATEGORIES, modelInCategory } from "@/lib/vehicle-catalogue";
 
 type GenerationRow = { id: number; name: string; yearStart: number; yearEnd: number | null };
-type ModelRow = { id: number; slug: string; name: string; brandId: number; generations: GenerationRow[] };
+type ModelRow = { id: number; slug: string; name: string; brandId: number; categories: ListingCategory[]; generations: GenerationRow[] };
 type BrandRow = { id: number; slug: string; name: string; models: ModelRow[] };
 
-const CATEGORIES: ListingCategory[] = [
-  "VOITURE",
-  "UTILITAIRE",
-  "POIDS_LOURD",
-  "DEUX_ROUES",
-  "AUTRE",
-];
+const CATEGORIES = LISTING_CATEGORIES;
 
 const CATEGORY_KEY: Record<ListingCategory, string> = {
   VOITURE: "categoryVoiture",
@@ -33,9 +28,11 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
   const [modelOther, setModelOther] = useState(!data.modelId && Boolean(data.modelFreeText));
   const [error, setError] = useState<string | null>(null);
 
+  // Lot 130 — marques et modèles proposés selon la catégorie choisie (un deux-roues ne propose pas Renault).
+  const visibleBrands = useMemo(() => filterCatalogueByCategory(brands, data.category), [brands, data.category]);
   const selectedBrand = useMemo(
-    () => brands.find((b) => b.id === data.brandId) ?? null,
-    [brands, data.brandId]
+    () => visibleBrands.find((b) => b.id === data.brandId) ?? null,
+    [visibleBrands, data.brandId]
   );
   const selectedModel = useMemo(
     () => selectedBrand?.models.find((m) => m.id === data.modelId) ?? null,
@@ -65,7 +62,24 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
         <label className="block text-sm font-medium text-slate-700 mb-1">{t("category")}</label>
         <select
           value={data.category ?? ""}
-          onChange={(e) => setData({ category: e.target.value as ListingCategory })}
+          onChange={(e) => {
+            const category = e.target.value as ListingCategory;
+            // Un choix devenu impossible dans la nouvelle catégorie est effacé, jamais conservé en silence.
+            const brand = brands.find((b) => b.id === data.brandId);
+            const brandFits = !brand || filterCatalogueByCategory([brand], category).length > 0;
+            const model = brand?.models.find((m) => m.id === data.modelId);
+            const modelFits = !model || modelInCategory(model, category);
+            if (!brandFits) {
+              setBrandOther(false);
+              setModelOther(false);
+              setData({ category, brandId: undefined, brandName: undefined, modelId: undefined, modelName: undefined, generationId: undefined, generationName: undefined });
+            } else if (!modelFits) {
+              setModelOther(false);
+              setData({ category, modelId: undefined, modelName: undefined, generationId: undefined, generationName: undefined });
+            } else {
+              setData({ category });
+            }
+          }}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
         >
           <option value="" disabled>
@@ -92,7 +106,7 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
             }
             setBrandOther(false);
             setModelOther(false);
-            const brand = brands.find((b) => b.id === Number(e.target.value));
+            const brand = visibleBrands.find((b) => b.id === Number(e.target.value));
             setData({
               brandId: brand?.id,
               brandName: brand?.name,
@@ -109,7 +123,7 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
           <option value="" disabled>
             {t("brandPlaceholder")}
           </option>
-          {brands.map((b) => (
+          {visibleBrands.map((b) => (
             <option key={b.id} value={b.id}>
               {b.name}
             </option>

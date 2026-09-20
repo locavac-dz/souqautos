@@ -450,7 +450,14 @@
     "wilayaTitle": "Voitures d'occasion à {wilaya}",
     "noStatsWilaya": "Pas encore d'annonce publiée dans cette wilaya.",
     "topBrandsTitle": "Marques les plus proposées",
-    "viewAllWilayaListings": "Voir toutes les annonces à {wilaya}"
+    "viewAllWilayaListings": "Voir toutes les annonces à {wilaya}",
+    "filterLabel": "Catégorie",
+    "filterAll": "Toutes",
+    "categoryVOITURE": "Voitures",
+    "categoryUTILITAIRE": "Utilitaires",
+    "categoryPOIDS_LOURD": "Poids lourds",
+    "categoryDEUX_ROUES": "Deux-roues",
+    "emptyCategory": "Aucune marque dans cette catégorie."
   },
   "Status": {
     "BROUILLON": "Brouillon",
@@ -835,6 +842,7 @@
     "errorEmptyFile": "Le fichier ne contient aucune ligne de données.",
     "errorTooManyRows": "Le fichier contient trop de lignes (500 maximum par import).",
     "error_invalid_category": "Catégorie invalide",
+    "error_wrong_category": "Marque ou modèle indisponible dans cette catégorie",
     "error_invalid_fuel_type": "Type de carburant invalide",
     "error_invalid_gearbox": "Boîte de vitesses invalide",
     "error_invalid_condition": "État invalide",
@@ -991,6 +999,12 @@
     "errorHasModels": "Impossible de supprimer : cette marque a encore des modèles.",
     "errorHasListings": "Impossible de supprimer : des annonces l'utilisent encore.",
     "errorHasGuides": "Impossible de supprimer : un guide d'achat est rattaché à ce modèle.",
+    "categoriesLabel": "Catégories du modèle",
+    "categoryVOITURE": "Voiture",
+    "categoryUTILITAIRE": "Utilitaire",
+    "categoryPOIDS_LOURD": "Poids lourd",
+    "categoryDEUX_ROUES": "Deux-roues",
+    "errorCategories": "Choisissez au moins une catégorie.",
     "errorGeneric": "Une erreur est survenue. Réessayez."
   },
   "AdminSettings": {

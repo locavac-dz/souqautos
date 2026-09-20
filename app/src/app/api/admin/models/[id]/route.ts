@@ -6,8 +6,10 @@ import { isAdmin } from "@/lib/auth-server/roles";
 import { validateCatalogueName } from "@/lib/catalogue-admin";
 import { writeAuditLog } from "@/lib/audit-log";
 import { parsePositiveIntId } from "@/lib/validation/int-bounds";
+import { normalizeModelCategories } from "@/lib/vehicle-catalogue";
 
-const bodySchema = z.object({ name: z.string() });
+// Lot 130 — `categories` facultatif : absent = catégories inchangées.
+const bodySchema = z.object({ name: z.string(), categories: z.unknown().optional() });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -32,23 +34,28 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
+  const categories = parsed.data.categories === undefined ? undefined : normalizeModelCategories(parsed.data.categories);
+  if (categories === null) {
+    return NextResponse.json({ error: "invalid_categories" }, { status: 400 });
+  }
+
   const model = await prisma.model.findUnique({ where: { id: modelId } });
   if (!model) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
   // Même règle que pour les marques : le slug ne change jamais après création.
-  await prisma.model.update({ where: { id: modelId }, data: { name } });
+  await prisma.model.update({ where: { id: modelId }, data: { name, ...(categories ? { categories } : {}) } });
 
   await writeAuditLog({
     adminId: user.id,
     action: "model.update",
     targetType: "Model",
     targetId: id,
-    details: { previousName: model.name, newName: name },
+    details: { previousName: model.name, newName: name, ...(categories ? { previousCategories: model.categories, newCategories: categories } : {}) },
   });
 
-  return NextResponse.json({ name });
+  return NextResponse.json({ name, categories: categories ?? model.categories });
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

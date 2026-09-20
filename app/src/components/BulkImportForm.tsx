@@ -9,6 +9,7 @@ type ImportResult = { imported: number; rejected: RejectedRow[] };
 
 const KNOWN_ERRORS = new Set([
   "invalid_category",
+  "wrong_category",
   "invalid_fuel_type",
   "invalid_gearbox",
   "invalid_condition",

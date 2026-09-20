@@ -71,7 +71,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     brands: new Map(
       brands.map((b) => [
         b.name.trim().toLowerCase(),
-        { id: b.id, models: new Map(b.models.map((m) => [m.name.trim().toLowerCase(), m.id])) },
+        {
+          id: b.id,
+          models: new Map(b.models.map((m) => [m.name.trim().toLowerCase(), m.id])),
+          modelCategories: new Map(b.models.map((m) => [m.id, m.categories])),
+        },
       ])
     ),
     wilayas: new Map([

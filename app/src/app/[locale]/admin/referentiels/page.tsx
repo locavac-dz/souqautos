@@ -28,6 +28,7 @@ export default async function CatalogueAdminPage() {
       id: model.id,
       name: model.name,
       slug: model.slug,
+      categories: model.categories,
       listingCount: model._count.listings,
     })),
   }));

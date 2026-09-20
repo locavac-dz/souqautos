@@ -7,8 +7,12 @@ import {
   conditions,
   type ListingInput,
 } from "@/lib/validation/listing";
+import { isCatalogueCategory } from "@/lib/vehicle-catalogue";
+import type { ListingCategory } from "@prisma/client";
 
-export type BrandLookup = { id: number; models: Map<string, number> };
+// Lot 130 — `modelCategories` (id de modèle → catégories) permet de refuser une ligne dont la marque ou le modèle
+// n'existe pas dans la catégorie annoncée (un Actros en « DEUX_ROUES »). Absent : aucun contrôle de catégorie.
+export type BrandLookup = { id: number; models: Map<string, number>; modelCategories?: Map<number, readonly ListingCategory[]> };
 export type ImportLookups = {
   brands: Map<string, BrandLookup>;
   wilayas: Map<string, number>;
@@ -84,6 +88,12 @@ export function mapCsvRowToListingInput(
     const modelKey = normalizeKey(record.modele ?? "");
     modelId = brand.models.get(modelKey);
     if (!modelId && record.modele?.trim()) modelFreeText = record.modele.trim();
+    if (brand.modelCategories && isCatalogueCategory(category)) {
+      const fits = modelId
+        ? (brand.modelCategories.get(modelId) ?? []).includes(category)
+        : [...brand.modelCategories.values()].some((categories) => categories.includes(category));
+      if (!fits) return { ok: false, error: "wrong_category" };
+    }
   } else if (record.marque?.trim()) {
     brandFreeText = record.marque.trim();
     if (record.modele?.trim()) modelFreeText = record.modele.trim();

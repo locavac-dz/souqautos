@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { hasCarBodyFields } from "@/lib/listing-category-fields";
+import { filterCatalogueByCategory, LISTING_CATEGORIES, modelInCategory } from "@/lib/vehicle-catalogue";
 import type {
   Listing,
   FuelType,
@@ -16,7 +17,7 @@ import type {
 type CommuneRow = { id: number; nomFr: string; nomAr: string };
 type WilayaRow = { id: number; nomFr: string; nomAr: string; communes: CommuneRow[] };
 type GenerationRow = { id: number; name: string; yearStart: number; yearEnd: number | null };
-type ModelRow = { id: number; slug: string; name: string; brandId: number; generations: GenerationRow[] };
+type ModelRow = { id: number; slug: string; name: string; brandId: number; categories: ListingCategory[]; generations: GenerationRow[] };
 type BrandRow = { id: number; slug: string; name: string; models: ModelRow[] };
 type EquipmentRow = { id: number; nameFr: string; nameAr: string; category: string };
 
@@ -28,7 +29,7 @@ const EQUIPMENT_CATEGORY_KEY: Record<string, string> = {
   EXTERIEUR: "equipmentCategoryExterieur",
 };
 
-const CATEGORIES: ListingCategory[] = ["VOITURE", "UTILITAIRE", "POIDS_LOURD", "DEUX_ROUES", "AUTRE"];
+const CATEGORIES = LISTING_CATEGORIES;
 const CATEGORY_KEY: Record<ListingCategory, string> = {
   VOITURE: "categoryVoiture",
   UTILITAIRE: "categoryUtilitaire",
@@ -44,6 +45,7 @@ const ERROR_KEY: Record<string, string> = {
   unknown_generation: "errorValidation",
   unknown_brand: "errorValidation",
   unknown_model: "errorValidation",
+  wrong_category: "errorValidation",
   at_least_one_photo: "errorAtLeastOnePhoto",
   too_many_photos: "errorTooManyPhotos",
   photo_too_large: "errorPhotoTooLarge",
@@ -78,7 +80,9 @@ export function ListingEditForm({
   const [modelFreeText, setModelFreeText] = useState(listing.modelFreeText ?? "");
   const [modelOther, setModelOther] = useState(!listing.modelId && Boolean(listing.modelFreeText));
 
-  const selectedBrand = useMemo(() => brands.find((b) => b.id === brandId) ?? null, [brands, brandId]);
+  // Lot 130 — marques et modèles proposés selon la catégorie choisie.
+  const visibleBrands = useMemo(() => filterCatalogueByCategory(brands, category), [brands, category]);
+  const selectedBrand = useMemo(() => visibleBrands.find((b) => b.id === brandId) ?? null, [visibleBrands, brandId]);
   const [generationId, setGenerationId] = useState<number | undefined>(listing.generationId ?? undefined);
   const selectedModelForGeneration = useMemo(
     () => selectedBrand?.models.find((m) => m.id === modelId) ?? null,
@@ -223,7 +227,24 @@ export function ListingEditForm({
         <select
           id="edit-category"
           value={category}
-          onChange={(e) => setCategory(e.target.value as ListingCategory)}
+          onChange={(e) => {
+            const next = e.target.value as ListingCategory;
+            setCategory(next);
+            // Un choix devenu impossible dans la nouvelle catégorie est effacé, jamais conservé en silence.
+            const brand = brands.find((b) => b.id === brandId);
+            if (brand && filterCatalogueByCategory([brand], next).length === 0) {
+              setBrandId(undefined);
+              setModelId(undefined);
+              setGenerationId(undefined);
+              setModelOther(false);
+            } else {
+              const model = brand?.models.find((m) => m.id === modelId);
+              if (model && !modelInCategory(model, next)) {
+                setModelId(undefined);
+                setGenerationId(undefined);
+              }
+            }
+          }}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
         >
           {CATEGORIES.map((c) => (
@@ -261,7 +282,7 @@ export function ListingEditForm({
           <option value="" disabled>
             {tWizard("brandPlaceholder")}
           </option>
-          {brands.map((b) => (
+          {visibleBrands.map((b) => (
             <option key={b.id} value={b.id}>
               {b.name}
             </option>

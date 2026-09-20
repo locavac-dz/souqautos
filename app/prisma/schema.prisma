@@ -163,6 +163,11 @@ model Model {
   // usage réel écrits en latin même dans une phrase arabe — jamais couverts
   // par construction (aucune entrée nameAr n'existe pour eux dans le seed).
   nameAr String?
+  // Lot 130 — catégories d'annonce où ce modèle est proposé (voiture, utilitaire, poids lourd, deux-roues).
+  // Un TABLEAU et non une valeur : un Kangoo ou un Hilux s'annonce aussi bien comme voiture que comme
+  // utilitaire. La catégorie d'une MARQUE se déduit de ses modèles (Renault : voitures + utilitaires + camions),
+  // elle n'est jamais saisie à part. Par défaut VOITURE : c'était le seul usage avant ce lot.
+  categories ListingCategory[] @default([VOITURE])
   listings Listing[]
   generations Generation[]
   roadTests RoadTest[]

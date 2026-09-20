@@ -1,4 +1,6 @@
+import type { ListingCategory } from "@prisma/client";
 import { prisma } from "./prisma";
+import { isCatalogueCategory, modelInCategory } from "./vehicle-catalogue";
 
 // Vérifications catalogue partagées par la création (`POST /api/listings`)
 // et l'édition (`PATCH /api/listings/[id]`) d'une annonce — jamais un
@@ -7,6 +9,8 @@ import { prisma } from "./prisma";
 // jusqu'ici la même suite de vérifications ; extraites ici pour ne pas
 // laisser les deux copies diverger (Lot 99, audit qualité).
 export type CatalogueRefsInput = {
+  // Lot 130 — catégorie de l'annonce : la marque et le modèle choisis doivent exister dans cette catégorie.
+  category?: ListingCategory;
   brandId?: number;
   modelId?: number;
   generationId?: number;
@@ -19,6 +23,7 @@ export type CatalogueRefsError =
   | "unknown_brand"
   | "unknown_model"
   | "unknown_generation"
+  | "wrong_category"
   | "unknown_wilaya"
   | "unknown_commune"
   | "unknown_equipment";
@@ -29,6 +34,7 @@ export type CatalogueRefsValidation = { ok: true } | { ok: false; error: Catalog
 // auto (qui n'ont ni wilaya, ni commune, ni équipements) : extraite ici plutôt
 // que dupliquée.
 export async function validateVehicleRefs(data: {
+  category?: ListingCategory;
   brandId?: number;
   modelId?: number;
   generationId?: number;
@@ -36,12 +42,18 @@ export async function validateVehicleRefs(data: {
   if (data.brandId) {
     const brand = await prisma.brand.findUnique({ where: { id: data.brandId } });
     if (!brand) return { ok: false, error: "unknown_brand" };
+    // Une marque sans modèle choisi doit tout de même avoir au moins un modèle dans la catégorie de l'annonce.
+    if (!data.modelId && data.category && isCatalogueCategory(data.category)) {
+      const fits = await prisma.model.count({ where: { brandId: data.brandId, categories: { has: data.category } } });
+      if (fits === 0) return { ok: false, error: "wrong_category" };
+    }
   }
   if (data.modelId) {
     const model = await prisma.model.findUnique({ where: { id: data.modelId } });
     if (!model || (data.brandId && model.brandId !== data.brandId)) {
       return { ok: false, error: "unknown_model" };
     }
+    if (!modelInCategory(model, data.category)) return { ok: false, error: "wrong_category" };
   }
   if (data.generationId) {
     const generation = await prisma.generation.findUnique({ where: { id: data.generationId } });
