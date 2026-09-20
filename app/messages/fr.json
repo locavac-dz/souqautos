@@ -1660,5 +1660,26 @@
     "adminReset": "Réinitialiser la double authentification",
     "adminResetConfirm": "Réinitialiser la double authentification de ce compte ? La personne sera déconnectée de tous ses appareils et devra la réactiver.",
     "adminResetDone": "Double authentification réinitialisée."
+  },
+  "SellerTrust": {
+    "sectionTitle": "Ce vendeur",
+    "badgeUnder1h": "Répond généralement en moins d'une heure",
+    "badgeUnder2h": "Répond généralement en moins de 2 heures",
+    "badgeUnder6h": "Répond généralement en moins de 6 heures",
+    "badgeUnder24h": "Répond généralement dans la journée",
+    "identityVerified": "Identité vérifiée",
+    "proVerified": "Professionnel vérifié",
+    "memberSince": "Membre depuis {duration}",
+    "ownTitle": "Votre réactivité",
+    "ownIntro": "Calculée sur les messages des 90 derniers jours. Les acheteurs voient un badge « Répond généralement en… » lorsque vous répondez à au moins 80 % des messages, en moins de 24 heures. Ils ne voient jamais de mauvaise note : sans badge, rien ne s'affiche.",
+    "ownStats": "Vous avez répondu à {responded} des {eligible} conversations jugées, en {median} en général.",
+    "ownNone": "Aucune conversation à juger pour l'instant. Les messages reçus il y a moins de 48 heures ne comptent pas encore.",
+    "ownBadgeEarned": "Badge obtenu : {badge}",
+    "ownGapNotEnough": "Il vous faut au moins 5 conversations jugées pour obtenir un badge.",
+    "ownGapRateTooLow": "Répondez à au moins 80 % des messages pour obtenir un badge.",
+    "ownGapTooSlow": "Répondez en moins de 24 heures en général pour obtenir un badge.",
+    "minutes": "{count} minutes",
+    "hours": "{count} heures",
+    "days": "{count} jours"
   }
 }

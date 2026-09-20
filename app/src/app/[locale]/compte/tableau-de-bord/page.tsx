@@ -7,6 +7,8 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { EmailVerificationStatus } from "@/components/EmailVerificationStatus";
 import { PhoneVerificationStatus } from "@/components/PhoneVerificationStatus";
 import { IdentityVerificationStatus } from "@/components/IdentityVerificationStatus";
+import { OwnResponsiveness } from "@/components/OwnResponsiveness";
+import { getSellerResponsiveness } from "@/lib/seller-responsiveness-service";
 
 export default async function DashboardPage() {
   const locale = await getLocale();
@@ -79,6 +81,8 @@ export default async function DashboardPage() {
           }
         />
       </div>
+
+      <OwnResponsiveness responsiveness={await getSellerResponsiveness(user.id)} />
 
       <div className="mt-6 flex items-center gap-4">
         <Link

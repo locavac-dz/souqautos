@@ -8,6 +8,8 @@ import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { publishedNow } from "@/lib/blog-publication";
 import { computeAverageRating } from "@/lib/reviews";
+import { getSellerResponsiveness } from "@/lib/seller-responsiveness-service";
+import { SellerTrustBadges } from "@/components/SellerTrustBadges";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isLikelyBot, recordListingView } from "@/lib/view-tracking";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
@@ -188,6 +190,8 @@ export default async function ListingDetailPage({
     select: { rating: true },
   });
   const sellerRating = computeAverageRating(sellerReviews.map((r) => r.rating));
+  // Lot 141 — les signaux de confiance, ici, à l'endroit exact où l'acheteur décide de contacter.
+  const sellerResponsiveness = await getSellerResponsiveness(listing.sellerId);
 
   const listingUrl = `${SITE_URL}/${locale}/annonce/${listing.id}`;
   const vehicleJsonLd = buildVehicleJsonLd({
@@ -554,6 +558,12 @@ export default async function ListingDetailPage({
                   {tReview("averageRating", { average: sellerRating.average, count: sellerRating.count })}
                 </p>
               )}
+              <SellerTrustBadges
+                identityVerified={Boolean(listing.seller.identityVerifiedAt)}
+                proVerified={listing.seller.professionalAccount?.badgeVerifie}
+                responsiveness={sellerResponsiveness}
+                className="mt-1.5"
+              />
               {listing.seller.professionalAccount && (
                 <Link
                   href={`/pro/${listing.seller.professionalAccount.id}`}

@@ -4,6 +4,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { getSellerTrustSummary } from "@/lib/seller-trust";
+import { getSellerResponsiveness } from "@/lib/seller-responsiveness-service";
+import { SellerTrustBadges } from "@/components/SellerTrustBadges";
 import { ListingCard } from "@/components/search/ListingCard";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewReplyForm } from "@/components/ReviewReplyForm";
@@ -36,7 +38,8 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
   const publishedTotal = await prisma.listing.count({ where: { sellerId: id, status: "PUBLIEE" } });
   const { page, totalPages: pages, skip } = pageWindow(publishedTotal, parseRequestedPage((await searchParams).page), PAGE_SIZE);
 
-  const [reviews, listings, trust] = await Promise.all([
+  // Lot 141 — réactivité mesurée sur les vraies conversations (badge positif seulement).
+  const [reviews, listings, trust, responsiveness] = await Promise.all([
     prisma.review.findMany({
       where: { sellerId: id },
       orderBy: { createdAt: "desc" },
@@ -57,6 +60,7 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
       },
     }),
     getSellerTrustSummary(id),
+    getSellerResponsiveness(id),
   ]);
 
   // trust ne peut être null ici : seller a déjà été vérifié non-null ci-dessus.
@@ -132,6 +136,8 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
           {seller.identityVerifiedAt && <span>{tVerification("identityVerifiedBadge")}</span>}
         </p>
       )}
+      {/* Identité déjà affichée juste au-dessus avec les autres vérifications : ici, seulement la réactivité. */}
+      <SellerTrustBadges identityVerified={false} responsiveness={responsiveness} className="mt-1" />
       <p className="mt-2 text-sm">
         {count > 0 ? (
           <span className="text-amber-600 font-medium">

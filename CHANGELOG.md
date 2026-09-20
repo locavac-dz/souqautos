@@ -2898,3 +2898,29 @@ Le Lot 139 avait relevé que l'estimation de prix coûtait du processeur à chaq
 - Le **rechargement** des comparables d'un modèle très courant depuis la base (~18 000 lignes, une fois par minute) reste à ~0,8 s : c'est la lecture, pas le calcul. Le réduire demanderait de limiter le pool de comparables — **là**, ce serait un vrai choix produit.
 - Mesures **sur cette machine**, comparables déjà en mémoire : elles comparent l'avant et l'après, elles ne garantissent rien pour votre serveur.
 - L'équivalence est prouvée sur les annonces **fabriquées** de la base de charge : elles couvrent 26 années, des modèles courants et rares, mais pas toutes les formes qu'aura un vrai marché.
+
+## Lot 141 — Confiance vendeur : badges vérifiés, et réactivité mesurée (2026-09-21)
+
+Sur un site d'annonces, l'acheteur doit décider s'il fait confiance à un inconnu. Le score de confiance existait depuis le Lot 12, mais **pas là où la décision se prend** : la fiche d'annonce n'affichait que le nom du vendeur et ses étoiles. Et rien ne disait si ce vendeur répond aux messages.
+
+**Livré**
+- **Badges de confiance sur la fiche d'annonce** (`SellerTrustBadges`), juste sous le nom du vendeur, à côté du bouton « Contacter » : identité vérifiée par l'équipe, professionnel vérifié, réactivité. Uniquement des signaux **vérifiés par le site**, jamais déclarés par le vendeur.
+- **Réactivité mesurée sur les vraies conversations** (`src/lib/seller-responsiveness.ts`, pur et testé ; `…-service.ts` pour la lecture en base) : sur 90 jours, badge accordé à partir de 5 conversations jugeables, 80 % de réponses et une médiane sous 24 h — décliné en « moins d'une heure », « moins de 2 heures », « moins de 6 heures », « dans la journée ».
+- **Uniquement des signaux positifs**, sur décision du porteur de projet : un vendeur lent ou trop nouveau n'a **aucun** badge, jamais de mauvaise note publique. Le compromis assumé : l'acheteur ne distingue pas « nouveau » de « ne répond jamais ».
+- **Le vendeur voit ses propres chiffres** sur son tableau de bord (`OwnResponsiveness`) : conversations répondues, délai habituel, et ce qui lui manque pour obtenir le badge. C'est le seul endroit où un chiffre défavorable s'affiche, et lui seul le voit — sans quoi il ne pourrait pas savoir pourquoi il n'a pas le badge.
+- Textes français et arabe (19 clés).
+
+**Décisions de calcul, et pourquoi**
+- **Délai de grâce de 48 h** : une conversation reçue il y a dix minutes et encore sans réponse n'est pas un échec, elle est exclue. Sans cela, un vendeur serait pénalisé par les messages qu'il est en train de lire.
+- **Médiane et non moyenne** pour le délai : une seule absence prolongée ne doit pas effacer des centaines de réponses rapides.
+- **« A répondu » = un message venant de quelqu'un d'autre que l'acheteur** : sur un compte professionnel, la réponse d'un collaborateur compte — pour l'acheteur, la réponse est arrivée.
+- **200 conversations les plus récentes au maximum** : cette mesure tourne à chaque consultation d'annonce. Mesuré à 100 000 annonces : 1,3 ms pour un vendeur sans conversation, et **11,8 ms au pire** — borné, au lieu de croître avec l'activité du vendeur (13 à 22 ms mesurées à 300 conversations avant la borne).
+
+**Vérification** : `npm run verify -- --e2e` — 1 643 tests unitaires (15 nouveaux), **162 de bout en bout (4 nouveaux)**, 20 en production. Les tests de bout en bout construisent de **vraies conversations** par l'API (un acheteur inscrit par conversation, le vendeur répond), puis reculent les dates en base pour simuler les délais : c'est le seul artifice, tout le reste est le vrai code. Ils prouvent qu'un vendeur réactif obtient le badge sur la fiche et sur sa page, qu'un vendeur muet n'obtient **rien** (et qu'aucune formulation négative n'atteint une page d'acheteur), que le vendeur voit ses chiffres et la raison qui lui manque, et que le badge « identité vérifiée » apparaît dès la validation par l'équipe. Les pages modifiées sont déjà couvertes par l'audit d'accessibilité du Lot 135. **Sabotages vérifiés** : minimum de conversations retiré, seuil de taux retiré, délai de grâce supprimé, fenêtre de 90 jours supprimée, réponse antérieure à la question acceptée, plafond de 24 h supprimé, et — de bout en bout — le message de l'acheteur compté comme une réponse du vendeur. Chacun fait échouer les tests attendus.
+
+**Limites**
+- La réactivité ne mesure que la **messagerie du site** : un vendeur joint par téléphone ou WhatsApp (Lot 119) paraît muet. C'est la limite la plus gênante de la mesure, et elle est irréductible sans instrumenter des échanges hors du site.
+- Les **seuils** (90 jours, 48 h, 5 conversations, 80 %, 200) sont des choix documentés, pas une calibration statistique : à réviser quand il y aura du vrai trafic.
+- Les badges ne sont **pas** affichés sur les cartes de résultats : ce serait une mesure par vendeur affiché, non mesurée à ce jour. À faire seulement après l'avoir chiffré.
+- Rien n'empêche un vendeur de répondre « ok » à tout pour gagner le badge : c'est une mesure de **réactivité**, jamais de qualité des réponses.
+- Textes arabes rédigés ici, **à faire relire par un locuteur natif**.
