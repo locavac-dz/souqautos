@@ -38,6 +38,13 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: staticSecurityHeaders(process.env.NODE_ENV === "production"),
       },
+      // Lot 135 — les photos envoyées ont toutes un nom aléatoire unique (UUID, src/lib/uploads.ts) et ne sont jamais
+      // réécrites : une photo remplacée reçoit un NOUVEAU nom. Le navigateur peut donc les garder un an sans jamais les
+      // redemander (sans cette ligne, il les revérifie à chaque page). Ne JAMAIS y mettre un fichier au nom réutilisable.
+      {
+        source: "/uploads/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
       {
         source: "/sw.js",
         headers: [
@@ -52,9 +59,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  ...(s3PublicUrl
-    ? {
-        images: {
+  images: {
+    // Lot 135 — les versions redimensionnées des photos sont gardées un an par le serveur (par défaut : 60 secondes, donc
+    // recalculées sans cesse). Même raison que ci-dessus : les noms de fichiers ne sont jamais réutilisés.
+    minimumCacheTTL: 31_536_000,
+    ...(s3PublicUrl
+      ? {
           remotePatterns: [
             {
               protocol: s3PublicUrl.protocol.replace(":", "") as "http" | "https",
@@ -63,9 +73,9 @@ const nextConfig: NextConfig = {
             },
           ],
           ...(s3HostIsLocalOrPrivateIp ? { dangerouslyAllowLocalIP: true } : {}),
-        },
-      }
-    : {}),
+        }
+      : {}),
+  },
 };
 
 export default withNextIntl(nextConfig);

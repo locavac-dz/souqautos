@@ -326,7 +326,7 @@ export default async function ListingDetailPage({
       {isOwner && listing.status === "PUBLIEE" && (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           {listing.expiresAt && (
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               {tListing("expiresOnLabel", {
                 date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
                   dateStyle: "long",
@@ -469,7 +469,7 @@ export default async function ListingDetailPage({
                   />
                 )}
               </div>
-              <p className="mt-2 text-xs text-slate-400">{tEstimate("disclaimer")}</p>
+              <p className="mt-2 text-xs text-slate-500">{tEstimate("disclaimer")}</p>
             </div>
           )}
 
@@ -544,7 +544,7 @@ export default async function ListingDetailPage({
             )}
 
             <div className="mt-4 pt-4 border-t border-slate-100">
-              <p className="text-xs text-slate-400 mb-1">{tListing("seller")}</p>
+              <p className="text-xs text-slate-500 mb-1">{tListing("seller")}</p>
               <Link href={`/vendeur/${listing.sellerId}`} className="font-medium text-slate-900 hover:underline">
                 {listing.seller.profile?.displayName ?? listing.seller.email}
               </Link>

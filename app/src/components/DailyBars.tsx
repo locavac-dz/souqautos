@@ -29,7 +29,7 @@ export function DailyBars({
           />
         ))}
       </div>
-      <figcaption className="mt-1 flex justify-between text-xs text-slate-400" dir="ltr">
+      <figcaption className="mt-1 flex justify-between text-xs text-slate-500" dir="ltr">
         <span>{dayLabel(points[0].day)}</span>
         <span>{dayLabel(points[points.length - 1].day)}</span>
       </figcaption>

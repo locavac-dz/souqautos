@@ -80,7 +80,7 @@ export default async function EstimatePage({
               </p>
 
               <div className="mt-4 rounded-md bg-slate-50 px-4 py-3 text-center">
-                <p className="text-xs text-slate-400">{t("rangeMid")}</p>
+                <p className="text-xs text-slate-500">{t("rangeMid")}</p>
                 <p className="text-2xl font-semibold text-slate-900">
                   {estimate.mid.toLocaleString()} DA
                 </p>
@@ -88,11 +88,11 @@ export default async function EstimatePage({
 
               <div className="mt-3 flex items-center justify-between text-sm">
                 <div>
-                  <p className="text-xs text-slate-400">{t("rangeLow")}</p>
+                  <p className="text-xs text-slate-500">{t("rangeLow")}</p>
                   <p className="font-medium text-slate-700">{estimate.low.toLocaleString()} DA</p>
                 </div>
                 <div className="text-right rtl:text-left">
-                  <p className="text-xs text-slate-400">{t("rangeHigh")}</p>
+                  <p className="text-xs text-slate-500">{t("rangeHigh")}</p>
                   <p className="font-medium text-slate-700">{estimate.high.toLocaleString()} DA</p>
                 </div>
               </div>
@@ -115,17 +115,17 @@ export default async function EstimatePage({
 
               <div className="mt-3 space-y-1">
                 {!estimate.appliedFilters.wilaya && params.wilayaId && (
-                  <p className="text-xs text-slate-400">{t("filterWilayaRelaxed")}</p>
+                  <p className="text-xs text-slate-500">{t("filterWilayaRelaxed")}</p>
                 )}
                 {!estimate.appliedFilters.mileage && params.mileage && (
-                  <p className="text-xs text-slate-400">{t("filterMileageRelaxed")}</p>
+                  <p className="text-xs text-slate-500">{t("filterMileageRelaxed")}</p>
                 )}
                 {!estimate.appliedFilters.year && params.year && (
-                  <p className="text-xs text-slate-400">{t("filterYearRelaxed")}</p>
+                  <p className="text-xs text-slate-500">{t("filterYearRelaxed")}</p>
                 )}
               </div>
 
-              <p className="mt-4 text-xs text-slate-400 border-t border-slate-100 pt-3">
+              <p className="mt-4 text-xs text-slate-500 border-t border-slate-100 pt-3">
                 {t("disclaimer")}
               </p>
             </div>

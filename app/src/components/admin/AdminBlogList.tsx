@@ -71,7 +71,7 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
                         {t("scheduledFor", { date: dateTimeFormatter.format(article.publishedAt) })}
                       </span>
                     )}
-                    {status === "draft" && <span className="text-slate-400">{t("draft")}</span>}
+                    {status === "draft" && <span className="text-slate-500">{t("draft")}</span>}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">

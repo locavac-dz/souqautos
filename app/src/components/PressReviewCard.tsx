@@ -47,7 +47,7 @@ export async function PressReviewCard({ item, locale }: { item: PressReviewCardI
         <span className="sr-only"> {t("opensInNewTab")}</span>
       </h3>
       <p className="mt-2 text-sm text-slate-600">{isAr ? item.noteAr : item.noteFr}</p>
-      <p className="mt-auto pt-3 text-xs text-slate-400">
+      <p className="mt-auto pt-3 text-xs text-slate-500">
         {t("readOn", { source: hostLabel(item.url) })}
         {vehicle && item.brand && item.model && (
           <>

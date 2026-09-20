@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
+import { usePathname } from "@/i18n/navigation";
 
 export function MobileMenuToggle({
   menuLabel,
@@ -9,21 +10,37 @@ export function MobileMenuToggle({
   menuLabel: string;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const pathname = usePathname();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  // Le menu est ouvert « sur une page » : dès que la page change (le menu est dans la mise en page, qui n'est pas
+  // remontée d'une page à l'autre), il se referme de lui-même au lieu de rester ouvert par-dessus la page choisie.
+  const [openedOn, setOpenedOn] = useState<string | null>(null);
+  const open = openedOn === pathname;
 
   return (
-    <div className="sm:hidden">
+    <div
+      className="sm:hidden"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && open) {
+          setOpenedOn(null);
+          buttonRef.current?.focus();
+        }
+      }}
+    >
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpenedOn(open ? null : pathname)}
         aria-expanded={open}
+        aria-controls={open ? panelId : undefined}
         aria-label={menuLabel}
         className="rounded p-2 text-slate-700 hover:text-slate-900"
       >
-        {open ? "✕" : "☰"}
+        <span aria-hidden="true">{open ? "✕" : "☰"}</span>
       </button>
       {open && (
-        <div className="absolute left-0 right-0 top-full z-40 flex flex-col gap-3 border-b border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+        <div id={panelId} className="absolute left-0 right-0 top-full z-40 flex flex-col gap-3 border-b border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
           {children}
         </div>
       )}

@@ -60,7 +60,7 @@ export default async function AdminPressReviewsPage() {
                     {status === "published" ? (
                       <span className="text-emerald-700">{t("statusPublished")}</span>
                     ) : (
-                      <span className="text-slate-400">{t("statusDraft")}</span>
+                      <span className="text-slate-500">{t("statusDraft")}</span>
                     )}
                   </p>
                 </div>

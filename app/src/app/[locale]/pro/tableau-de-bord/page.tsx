@@ -169,7 +169,7 @@ export default async function ProDashboardPage() {
                 })}
           </p>
           {!hasAdvancedProTools(subscriptionStatus.tier) && (
-            <p className="text-xs text-slate-400 mt-1">{t("subscriptionAdvancedToolsLocked")}</p>
+            <p className="text-xs text-slate-500 mt-1">{t("subscriptionAdvancedToolsLocked")}</p>
           )}
           {isOwner && upgradableTiers.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">

@@ -46,7 +46,7 @@ export default async function AdminReportsPage() {
               {report.listing ? (
                 <Thumbnail path={report.listing.photos[0]?.path} title={report.listing.title} />
               ) : (
-                <div className="h-20 w-28 rounded bg-slate-100 shrink-0 flex items-center justify-center text-xs text-slate-400">
+                <div className="h-20 w-28 rounded bg-slate-100 shrink-0 flex items-center justify-center text-xs text-slate-500">
                   {report.ownerReview ? t("ownerReviewReportBadge") : t("userReportBadge")}
                 </div>
               )}
@@ -82,7 +82,7 @@ export default async function AdminReportsPage() {
                 )}
                 <p className="text-sm text-slate-700 mt-1">{tReport(REASON_KEY[report.reason])}</p>
                 {report.comment && <p className="text-sm text-slate-500 mt-0.5">{report.comment}</p>}
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   {t("reportedBy")}: {report.author.profile?.displayName ?? report.author.email} ·{" "}
                   {t("reportedOn", {
                     date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {

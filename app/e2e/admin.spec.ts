@@ -2,37 +2,12 @@ import { test, expect, type Page } from "@playwright/test";
 import { uniqueAccount, registerAndLogin } from "./fixtures";
 import { createListing } from "./api-helpers";
 import { disconnectE2eDb, e2eDb, makeAdmin } from "./db";
+import { ADMIN_PAGES } from "./public-paths";
 import fr from "../messages/fr.json";
 
 // Lot 131 — l'espace d'administration : qui y entre, ce que voit chaque rôle, chaque écran s'ouvre sans erreur (dans les
 // deux langues pour les plus récents), la modération d'une annonce de bout en bout, le journal d'audit et la mesure d'audience.
 test.afterAll(disconnectE2eDb);
-
-const ADMIN_PAGES = [
-  "/admin",
-  "/admin/annonces",
-  "/admin/utilisateurs",
-  "/admin/signalements",
-  "/admin/avis",
-  "/admin/avis-proprietaires",
-  "/admin/pro",
-  "/admin/identite",
-  "/admin/referentiels",
-  "/admin/statistiques",
-  "/admin/audience",
-  "/admin/parametres",
-  "/admin/journal",
-  "/admin/paiements",
-  "/admin/mag",
-  "/admin/mag/nouveau",
-  "/admin/essais",
-  "/admin/essais/nouveau",
-  "/admin/guides",
-  "/admin/guides/nouveau",
-  "/admin/editorial",
-  "/admin/revue-de-presse",
-  "/admin/revue-de-presse/nouveau",
-];
 
 async function loginAsAdmin(page: Page, prefix: string) {
   const account = uniqueAccount(prefix);

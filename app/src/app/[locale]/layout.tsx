@@ -57,6 +57,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const messages = await getMessages();
+  const tNav = await getTranslations({ locale, namespace: "Nav" });
   const user = await getCurrentUser();
   const direction = localeDirection[locale as AppLocale];
 
@@ -77,6 +78,13 @@ export default async function LocaleLayout({
       <body className="min-h-screen flex flex-col antialiased">
         <NextIntlClientProvider messages={messages}>
           <CompareProvider>
+            {/* Premier élément atteint au clavier : invisible tant qu'il n'a pas le focus, il évite de retraverser toute la navigation à chaque page. */}
+            <a
+              href="#contenu"
+              className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+            >
+              {tNav("skipToContent")}
+            </a>
             <SiteHeader
               user={
                 user
@@ -85,7 +93,9 @@ export default async function LocaleLayout({
               }
               unreadMessagesCount={unreadMessagesCount}
             />
-            <main className="flex-1">{children}</main>
+            <main id="contenu" tabIndex={-1} className="flex-1 focus:outline-none">
+              {children}
+            </main>
             <SiteFooter />
             <CompareTray />
             <PwaRegister />

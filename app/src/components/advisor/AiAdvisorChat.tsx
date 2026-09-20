@@ -95,7 +95,7 @@ export function AiAdvisorChat() {
             )}
           </div>
         ))}
-        {pending && <p className="text-sm text-slate-400">{t("pending")}</p>}
+        {pending && <p className="text-sm text-slate-500">{t("pending")}</p>}
       </div>
 
       {error && <p className="text-sm text-red-600 mb-2">{error}</p>}

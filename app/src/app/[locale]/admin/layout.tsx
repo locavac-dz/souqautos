@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-8 text-sm border-b border-slate-200 pb-4">
+      <nav aria-label={t("sectionsNav")} className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-8 text-sm border-b border-slate-200 pb-4">
         <Link href="/admin" className="font-medium text-slate-900">
           {t("dashboardTitle")}
         </Link>

@@ -62,7 +62,7 @@ export function PhoneVerificationStatus({ verified, hasPhone }: { verified: bool
   }
 
   if (!hasPhone) {
-    return <p className="text-sm text-slate-400">{t("noPhoneOnFile")}</p>;
+    return <p className="text-sm text-slate-500">{t("noPhoneOnFile")}</p>;
   }
 
   return (

@@ -62,7 +62,7 @@ export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings;
           value={bankName}
           onChange={(e) => setBankName(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -74,7 +74,7 @@ export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings;
           value={bankRib}
           onChange={(e) => setBankRib(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-mono text-left disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-mono text-left disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -85,7 +85,7 @@ export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings;
           value={bankAccountHolder}
           onChange={(e) => setBankAccountHolder(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -98,7 +98,7 @@ export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings;
           value={premiumPrice}
           onChange={(e) => setPremiumPrice(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -111,7 +111,7 @@ export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings;
           value={premiumPlusPrice}
           onChange={(e) => setPremiumPlusPrice(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 

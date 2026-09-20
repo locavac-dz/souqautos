@@ -37,7 +37,7 @@ export default async function AdminReviewsPage() {
                 <DeleteReviewButton reviewId={review.id} />
               </div>
               {review.comment && <p className="text-sm text-slate-700 mt-1">{review.comment}</p>}
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 {review.seller ? (
                   <>
                     {t("sellerLabel")}:{" "}

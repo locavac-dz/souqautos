@@ -136,7 +136,7 @@ export function ProCollaboratorsManager({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-slate-900">{c.name}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     {c.email} · {summarizePermissions(c.permissions, t)}
                   </p>
                 </div>

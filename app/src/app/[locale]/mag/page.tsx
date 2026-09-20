@@ -64,7 +64,7 @@ export default async function BlogIndexPage() {
               href={`/mag/${article.slug}`}
               className="block rounded-lg border border-slate-200 p-4 hover:border-slate-300"
             >
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 {article.publishedAt && dateFormatter.format(article.publishedAt)}
               </p>
               <h2 className="mt-1 text-lg font-medium text-slate-900">

@@ -49,7 +49,7 @@ export default async function AdminOwnerReviewsPage() {
                 <p className="mt-1 whitespace-pre-line text-sm text-slate-600" dir="auto">
                   {review.comment}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   {review.user.profile?.displayName ?? review.user.email} · {dateFormatter.format(review.createdAt)}
                 </p>
               </div>

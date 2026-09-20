@@ -79,8 +79,9 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4 pb-16">
           <h2 className="text-lg font-medium text-slate-900 mb-4">{t("featuredTitle")}</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {featuredListings.map((listing) => (
+            {featuredListings.map((listing, index) => (
               <ListingCard
+                eager={index < 4}
                 key={listing.id}
                 listing={listing}
                 isLoggedIn={Boolean(currentUser)}

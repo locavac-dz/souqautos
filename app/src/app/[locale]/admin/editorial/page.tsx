@@ -77,7 +77,7 @@ export default async function AdminEditorialPage() {
               ))}
             </ul>
           )}
-          {totalScheduled > report.scheduled.length && <p className="mt-1 text-xs text-slate-400">{t("listCapped", { shown: fmt(report.scheduled.length), total: fmt(totalScheduled) })}</p>}
+          {totalScheduled > report.scheduled.length && <p className="mt-1 text-xs text-slate-500">{t("listCapped", { shown: fmt(report.scheduled.length), total: fmt(totalScheduled) })}</p>}
         </section>
 
         <section className="min-w-0">
@@ -94,14 +94,14 @@ export default async function AdminEditorialPage() {
                     </Link>
                     <p className="text-xs text-slate-500">{sectionLabel(item.section)}</p>
                   </div>
-                  <span className={`shrink-0 text-xs ${item.stale ? "text-red-600" : "text-slate-400"}`}>
+                  <span className={`shrink-0 text-xs ${item.stale ? "text-red-600" : "text-slate-500"}`}>
                     {item.stale ? t("draftStale", { date: dateFmt.format(item.updatedAt) }) : t("draftEdited", { date: dateFmt.format(item.updatedAt) })}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-          {totalDrafts > report.drafts.length && <p className="mt-1 text-xs text-slate-400">{t("listCapped", { shown: fmt(report.drafts.length), total: fmt(totalDrafts) })}</p>}
+          {totalDrafts > report.drafts.length && <p className="mt-1 text-xs text-slate-500">{t("listCapped", { shown: fmt(report.drafts.length), total: fmt(totalDrafts) })}</p>}
         </section>
       </div>
 

@@ -175,17 +175,17 @@ export default async function ModelPage({
       ) : (
         <div className="mt-4 flex flex-wrap gap-6 text-sm">
           <div>
-            <p className="text-xs text-slate-400">{t("statsCount", { count: stats.count })}</p>
+            <p className="text-xs text-slate-500">{t("statsCount", { count: stats.count })}</p>
           </div>
           {stats.avgPrice && (
             <div>
-              <p className="text-xs text-slate-400">{t("avgPrice")}</p>
+              <p className="text-xs text-slate-500">{t("avgPrice")}</p>
               <p className="font-medium text-slate-900">{stats.avgPrice.toLocaleString()} DA</p>
             </div>
           )}
           {stats.minPrice && stats.maxPrice && (
             <div>
-              <p className="text-xs text-slate-400">{t("priceRange")}</p>
+              <p className="text-xs text-slate-500">{t("priceRange")}</p>
               <p className="font-medium text-slate-900">
                 {stats.minPrice.toLocaleString()} – {stats.maxPrice.toLocaleString()} DA
               </p>
@@ -228,7 +228,7 @@ export default async function ModelPage({
       {pressReviews.length > 0 && (
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-slate-900">{tPress("modelSectionTitle")}</h2>
-          <p className="mt-1 text-xs text-slate-400">{tPress("disclaimer")}</p>
+          <p className="mt-1 text-xs text-slate-500">{tPress("disclaimer")}</p>
           <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pressReviews.map((item) => (
               <PressReviewCard key={item.id} item={item} locale={locale} />
@@ -246,8 +246,9 @@ export default async function ModelPage({
 
       {listings.length > 0 && (
         <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {listings.map((listing) => (
+          {listings.map((listing, index) => (
             <ListingCard
+              eager={index < 3}
               key={listing.id}
               listing={listing}
               isLoggedIn={Boolean(currentUser)}

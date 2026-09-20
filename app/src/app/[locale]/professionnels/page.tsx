@@ -105,7 +105,7 @@ export default async function ProfessionalsLandingPage() {
           );
         })}
       </div>
-      <p className="mt-4 text-xs text-slate-400">{t("pricingFootnote")}</p>
+      <p className="mt-4 text-xs text-slate-500">{t("pricingFootnote")}</p>
     </div>
   );
 }

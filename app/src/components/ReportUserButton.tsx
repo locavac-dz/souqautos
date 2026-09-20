@@ -70,12 +70,12 @@ export function ReportUserButton({
   }
 
   if (done) {
-    return <p className="text-xs text-slate-400">{t("alreadyReportedUser")}</p>;
+    return <p className="text-xs text-slate-500">{t("alreadyReportedUser")}</p>;
   }
 
   if (!open) {
     return (
-      <button type="button" onClick={handleOpen} className="text-xs text-slate-400 hover:text-red-600">
+      <button type="button" onClick={handleOpen} className="text-xs text-slate-500 hover:text-red-600">
         {t("reportUser")}
       </button>
     );
@@ -115,7 +115,7 @@ export function ReportUserButton({
         >
           {t("submit")}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs text-slate-400 hover:text-slate-600">
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-slate-500 hover:text-slate-600">
           {t("cancel")}
         </button>
       </div>

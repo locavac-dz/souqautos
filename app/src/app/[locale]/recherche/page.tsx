@@ -172,8 +172,9 @@ export default async function SearchPage({
           <div className="mb-6">
             <h2 className="text-sm font-medium text-slate-700 mb-2">{t("featuredTitle")}</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {featuredListings.map((listing) => (
+              {featuredListings.map((listing, index) => (
                 <ListingCard
+                  eager={index < 3}
                   key={listing.id}
                   listing={listing}
                   isLoggedIn={Boolean(currentUser)}
@@ -200,8 +201,9 @@ export default async function SearchPage({
         ) : (
           listings.length > 0 && (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {listings.map((listing) => (
+              {listings.map((listing, index) => (
                 <ListingCard
+                  eager={index < 3}
                   key={listing.id}
                   listing={listing}
                   isLoggedIn={Boolean(currentUser)}

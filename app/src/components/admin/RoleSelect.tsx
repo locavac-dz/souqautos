@@ -17,10 +17,12 @@ export function RoleSelect({
   userId,
   currentRole,
   disabled,
+  label,
 }: {
   userId: string;
   currentRole: Role;
   disabled?: boolean;
+  label: string; // nom accessible du menu (« Rôle de … ») : il y en a un par ligne, sans lui rien ne les distingue
 }) {
   const t = useTranslations("Admin");
   const router = useRouter();
@@ -43,6 +45,7 @@ export function RoleSelect({
 
   return (
     <select
+      aria-label={label}
       value={role}
       disabled={disabled || pending}
       onChange={(e) => handleChange(e.target.value as Role)}

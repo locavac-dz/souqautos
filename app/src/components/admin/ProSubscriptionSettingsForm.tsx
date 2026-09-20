@@ -78,7 +78,7 @@ export function ProSubscriptionSettingsForm({ settings, canEdit }: { settings: S
           value={starterQuota}
           onChange={(e) => setStarterQuota(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -91,7 +91,7 @@ export function ProSubscriptionSettingsForm({ settings, canEdit }: { settings: S
           value={businessQuota}
           onChange={(e) => setBusinessQuota(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -104,11 +104,11 @@ export function ProSubscriptionSettingsForm({ settings, canEdit }: { settings: S
           value={proQuota}
           onChange={(e) => setProQuota(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
-      <p className="text-xs text-slate-400">{t("premiumUnlimitedNotice")}</p>
+      <p className="text-xs text-slate-500">{t("premiumUnlimitedNotice")}</p>
 
       <label className="block">
         <span className="text-sm font-medium text-slate-700">{t("businessPriceLabel")}</span>
@@ -119,7 +119,7 @@ export function ProSubscriptionSettingsForm({ settings, canEdit }: { settings: S
           value={businessPrice}
           onChange={(e) => setBusinessPrice(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -132,7 +132,7 @@ export function ProSubscriptionSettingsForm({ settings, canEdit }: { settings: S
           value={proPrice}
           onChange={(e) => setProPrice(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -145,7 +145,7 @@ export function ProSubscriptionSettingsForm({ settings, canEdit }: { settings: S
           value={premiumPrice}
           onChange={(e) => setPremiumPrice(e.target.value)}
           disabled={!canEdit}
-          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 

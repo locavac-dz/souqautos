@@ -67,9 +67,9 @@ export async function OwnerReviewsSection({
         </div>
       )}
       {summary.count > 0 && !summary.showAverage && (
-        <p className="mt-1 text-xs text-slate-400">{t("notEnoughForAverage", { min: MIN_REVIEWS_FOR_AVERAGE })}</p>
+        <p className="mt-1 text-xs text-slate-500">{t("notEnoughForAverage", { min: MIN_REVIEWS_FOR_AVERAGE })}</p>
       )}
-      <p className="mt-1 text-xs text-slate-400">{t("declaredNotice")}</p>
+      <p className="mt-1 text-xs text-slate-500">{t("declaredNotice")}</p>
 
       {reviews.length === 0 ? (
         <p className="mt-4 text-sm text-slate-500">{t("noReviews")}</p>

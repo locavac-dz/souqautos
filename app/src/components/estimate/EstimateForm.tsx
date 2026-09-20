@@ -139,9 +139,11 @@ export function EstimateForm({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+    // Le champ est DANS l'étiquette : le lecteur d'écran annonce « Année » en entrant dans le champ (l'ancienne
+    // étiquette voisine n'y était reliée par aucun `for`/`id`).
+    <label className="block">
+      <span className="block text-sm font-medium text-slate-700 mb-1">{label}</span>
       {children}
-    </div>
+    </label>
   );
 }

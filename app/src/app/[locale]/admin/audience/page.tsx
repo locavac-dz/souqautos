@@ -76,7 +76,7 @@ export default async function AdminAudiencePage({ searchParams }: { searchParams
                               ) : (
                                 row.detail
                               )}
-                              <span className="ms-2 text-xs text-slate-400">{row.page.split("/")[1]}</span>
+                              <span className="ms-2 text-xs text-slate-500">{row.page.split("/")[1]}</span>
                             </th>
                             <td className="px-3 py-2 text-end tabular-nums">{fmt(row.count)}</td>
                           </tr>
@@ -112,7 +112,7 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
     <div className="rounded-lg border border-slate-200 p-4">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
-      {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </div>
   );
 }
@@ -130,7 +130,7 @@ function Table({ title, rows, total, fmt, mono }: { title: string; rows: CountRo
                   {row.label}
                 </th>
                 <td className="px-3 py-2 text-end tabular-nums">{fmt(row.count)}</td>
-                <td className="w-16 whitespace-nowrap px-3 py-2 text-end text-xs text-slate-400 tabular-nums">{sharePercent(row.count, total)} %</td>
+                <td className="w-16 whitespace-nowrap px-3 py-2 text-end text-xs text-slate-500 tabular-nums">{sharePercent(row.count, total)} %</td>
               </tr>
             ))}
           </tbody>

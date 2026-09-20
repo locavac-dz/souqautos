@@ -21,8 +21,8 @@ export default function Step5Page() {
 
   return (
     <StepShell step={5} title={t("step5Title")} nextLabel={t("next")} onNext={handleNext}>
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("price")}</label>
+      <label className="block">
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("price")}</span>
         <input
           type="number"
           min={1}
@@ -30,7 +30,7 @@ export default function Step5Page() {
           onChange={(e) => setData({ price: e.target.value ? Number(e.target.value) : undefined })}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
-      </div>
+      </label>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>

@@ -13,24 +13,24 @@ export default function Step10Page() {
         <p className="text-sm text-slate-500">{t("formulaStandardDesc")}</p>
       </div>
 
-      <div className="rounded-lg border border-slate-200 p-4 opacity-60">
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
         <div className="flex items-center justify-between">
-          <p className="font-medium text-slate-700">{t("formulaPremium")}</p>
-          <span className="text-xs rounded-full bg-slate-100 px-2 py-0.5 text-slate-500">
+          <p className="font-medium text-slate-800">{t("formulaPremium")}</p>
+          <span className="text-xs rounded-full bg-slate-200 px-2 py-0.5 text-slate-700">
             {t("formulaComingSoon")}
           </span>
         </div>
-        <p className="text-sm text-slate-500">{t("formulaPremiumDesc")}</p>
+        <p className="text-sm text-slate-600">{t("formulaPremiumDesc")}</p>
       </div>
 
-      <div className="rounded-lg border border-slate-200 p-4 opacity-60">
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
         <div className="flex items-center justify-between">
-          <p className="font-medium text-slate-700">{t("formulaPremiumPlus")}</p>
-          <span className="text-xs rounded-full bg-slate-100 px-2 py-0.5 text-slate-500">
+          <p className="font-medium text-slate-800">{t("formulaPremiumPlus")}</p>
+          <span className="text-xs rounded-full bg-slate-200 px-2 py-0.5 text-slate-700">
             {t("formulaComingSoon")}
           </span>
         </div>
-        <p className="text-sm text-slate-500">{t("formulaPremiumPlusDesc")}</p>
+        <p className="text-sm text-slate-600">{t("formulaPremiumPlusDesc")}</p>
       </div>
     </StepShell>
   );

@@ -96,7 +96,7 @@ export function ListingPriceEditor({
           setPrice(String(currentPrice));
           setError(null);
         }}
-        className="text-xs text-slate-400 hover:text-slate-600"
+        className="text-xs text-slate-500 hover:text-slate-600"
       >
         {cancelLabel}
       </button>

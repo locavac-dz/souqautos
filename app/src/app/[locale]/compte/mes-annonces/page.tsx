@@ -169,7 +169,7 @@ export default async function MyListingsPage() {
                       <span>{t("views", { count: listing.views })}</span>
                     </div>
                     {proAccount && (
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-slate-500">
                         {t("proAccountLabel", { name: proAccount.name })}
                       </p>
                     )}
@@ -180,7 +180,7 @@ export default async function MyListingsPage() {
                         </p>
                       )}
                     {listing.expiresAt && (listing.status === "PUBLIEE" || listing.status === "EXPIREE") && (
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-slate-500">
                         {tListing(listing.status === "EXPIREE" ? "expiredOnLabel" : "expiresOnLabel", {
                           date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
                             dateStyle: "long",

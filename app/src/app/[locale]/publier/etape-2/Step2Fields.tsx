@@ -58,8 +58,8 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
 
   return (
     <StepShell step={2} title={t("step2Title")} nextLabel={t("next")} onNext={handleNext}>
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("category")}</label>
+      <label className="block">
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("category")}</span>
         <select
           value={data.category ?? ""}
           onChange={(e) => {
@@ -91,10 +91,10 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
             </option>
           ))}
         </select>
-      </div>
+      </label>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("brand")}</label>
+      <label className="block">
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("brand")}</span>
         <select
           value={brandOther ? "__other__" : (data.brandId ?? "")}
           onChange={(e) => {
@@ -130,25 +130,25 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
           ))}
           <option value="__other__">{t("brandOther")}</option>
         </select>
-      </div>
+      </label>
 
       {brandOther && (
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+        <label className="block">
+          <span className="block text-sm font-medium text-slate-700 mb-1">
             {t("brandFreeText")}
-          </label>
+          </span>
           <input
             type="text"
             value={data.brandFreeText ?? ""}
             onChange={(e) => setData({ brandFreeText: e.target.value })}
             className="w-full rounded-md border border-slate-300 px-3 py-2"
           />
-        </div>
+        </label>
       )}
 
       {!brandOther && selectedBrand && (
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{t("model")}</label>
+        <label className="block">
+          <span className="block text-sm font-medium text-slate-700 mb-1">{t("model")}</span>
           <select
             value={modelOther ? "__other__" : (data.modelId ?? "")}
             onChange={(e) => {
@@ -179,12 +179,12 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
             ))}
             <option value="__other__">{t("modelOther")}</option>
           </select>
-        </div>
+        </label>
       )}
 
       {!brandOther && !modelOther && selectedModel && selectedModel.generations.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{t("generation")}</label>
+        <label className="block">
+          <span className="block text-sm font-medium text-slate-700 mb-1">{t("generation")}</span>
           <select
             value={data.generationId ?? ""}
             onChange={(e) => {
@@ -203,21 +203,21 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
               </option>
             ))}
           </select>
-        </div>
+        </label>
       )}
 
       {(brandOther || modelOther) && (
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+        <label className="block">
+          <span className="block text-sm font-medium text-slate-700 mb-1">
             {t("modelFreeText")}
-          </label>
+          </span>
           <input
             type="text"
             value={data.modelFreeText ?? ""}
             onChange={(e) => setData({ modelFreeText: e.target.value })}
             className="w-full rounded-md border border-slate-300 px-3 py-2"
           />
-        </div>
+        </label>
       )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}

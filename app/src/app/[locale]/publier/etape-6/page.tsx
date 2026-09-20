@@ -64,7 +64,7 @@ export default function Step6Page() {
         ))}
 
         {photos.length < MAX_PHOTOS && (
-          <label className="aspect-square flex items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-slate-400 text-sm cursor-pointer hover:border-slate-400">
+          <label className="aspect-square flex items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-slate-500 text-sm cursor-pointer hover:border-slate-400">
             {t("photosAdd")}
             <input
               type="file"

@@ -93,7 +93,7 @@ export default async function BlogArticlePage({
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <p className="text-xs text-slate-400">{dateFormatter.format(article.publishedAt!)}</p>
+      <p className="text-xs text-slate-500">{dateFormatter.format(article.publishedAt!)}</p>
       <h1 className="mt-1 text-2xl font-semibold text-slate-900">{title}</h1>
 
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-slate-700">

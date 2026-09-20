@@ -111,7 +111,7 @@ export function MessageThread({
           conversationId={conversationId}
           onDeleted={() => router.push("/compte/messages")}
         />
-        <button type="button" onClick={toggleBlock} className="text-xs text-slate-400 hover:text-red-600">
+        <button type="button" onClick={toggleBlock} className="text-xs text-slate-500 hover:text-red-600">
           {blocked ? t("unblockUser") : t("blockUser")}
         </button>
         <ReportUserButton userId={otherUserId} isLoggedIn initialAlreadyReported={initialAlreadyReported} />

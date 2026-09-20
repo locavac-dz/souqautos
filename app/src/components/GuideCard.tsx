@@ -29,7 +29,7 @@ export function GuideCard({ article, locale }: { article: GuideCardArticle; loca
         {vehicle && <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{vehicle}</p>}
         <h2 className="mt-1 text-lg font-medium text-slate-900">{isAr ? article.titleAr : article.titleFr}</h2>
         <p className="mt-2 text-sm text-slate-600">{isAr ? article.excerptAr : article.excerptFr}</p>
-        <p className="mt-auto pt-3 text-xs text-slate-400">{article.publishedAt && dateFormatter.format(article.publishedAt)}</p>
+        <p className="mt-auto pt-3 text-xs text-slate-500">{article.publishedAt && dateFormatter.format(article.publishedAt)}</p>
       </div>
     </Link>
   );

@@ -30,7 +30,7 @@ export function ToggleProVerifiedButton({ accountId, verified }: { accountId: st
       className={`rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${
         verified
           ? "border-slate-300 text-slate-700 hover:bg-slate-50"
-          : "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600"
+          : "bg-emerald-700 text-white hover:bg-emerald-800 border-emerald-700"
       }`}
     >
       {verified ? t("revokeProBadge") : t("grantProBadge")}

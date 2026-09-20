@@ -69,6 +69,7 @@ export function IdentityVerificationStatus({
       <form onSubmit={handleSubmit} className="mt-2 space-y-2">
         <input
           type="file"
+          aria-label={t("identityDocLabel")}
           accept="image/jpeg,image/png,image/webp,application/pdf"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="text-sm"

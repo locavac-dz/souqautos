@@ -218,7 +218,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
                 setName(brand.name);
                 setError(null);
               }}
-              className="text-xs text-slate-400 hover:text-slate-600"
+              className="text-xs text-slate-500 hover:text-slate-600"
             >
               {t("cancelAction")}
             </button>
@@ -226,7 +226,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
         ) : (
           <div>
             <p className="font-medium text-slate-900">{brand.name}</p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               {brand.slug} · {t("listingCount", { count: brand.listingCount })}
             </p>
           </div>
@@ -281,7 +281,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
                   setNewModelName("");
                   setAddModelError(null);
                 }}
-                className="text-xs text-slate-400 hover:text-slate-600"
+                className="text-xs text-slate-500 hover:text-slate-600"
               >
                 {t("cancelAction")}
               </button>
@@ -365,7 +365,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
               setCategories(asCategories(model.categories));
               setError(null);
             }}
-            className="text-xs text-slate-400 hover:text-slate-600"
+            className="text-xs text-slate-500 hover:text-slate-600"
           >
             {t("cancelAction")}
           </button>
@@ -373,7 +373,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
       ) : (
         <div>
           <span className="text-slate-800">{model.name}</span>
-          <span className="ml-2 text-xs text-slate-400">
+          <span className="ml-2 text-xs text-slate-500">
             {model.slug} · {asCategories(model.categories).map((c) => t(CATEGORY_LABEL[c])).join(", ")} · {t("listingCount", { count: model.listingCount })}
           </span>
         </div>

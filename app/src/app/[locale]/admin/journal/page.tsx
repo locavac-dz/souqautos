@@ -83,21 +83,21 @@ export default async function AdminAuditLogPage({
       )}
 
       {totalPages > 1 && (
-        <nav className="mt-6 flex items-center justify-center gap-4">
+        <nav aria-label={t("paginationLabel")} className="mt-6 flex items-center justify-center gap-4">
           {page > 1 ? (
-            <Link href={hrefForPage(page - 1)} className="text-sm text-slate-700 hover:text-slate-900">
+            <Link href={hrefForPage(page - 1)} className="text-sm font-medium text-slate-900 hover:underline">
               ← {t("previous")}
             </Link>
           ) : (
-            <span className="text-sm text-slate-300">← {t("previous")}</span>
+            <span aria-disabled="true" className="text-sm text-slate-500">← {t("previous")}</span>
           )}
           <span className="text-sm text-slate-500">{t("pageOf", { page, totalPages })}</span>
           {page < totalPages ? (
-            <Link href={hrefForPage(page + 1)} className="text-sm text-slate-700 hover:text-slate-900">
+            <Link href={hrefForPage(page + 1)} className="text-sm font-medium text-slate-900 hover:underline">
               {t("next")} →
             </Link>
           ) : (
-            <span className="text-sm text-slate-300">{t("next")} →</span>
+            <span aria-disabled="true" className="text-sm text-slate-500">{t("next")} →</span>
           )}
         </nav>
       )}

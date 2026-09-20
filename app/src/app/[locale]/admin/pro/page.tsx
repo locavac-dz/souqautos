@@ -29,7 +29,7 @@ export default async function AdminProAccountsPage() {
                 <Link href={`/pro/${account.id}`} className="font-medium text-slate-900 hover:underline">
                   {account.nomCommercial}
                 </Link>
-                <p className="text-xs text-slate-400 mt-1">{account.user.email}</p>
+                <p className="text-xs text-slate-500 mt-1">{account.user.email}</p>
               </div>
               <ToggleProVerifiedButton accountId={account.id} verified={account.badgeVerifie} />
             </div>

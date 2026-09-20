@@ -87,7 +87,7 @@ export default async function InboxPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 truncate">{conversation.listing.title}</p>
+                    <p className="text-xs text-slate-500 truncate">{conversation.listing.title}</p>
                     {lastMessage && (
                       <p
                         className={`text-sm text-slate-500 truncate mt-0.5 ${lastMessage.deletedAt ? "italic" : ""}`}

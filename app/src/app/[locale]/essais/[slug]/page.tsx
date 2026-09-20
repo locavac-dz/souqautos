@@ -157,7 +157,7 @@ export default async function RoadTestPage({
 
       {article.coverImageUrl && (
         <div className="relative mt-6 aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-          <Image src={article.coverImageUrl} alt="" fill sizes="(min-width: 768px) 768px, 100vw" className="object-cover" priority />
+          <Image src={article.coverImageUrl} alt="" fill sizes="(min-width: 768px) 768px, 100vw" className="object-cover" loading="eager" fetchPriority="high" />
         </div>
       )}
 

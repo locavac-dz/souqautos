@@ -90,7 +90,7 @@ export default async function BrandsIndexPage({
               <p className="text-xs text-slate-500 mt-0.5">
                 {brandCategories(allBrands.find((b) => b.id === brand.id)!.models).map((c) => t(`category${c}`)).join(" · ")}
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 {t("statsCount", { count: stat?.count ?? 0 })}
               </p>
               {stat?.avgPrice && (

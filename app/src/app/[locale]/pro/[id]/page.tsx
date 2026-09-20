@@ -170,7 +170,7 @@ export default async function ProShowcasePage({
     <div>
       {account.bannerUrl && (
         <div className="relative h-40 sm:h-56 w-full">
-          <Image src={account.bannerUrl} alt="" fill sizes="100vw" className="object-cover" priority />
+          <Image src={account.bannerUrl} alt="" fill sizes="100vw" className="object-cover" loading="eager" fetchPriority="high" />
         </div>
       )}
       <div className="mx-auto max-w-4xl px-4 py-10">
@@ -210,7 +210,7 @@ export default async function ProShowcasePage({
             {"★".repeat(Math.round(average))} {tReview("averageRating", { average, count })}
           </span>
         ) : (
-          <span className="text-slate-400">{tReview("noReviews")}</span>
+          <span className="text-slate-500">{tReview("noReviews")}</span>
         )}
       </p>
 
@@ -228,8 +228,9 @@ export default async function ProShowcasePage({
             <p className="text-slate-500 text-sm">{t("noListings")}</p>
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
-              {listings.map((listing) => (
+              {listings.map((listing, index) => (
                 <ListingCard
+                  eager={index < 2}
                   key={listing.id}
                   listing={listing}
                   isLoggedIn={Boolean(currentUser)}
@@ -261,7 +262,7 @@ export default async function ProShowcasePage({
                       {currentUser && isStaff(currentUser.role) && <DeleteReviewButton reviewId={review.id} />}
                     </div>
                     {review.comment && <p className="text-sm text-slate-700 mt-1">{review.comment}</p>}
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       {tReview("byAuthor", {
                         name: review.author.profile?.displayName ?? review.author.email,
                       })}{" "}

@@ -139,7 +139,7 @@ export default async function RoadTestsIndexPage({ searchParams }: { searchParam
               </Link>
             )}
           </div>
-          <p className="mt-1 text-xs text-slate-400">{tPress("disclaimer")}</p>
+          <p className="mt-1 text-xs text-slate-500">{tPress("disclaimer")}</p>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pressItems.map((item) => (
               <PressReviewCard key={item.id} item={item} locale={locale} />

@@ -51,8 +51,8 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
 
   return (
     <StepShell step={4} title={t("step4Title")} nextLabel={t("next")} onNext={handleNext}>
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t("condition")}</label>
+      <label className="block">
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("condition")}</span>
         <select
           value={data.condition ?? ""}
           onChange={(e) => setData({ condition: e.target.value as ListingCondition })}
@@ -64,7 +64,7 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
           <option value="NEUF">{t("conditionNeuf")}</option>
           <option value="OCCASION">{t("conditionOccasion")}</option>
         </select>
-      </div>
+      </label>
 
       <label className="flex items-center gap-2 text-sm text-slate-700">
         <input

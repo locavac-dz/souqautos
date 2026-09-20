@@ -59,7 +59,7 @@ export default async function WilayaIndexPage() {
               className="rounded-lg border border-slate-200 p-3 hover:border-slate-300"
             >
               <p className="font-medium text-slate-900">{label}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{t("statsCount", { count: stat?.count ?? 0 })}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t("statsCount", { count: stat?.count ?? 0 })}</p>
               {stat?.avgPrice && (
                 <p className="text-xs text-slate-500 mt-1">
                   {t("avgPrice")}: {stat.avgPrice.toLocaleString()} DA

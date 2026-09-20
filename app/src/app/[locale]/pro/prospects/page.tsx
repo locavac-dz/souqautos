@@ -123,7 +123,7 @@ export default async function ProProspectsPage({ searchParams }: { searchParams:
                         {row.listing.title}
                       </Link>
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">{t("lastActivity", { date: fmtDate(row.lastActivityAt) })}</p>
+                    <p className="mt-1 text-xs text-slate-500">{t("lastActivity", { date: fmtDate(row.lastActivityAt) })}</p>
                     <Link href={`/compte/messages/${row.conversationId}`} className="mt-3 inline-block text-sm text-slate-700 underline hover:text-slate-900">
                       {t("openConversation")}
                     </Link>

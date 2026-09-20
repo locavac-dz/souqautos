@@ -22,7 +22,7 @@ export async function GoogleSignInButton({ locale, next }: { locale: GoogleLogin
         </svg>
         {t("googleContinue")}
       </a>
-      <div className="mt-6 flex items-center gap-3 text-xs uppercase text-slate-400" aria-hidden="true">
+      <div className="mt-6 flex items-center gap-3 text-xs uppercase text-slate-500" aria-hidden="true">
         <span className="h-px flex-1 bg-slate-200" />
         {t("googleOr")}
         <span className="h-px flex-1 bg-slate-200" />

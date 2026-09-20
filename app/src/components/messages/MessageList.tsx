@@ -53,7 +53,7 @@ export function MessageList({
               <div
                 className={`rounded-lg px-3 py-2 text-sm ${
                   isDeleted
-                    ? "italic text-slate-400 bg-slate-50 border border-slate-200"
+                    ? "italic text-slate-500 bg-slate-50 border border-slate-200"
                     : isMine
                       ? "bg-slate-900 text-white"
                       : "bg-slate-100 text-slate-900"
@@ -80,7 +80,7 @@ export function MessageList({
                   type="button"
                   onClick={() => handleDelete(message.id)}
                   disabled={pendingId === message.id}
-                  className="text-xs text-slate-400 hover:text-red-600 disabled:opacity-50"
+                  className="text-xs text-slate-500 hover:text-red-600 disabled:opacity-50"
                 >
                   {confirmingId === message.id ? t("confirmDeleteMessage") : t("deleteMessage")}
                 </button>

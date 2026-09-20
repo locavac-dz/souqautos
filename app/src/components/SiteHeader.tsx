@@ -94,7 +94,7 @@ export async function SiteHeader({
           {tBrand("name")}
         </Link>
 
-        <nav className="hidden sm:flex items-center gap-4 text-sm">{navContent}</nav>
+        <nav aria-label={tNav("main")} className="hidden sm:flex items-center gap-4 text-sm">{navContent}</nav>
 
         <MobileMenuToggle menuLabel={tNav("menu")}>{navContent}</MobileMenuToggle>
       </div>

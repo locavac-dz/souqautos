@@ -162,7 +162,7 @@ export default function ComparePage() {
                       >
                         {l.title}
                       </Link>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {brandLabel} {modelLabel}
                       </p>
                       <button
@@ -239,7 +239,7 @@ export default function ComparePage() {
                   {currentSummary.narrative}
                 </p>
               )}
-              <p className="mt-3 text-xs text-slate-400">{t("summaryDisclaimer")}</p>
+              <p className="mt-3 text-xs text-slate-500">{t("summaryDisclaimer")}</p>
             </div>
           )}
         </div>

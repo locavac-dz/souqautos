@@ -163,7 +163,7 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
                       )}
                     </p>
                     {wilaya && <p className="text-sm text-slate-500">{wilayaLabel(wilaya)}</p>}
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-500">
                       {tCatalogue("statsCount", { count: entry.listingCount })}
                     </p>
                     <p className="mt-0.5 text-xs">
@@ -172,7 +172,7 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
                           ★ {tReview("averageRating", { average: entry.ratingAverage, count: entry.ratingCount })}
                         </span>
                       ) : (
-                        <span className="text-slate-400">{tReview("noReviews")}</span>
+                        <span className="text-slate-500">{tReview("noReviews")}</span>
                       )}
                     </p>
                   </div>

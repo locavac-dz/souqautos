@@ -1,5 +1,6 @@
 import { test, expect, type ConsoleMessage } from "@playwright/test";
-import { disconnectE2eDb, e2eDb } from "./db";
+import { disconnectE2eDb } from "./db";
+import { STATIC_PATHS, dynamicPaths } from "./public-paths";
 
 // Lot 131 — chaque page publique, dans les deux langues, sur le vrai site : elle répond, porte la bonne langue et le
 // bon sens d'écriture (droite à gauche en arabe), a un titre, ne déclenche aucune erreur dans le navigateur
@@ -8,48 +9,11 @@ import { disconnectE2eDb, e2eDb } from "./db";
 test.afterAll(disconnectE2eDb);
 test.setTimeout(60_000);
 
-const STATIC_PATHS = [
-  "",
-  "/recherche",
-  "/voitures",
-  "/cote-souq-auto",
-  "/concessionnaires",
-  "/professionnels",
-  "/devenir-professionnel",
-  "/vendre",
-  "/comparateur",
-  "/mag",
-  "/essais",
-  "/essais/revue-de-presse",
-  "/guides",
-  "/wilaya",
-  "/conditions-generales",
-  "/politique-confidentialite",
-  "/mentions-legales",
-  "/connexion",
-  "/inscription",
-];
-
 // Bruit propre au mode développement, sans rapport avec le site (outil de développement, image d'illustration absente).
 function isRealError(message: ConsoleMessage): boolean {
   if (message.type() !== "error") return false;
   const text = message.text();
   return !/Download the React DevTools|favicon|Failed to load resource: the server responded with a status of 404/i.test(text);
-}
-
-async function dynamicPaths(): Promise<string[]> {
-  const db = e2eDb();
-  const listing = await db.listing.findFirstOrThrow({ where: { status: "PUBLIEE" }, select: { id: true, sellerId: true } });
-  const wilaya = await db.wilaya.findFirstOrThrow({ select: { slug: true } });
-  return [
-    "/voitures/renault",
-    "/voitures/renault/clio",
-    "/voitures/yamaha",
-    "/voitures/yamaha/mt-07",
-    `/wilaya/${wilaya.slug}`,
-    `/annonce/${listing.id}`,
-    `/vendeur/${listing.sellerId}`,
-  ];
 }
 
 for (const locale of ["fr", "ar"] as const) {

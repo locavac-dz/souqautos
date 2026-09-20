@@ -128,7 +128,7 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
             {"★".repeat(Math.round(average))} {t("averageRating", { average, count })}
           </span>
         ) : (
-          <span className="text-slate-400">{t("noReviews")}</span>
+          <span className="text-slate-500">{t("noReviews")}</span>
         )}
       </p>
 
@@ -149,8 +149,9 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
             <p className="text-slate-500 text-sm">{t("noListings")}</p>
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
-              {listings.map((listing) => (
+              {listings.map((listing, index) => (
                 <ListingCard
+                  eager={index < 2}
                   key={listing.id}
                   listing={listing}
                   isLoggedIn={Boolean(currentUser)}
@@ -188,7 +189,7 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
                       {currentUser && isStaff(currentUser.role) && <DeleteReviewButton reviewId={review.id} />}
                     </div>
                     {review.comment && <p className="text-sm text-slate-700 mt-1">{review.comment}</p>}
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       {t("byAuthor", { name: review.author.profile?.displayName ?? review.author.email })} ·{" "}
                       {dateFormatter.format(review.createdAt)}
                     </p>

@@ -72,12 +72,12 @@ export function ReportListingButton({
   }
 
   if (done) {
-    return <p className="text-xs text-slate-400">{t("alreadyReported")}</p>;
+    return <p className="text-xs text-slate-500">{t("alreadyReported")}</p>;
   }
 
   if (!open) {
     return (
-      <button type="button" onClick={handleOpen} className="text-xs text-slate-400 hover:text-red-600">
+      <button type="button" onClick={handleOpen} className="text-xs text-slate-500 hover:text-red-600">
         {t("reportListing")}
       </button>
     );
@@ -117,7 +117,7 @@ export function ReportListingButton({
         >
           {t("submit")}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs text-slate-400 hover:text-slate-600">
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-slate-500 hover:text-slate-600">
           {t("cancel")}
         </button>
       </div>

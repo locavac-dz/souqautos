@@ -55,7 +55,7 @@ export async function RoadTestCard({ article, locale }: { article: RoadTestCardA
           </div>
         )}
         <p className="mt-2 text-sm text-slate-600">{isAr ? article.excerptAr : article.excerptFr}</p>
-        <p className="mt-auto pt-3 text-xs text-slate-400">
+        <p className="mt-auto pt-3 text-xs text-slate-500">
           {article.publishedAt && dateFormatter.format(article.publishedAt)}
         </p>
       </div>

@@ -70,7 +70,7 @@ export default async function AdminListingsPage() {
                         {listing.title}
                       </Link>
                       <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-500 mt-1">
                         {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email} ·{" "}
                         {t("submittedOn", {
                           date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
@@ -135,7 +135,7 @@ export default async function AdminListingsPage() {
                     {listing.title}
                   </Link>
                   <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email}
                   </p>
                 </div>

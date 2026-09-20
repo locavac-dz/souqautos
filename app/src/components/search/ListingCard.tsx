@@ -46,6 +46,7 @@ export async function ListingCard({
   priceBadge,
   sellerTrustScore,
   professionalBadge,
+  eager = false,
 }: {
   listing: CardListing;
   isLoggedIn: boolean;
@@ -53,6 +54,9 @@ export async function ListingCard({
   priceBadge?: { badge: PriceBadge; deviationPct: number } | null;
   sellerTrustScore?: number | null;
   professionalBadge?: { badgeVerifie: boolean } | null;
+  // Cartes visibles dès l'ouverture de la page (première rangée) : leur photo est chargée tout de suite, en priorité. Sans cela,
+  // le navigateur attend d'avoir mis la page en forme pour la demander, et la plus grande image affichée (LCP) arrive plus tard.
+  eager?: boolean;
 }) {
   const locale = await getLocale();
   const tWizard = await getTranslations("Wizard");
@@ -77,6 +81,8 @@ export async function ListingCard({
             src={listing.photos[0].path}
             alt={listing.title}
             fill
+            loading={eager ? "eager" : undefined}
+            fetchPriority={eager ? "high" : undefined}
             className="object-cover"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />

@@ -726,7 +726,7 @@ export function BlogArticleForm({
             disabled={mode !== "scheduled"}
             onChange={(e) => setScheduledAt(e.target.value)}
             aria-label={t("publicationScheduled")}
-            className="rounded-md border border-slate-300 px-2 py-1 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+            className="rounded-md border border-slate-300 px-2 py-1 text-sm disabled:bg-slate-50 disabled:text-slate-500"
           />
         </label>
         <p className="text-xs text-slate-500">{t("publicationHelp")}</p>

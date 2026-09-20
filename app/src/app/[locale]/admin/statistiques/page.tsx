@@ -217,7 +217,7 @@ function WeekBars({
                 title={`${formatter.format(w.weekStart)} — ${w.count}`}
               />
             </div>
-            <span className="text-[10px] text-slate-400">{w.count}</span>
+            <span className="text-[10px] text-slate-500">{w.count}</span>
           </div>
         );
       })}

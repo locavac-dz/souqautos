@@ -2718,3 +2718,31 @@ Deuxième lot du bloc 6 « prêt pour la mise en ligne ». Jusqu'ici, si une fai
 - `style-src` garde `'unsafe-inline'` (styles de Next.js/React) : un style injecté reste possible, un script non.
 - Toute ressource externe ajoutée plus tard (police, statistiques, vidéo intégrée) sera bloquée tant qu'elle n'est pas déclarée dans la politique.
 - Pas de `preload` HSTS (décision à prendre volontairement, quasi irréversible).
+
+## Lot 135 — Bloc 6 : accessibilité et performance (2026-09-20)
+
+Troisième lot du bloc 6 « prêt pour la mise en ligne ». Pour la première fois, l'accessibilité et le poids des pages sont **mesurés dans un vrai navigateur** au lieu d'être supposés.
+
+**Accessibilité — mesurée avec axe-core, sur toutes les pages, en français et en arabe**
+- `e2e/accessibility.spec.ts` audite les pages publiques (20 + 7 dynamiques), l'espace d'un compte connecté (7 écrans, les 11 étapes de publication et la modification d'annonce) et les 23 écrans d'administration. Règles WCAG 2.x A/AA + bonnes pratiques. **Première mesure : 4 familles de défauts (contraste, champs sans étiquette reliée, menus sans nom, zones de navigation non nommées) sur une trentaine de pages ; après correction : zéro.**
+- **Texte trop pâle** : `text-slate-400` (contraste 2,6 pour 4,5 exigé) remplacé par `text-slate-500` dans 61 fichiers (117 occurrences) ; boutons verts de l'administration (blanc sur emerald-600, 3,8) passés en emerald-700 ; cartes « bientôt disponible » de l'étape 10 sans opacité réduite ; pagination désactivée lisible et marquée `aria-disabled`.
+- **Champs sans étiquette reliée** (défaut critique pour les lecteurs d'écran) : le formulaire de cote, les étapes 2 à 5 de publication (18 champs) — le champ est maintenant DANS son étiquette ; menu de tri de la recherche, menus de rôle de l'administration (« Rôle de … »), envoi de la pièce d'identité : noms accessibles ajoutés (FR/AR).
+- **Zones de navigation nommées** (principale, fil d'Ariane — jusqu'ici « Breadcrumb » en anglais —, pagination, sections d'administration).
+- **Lien « Aller au contenu principal »** (premier arrêt au clavier). **Menu mobile** : se ferme avec Échap (focus rendu au bouton) et **quand on change de page** (il restait ouvert par-dessus la page choisie), `aria-controls`.
+- **Au clavier** (`e2e/accessibility.spec.ts`) : lien d'évitement, contour de focus visible sur chaque élément atteint (tests sur 3 pages × 2 langues), menu mobile.
+- `axe-core` ajouté en dépendance de développement (il n'arrivait qu'indirectement, par le lint).
+
+**Performance — mesurée sur la version de production** (`e2e-pwa/performance.spec.ts`, première visite d'un navigateur neuf)
+- Mesuré : JavaScript ~233 Ko et CSS ~8 Ko compressés par page, décalage de mise en page nul. Budgets testés : JS 300 Ko, CSS 30 Ko, CLS 0,05.
+- **Défaut trouvé et corrigé** : l'image principale (LCP) de l'accueil, de la recherche et des pages marque/modèle/vendeur/professionnel/ville était en chargement différé (`lazy`) : le navigateur la demandait en retard. Les cartes de la première rangée sont maintenant `loading="eager"` + `fetchPriority="high"` (`priority`, déprécié dans Next 16, remplacé partout).
+- **Cache** : les photos (`/uploads/*`, noms UUID jamais réutilisés) sont servies `immutable` un an, leurs versions redimensionnées aussi (`minimumCacheTTL`).
+- Documentation : `docs/EXPLOITATION.md`, section 5 septies (règles pour les nouveaux formulaires, budgets, avertissement sur les noms de fichiers d'`/uploads`).
+
+**Vérification** : `npm run verify -- --e2e` — 1 263 tests unitaires, **131 tests de bout en bout (12 nouveaux)**, **15 en production (2 nouveaux)**. **Sabotages vérifiés** : couleur pâle rétablie / étiquette retirée (axe), contour de focus supprimé, menu qui ne se ferme plus à la navigation, images de nouveau en `lazy`, en-tête de cache retiré → chacun fait échouer le test attendu.
+
+**Limites**
+- Aucun audit avec un **vrai lecteur d'écran** (NVDA, VoiceOver, TalkBack), aucun test de la **qualité** des textes alternatifs ni de la lisibilité de l'arabe, aucun test sur un vrai téléphone : un outil automatique attrape environ un tiers des problèmes d'accessibilité.
+- Les pages n'ont été auditées que dans les états testés (pages vides, formulaires non soumis) : messages d'erreur, fenêtres et états de chargement ne le sont pas.
+- Mesures de performance **sur cette machine, sans limitation réseau** : les millisecondes ne sont pas des seuils. Pas de mesure sur mobile 3G/4G, ni sous charge (lot suivant), ni « terrain ».
+- Les images restent en WebP (pas d'AVIF) : plus léger mais plus coûteux à produire sur un petit serveur ; à réévaluer avec l'hébergement.
+- Mode sombre toujours absent (le site reste en thème clair, décision documentée dans `globals.css`).

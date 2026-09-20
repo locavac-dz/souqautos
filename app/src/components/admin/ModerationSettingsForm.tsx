@@ -51,7 +51,7 @@ export function ModerationSettingsForm({
     <form onSubmit={handleSubmit} className="max-w-md space-y-4">
       <label className="block">
         <span className="text-sm font-medium text-slate-700">{t("autoSuspendListingLabel")}</span>
-        <p className="text-xs text-slate-400 mb-1">{t("autoSuspendListingHelp")}</p>
+        <p className="text-xs text-slate-500 mb-1">{t("autoSuspendListingHelp")}</p>
         <input
           type="number"
           min={1}
@@ -59,13 +59,13 @@ export function ModerationSettingsForm({
           value={listingThreshold}
           onChange={(e) => setListingThreshold(e.target.value)}
           disabled={!canEdit}
-          className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
       <label className="block">
         <span className="text-sm font-medium text-slate-700">{t("autoSuspendUserLabel")}</span>
-        <p className="text-xs text-slate-400 mb-1">{t("autoSuspendUserHelp")}</p>
+        <p className="text-xs text-slate-500 mb-1">{t("autoSuspendUserHelp")}</p>
         <input
           type="number"
           min={1}
@@ -73,7 +73,7 @@ export function ModerationSettingsForm({
           value={userThreshold}
           onChange={(e) => setUserThreshold(e.target.value)}
           disabled={!canEdit}
-          className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+          className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500"
         />
       </label>
 
@@ -86,7 +86,7 @@ export function ModerationSettingsForm({
           {pending ? t("saving") : t("save")}
         </button>
       ) : (
-        <p className="text-xs text-slate-400">{t("readOnlyNotice")}</p>
+        <p className="text-xs text-slate-500">{t("readOnlyNotice")}</p>
       )}
 
       {saved && <p className="text-sm text-emerald-700">{t("saved")}</p>}

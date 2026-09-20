@@ -27,7 +27,7 @@ export default async function AdminIdentityRequestsPage() {
                 <p className="font-medium text-slate-900">
                   {req.user.profile?.displayName ?? req.user.email}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   {req.user.email} ·{" "}
                   {t("submittedOn", {
                     date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {

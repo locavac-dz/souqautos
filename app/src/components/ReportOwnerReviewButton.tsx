@@ -45,7 +45,7 @@ export function ReportOwnerReviewButton({ reviewId }: { reviewId: string }) {
     <div className="mt-2 text-xs">
       {message && <p className={message.kind === "ok" ? "text-emerald-700" : "text-red-600"}>{message.text}</p>}
       {!open && !(message?.kind === "ok") && (
-        <button type="button" onClick={() => setOpen(true)} className="text-slate-400 underline hover:text-slate-700">
+        <button type="button" onClick={() => setOpen(true)} className="text-slate-500 underline hover:text-slate-700">
           {t("report")}
         </button>
       )}
@@ -76,7 +76,7 @@ export function ReportOwnerReviewButton({ reviewId }: { reviewId: string }) {
             <button type="button" onClick={send} disabled={pending} className="font-medium text-slate-800 underline disabled:opacity-50">
               {t("reportSend")}
             </button>
-            <button type="button" onClick={() => setOpen(false)} className="text-slate-400 underline">
+            <button type="button" onClick={() => setOpen(false)} className="text-slate-500 underline">
               {t("reportCancel")}
             </button>
           </div>

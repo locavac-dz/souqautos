@@ -36,9 +36,9 @@ export default async function AdminUsersPage() {
             <div key={user.id} className="flex items-center justify-between px-4 py-3 text-sm">
               <div>
                 <p className="font-medium text-slate-900">{user.profile?.displayName ?? user.email}</p>
-                <p className="text-slate-400 text-xs">{user.email}</p>
+                <p className="text-slate-500 text-xs">{user.email}</p>
                 {user.deletedAt ? (
-                  <p className="mt-0.5 text-xs text-slate-400">{t("deletedLabel")}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{t("deletedLabel")}</p>
                 ) : (
                   <>
                     {user.suspendedAt && (
@@ -53,11 +53,16 @@ export default async function AdminUsersPage() {
               </div>
               <div className="flex items-center gap-3">
                 {user.deletedAt ? (
-                  <span className="text-slate-400">{t(ROLE_KEY[user.role])}</span>
+                  <span className="text-slate-500">{t(ROLE_KEY[user.role])}</span>
                 ) : (
                   <>
                     {canChangeRoles ? (
-                      <RoleSelect userId={user.id} currentRole={user.role} disabled={user.id === currentUser?.id} />
+                      <RoleSelect
+                        userId={user.id}
+                        currentRole={user.role}
+                        disabled={user.id === currentUser?.id}
+                        label={t("roleSelectLabel", { name: user.profile?.displayName ?? user.email })}
+                      />
                     ) : (
                       <span className="text-slate-600">{t(ROLE_KEY[user.role])}</span>
                     )}
