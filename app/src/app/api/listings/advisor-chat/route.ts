@@ -6,7 +6,8 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { runAdvisorTurn } from "@/lib/ai-advisor";
 import { searchParamsSchema } from "@/lib/validation/search";
-import { buildListingWhere, buildListingOrderBy, listingCardInclude } from "@/lib/search";
+import { buildListingOrderBy, listingCardInclude } from "@/lib/search";
+import { resolveListingWhere } from "@/lib/search-query";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
   // dans Prisma : toujours revalidés par le même schéma que /recherche,
   // exactement la forme qu'il valide déjà depuis une vraie query string.
   const searchParams = searchParamsSchema.parse({ ...turn.filters, page: "1" });
-  const where = buildListingWhere(searchParams);
+  const where = await resolveListingWhere(searchParams);
   const orderBy = buildListingOrderBy(searchParams.sort);
 
   const [listings, totalCount] = await Promise.all([

@@ -6,7 +6,6 @@ import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder
 import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import { searchParamsSchema, PAGE_SIZE } from "@/lib/validation/search";
 import {
-  buildListingWhere,
   buildListingOrderBy,
   currentPage,
   paginationOffset,
@@ -18,6 +17,7 @@ import { SearchFilters } from "@/components/search/SearchFilters";
 import { SaveSearchAlertForm } from "@/components/search/SaveSearchAlertForm";
 import { SortSelect } from "@/components/search/SortSelect";
 import { getSearchBrands, getSearchEquipments, getSearchWilayas } from "@/lib/reference-data";
+import { resolveListingWhere } from "@/lib/search-query";
 import { ListingCard } from "@/components/search/ListingCard";
 import { Pagination } from "@/components/search/Pagination";
 import { estimatePricesForListings } from "@/lib/price-estimation";
@@ -43,7 +43,7 @@ export default async function SearchPage({
   await sweepExpiredListings();
   await sweepExpiringListingsForReminders();
 
-  const where = buildListingWhere(params);
+  const where = await resolveListingWhere(params); // Lot 139 : mot cherché d'abord dans le catalogue (en cache), puis requête sans jointure
   const orderBy = buildListingOrderBy(params.sort);
   const page = currentPage(params);
 

@@ -16,7 +16,13 @@ export const listingCardInclude = {
 
 export type ListingWithCardRelations = Prisma.ListingGetPayload<{ include: typeof listingCardInclude }>;
 
-export function buildListingWhere(params: SearchParams): Prisma.ListingWhereInput {
+// Lot 139 — marques, modèles et wilayas dont le NOM contient le mot cherché (cf. src/lib/search-query.ts).
+export type CatalogueMatches = { brandIds: number[]; modelIds: number[]; wilayaIds: number[] };
+
+// `catalogueMatches` (facultatif) : quand l'appelant a déjà cherché le mot dans le catalogue, la condition n'a plus besoin de
+// joindre les tables de marques, modèles et wilayas — même résultat, sans jointure (et donc indexable). Sans lui, la forme
+// d'origine (par relations) est conservée : c'est la RÉFÉRENCE dont le test d'équivalence vérifie que la forme rapide est identique.
+export function buildListingWhere(params: SearchParams, catalogueMatches?: CatalogueMatches): Prisma.ListingWhereInput {
   const where: Prisma.ListingWhereInput = { status: "PUBLIEE" };
 
   if (params.q) {
@@ -24,15 +30,15 @@ export function buildListingWhere(params: SearchParams): Prisma.ListingWhereInpu
     // (SQLite ne distinguait pas majuscules et minuscules). Aucun pliage des
     // accents dans un cas comme dans l'autre.
     const contains = { contains: params.q, mode: "insensitive" } as const;
-    where.OR = [
-      { title: contains },
-      { brandFreeText: contains },
-      { modelFreeText: contains },
-      { brand: { name: contains } },
-      { model: { name: contains } },
-      { wilaya: { nomFr: contains } },
-      { wilaya: { nomAr: contains } },
-    ];
+    const clauses: Prisma.ListingWhereInput[] = [{ title: contains }, { brandFreeText: contains }, { modelFreeText: contains }];
+    if (catalogueMatches) {
+      if (catalogueMatches.brandIds.length > 0) clauses.push({ brandId: { in: catalogueMatches.brandIds } });
+      if (catalogueMatches.modelIds.length > 0) clauses.push({ modelId: { in: catalogueMatches.modelIds } });
+      if (catalogueMatches.wilayaIds.length > 0) clauses.push({ wilayaId: { in: catalogueMatches.wilayaIds } });
+    } else {
+      clauses.push({ brand: { name: contains } }, { model: { name: contains } }, { wilaya: { nomFr: contains } }, { wilaya: { nomAr: contains } });
+    }
+    where.OR = clauses;
   }
 
   if (params.category) where.category = params.category;

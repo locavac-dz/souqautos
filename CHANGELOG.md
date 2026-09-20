@@ -2840,3 +2840,36 @@ Sixième lot du bloc 6 « prêt pour la mise en ligne ». Le compte d'un adminis
 - Une personne qui connaît le mot de passe d'un compte peut le **verrouiller** 15 minutes en échouant 5 codes (même compromis que pour un mot de passe).
 - **Premier déploiement en production** : tous les comptes d'équipe existants perdent leurs pouvoirs jusqu'à ce qu'ils activent la fonction. `launch:check` en compte déjà un (l'administrateur de développement).
 - Textes **arabes rédigés ici**, à faire relire par un locuteur natif (les 54 nouveaux messages et les courriels).
+
+## Lot 139 — Recherche par mot : indépendante du volume, à résultats identiques (2026-09-20)
+
+Le Lot 137 avait laissé un point faible mesuré : la recherche par mot (`?q=`) lisait toute la table à chaque requête, et le comptage de la pagination aussi. Coût proportionnel au nombre d'annonces — invisible aujourd'hui, bloquant à 100 000. Ce lot le corrige **sans rien changer à ce que la recherche trouve**.
+
+**Deux changements**
+- **Le mot est cherché d'abord dans le catalogue** (62 marques, 410 modèles, 69 wilayas — déjà gardés en mémoire depuis le Lot 137), puis la requête devient « titre contient… OU marque dans (…) OU modèle dans (…) OU wilaya dans (…) » : **plus aucune jointure**, là où chaque ligne d'annonce en exigeait jusqu'à quatre.
+- **Index trigramme** (`pg_trgm`, migration `20260920150000_listing_text_search`, écart nul avec `schema.prisma` vérifié) : le « contient » du titre et des textes libres devient indexable. Index de 6,4 Mo pour une table de 31 Mo à 100 000 annonces.
+
+**Mesures à 100 000 annonces** (base de charge, `npm run load:seed -- --listings 100000`)
+
+| Scénario (10 visiteurs) | req/s | p95 |
+|---|---|---|
+| recherche par mot | 10,8 → **28,9** | 1 100 → **418 ms** |
+| recherche simple | 23,6 → 28,3 | 609 → 484 ms |
+| recherche filtrée | 23,0 → 23,7 | 543 → 476 ms |
+| navigation (mélange) | 33,1 → 34,5 | 618 → 481 ms |
+
+Comptage d'un mot d'au moins 3 lettres et peu courant : **0,03 à 15 ms** (contre 66 à 158 ms) ; un mot sans résultat (« zzzz ») passe de 408 à **0,04 ms**.
+
+**Ce qui n'a pas changé, et qui est prouvé**
+- `src/lib/like.ts` reproduit **exactement** le `ILIKE '%mot%'` d'origine, jokers compris : Prisma ne protège ni `%` ni `_`, donc « c_io » trouve « Clio » et « % » trouve tout — comme avant. Écrit **sans expression régulière** (deux pointeurs, coût borné) : un motif rempli de `%` ne peut pas figer le serveur.
+- `tests/search-equivalence.test.ts` compare, sur les **100 000 annonces**, les annonces trouvées par l'ancienne et la nouvelle forme — **une à une** (empreinte des identifiants triés), sur **70 mots** : casse, accents, arabe, chiffres, jokers, caractères d'échappement, injections, mots sans résultat, et mot + filtres. Il compare aussi le catalogue directement à PostgreSQL, parce que le titre des annonces fabriquées contient le nom du modèle et masquerait un écart.
+
+**Vérification** : `npm run verify -- --e2e` — 1 623 tests unitaires (168 nouveaux), **158 de bout en bout (6 nouveaux)**, 20 en production. Les tests de bout en bout prouvent ce que voit le visiteur : une annonce trouvée par le nom de son modèle alors que son titre ne le contient pas, par le nom arabe de sa wilaya, les jokers, et aucune annonce en attente de modération. **Sabotages vérifiés** : « _ » ou « % » traités comme littéraux, échappement ignoré, casse non pliée, nom arabe des wilayas oublié, modèles oubliés, clause des modèles retirée (de bout en bout) → chacun fait échouer le test attendu.
+
+**Limites**
+- **Exigence d'hébergement** : la migration exécute `CREATE EXTENSION pg_trgm` — extension « de confiance » depuis **PostgreSQL 13** (le propriétaire de la base suffit), mais absente si le paquet `postgresql-contrib` ne l'est pas. La migration échoue alors : la faire créer par un administrateur de la base avant `prisma migrate deploy`. Sans les index, le site fonctionne à l'identique, seulement plus lentement à grand volume.
+- **Un index trigramme exige au moins 3 caractères** : « a » ou « ar » restent un parcours complet (70 à 225 ms à 100 000 annonces, et la mesure a même été plus lente qu'avant l'index sur ce cas). Un **mot très courant** (« clio » = un quart des annonces) reste à ~73 ms : PostgreSQL choisit le parcours complet, à raison, quand il faut de toute façon compter des dizaines de milliers de lignes.
+- **Toujours pas de pliage des accents ni de tolérance aux fautes** (« megane » ne trouve pas « Mégane ») : c'est le comportement d'avant, conservé délibérément. Le remède serait l'extension `unaccent` et la similarité trigramme, ou un moteur de recherche dédié — un changement de comportement, donc un choix produit.
+- Les **alertes de recherche** gardent l'ancienne forme : elles testent une seule annonce par son identifiant, où les jointures ne coûtent rien.
+- **Constat nouveau, non traité** : à 100 000 annonces, le badge « bon prix » coûte **~13 ms de processeur par page** (~5 ms à 20 000), et le rechargement des comparables d'un modèle très courant ~0,8 s chaque minute. Le remède touche à la façon de calculer l'estimation (comparables limités aux plus récents, ou statistiques précalculées) : c'est un choix produit, pas une optimisation neutre.
+- Mesures **sur cette machine**, sans latence réseau : elles comparent l'avant et l'après, elles ne garantissent rien pour votre serveur.
