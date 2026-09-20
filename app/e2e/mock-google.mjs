@@ -58,6 +58,14 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === "GET" && url.pathname === "/__state") return send(res, 200, { exchanges });
 
+  // Lot 134 — page d'un AUTRE site (autre port = autre origine) qui tente d'afficher le site dans un cadre : sert à
+  // vérifier que le site refuse d'être encadré (clickjacking). Utilisée par e2e/security-headers.spec.ts.
+  if (req.method === "GET" && url.pathname === "/__frame") {
+    const src = (url.searchParams.get("src") ?? "").replace(/[<>"']/g, "");
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+    return res.end(`<!doctype html><html><body><p id="hote">Page d'un autre site</p><iframe id="cadre" src="${src}" width="600" height="400"></iframe></body></html>`);
+  }
+
   // Page de choix du compte : ici, le « choix » est celui de l'identité configurée, sans écran.
   if (req.method === "GET" && url.pathname === "/auth") {
     const q = url.searchParams;

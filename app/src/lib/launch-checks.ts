@@ -170,6 +170,16 @@ function checkSearchConsole(env: Env): CheckResult {
   return { id: "search-console", level: "warning", message: "Pas de code de vérification Google Search Console : impossible de soumettre le plan du site ni de suivre l'exploration par Google.", fix: "Ajouter la propriété du site dans Search Console (méthode « balise HTML »), puis définir GOOGLE_SITE_VERIFICATION." };
 }
 
+// Lot 134 — la politique de sécurité des contenus (src/proxy.ts) peut être mise en mode « observation » (CSP_REPORT_ONLY=1) :
+// le navigateur signale ce qu'il aurait bloqué mais ne bloque RIEN. Utile quelques jours pour repérer un oubli avant de
+// durcir, dangereux s'il y reste : le site n'est alors protégé contre l'injection de scripts que sur le papier.
+function checkSecurityPolicy(env: Env): CheckResult {
+  if (env.CSP_REPORT_ONLY === "1") {
+    return { id: "csp", level: "warning", message: "La politique de sécurité des contenus est en mode observation (CSP_REPORT_ONLY=1) : elle signale mais ne bloque rien, un script injecté dans une page s'exécuterait.", fix: "Après avoir relu les rapports (« [csp] » dans les journaux), retirer CSP_REPORT_ONLY. Voir docs/EXPLOITATION.md, section « En-têtes de sécurité »." };
+  }
+  return { id: "csp", level: "ok", message: "Politique de sécurité des contenus appliquée (bloque les scripts non autorisés)." };
+}
+
 function checkInfrastructure(env: Env): CheckResult[] {
   const results: CheckResult[] = [];
 
@@ -230,6 +240,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkPush(env),
     checkGoogleLogin(env),
     checkSearchConsole(env),
+    checkSecurityPolicy(env),
     ...checkInfrastructure(env),
     ...checkFacts(facts),
   ];

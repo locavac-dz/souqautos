@@ -133,6 +133,20 @@ describe("evaluateLaunchReadiness", () => {
   });
 });
 
+describe("evaluateLaunchReadiness — politique de sécurité (Lot 134)", () => {
+  it("is fine by default: the policy is enforced", () => {
+    expect(level(evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts }), "csp")).toEqual(["ok"]);
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, CSP_REPORT_ONLY: "0" }, facts: goodFacts }), "csp")).toEqual(["ok"]);
+  });
+
+  it("warns, without blocking, when the policy is left in observation mode (it blocks nothing there)", () => {
+    const results = evaluateLaunchReadiness({ env: { ...goodEnv, CSP_REPORT_ONLY: "1" }, facts: goodFacts });
+    expect(level(results, "csp")).toEqual(["warning"]);
+    expect(results.find((r) => r.id === "csp")?.fix).toContain("CSP_REPORT_ONLY");
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+  });
+});
+
 describe("evaluateLaunchReadiness — Search Console (Lot 124)", () => {
   const withoutCode = () => {
     const { GOOGLE_SITE_VERIFICATION, ...rest } = goodEnv;

@@ -2694,3 +2694,27 @@ Premier lot du bloc 6 « prêt pour la mise en ligne ». Jusqu'ici, une personne
 - Les limites de débit sont conservées en mémoire sans Redis (par instance, perdues au redémarrage).
 - Une personne bloquée par les limites doit attendre : pas d'outil de déblocage pour l'équipe.
 - Les sessions restent des jetons sans état : la révocation est **par compte** (toutes les sessions d'un coup), pas par appareil.
+
+## Lot 134 — Bloc 6 : en-têtes de sécurité et protection contre l'injection de scripts (2026-09-20)
+
+Deuxième lot du bloc 6 « prêt pour la mise en ligne ». Jusqu'ici, si une faille laissait un attaquant glisser du code dans une page, le navigateur l'exécutait ; le site pouvait aussi être affiché dans un cadre par un autre site (clickjacking) et révélait son socle technique. Le navigateur refuse maintenant tout cela.
+
+**Livré**
+- **Politique de sécurité des contenus (CSP) à nonce** (`src/proxy.ts`, `src/lib/security-headers.ts`) : chaque page reçoit un nonce aléatoire différent à chaque requête ; seuls les scripts qui le portent s'exécutent. Un script, un gestionnaire (`onclick=…`) ou une adresse `javascript:` injectés sont refusés. Ni `unsafe-eval` ni `unsafe-inline` pour les scripts en production. Le site ne charge, n'appelle et n'encadre rien d'extérieur (seule exception : l'origine du stockage de photos `S3_PUBLIC_URL`, pour les images) ; il ne peut plus être encadré (`frame-ancestors 'none'`).
+- **En-têtes fixes sur toutes les réponses** (`next.config.ts`) : `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy` (géolocalisation, caméra, micro… interdits), `Cross-Origin-Opener-Policy: same-origin-allow-popups` (la fenêtre WhatsApp reste pilotable) ; en production `Strict-Transport-Security` (1 an, sous-domaines inclus, sans `preload`). `X-Powered-By` supprimé.
+- **Un en-tête de politique envoyé par un visiteur n'est jamais repris.**
+- **Rapports de violation** : `POST /api/security/csp-report` (toujours 204, corps ≤ 8 Ko, 30/min par IP, bruit des extensions de navigateur ignoré, jetons des adresses masqués dans les journaux, ex. lien de réinitialisation).
+- **Mode observation** `CSP_REPORT_ONLY=1` pour un premier déploiement prudent ; `npm run launch:check` avertit tant qu'il est actif.
+- **zod en mode « sans compilation » dans le navigateur** (`src/instrumentation-client.ts`) : sa sonde `new Function` déclenchait une fausse violation à chaque page vue en production (défaut révélé par le test de production, corrigé).
+- Documentation : `docs/EXPLOITATION.md`, section 5 sexies (mise en place, HSTS, contrôle après déploiement).
+
+**Vérification** : `npm run verify -- --e2e` — 1 263 tests unitaires (38 nouveaux : politique, rapports, proxy, zod, contrôle de lancement), **119 tests de bout en bout (12 nouveaux, dans un vrai navigateur)**, 13 de l'application installable en **production** (6 nouveaux). Les tests prouvent ce que le navigateur **refuse** : script, gestionnaire et lien `javascript:` injectés dans une vraie page, image/requête/cadre externes, encadrement par un autre site (faux site sur un autre port), et que le site fonctionne sans la moindre violation sur 12 pages FR/AR en production. **Sabotages vérifiés** : cadre autorisé, scripts en ligne autorisés, HSTS retiré, zod non réglé, retrait des en-têtes du visiteur dans le proxy → chacun fait échouer le test attendu.
+- Constat : dans Next.js 16.3.4, les en-têtes de réponse du proxy sont recopiés dans la requête ; le nonce marche donc même sans la copie explicite, qui est gardée (méthode documentée, requise en mode observation). `x-nonce`, lu nulle part, a été retiré.
+- Un test de bout en bout (connexion dans `messaging.spec.ts`) a échoué une fois sur la première exécution complète, puis a réussi seul, à 6 répétitions et dans une seconde exécution complète : **cause non établie** (probablement une course à l'hydratation sur un serveur de développement chargé) ; à surveiller.
+
+**Limites**
+- **Écart schéma/migrations non contrôlé** (`SHADOW_DATABASE_URL` non définie ici) : sans effet, ce lot n'ajoute aucune migration.
+- Politique **jamais essayée derrière votre vrai répartiteur de charge / CDN**, ni avec un vrai stockage S3 ; HSTS (https) non testé hors production locale en http.
+- `style-src` garde `'unsafe-inline'` (styles de Next.js/React) : un style injecté reste possible, un script non.
+- Toute ressource externe ajoutée plus tard (police, statistiques, vidéo intégrée) sera bloquée tant qu'elle n'est pas déclarée dans la politique.
+- Pas de `preload` HSTS (décision à prendre volontairement, quasi irréversible).

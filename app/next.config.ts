@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { staticSecurityHeaders } from "./src/lib/security-headers";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -25,10 +26,18 @@ const s3HostIsLocalOrPrivateIp = s3PublicUrl
   : false;
 
 const nextConfig: NextConfig = {
+  // Lot 134 — n'annonce plus « X-Powered-By: Next.js » : inutile aux visiteurs, utile à qui cherche une version vulnérable.
+  poweredByHeader: false,
   // Lot 120 — le service worker doit toujours être revérifié : sinon une ancienne version
   // pourrait rester active chez les visiteurs après une mise à jour du site.
   async headers() {
     return [
+      // Lot 134 — en-têtes de sécurité fixes, sur TOUTES les réponses (pages, API, fichiers). La politique de sécurité des
+      // contenus (CSP), elle, change à chaque requête (nonce) : elle est posée par src/proxy.ts.
+      {
+        source: "/:path*",
+        headers: staticSecurityHeaders(process.env.NODE_ENV === "production"),
+      },
       {
         source: "/sw.js",
         headers: [
