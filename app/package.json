@@ -17,6 +17,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo-listings.ts",
     "db:demo-photos": "tsx prisma/apply-demo-photos.ts",
+    "verify": "node scripts/verify.mjs",
     "i18n:check": "vitest run tests/i18n-messages.test.ts tests/i18n-audit.test.ts",
     "i18n:review": "tsx scripts/i18n-review.ts",
     "launch:check": "tsx scripts/launch-check.ts",
@@ -61,5 +62,14 @@
     "tsx": "^4.23.13",
     "typescript": "^5",
     "vitest": "^4.1.11"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "@swc/core@1.16.1": true,
+    "esbuild@0.28.2": true,
+    "prisma@6.19.3": true,
+    "unrs-resolver@1.12.2": true
   }
 }

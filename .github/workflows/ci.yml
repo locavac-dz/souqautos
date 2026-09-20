@@ -1,0 +1,133 @@
+# Lot 129 — chaîne d'intégration continue : à chaque envoi de code et chaque demande de fusion, tout ce
+# qui se vérifie par une machine est vérifié. Équivalent local : `npm run verify` (dossier app/).
+#
+# NON EXÉCUTÉ SUR GITHUB à la rédaction : le dépôt n'a pas de serveur distant. Chaque étape a été
+# reproduite en local (voir CHANGELOG, Lot 129) ; la première exécution réelle est à surveiller.
+#
+# Les mots de passe ci-dessous sont ceux de conteneurs PostgreSQL JETABLES créés pour la durée du
+# travail : ce ne sont pas des secrets. Aucun secret du projet n'est nécessaire (SMTP, S3, Redis et
+# clés VAPID sont absents : le site retombe sur ses modes de secours, comme dans les tests locaux).
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+  POSTGRES_PASSWORD: ci-conteneur-jetable
+  DATABASE_URL: postgresql://souq_auto:ci-conteneur-jetable@localhost:5432/souq_auto
+  E2E_DATABASE_URL: postgresql://souq_auto:ci-conteneur-jetable@localhost:5432/souq_auto_e2e
+  SHADOW_DATABASE_URL: postgresql://souq_auto:ci-conteneur-jetable@localhost:5432/souq_auto_shadow
+  NEXT_PUBLIC_SITE_URL: http://localhost:5185
+  # Valeurs propres à la CI (jamais celles d'un vrai environnement) : suffisantes pour démarrer le site.
+  JWT_SECRET: ci-jwt-secret-jetable-0123456789abcdef0123456789abcdef
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  checks:
+    name: Types, lint, tests, migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: souq_auto
+          POSTGRES_PASSWORD: ci-conteneur-jetable
+          POSTGRES_DB: souq_auto
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U souq_auto"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Installer les dépendances (verrou respecté à l'identique)
+        run: npm ci
+      - name: Générer le client de base de données
+        run: npx prisma generate
+      - name: Types
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Tests unitaires et cohérence des textes français / arabes
+        run: npm test
+      - name: Créer la base de contrôle des écarts
+        run: PGPASSWORD="$POSTGRES_PASSWORD" psql -h localhost -U souq_auto -d souq_auto -c "CREATE DATABASE souq_auto_shadow"
+      - name: Les migrations s'appliquent sur une base vide
+        run: npx prisma migrate deploy
+      - name: Le schéma ne diffère pas des migrations (aucune migration oubliée)
+        run: npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url "$SHADOW_DATABASE_URL" --exit-code
+      - name: Vulnérabilités connues des dépendances de production (information)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
+
+  e2e:
+    name: Tests de bout en bout
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: souq_auto
+          POSTGRES_PASSWORD: ci-conteneur-jetable
+          POSTGRES_DB: souq_auto
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U souq_auto"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Installer les dépendances
+        run: npm ci
+      - name: Générer le client de base de données
+        run: npx prisma generate
+      - name: Clé de chiffrement propre à cette exécution
+        run: echo "ENCRYPTION_KEY=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+      - name: Installer le navigateur de test
+        run: npx playwright install --with-deps chromium
+      - name: Créer la base des tests de bout en bout
+        run: PGPASSWORD="$POSTGRES_PASSWORD" psql -h localhost -U souq_auto -d souq_auto -c "CREATE DATABASE souq_auto_e2e"
+      - name: Tests de bout en bout
+        run: npm run test:e2e
+      - name: Application installable (version de production)
+        run: npm run test:e2e:pwa
+      - name: Conserver les traces en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: traces-playwright
+          path: |
+            app/test-results/
+            app/playwright-report/
+          retention-days: 7
