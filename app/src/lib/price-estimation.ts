@@ -105,9 +105,11 @@ function buildTiers(query: {
 
 function matchesEquipment(rowEquipmentIds: number[], queryEquipmentIds: number[]): boolean {
   if (queryEquipmentIds.length === 0) return true;
-  const rowSet = new Set(rowEquipmentIds);
-  const sharedCount = queryEquipmentIds.filter((id) => rowSet.has(id)).length;
-  return sharedCount / queryEquipmentIds.length >= EQUIPMENT_OVERLAP_RATIO;
+  // Lot 140 — même calcul qu'avant (on compte les équipements demandés présents sur la ligne), mais sans créer un Set par
+  // ligne comparée : ces listes font au plus quelques dizaines d'éléments, et ce test est exécuté des milliers de fois par page.
+  let shared = 0;
+  for (const id of queryEquipmentIds) if (rowEquipmentIds.includes(id)) shared += 1;
+  return shared / queryEquipmentIds.length >= EQUIPMENT_OVERLAP_RATIO;
 }
 
 function matchesTier(
@@ -128,34 +130,76 @@ function matchesTier(
   return true;
 }
 
+type EstimateQueryInput = {
+  year?: number;
+  mileage?: number;
+  wilayaId?: number;
+  equipmentIds?: number[];
+  excludeListingId?: string;
+};
+
+// Lot 140 — les comparables d'un modèle, RANGÉS PAR ANNÉE.
+//
+// Tous les paliers sauf le dernier filtrent sur l'année (± 2 ans) : les ranger par année une fois permet de ne parcourir
+// que la tranche utile au lieu de toutes les annonces du modèle, à chaque palier et pour chaque carte de la page. Mesuré à
+// 100 000 annonces : une page de recherche parcourait 116 642 lignes (16,15 ms de processeur), dont 6,83 ms passées à
+// RECOPIER les lignes pour en exclure l'annonce affichée — copie désormais supprimée (l'exclusion se fait au passage).
+// Les résultats sont identiques : mêmes lignes retenues, et le calcul trie de toute façon les prix.
+//
+// `byYear` est un objet ordinaire (et non une Map) pour que le gel en profondeur du cache (src/lib/reference-data.ts)
+// atteigne aussi les tranches : une valeur partagée entre toutes les visites ne doit être modifiable par personne.
+export type ComparableIndex = { all: ComparableRow[]; byYear: Record<number, ComparableRow[]> };
+
+const EMPTY_INDEX: ComparableIndex = { all: [], byYear: {} };
+
+export function indexComparables(rows: ComparableRow[]): ComparableIndex {
+  const byYear: Record<number, ComparableRow[]> = {};
+  for (const row of rows) (byYear[row.year] ??= []).push(row);
+  return { all: rows, byYear };
+}
+
+// Les tranches de lignes à parcourir pour un palier : celles des années utiles, ou tout le modèle pour le palier sans filtre.
+// Ce n'est qu'un PRÉ-FILTRE : la règle reste `matchesTier`, qui revérifie l'année. Une tranche trop large ne change donc rien
+// au résultat (seulement au coût) ; une tranche trop étroite, si — c'est ce que vérifient les tests d'équivalence.
+function groupsForTier(index: ComparableIndex, query: EstimateQueryInput, tier: Tier): ComparableRow[][] {
+  if (!tier.year || query.year === undefined) return [index.all];
+  const groups: ComparableRow[][] = [];
+  // Bornes entières : une année demandée non entière ne doit élargir la fenêtre dans aucun sens.
+  for (let year = Math.ceil(query.year - YEAR_WINDOW); year <= Math.floor(query.year + YEAR_WINDOW); year++) {
+    const rows = index.byYear[year];
+    if (rows) groups.push(rows);
+  }
+  return groups;
+}
+
 // Essaie des filtres du plus précis au plus large : dès qu'un niveau donne au
 // moins un résultat, on s'arrête et on indique honnêtement quels critères ont
 // réellement été pris en compte (cf. commentaire de tête). Opère en mémoire sur
 // un jeu de lignes déjà chargé — permet à l'appelant de charger les
 // comparables une seule fois pour toute une page de résultats plutôt qu'une
 // requête par annonce (cf. estimatePricesForListings ci-dessous).
-export function estimateFromRows(
-  rows: ComparableRow[],
-  query: {
-    year?: number;
-    mileage?: number;
-    wilayaId?: number;
-    equipmentIds?: number[];
-    excludeListingId?: string;
-  }
-): EstimateResult | null {
-  const candidates = query.excludeListingId ? rows.filter((r) => r.id !== query.excludeListingId) : rows;
-
+export function estimateFromIndex(index: ComparableIndex, query: EstimateQueryInput): EstimateResult | null {
   for (const tier of buildTiers(query)) {
-    const matched = candidates.filter((r) => matchesTier(r, query, tier));
-    if (matched.length > 0) {
-      const base = computeEstimateFromPrices(matched.map((r) => r.price));
-      if (!base) continue;
-      return { ...base, appliedFilters: tier };
+    const prices: number[] = [];
+    for (const group of groupsForTier(index, query, tier)) {
+      for (const row of group) {
+        // L'annonce ne se compare jamais à elle-même (`excludeListingId`) : testé au passage, sans recopier le tableau.
+        if (row.id === query.excludeListingId) continue;
+        if (matchesTier(row, query, tier)) prices.push(row.price);
+      }
     }
+    const base = computeEstimateFromPrices(prices);
+    if (base) return { ...base, appliedFilters: tier };
   }
 
   return null;
+}
+
+// Même chose à partir d'une simple liste de lignes : pour un appel isolé, ou quand le rangement par année ne serait pas
+// rentabilisé. Un appelant qui estime PLUSIEURS annonces sur le même jeu de lignes range une fois (indexComparables) et
+// appelle estimateFromIndex.
+export function estimateFromRows(rows: ComparableRow[], query: EstimateQueryInput): EstimateResult | null {
+  return estimateFromIndex(indexComparables(rows), query);
 }
 
 // Lot 137 — les comparables d'un couple (marque, modèle) : TOUTES ses annonces publiées (le palier le plus large de
@@ -169,7 +213,9 @@ export function estimateFromRows(
 // plus 60 secondes plus tard ; les annonces elles-mêmes, leurs prix et leur statut affichés sont toujours à jour.
 export const COMPARABLES_TTL_MS = 60 * 1000;
 
-async function loadComparableRows(brandId: number, modelId: number): Promise<ComparableRow[]> {
+// Lot 140 — le rangement par année est fait UNE fois, à l'intérieur du cache : toutes les visites des 60 secondes suivantes
+// s'en servent, aucune page ne le refait.
+async function loadComparableIndex(brandId: number, modelId: number): Promise<ComparableIndex> {
   return cachedReference(
     `comparables:${brandId}-${modelId}`,
     async () => {
@@ -184,17 +230,17 @@ async function loadComparableRows(brandId: number, modelId: number): Promise<Com
           equipments: { select: { equipmentId: true } },
         },
       });
-      return rows.map(({ equipments, ...r }) => ({ ...r, equipmentIds: equipments.map((e) => e.equipmentId) }));
+      return indexComparables(rows.map(({ equipments, ...r }) => ({ ...r, equipmentIds: equipments.map((e) => e.equipmentId) })));
     },
     { ttlMs: COMPARABLES_TTL_MS },
   );
 }
 
 // Une seule lecture (le palier le plus large, sans filtre) : le classement du
-// plus précis au plus large se fait ensuite en mémoire via estimateFromRows,
+// plus précis au plus large se fait ensuite en mémoire via estimateFromIndex,
 // au lieu d'une requête par palier essayé.
 export async function estimatePrice(query: EstimateQuery): Promise<EstimateResult | null> {
-  return estimateFromRows(await loadComparableRows(query.brandId, query.modelId), query);
+  return estimateFromIndex(await loadComparableIndex(query.brandId, query.modelId), query);
 }
 
 type ListingForBatchEstimate = {
@@ -224,10 +270,10 @@ export async function estimatePricesForListings(
     }
   }
 
-  const rowsByPair = new Map<string, ComparableRow[]>();
+  const indexByPair = new Map<string, ComparableIndex>();
   await Promise.all(
     Array.from(pairs.entries()).map(async ([key, { brandId, modelId }]) => {
-      rowsByPair.set(key, await loadComparableRows(brandId, modelId));
+      indexByPair.set(key, await loadComparableIndex(brandId, modelId));
     })
   );
 
@@ -237,10 +283,10 @@ export async function estimatePricesForListings(
       results.set(listing.id, null);
       continue;
     }
-    const rows = rowsByPair.get(`${listing.brandId}-${listing.modelId}`) ?? [];
+    const index = indexByPair.get(`${listing.brandId}-${listing.modelId}`) ?? EMPTY_INDEX;
     results.set(
       listing.id,
-      estimateFromRows(rows, {
+      estimateFromIndex(index, {
         year: listing.year,
         mileage: listing.mileage,
         wilayaId: listing.wilayaId,

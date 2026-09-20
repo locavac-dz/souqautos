@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { estimateFromRows, type EstimateResult } from "@/lib/price-estimation";
+import { estimateFromIndex, indexComparables, type EstimateResult } from "@/lib/price-estimation";
 
 // Lots 77-78, 84 — "Système anti-fraude" documenté depuis le Lot 0
 // (docs/ARCHITECTURE.md §16 : "Règles + IA : détection de prix anormalement
@@ -175,7 +175,8 @@ export async function getFraudSignalsForListings(
   ]);
 
   const otherPhotos = matchingPhotos.map((p) => ({ sha256: p.sha256, sellerId: p.listing.sellerId }));
-  const rowsByPair = new Map(rowsByPairEntries);
+  // Lot 140 — rangé une fois par couple (marque, modèle), pas une fois par annonce de la file de modération.
+  const indexByPair = new Map(rowsByPairEntries.map(([key, rows]) => [key, indexComparables(rows)] as const));
   const rejectionCountBySeller = new Map(rejectionGroups.map((g) => [g.sellerId, g._count._all]));
 
   const results = new Map<string, FraudSignals>();
@@ -188,8 +189,8 @@ export async function getFraudSignalsForListings(
 
     let lowPrice = false;
     if (listing.brandId && listing.modelId) {
-      const rows = rowsByPair.get(`${listing.brandId}-${listing.modelId}`) ?? [];
-      const estimate = estimateFromRows(rows, {
+      const index = indexByPair.get(`${listing.brandId}-${listing.modelId}`);
+      const estimate = index === undefined ? null : estimateFromIndex(index, {
         year: listing.year,
         mileage: listing.mileage,
         wilayaId: listing.wilayaId,

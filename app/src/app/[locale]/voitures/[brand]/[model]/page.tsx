@@ -14,7 +14,7 @@ import { OwnerReviewsSection } from "@/components/OwnerReviewsSection";
 import { publishedNow } from "@/lib/blog-publication";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { estimateFromRows } from "@/lib/price-estimation";
+import { estimateFromIndex, indexComparables } from "@/lib/price-estimation";
 import { computePriceBadge } from "@/lib/price-badge";
 import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
@@ -132,10 +132,11 @@ export default async function ModelPage({
   // Tous les listings de cette page partagent déjà la même marque/modèle : on
   // réutilise ce jeu de lignes déjà chargé comme pool de comparables au lieu
   // de le requêter une seconde fois (cf. estimateFromRows, lib/price-estimation.ts).
-  const comparableRows = listings.map((l) => ({ ...l, equipmentIds: l.equipments.map((e) => e.equipmentId) }));
+  // Lot 140 — rangé une seule fois par année, pas une fois par annonce de la page.
+  const comparableIndex = indexComparables(listings.map((l) => ({ ...l, equipmentIds: l.equipments.map((e) => e.equipmentId) })));
   const priceBadges = new Map(
     listings.map((listing) => {
-      const estimate = estimateFromRows(comparableRows, {
+      const estimate = estimateFromIndex(comparableIndex, {
         year: listing.year,
         mileage: listing.mileage,
         wilayaId: listing.wilayaId,

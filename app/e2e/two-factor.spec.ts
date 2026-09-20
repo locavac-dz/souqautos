@@ -486,8 +486,10 @@ test.describe("administration", () => {
     await expect(row.getByText(`${T.adminColumn} : ${T.adminEnabled}`)).toBeVisible();
     page.once("dialog", (dialog) => void dialog.accept());
     await row.getByRole("button", { name: T.adminReset }).click();
-    await expect(row.getByText(`${T.adminColumn} : ${T.adminEnabled}`)).toHaveCount(0);
-    expect((await userRow(target.email)).totpEnabledAt).toBeNull();
+    // Deux choses distinctes, vérifiées séparément pour qu'un échec dise LAQUELLE a lâché : d'abord que la réinitialisation a
+    // réellement eu lieu (le clic a été confirmé et la route appelée), ensuite que la liste se remet à jour toute seule.
+    await expect.poll(async () => (await userRow(target.email)).totpEnabledAt, { timeout: 20_000, message: "la réinitialisation n'a pas été enregistrée en base" }).toBeNull();
+    await expect(row.getByText(`${T.adminColumn} : ${T.adminEnabled}`), "la liste ne s'est pas rafraîchie après la réinitialisation").toHaveCount(0);
     await victimContext.close();
   });
 });

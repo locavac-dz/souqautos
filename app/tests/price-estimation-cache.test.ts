@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const findMany = vi.fn();
 vi.mock("@/lib/prisma", () => ({ prisma: { listing: { findMany: (...args: unknown[]) => findMany(...args) } } }));
 
-import { COMPARABLES_TTL_MS, estimateFromRows, estimatePrice, estimatePricesForListings } from "@/lib/price-estimation";
+import { COMPARABLES_TTL_MS, estimateFromRows, estimatePrice, estimatePricesForListings, indexComparables } from "@/lib/price-estimation";
 import { invalidateReferenceData } from "@/lib/reference-data";
 
 // Lot 137 — les comparables de prix d'un modèle sont gardés 60 s en mémoire au lieu d'être rechargés à chaque page (ils
@@ -69,6 +69,23 @@ describe("estimatePricesForListings — comparables en cache", () => {
     expect(findMany).not.toHaveBeenCalled();
     const own = await estimatePricesForListings([listing({ id: "a", year: 2019, mileage: 60_000, wilayaId: 16, equipmentIds: [1, 2] })]);
     expect(own.get("a")).toEqual(estimateFromRows(flat, { year: 2019, mileage: 60_000, wilayaId: 16, equipmentIds: [1, 2], excludeListingId: "a" }));
+  });
+
+  it("range les comparables par année, et la valeur partagée est GELÉE jusqu'aux tranches (personne ne peut la modifier)", async () => {
+    const built = indexComparables(flat);
+    expect(Object.keys(built)).toEqual(["all", "byYear"]);
+    expect(Object.keys(built.byYear).map(Number).sort()).toEqual([2016, 2019, 2020, 2021]);
+    expect(built.byYear[2019]?.map((r) => r.id)).toEqual(["a"]);
+    expect(built.all).toHaveLength(4);
+    // Le gel du cache (src/lib/reference-data.ts) doit atteindre les TRANCHES : sinon une page pourrait corrompre les
+    // estimations de toutes les autres. Vérifié sur une valeur réellement passée par le cache (clé neuve).
+    const cached = (await import("@/lib/reference-data")).cachedReference;
+    const shared = await cached("comparables-gel-test", async () => built);
+    expect(Object.isFrozen(shared)).toBe(true);
+    expect(Object.isFrozen(shared.all)).toBe(true);
+    expect(Object.isFrozen(shared.byYear)).toBe(true);
+    expect(Object.isFrozen(shared.byYear[2019])).toBe(true);
+    expect(() => shared.byYear[2019]!.push(flat[0])).toThrow(TypeError);
   });
 
   it("ne garde pas un échec de la base : l'appel suivant réessaie", async () => {
