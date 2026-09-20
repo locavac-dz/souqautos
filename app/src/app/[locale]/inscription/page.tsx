@@ -2,6 +2,13 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { RegisterForm } from "@/components/RegisterForm";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { isGoogleLoginEnabled, pickLoginLocale } from "@/lib/google-oauth";
+import { SITE_URL } from "@/lib/site";
+
+// Lot 132 — la présence du bouton « Continuer avec Google » dépend de la configuration lue à chaque requête, jamais figée
+// à la compilation.
+export const dynamic = "force-dynamic";
 
 export default async function RegisterPage({
   params,
@@ -18,6 +25,7 @@ export default async function RegisterPage({
   return (
     <div className="mx-auto max-w-md px-4 py-12">
       <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("registerTitle")}</h1>
+      {isGoogleLoginEnabled(process.env, SITE_URL) && <GoogleSignInButton locale={pickLoginLocale(locale)} />}
       <RegisterForm wilayas={wilayas} locale={locale} />
       <p className="mt-6 text-sm text-slate-500">
         {t("hasAccount")}{" "}

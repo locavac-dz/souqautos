@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
   // court-circuit qui sauterait l'appel bcrypt, ce qui rendrait la réponse
   // mesurablement plus rapide et permettrait d'énumérer les comptes
   // existants/verrouillés par le temps de réponse (Lot 98, audit sécurité).
-  const passwordValid = await verifyPassword(
-    password,
-    !user || locked ? DUMMY_PASSWORD_HASH : user.passwordHash
-  );
+  // Lot 132 — un compte créé avec Google n'a pas de mot de passe (`passwordHash` nul) : même comparaison factice, et
+  // jamais valide, donc la même réponse et le même temps qu'un mot de passe faux.
+  const passwordValid =
+    (await verifyPassword(password, !user || locked || !user.passwordHash ? DUMMY_PASSWORD_HASH : user.passwordHash)) && Boolean(user?.passwordHash);
 
   if (!user) {
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });

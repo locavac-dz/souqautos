@@ -1,6 +1,7 @@
 import { resolveMailConfig, DEFAULT_MAIL_FROM } from "@/lib/mail-config";
 import { parseTrustedProxyHops } from "@/lib/client-ip";
 import { resolvePushConfig, vapidKeysMatch } from "@/lib/push";
+import { resolveGoogleConfig } from "@/lib/google-oauth";
 import { verificationStatus } from "@/lib/seo-verification";
 
 // Lot 117 — contrôle de préparation à la mise en ligne (`npm run launch:check`).
@@ -112,6 +113,23 @@ function checkSiteUrl(env: Env): CheckResult {
   return { id: "site-url", level: "ok", message: `NEXT_PUBLIC_SITE_URL : ${url.origin}.` };
 }
 
+// Lot 132 — connexion avec Google (facultative). Sans identifiant NI secret, le bouton n'apparaît pas ; un seul des deux
+// est une erreur (jamais un bouton qui ne marcherait pas). L'adresse de retour affichée est celle à déclarer, telle
+// quelle, dans la console Google Cloud : une différence d'un seul caractère fait refuser toutes les connexions.
+function checkGoogleLogin(env: Env): CheckResult {
+  const resolution = resolveGoogleConfig({ ...env, NODE_ENV: "production" }, env.NEXT_PUBLIC_SITE_URL ?? "");
+  if (resolution.mode === "error") {
+    return { id: "google-login", level: "error", message: `Connexion avec Google : ${resolution.reason}`, fix: "Définir GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET ensemble (voir .env.example), ou aucun des deux." };
+  }
+  if (resolution.mode === "disabled") {
+    return { id: "google-login", level: "warning", message: "Connexion avec Google désactivée (facultative) : ni GOOGLE_CLIENT_ID ni GOOGLE_CLIENT_SECRET ne sont définis.", fix: "Voir docs/EXPLOITATION.md, section « Connexion avec Google »." };
+  }
+  if (!resolution.config.clientId.endsWith(".apps.googleusercontent.com")) {
+    return { id: "google-login", level: "warning", message: "GOOGLE_CLIENT_ID n'a pas la forme d'un identifiant Google (…apps.googleusercontent.com) : vérifier qu'il vient bien de la console Google Cloud.", fix: "Copier l'identifiant client OAuth tel qu'il est affiché dans Google Cloud, sans espace." };
+  }
+  return { id: "google-login", level: "ok", message: `Connexion avec Google configurée. Adresse de retour à déclarer dans Google Cloud : ${resolution.config.redirectUri}` };
+}
+
 function checkMail(env: Env): CheckResult[] {
   const config = resolveMailConfig({ ...env, NODE_ENV: "production" });
   if (config.mode === "error") {
@@ -210,6 +228,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkSiteUrl(env),
     ...checkMail(env),
     checkPush(env),
+    checkGoogleLogin(env),
     checkSearchConsole(env),
     ...checkInfrastructure(env),
     ...checkFacts(facts),

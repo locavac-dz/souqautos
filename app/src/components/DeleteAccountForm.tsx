@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 
-export function DeleteAccountForm() {
+// Lot 132 — `hasPassword` faux : compte créé avec Google, sans mot de passe. La suppression se confirme alors en
+// saisissant l'adresse e-mail du compte.
+export function DeleteAccountForm({ hasPassword = true }: { hasPassword?: boolean }) {
   const t = useTranslations("ProfileEdit");
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -21,7 +23,7 @@ export function DeleteAccountForm() {
     const res = await fetch("/api/profile/delete-account", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify(hasPassword ? { password } : { confirmEmail: password }),
     });
 
     if (res.ok) {
@@ -35,7 +37,13 @@ export function DeleteAccountForm() {
 
     setPending(false);
     const body = await res.json().catch(() => null);
-    setError(body?.error === "wrong_password" ? t("deleteAccountWrongPassword") : t("errorGeneric"));
+    setError(
+      body?.error === "wrong_password"
+        ? t("deleteAccountWrongPassword")
+        : body?.error === "wrong_confirmation"
+          ? t("deleteAccountWrongConfirmation")
+          : t("errorGeneric")
+    );
   }
 
   if (done) {
@@ -62,9 +70,10 @@ export function DeleteAccountForm() {
       ) : (
         <form onSubmit={handleSubmit} className="mt-3 space-y-2">
           <label className="block">
-            <span className="text-xs text-red-700">{t("deleteAccountPasswordLabel")}</span>
+            <span className="text-xs text-red-700">{hasPassword ? t("deleteAccountPasswordLabel") : t("deleteAccountEmailLabel")}</span>
             <input
-              type="password"
+              type={hasPassword ? "password" : "email"}
+              autoComplete={hasPassword ? "current-password" : "email"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

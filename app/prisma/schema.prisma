@@ -22,7 +22,9 @@ model User {
   id              String    @id @default(cuid())
   email           String    @unique
   phone           String?   @unique
-  passwordHash    String
+  // Lot 132 — `null` pour un compte créé par « Continuer avec Google » qui n'a jamais défini de mot de passe : la
+  // connexion par mot de passe lui est alors impossible (jamais un mot de passe « inutilisable » écrit à la place).
+  passwordHash    String?
   role            Role      @default(PARTICULIER)
   emailVerifiedAt DateTime?
   phoneVerifiedAt DateTime?
@@ -64,6 +66,7 @@ model User {
   reviewsReceived       Review[]       @relation("SellerReviews")
   reviewsWritten        Review[]       @relation("AuthorReviews")
   emailVerificationTokens EmailVerificationToken[]
+  oauthAccounts           OAuthAccount[]
   emailChangeRequests     EmailChangeRequest[]
   phoneVerificationCodes  PhoneVerificationCode[]
   professionalAccount     ProfessionalAccount?
@@ -1208,5 +1211,21 @@ model PushSubscription {
   createdAt  DateTime  @default(now())
   lastSentAt DateTime?
 
+  @@index([userId])
+}
+
+// Lot 132 — connexion avec un compte Google (OpenID Connect). Une ligne = un compte Google (identifiant `sub`, stable
+// et propre à Google) lié à un compte du site. On ne garde volontairement RIEN d'autre venant de Google : ni adresse,
+// ni nom, ni photo. Supprimée avec le compte (cascade) et à la suppression du compte par son titulaire, sans quoi
+// l'identifiant Google rouvrirait un compte anonymisé.
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  provider          String
+  providerAccountId String
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
   @@index([userId])
 }

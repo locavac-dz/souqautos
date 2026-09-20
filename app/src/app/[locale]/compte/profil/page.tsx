@@ -50,7 +50,7 @@ export default async function EditProfilePage() {
       </div>
 
       <div className="mt-10">
-        <DeleteAccountForm />
+        <DeleteAccountForm hasPassword={Boolean(user.passwordHash)} />
       </div>
     </div>
   );

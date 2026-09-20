@@ -2638,3 +2638,33 @@ Dernier lot du bloc « qualité technique » : la suite de bout en bout passe de
 - La suite dure environ 5 minutes : la CI la lance après les contrôles rapides (`checks`), et son travail `e2e` a un délai de 30 minutes.
 - Non couverts : paiement par virement, messagerie au-delà du premier échange, alertes de recherche, notifications push et installation sur un vrai appareil, import en masse, avis, signalements, favoris, comparateur, assistant d'achat par IA (un test existe, non modifié).
 - Le journal d'audit de la base de développement n'est pas touché : ces tests n'écrivent que dans la base jetable `_e2e`.
+
+## Lot 132 — Connexion avec Google (2026-09-20)
+
+Un bouton « Continuer avec Google » sur les pages de connexion et d'inscription, en français et en arabe (de droite à gauche). **Facultatif** : sans `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET`, il n'apparaît pas. **Ce lot n'a pas pu être essayé avec le vrai Google** : il faut d'abord créer les identifiants dans la console Google Cloud (voir `docs/EXPLOITATION.md`, section 5 quater).
+
+**Fonctionnement** : OpenID Connect, code d'autorisation avec **PKCE**, `state` et `nonce`, dans un cookie de déroulement de 10 minutes (signé, illisible par script, à usage unique, propre à ce déroulement : il ne peut jamais servir de session). Étendues demandées : `openid email profile`, rien d'autre. Le jeton d'identité est reçu directement de Google en https (cas prévu par OpenID Connect) ; émetteur, destinataire, expiration, nonce et adresse sont vérifiés, ainsi que l'attestation par Google que l'adresse appartient bien à la personne.
+
+**Règles de rattachement** (`src/lib/google-account.ts`, documentées dans le code et dans `EXPLOITATION.md`)
+- Compte Google déjà lié : c'est ce compte du site.
+- Adresse déjà inscrite sur le site **et vérifiée** : le compte Google y est rattaché, le mot de passe continue de fonctionner.
+- Adresse déjà inscrite **mais non vérifiée** : **refus**. Sans cela, quelqu'un qui se serait inscrit avec l'adresse d'un autre, avant lui, hériterait de sa connexion Google. (Conséquence : pas de réinitialisation de mot de passe sur le site, donc la personne dont l'adresse a été usurpée doit être aidée par l'équipe.)
+- Compte de l'équipe (modérateur, administrateur) ou compte suspendu : refus.
+- Sinon, création d'un compte : adresse vérifiée d'office, **aucun mot de passe** (`User.passwordHash` devient facultatif).
+- Le site ne garde de Google que l'identifiant du compte (`OAuthAccount`) : ni adresse, ni nom, ni photo.
+
+**Autres changements**
+- Suppression de compte : un compte créé avec Google (sans mot de passe) confirme en saisissant son adresse e-mail ; un compte avec mot de passe doit toujours le donner. Le lien avec Google est rompu à la suppression (sans cela, le même compte Google rouvrirait le compte anonymisé).
+- Adresse de retour (`?next=`) limitée à une page du site : pas de redirection ouverte. Limites de débit par adresse sur le départ et le retour.
+- `npm run launch:check` : nouveau contrôle (erreur si un seul des deux identifiants est défini ; affiche l'adresse exacte à déclarer dans Google Cloud). `.env.example` documenté.
+- Politique de confidentialité (FR/AR) complétée : données reçues de Google, cookie temporaire de 10 minutes, mot de passe absent pour un compte Google. **À faire relire par un juriste**, comme le reste de la page.
+- Migration `20260920110000_google_login` (table `OAuthAccount`, mot de passe facultatif).
+
+**Vérification** : `npm run verify -- --e2e` — 1 199 tests unitaires (dont 52 nouveaux : jeton, PKCE, cookie, redirection, règles de rattachement, contrôle de lancement), **92 tests de bout en bout (25 nouveaux)**, 7 de l'application installable, écart de migrations nul. Les tests de bout en bout tournent contre un **faux serveur Google** (`e2e/mock-google.mjs`) qui applique les vérifications de Google (secret du client, PKCE réel, code à usage unique, adresse de retour) : ils couvrent création de compte, deuxième connexion, rattachement, les quatre refus, annulation, erreur de Google, jetons invalides (nonce, expiration, émetteur, destinataire, non-jeton), état falsifié ou rejoué, cookie falsifié ou de session, redirections ouvertes, limite de débit, suppression du compte. **Vérifié par sabotage** : retirer le refus des adresses non vérifiées, le contrôle de l'état, le contrôle des redirections, celui du nonce, ou la rupture du lien à la suppression fait échouer les tests. Le test de la fonction de redirection a en outre trouvé un défaut de détail (`/fr?x=1`), corrigé.
+
+**Limites**
+- **Jamais essayé avec le vrai Google** : identifiants acceptés, adresse de retour déclarée, écran de consentement ne se vérifient qu'avec de vrais identifiants.
+- La signature du jeton d'identité n'est pas vérifiée (reçu directement de Google, avec le secret du site) : choix documenté, permis par la spécification.
+- Le logo « G » est celui que Google demande pour ses boutons de connexion, reproduit en SVG et contrôlé visuellement ; à comparer aux consignes de marque de Google avant la mise en ligne.
+- Pas de rattachement manuel depuis la page du profil (« lier mon compte Google »), pas de « délier », pas d'autre fournisseur (Facebook, Apple) ; les comptes de l'équipe ne peuvent pas utiliser Google.
+- Le mode de connexion d'un compte Google-seul (aucun mot de passe) n'offre aucun moyen d'en définir un : à ajouter avec une future réinitialisation de mot de passe.

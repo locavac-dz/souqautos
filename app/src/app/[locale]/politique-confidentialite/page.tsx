@@ -57,6 +57,7 @@ export default async function PrivacyPolicyPage() {
             <li>{t("recipientsEmail")}</li>
             <li>{t("recipientsSms")}</li>
             <li>{t("recipientsAi")}</li>
+            <li>{t("recipientsGoogle")}</li>
           </ul>
           <p className="mt-2">{t("recipientsNever")}</p>
         </section>

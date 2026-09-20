@@ -12,7 +12,9 @@ import {
   ACCOUNT_DELETED_LISTING_NOTE,
 } from "@/lib/account-deletion";
 
-const bodySchema = z.object({ password: z.string().min(1) });
+// Lot 132 — un compte créé avec Google n'a pas de mot de passe : il confirme la suppression en saisissant son adresse
+// e-mail. Un compte qui a un mot de passe doit toujours le donner (`confirmEmail` ne le remplace jamais).
+const bodySchema = z.object({ password: z.string().min(1).optional(), confirmEmail: z.string().min(1).max(255).optional() });
 
 // Lot 51 — suppression de compte à la demande du titulaire. Anonymisation,
 // jamais une suppression physique de la ligne User (cf. audit Lot 50 : la
@@ -37,8 +39,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "validation" }, { status: 400 });
   }
 
-  if (!(await verifyPassword(parsed.data.password, user.passwordHash))) {
-    return NextResponse.json({ error: "wrong_password" }, { status: 400 });
+  if (user.passwordHash) {
+    if (!parsed.data.password || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
+      return NextResponse.json({ error: "wrong_password" }, { status: 400 });
+    }
+  } else if (parsed.data.confirmEmail?.trim().toLowerCase() !== user.email.toLowerCase()) {
+    return NextResponse.json({ error: "wrong_confirmation" }, { status: 400 });
   }
 
   const now = new Date();
@@ -69,6 +75,9 @@ export async function POST(request: NextRequest) {
     // signalements qui les visaient) : un texte personnel ne reste pas en ligne
     // sous un nom anonymisé, et n'aurait plus d'auteur pour le modifier.
     prisma.ownerReview.deleteMany({ where: { userId: user.id } }),
+    // Lot 132 — le lien avec le compte Google est rompu : sans cela, la même personne (ou quiconque contrôlerait ce
+    // compte Google) se reconnecterait dans le compte anonymisé.
+    prisma.oAuthAccount.deleteMany({ where: { userId: user.id } }),
     // Retire du marché toute annonce encore active — un compte supprimé ne
     // peut plus jamais répondre à un acheteur ni compléter un brouillon.
     prisma.listing.updateMany({

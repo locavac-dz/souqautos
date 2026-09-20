@@ -48,7 +48,7 @@ async function collectFacts(): Promise<LaunchFacts> {
     const demoAccounts = await prisma.user.count({ where: { OR: DEMO_DOMAINS.map((domain) => ({ email: { endsWith: domain, mode: "insensitive" as const } })) } });
     return {
       dbReachable: true,
-      adminUsesDevPassword: admin ? await bcrypt.compare(DEV_ADMIN_PASSWORD, admin.passwordHash) : false,
+      adminUsesDevPassword: admin?.passwordHash ? await bcrypt.compare(DEV_ADMIN_PASSWORD, admin.passwordHash) : false,
       demoAccounts,
       migrationsOnDisk,
       migrationsApplied: Number(applied[0]?.count ?? 0),

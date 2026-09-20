@@ -29,6 +29,8 @@ const goodEnv = {
   VAPID_PRIVATE_KEY: vapid.privateKey,
   VAPID_SUBJECT: "mailto:contact@souqauto.example",
   GOOGLE_SITE_VERIFICATION: "abcDEF1234567890_-abcDEF1234567890",
+  GOOGLE_CLIENT_ID: "123456789-abcdef.apps.googleusercontent.com",
+  GOOGLE_CLIENT_SECRET: "secret-de-test",
 };
 
 const level = (results: ReturnType<typeof evaluateLaunchReadiness>, id: string) => results.filter((r) => r.id === id).map((r) => r.level);
@@ -152,5 +154,40 @@ describe("evaluateLaunchReadiness — Search Console (Lot 124)", () => {
 
   it("is fine with a valid code", () => {
     expect(level(evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts }), "search-console")).toEqual(["ok"]);
+  });
+
+  describe("connexion avec Google (Lot 132)", () => {
+    const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ...withoutGoogle } = goodEnv;
+    void GOOGLE_CLIENT_ID;
+    void GOOGLE_CLIENT_SECRET;
+
+    it("is ready when the identifier and the secret are both set, and shows the exact redirect address to declare", () => {
+      const results = evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts });
+      expect(level(results, "google-login")).toEqual(["ok"]);
+      expect(results.find((r) => r.id === "google-login")?.message).toContain("https://souqauto.example/api/auth/google/callback");
+    });
+
+    it("only warns when the feature is left off (it is optional)", () => {
+      const results = evaluateLaunchReadiness({ env: withoutGoogle, facts: goodFacts });
+      expect(level(results, "google-login")).toEqual(["warning"]);
+      expect(summarizeChecks(results).ready).toBe(true);
+    });
+
+    it("blocks the launch when only one of the two variables is set", () => {
+      expect(level(evaluateLaunchReadiness({ env: { ...withoutGoogle, GOOGLE_CLIENT_ID: "x.apps.googleusercontent.com" }, facts: goodFacts }), "google-login")).toEqual(["error"]);
+      const noId = evaluateLaunchReadiness({ env: { ...withoutGoogle, GOOGLE_CLIENT_SECRET: "s" }, facts: goodFacts });
+      expect(level(noId, "google-login")).toEqual(["error"]);
+      expect(summarizeChecks(noId).ready).toBe(false);
+    });
+
+    it("warns about an identifier that does not look like Google's", () => {
+      const results = evaluateLaunchReadiness({ env: { ...goodEnv, GOOGLE_CLIENT_ID: "mon-identifiant" }, facts: goodFacts });
+      expect(level(results, "google-login")).toEqual(["warning"]);
+    });
+
+    it("ignores the test-only replacement of Google's addresses when judging as production", () => {
+      const results = evaluateLaunchReadiness({ env: { ...goodEnv, GOOGLE_OAUTH_TEST_BASE_URL: "http://localhost:5187" }, facts: goodFacts });
+      expect(level(results, "google-login")).toEqual(["ok"]);
+    });
   });
 });

@@ -34,7 +34,15 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
+  webServer: [
+    // Lot 132 — faux serveur Google (e2e/mock-google.mjs) pour tester « Continuer avec Google » sans dépendre de Google.
+    {
+      command: "node e2e/mock-google.mjs",
+      url: "http://localhost:5187/__health",
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
+    {
     command: `npx next dev -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
@@ -47,6 +55,17 @@ export default defineConfig({
     // persistant entre deux exécutions de la suite, causant des échecs
     // intermittents par épuisement de quota (trouvé en écrivant ce lot).
     // Repli mémoire honnête forcé, comme prévu.
-    env: { DATABASE_URL: getE2eDatabaseUrl(), REDIS_URL: "", S3_BUCKET: "" },
-  },
+    env: {
+      DATABASE_URL: getE2eDatabaseUrl(),
+      REDIS_URL: "",
+      S3_BUCKET: "",
+      // Lot 132 — connexion Google activée sur le faux serveur, avec des identifiants FACTICES ; l'adresse du site est celle du
+      // serveur de test (l'adresse de retour de Google en est déduite).
+      GOOGLE_CLIENT_ID: "e2e-client.apps.googleusercontent.com",
+      GOOGLE_CLIENT_SECRET: "e2e-secret-factice",
+      GOOGLE_OAUTH_TEST_BASE_URL: "http://localhost:5187",
+      NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`,
+    },
+    },
+  ],
 });
