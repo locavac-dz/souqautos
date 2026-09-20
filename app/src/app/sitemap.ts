@@ -5,6 +5,7 @@ import { routing } from "@/i18n/routing";
 import { getDirectoryEntries } from "@/lib/professional-directory";
 import { publishedNow } from "@/lib/blog-publication";
 import { articlePublicPath } from "@/lib/blog";
+import { listingBudget, sitemapTruncationWarning } from "@/lib/sitemap-limits";
 
 // Lot 110 — sans cette ligne Next fige le sitemap au moment du build (rien ne
 // lui indique que la base est lue) : un essai programmé n'y apparaîtrait jamais
@@ -25,13 +26,9 @@ function localizedEntry(path: string, lastModified?: Date) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [brands, wilayas, listings, articles, proShowcases] = await Promise.all([
+  const [brands, wilayas, articles, proShowcases] = await Promise.all([
     prisma.brand.findMany({ include: { models: true } }),
     prisma.wilaya.findMany(),
-    prisma.listing.findMany({
-      where: { status: "PUBLIEE" },
-      select: { id: true, createdAt: true },
-    }),
     prisma.blogArticle.findMany({
       where: publishedNow(new Date()),
       select: { slug: true, kind: true, updatedAt: true },
@@ -53,6 +50,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry("/essais"),
     localizedEntry("/guides"),
   ];
+
+  // Lot 137 — au plus 50 000 adresses au total (limite du protocole) : les annonces les plus récentes d'abord.
+  const otherCount = staticEntries.length + proShowcases.length + articles.length + wilayas.length + brands.length + brands.reduce((sum, b) => sum + b.models.length, 0);
+  const budget = listingBudget(otherCount);
+  const publishedCount = await prisma.listing.count({ where: { status: "PUBLIEE" } });
+  const warning = sitemapTruncationWarning(publishedCount, budget);
+  if (warning) console.warn(warning);
+  const listings = await prisma.listing.findMany({
+    where: { status: "PUBLIEE" },
+    select: { id: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+    take: budget,
+  });
 
   const brandEntries = brands.map((brand) => localizedEntry(`/voitures/${brand.slug}`));
 

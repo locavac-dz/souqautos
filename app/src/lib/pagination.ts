@@ -18,3 +18,14 @@ export function paginate<T>(items: T[], requestedPage: number | undefined, pageS
     totalCount: items.length,
   };
 }
+
+// Lot 137 — numéro de page lu dans l'adresse (?page=3) par les pages qui paginent leurs annonces (vendeur, vitrine
+// professionnelle). Absent, non numérique, négatif ou décimal : `undefined` (pageWindow ramène alors à la page 1) ; plafonné
+// pour qu'un « ?page=999999999999 » ne produise jamais un décalage (OFFSET) démesuré côté base.
+export const MAX_REQUESTED_PAGE = 100_000;
+
+export function parseRequestedPage(raw: string | string[] | undefined): number | undefined {
+  const value = (Array.isArray(raw) ? raw[0] : raw)?.trim();
+  if (!value || !/^\d{1,9}$/.test(value)) return undefined;
+  return Math.min(MAX_REQUESTED_PAGE, Number(value));
+}

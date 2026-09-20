@@ -2772,3 +2772,43 @@ Quatrième lot du bloc 6 « prêt pour la mise en ligne ». Les sauvegardes exis
 - Les archives ne sont **pas chiffrées** (téléphones et pièces d'identité le sont déjà par l'application avec `ENCRYPTION_KEY`, le reste de la base ne l'est pas) : à protéger comme la base elle-même.
 - Le contrôle du site se limite à `/api/health` (base de données). Pas de suivi d'erreurs du **navigateur** des visiteurs, pas de tableau de bord ni de graphiques, pas de service extérieur de type Sentry.
 - Le veilleur ne détecte pas une sauvegarde **réussie mais inutile** (base vide, mauvaise base) au-delà de la comparaison de taille : c'est le test de restauration hebdomadaire qui le prouve.
+
+## Lot 137 — Bloc 6 : test de charge, et trois défauts d'échelle corrigés (2026-09-20)
+
+Cinquième lot du bloc 6 « prêt pour la mise en ligne ». Sur les 24 annonces de démonstration, aucune mesure n'a de sens : ce lot fabrique un **volume réaliste** (20 000 annonces), mesure le site compilé en production, et corrige ce que la mesure révèle.
+
+**Outils livrés**
+- **`npm run load:seed`** : crée la base dédiée `<base>_load` (refusée si son nom ne finit pas par `_load`, jamais la base de développement ni celle des tests), applique les migrations et génère les annonces (20 000 en 7 s, reproductibles). Données volontairement **rudes** : un modèle courant (Renault Clio) = 24 % des annonces, le plus gros vendeur en a près de 3 000, grandes wilayas surreprésentées, statuts variés, prix qui suivent l'âge et le kilométrage.
+- **`npm run load:test -- --start`** : compile, démarre le site en production sur cette base, joue 10 scénarios (accueil, recherche simple / filtrée / par mot / page profonde, fiche, page d'un modèle, vendeur, plan du site, santé) plus un **mélange réaliste de navigation**, en montée en charge (`--concurrency 1,10,50,100`). Percentiles réels (rang le plus proche), erreurs comptées à part, budgets par scénario (`scripts/load-budget.json`, code de sortie 1 si dépassé).
+- **`SLOW_QUERY_MS`** : journal des requêtes SQL lentes (`[sql-lent] 412 ms — SELECT …`), **sans jamais écrire les valeurs des paramètres**. C'est lui, avec un profil processeur du serveur, qui a permis de trouver la cause.
+
+**Ce que la mesure a révélé, et corrigé** (à 10 visiteurs simultanés, 20 000 annonces, avant → après)
+- **Comparables de prix rechargés à chaque visite** — cause principale. Le badge « bon prix » de chaque carte chargeait TOUTES les annonces publiées du même modèle (3 855 lignes pour une Clio + une requête à 3 855 paramètres pour leurs équipements), à chaque page de recherche, pour chaque modèle affiché : le client de base de données prenait **42 % du temps du serveur** et le coût croît avec le volume. Ces lignes sont maintenant gardées 60 s par modèle, avec regroupement des chargements simultanés ; le calcul est **strictement identique** (test : résultat comparé au calcul direct). Sept pages en profitent.
+- **Pages vendeur et vitrine professionnelle non paginées** : toutes les annonces du vendeur (1,2 Mo de HTML). Désormais 20 par page (`?page=`).
+- **Référentiel rechargé à chaque recherche** (62 marques + 410 modèles, 69 wilayas + 1 541 communes) : gardé 5 min en mémoire, rafraîchi tout de suite par l'administration du catalogue.
+- **Deux index** (migration `20260920130000_listing_search_indexes`, écart nul avec `schema.prisma` vérifié) : « plus récentes d'abord » 6,7 → 0,08 ms, annonces d'un modèle 3,4 → 0,06 ms (parcours complet de la table avant, proportionnel au volume).
+- **Plan du site** : limité à 50 000 adresses (limite du protocole, au-delà les moteurs rejettent tout le fichier), annonces les plus récentes d'abord, avertissement `[sitemap]`.
+
+| Scénario | req/s | p95 (ms) | Poids de la page |
+|---|---|---|---|
+| Recherche | 11,6 → **42,7** | 958 → 269 | 437 Ko |
+| Recherche filtrée | 11,1 → 42,4 | 1 037 → 255 | 449 Ko |
+| Recherche par mot | 17,9 → 38,2 | 617 → 294 | |
+| Recherche, page profonde | 14,4 → 50,7 | 771 → 237 | |
+| Fiche d'annonce | 48,4 → 95,1 | 298 → 122 | |
+| **Page vendeur** | 5,8 → **71,5** | 1 829 → 168 | 1 237 → **226 Ko** |
+| Navigation (mélange) | 20,1 → **58,2** | 860 → 251 | |
+| Accueil, page modèle, santé, plan du site | inchangés | | |
+
+**Capacité** (montée en charge, machine de développement, générateur et base sur la même machine) : environ **55 à 60 pages/s par processus Node**, puis la file s'allonge ; à **200 visiteurs simultanés : aucune erreur**, p95 de 4 s (dégradation progressive, pas d'effondrement). Estimation grossière, non vérifiée avec de vrais visiteurs : ~1 000 à 1 500 visiteurs actifs simultanés par processus ; au-delà, plusieurs instances.
+
+**Vérification** : `npm run verify -- --e2e` — 1 356 tests unitaires (50 nouveaux : cache et son plafond, comparables identiques au calcul direct, statistiques du test de charge, générateur de données, journal des requêtes lentes, pagination, limite du plan du site), 131 de bout en bout, 15 en production. Le budget a été mis à l'épreuve en **réintroduisant les défauts** : il détecte la page vendeur non paginée (p95 1 018 ms pour 500 ms de budget, code de sortie 1).
+
+**Limites**
+- **Le budget ne détecte pas tout** : la suppression du cache des comparables n'a PAS été détectée (p95 390 ms pour un budget de 700 ms), l'index ayant déjà réduit le coût de ce défaut. Il repère les régressions d'au moins 2,5 fois, pas les dérives lentes.
+- **Recherche par mot** : `ILIKE '%mot%'` sur sept colonnes, non indexable, 32 à 40 ms à 20 000 annonces et **proportionnel au volume** (de l'ordre de la seconde vers 500 000). Remède : index trigramme (`pg_trgm`, à vérifier chez l'hébergeur) ou moteur dédié. Le compte des annonces parcourt aussi tout (3,4 ms).
+- **Plan du site** : au-delà d'environ 45 000 annonces publiées, il faudra plusieurs plans (`generateSitemaps`) ; sinon les plus anciennes annonces en sortent.
+- **Estimations décalées de 60 s au plus** : une annonce publiée, vendue ou au prix modifié n'entre dans le badge « bon prix » et la cote qu'après ce délai (les annonces affichées sont toujours à jour). Le référentiel : 5 min sur les autres instances après une modification du catalogue.
+- Les **avis** des pages vendeur et professionnelle ne sont pas paginés (la moyenne de la vitrine se calcule sur tous). La recherche envoie encore ~437 Ko de HTML avant compression (toutes les communes et modèles pour les filtres ; poids compressé non mesuré).
+- **Mesure sur cette machine seulement**, sans latence réseau, sans images ni scripts, sans Redis, avec le générateur sur la même machine : elle compare l'avant et l'après, elle ne garantit rien pour votre serveur. **Relancer le test sur l'hébergement réel avant l'ouverture.**
+- La base de charge `souq_auto_load` (20 000 annonces fabriquées) existe sur ce PostgreSQL ; `--reset` la reconstruit. Les vendeurs fictifs `charge-N@example.dz` n'ont aucun mot de passe.

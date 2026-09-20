@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { invalidateReferenceData } from "@/lib/reference-data";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { validateCatalogueName } from "@/lib/catalogue-admin";
@@ -40,6 +41,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // Le slug ne change jamais après création (stabilité des URL SEO
   // /voitures/[brand]) — seul le nom affiché est modifiable.
   await prisma.brand.update({ where: { id: brandId }, data: { name } });
+  invalidateReferenceData();
 
   await writeAuditLog({
     adminId: user.id,
@@ -81,6 +83,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   }
 
   await prisma.brand.delete({ where: { id: brandId } });
+  invalidateReferenceData();
 
   await writeAuditLog({
     adminId: user.id,

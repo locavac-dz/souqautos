@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { invalidateReferenceData } from "@/lib/reference-data";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { validateCatalogueName } from "@/lib/catalogue-admin";
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     throw error;
   }
+  invalidateReferenceData();
 
   await writeAuditLog({
     adminId: user.id,

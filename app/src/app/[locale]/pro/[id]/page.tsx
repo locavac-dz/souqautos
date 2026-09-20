@@ -11,6 +11,9 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { ListingCard } from "@/components/search/ListingCard";
 import { estimatePricesForListings } from "@/lib/price-estimation";
+import { Pagination } from "@/components/search/Pagination";
+import { pageWindow, parseRequestedPage } from "@/lib/pagination";
+import { PAGE_SIZE } from "@/lib/validation/search";
 import { computePriceBadge } from "@/lib/price-badge";
 import { computeAverageRating } from "@/lib/reviews";
 import { ReviewForm } from "@/components/ReviewForm";
@@ -61,8 +64,10 @@ export async function generateMetadata({
 
 export default async function ProShowcasePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; locale: string }>;
+  searchParams: Promise<{ page?: string | string[] }>;
 }) {
   const { id } = await params;
   const locale = await getLocale();
@@ -79,10 +84,16 @@ export default async function ProShowcasePage({
   // indexé comme une page valide.
   if (!account) notFound();
 
+  // Lot 137 — annonces paginées (20 par page) : un concessionnaire en publie des milliers, la vitrine les chargeait toutes.
+  const publishedTotal = await prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } });
+  const { page, totalPages: pages, skip } = pageWindow(publishedTotal, parseRequestedPage((await searchParams).page), PAGE_SIZE);
+
   const [listings, reviews] = await Promise.all([
     prisma.listing.findMany({
       where: { sellerId: account.userId, status: "PUBLIEE" },
       orderBy: { publishedAt: "desc" },
+      skip,
+      take: PAGE_SIZE,
       include: {
         brand: true,
         model: true,
@@ -240,6 +251,7 @@ export default async function ProShowcasePage({
               ))}
             </div>
           )}
+          <Pagination page={page} totalPages={pages} searchParams={{}} basePath={`/pro/${id}`} />
         </div>
 
         <div className="sm:col-span-1 space-y-4">

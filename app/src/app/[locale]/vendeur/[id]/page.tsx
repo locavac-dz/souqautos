@@ -11,10 +11,13 @@ import { DeleteReviewButton } from "@/components/admin/DeleteReviewButton";
 import { TrustScoreCard } from "@/components/TrustScoreCard";
 import { isStaff } from "@/lib/auth-server/roles";
 import { estimatePricesForListings } from "@/lib/price-estimation";
+import { Pagination } from "@/components/search/Pagination";
+import { pageWindow, parseRequestedPage } from "@/lib/pagination";
+import { PAGE_SIZE } from "@/lib/validation/search";
 import { computePriceBadge } from "@/lib/price-badge";
 import { ReportUserButton } from "@/components/ReportUserButton";
 
-export default async function SellerPage({ params }: { params: Promise<{ id: string; locale: string }> }) {
+export default async function SellerPage({ params, searchParams }: { params: Promise<{ id: string; locale: string }>; searchParams: Promise<{ page?: string | string[] }> }) {
   const { id } = await params;
   const locale = await getLocale();
   const t = await getTranslations("Review");
@@ -28,6 +31,11 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
   // Lot 131 — vraie réponse 404 pour un profil inexistant.
   if (!seller) notFound();
 
+  // Lot 137 — les annonces sont paginées (20 par page) : un gros vendeur en a des milliers, et la page les chargeait toutes
+  // (1,2 Mo de HTML, 1,8 s à 10 visiteurs simultanés).
+  const publishedTotal = await prisma.listing.count({ where: { sellerId: id, status: "PUBLIEE" } });
+  const { page, totalPages: pages, skip } = pageWindow(publishedTotal, parseRequestedPage((await searchParams).page), PAGE_SIZE);
+
   const [reviews, listings, trust] = await Promise.all([
     prisma.review.findMany({
       where: { sellerId: id },
@@ -37,6 +45,8 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
     prisma.listing.findMany({
       where: { sellerId: id, status: "PUBLIEE" },
       orderBy: { publishedAt: "desc" },
+      skip,
+      take: PAGE_SIZE,
       include: {
         brand: true,
         model: true,
@@ -161,6 +171,7 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
               ))}
             </div>
           )}
+          <Pagination page={page} totalPages={pages} searchParams={{}} basePath={`/vendeur/${id}`} />
         </div>
 
         <div className="sm:col-span-1 space-y-4">

@@ -24,7 +24,9 @@
     "push:keys": "node scripts/generate-vapid-keys.mjs",
     "db:backup": "node scripts/backup-db.mjs",
     "db:restore-check": "node scripts/restore-check.mjs",
-    "ops:check": "tsx scripts/ops-check.ts"
+    "ops:check": "tsx scripts/ops-check.ts",
+    "load:seed": "tsx prisma/seed-load.ts",
+    "load:test": "tsx scripts/load-test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

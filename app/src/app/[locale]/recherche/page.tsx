@@ -17,6 +17,7 @@ import {
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SaveSearchAlertForm } from "@/components/search/SaveSearchAlertForm";
 import { SortSelect } from "@/components/search/SortSelect";
+import { getSearchBrands, getSearchEquipments, getSearchWilayas } from "@/lib/reference-data";
 import { ListingCard } from "@/components/search/ListingCard";
 import { Pagination } from "@/components/search/Pagination";
 import { estimatePricesForListings } from "@/lib/price-estimation";
@@ -76,18 +77,10 @@ export default async function SearchPage({
   const featuredIds = featuredListings.map((l) => l.id);
 
   const [brands, wilayas, equipments, listings, totalCount, currentUser] = await Promise.all([
-    prisma.brand.findMany({
-      include: { models: { orderBy: { name: "asc" } } },
-      orderBy: { name: "asc" },
-    }),
-    prisma.wilaya.findMany({
-      orderBy: { id: "asc" },
-      include: { communes: { orderBy: { nomFr: "asc" } } },
-    }),
-    prisma.equipment.findMany({
-      orderBy: { nameFr: "asc" },
-      select: { id: true, nameFr: true, nameAr: true, category: true },
-    }),
+    // Lot 137 — référentiel en cache mémoire (5 min) : il était rechargé à chaque visite et pesait 42 % du temps du serveur.
+    getSearchBrands(),
+    getSearchWilayas(),
+    getSearchEquipments(),
     prisma.listing.findMany({
       where: featuredIds.length > 0 ? { ...where, id: { notIn: featuredIds } } : where,
       orderBy,

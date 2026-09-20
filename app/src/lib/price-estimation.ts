@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { cachedReference } from "@/lib/reference-data";
 
 export type EstimateResult = {
   low: number;
@@ -157,30 +158,43 @@ export function estimateFromRows(
   return null;
 }
 
-// Une seule requête (le palier le plus large, sans filtre) : le classement du
+// Lot 137 — les comparables d'un couple (marque, modèle) : TOUTES ses annonces publiées (le palier le plus large de
+// l'estimation les exige : « tout le marché du modèle »). Mesuré sur 20 000 annonces : pour une Renault Clio, 3 855 lignes et
+// leurs équipements (une requête à 3 855 paramètres) rechargés à CHAQUE page de recherche, pour chaque modèle affiché — le
+// client de base de données passait 42 % du temps du serveur à les décoder, et le coût croît avec le nombre d'annonces.
+//
+// Les mêmes lignes servent donc toutes les visites pendant 60 secondes (chargements simultanés regroupés, cf.
+// src/lib/reference-data.ts) : le calcul de l'estimation est INCHANGÉ, seule la relecture de la base est évitée. Contrepartie
+// assumée : une annonce publiée, vendue ou dont le prix change n'entre dans les estimations (badge « bon prix », cote) qu'au
+// plus 60 secondes plus tard ; les annonces elles-mêmes, leurs prix et leur statut affichés sont toujours à jour.
+export const COMPARABLES_TTL_MS = 60 * 1000;
+
+async function loadComparableRows(brandId: number, modelId: number): Promise<ComparableRow[]> {
+  return cachedReference(
+    `comparables:${brandId}-${modelId}`,
+    async () => {
+      const rows = await prisma.listing.findMany({
+        where: { status: "PUBLIEE", brandId, modelId },
+        select: {
+          id: true,
+          price: true,
+          year: true,
+          mileage: true,
+          wilayaId: true,
+          equipments: { select: { equipmentId: true } },
+        },
+      });
+      return rows.map(({ equipments, ...r }) => ({ ...r, equipmentIds: equipments.map((e) => e.equipmentId) }));
+    },
+    { ttlMs: COMPARABLES_TTL_MS },
+  );
+}
+
+// Une seule lecture (le palier le plus large, sans filtre) : le classement du
 // plus précis au plus large se fait ensuite en mémoire via estimateFromRows,
 // au lieu d'une requête par palier essayé.
 export async function estimatePrice(query: EstimateQuery): Promise<EstimateResult | null> {
-  const rows = await prisma.listing.findMany({
-    where: {
-      status: "PUBLIEE",
-      brandId: query.brandId,
-      modelId: query.modelId,
-    },
-    select: {
-      id: true,
-      price: true,
-      year: true,
-      mileage: true,
-      wilayaId: true,
-      equipments: { select: { equipmentId: true } },
-    },
-  });
-
-  return estimateFromRows(
-    rows.map((r) => ({ ...r, equipmentIds: r.equipments.map((e) => e.equipmentId) })),
-    query
-  );
+  return estimateFromRows(await loadComparableRows(query.brandId, query.modelId), query);
 }
 
 type ListingForBatchEstimate = {
@@ -213,21 +227,7 @@ export async function estimatePricesForListings(
   const rowsByPair = new Map<string, ComparableRow[]>();
   await Promise.all(
     Array.from(pairs.entries()).map(async ([key, { brandId, modelId }]) => {
-      const rows = await prisma.listing.findMany({
-        where: { status: "PUBLIEE", brandId, modelId },
-        select: {
-          id: true,
-          price: true,
-          year: true,
-          mileage: true,
-          wilayaId: true,
-          equipments: { select: { equipmentId: true } },
-        },
-      });
-      rowsByPair.set(
-        key,
-        rows.map((r) => ({ ...r, equipmentIds: r.equipments.map((e) => e.equipmentId) }))
-      );
+      rowsByPair.set(key, await loadComparableRows(brandId, modelId));
     })
   );
 

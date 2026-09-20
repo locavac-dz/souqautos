@@ -1,5 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import { encryptDeterministic, decryptDeterministic } from "./crypto/at-rest";
+import { formatSlowQuery, parseSlowQueryMs } from "./slow-query";
 
 // Chiffrement au repos de User.phone (cf. docs/ARCHITECTURE.md §47), rendu
 // transparent au reste de l'application via une extension Prisma plutôt que
@@ -36,7 +37,15 @@ function decryptResult(result: unknown): unknown {
 }
 
 function createPrismaClient() {
-  return new PrismaClient().$extends({
+  // Lot 137 — journal des requêtes lentes, seulement si SLOW_QUERY_MS est défini (sinon aucun suivi : aucun coût).
+  const slowQueryMs = parseSlowQueryMs(process.env.SLOW_QUERY_MS);
+  const client = new PrismaClient({ log: slowQueryMs ? [{ emit: "event", level: "query" }] : [] }) as PrismaClient<Prisma.PrismaClientOptions, "query">;
+  if (slowQueryMs) {
+    client.$on("query", (event) => {
+      if (event.duration >= slowQueryMs) console.warn(formatSlowQuery(event.query, event.duration));
+    });
+  }
+  return client.$extends({
     query: {
       user: {
         async $allOperations({ args, query }) {

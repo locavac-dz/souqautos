@@ -1,0 +1,14 @@
+{
+  "_note": "Lot 137 — limites du test de charge (npm run load:test -- --start), appliquées au palier de 10 visiteurs simultanés sur 20 000 annonces. Fixées à ~2,5 fois les mesures du 20/09/2026 sur la machine de développement (p95, en millisecondes) : elles servent à repérer une RÉGRESSION (le retour d'une requête par carte, d'un chargement sans limite…), pas à garantir un temps de réponse en production. Sur une machine plus lente, les relever ; ne jamais les relever pour « faire passer » un dépassement sans en chercher la cause.",
+  "accueil": { "p95Ms": 300, "maxErrorRate": 0 },
+  "recherche": { "p95Ms": 700, "maxErrorRate": 0 },
+  "recherche-filtres": { "p95Ms": 700, "maxErrorRate": 0 },
+  "recherche-texte": { "p95Ms": 800, "maxErrorRate": 0 },
+  "recherche-profonde": { "p95Ms": 650, "maxErrorRate": 0 },
+  "annonce": { "p95Ms": 350, "maxErrorRate": 0 },
+  "page-modele": { "p95Ms": 450, "maxErrorRate": 0 },
+  "vendeur": { "p95Ms": 500, "maxErrorRate": 0 },
+  "sitemap": { "p95Ms": 2000, "maxErrorRate": 0 },
+  "sante": { "p95Ms": 50, "maxErrorRate": 0 },
+  "navigation": { "p95Ms": 700, "maxErrorRate": 0 }
+}

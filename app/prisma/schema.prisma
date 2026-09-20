@@ -373,6 +373,11 @@ model Listing {
   contentHash  String           @default("")
 
   @@index([status, category, wilayaId])
+  // Lot 137 — mesurés sur 20 000 annonces (EXPLAIN ANALYZE) : la recherche « plus récentes » lisait toute la table pour
+  // n'en garder que 20 (6,7 ms → 0,08 ms avec cet index, et l'écart croît avec le nombre d'annonces), et les annonces d'un
+  // modèle (page du modèle, comparables de prix) aussi (3,4 ms → 0,06 ms pour un modèle rare).
+  @@index([status, createdAt(sort: Desc)])
+  @@index([status, brandId, modelId])
   @@index([sellerId])
   @@index([status, expiresAt])
   @@index([contentHash])
