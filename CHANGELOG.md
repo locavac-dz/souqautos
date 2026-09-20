@@ -2540,3 +2540,25 @@ Un tableau de bord pour l'équipe éditoriale (`/admin/editorial`, ADMIN seuleme
 - Textes de l'interface en arabe non relus par un locuteur natif.
 
 **Bloc 4 terminé** : mesure d'audience et référencement (Lot 124), photos des annonces de démonstration (Lot 125), guides d'achat (Lot 126), rythme éditorial (Lot 127). Le contenu — guides, essais, revue de presse — reste à rédiger par votre équipe.
+
+## Lot 128 — Bloc 5 : cohérence des textes français / arabes et dossier de relecture (2026-09-20)
+
+Premier lot du bloc « qualité technique ». Il fait deux choses distinctes : des **garde-fous permanents** sur ce qu'une machine peut prouver (aucun texte manquant, aucune variable oubliée, aucune clé inexistante), et un **dossier de relecture** pour ce qu'elle ne peut pas juger : la qualité de l'arabe, qui exige un locuteur natif. **Ce lot ne certifie pas l'arabe.**
+
+**État des lieux** (mesuré avant d'écrire le moindre test) : 1 426 textes dans chaque langue, aucune clé d'un seul côté, aucune variable qui diffère, aucune accolade cassée, aucun texte vide, aucun mot français mêlé à l'arabe ; sur **1 875 appels** à une clé de traduction dans le code, aucun ne vise une clé absente. Les 18 textes identiques au français sont légitimes (marques, paliers « Starter / Premium », scores). Rien à corriger : le lot verrouille cet état.
+
+**Livré**
+- **`src/lib/i18n-audit.ts`** (logique pure) : aplatissement des messages, extraction **exacte** des variables et des balises (y compris **dans** les branches de pluriel, grâce à l'analyseur ICU de `next-intl`), détection d'une syntaxe invalide (accolade ouverte, pluriel sans « other »), comparaison des deux langues, et balayage du code source pour vérifier chaque `t("clé")` contre les fichiers (clés littérales, clés calculées `status${x}`, `t.rich`, `getTranslations({ namespace })`).
+- **Tests permanents** (`tests/i18n-audit.test.ts`, `tests/i18n-messages.test.ts`, 31 tests) sur les vrais fichiers et le vrai code : mêmes clés dans les deux langues, aucun message vide, syntaxe valide, mêmes variables, aucune traduction oubliée (texte identique au français, ou arabe entièrement latin, hors liste d'exceptions **explicite et vérifiée**), aucun mot français dans une phrase arabe, et chaque clé demandée par le code existe. `npm run i18n:check` les lance seuls. **Vérifié par sabotage** : une clé retirée de l'arabe, une variable supprimée d'une phrase arabe et une clé inexistante dans le code font bien échouer le test (puis tout a été restauré).
+- **`npm run i18n:review`** génère, dans `review-arabe/` (ignoré par git, à régénérer), deux fichiers pour le relecteur : `revue-arabe.html` (lecture confortable, français et arabe côte à côte, arabe en grand et de droite à gauche, filtre de recherche) et `revue-arabe.csv` (à ouvrir dans Excel, encodage compatible, avec deux colonnes vides « Correction » et « Commentaire »). Les 1 426 textes y figurent, **classés dans l'ordre de ce que voient les visiteurs** (navigation, accueil, recherche, annonce, publication…) ; les textes juridiques sont signalés comme devant aussi être validés par un juriste arabophone ; ceux réservés à l'équipe viennent en dernier. Chaque ligne indique les `{variables}` à conserver telles quelles.
+- **Tableau de terminologie** en tête du dossier : pour 11 notions (annonce, voiture, vendeur, prix, favoris, alerte / notification…), le nombre de textes contenant chaque variante arabe, pour montrer où le vocabulaire hésite. Ce n'est pas un verdict : plusieurs variantes peuvent être justes.
+
+**À faire par vous (je ne peux pas le faire)**
+- **Faire relire le dossier par un locuteur natif** (idéalement algérien : le registre d'un site de petites annonces n'est pas celui d'un texte administratif). C'est la seule vraie réponse à « l'arabe est-il bon ? ». Les corrections se reportent ensuite dans `messages/ar.json` ; `npm run i18n:check` garantit alors que rien ne casse.
+- **Points de vocabulaire que le tableau fait apparaître** et que le relecteur devrait trancher : « voiture » (`سيارة` 21 textes, `مركبة` 2), « vendeur » (`بائع` 25, `البائع` 14, `مالك` 12), « alerte » et « notification » (`تنبيه` 15, `إشعار` 16 : voulu ou non ?), « kilométrage » (`كم` 38, `كيلومتر` 10). À l'inverse, « annonce » (`إعلان`, 173 textes) et « prix » (`سعر`, 34) sont parfaitement homogènes.
+
+**Limites**
+- Les tests **ne jugent pas le sens** : une phrase arabe grammaticale mais fausse les passerait.
+- Le balayage du code voit les traductions déclarées par `useTranslations` / `getTranslations` ; il ne voit pas celles **passées en paramètre** à une autre fonction (`t={t}`). C'est un filet, pas une preuve.
+- Les tests s'appuient sur `@formatjs/icu-messageformat-parser`, installé comme dépendance de `next-intl` et non déclaré en propre : si une mise à jour de `next-intl` le retirait, les tests le diraient aussitôt.
+- Les textes venus du **contenu** (annonces, articles, guides, revue de presse) ne sont pas concernés : ils sont saisis dans les deux langues par l'équipe.

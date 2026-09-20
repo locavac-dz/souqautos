@@ -17,6 +17,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo-listings.ts",
     "db:demo-photos": "tsx prisma/apply-demo-photos.ts",
+    "i18n:check": "vitest run tests/i18n-messages.test.ts tests/i18n-audit.test.ts",
+    "i18n:review": "tsx scripts/i18n-review.ts",
     "launch:check": "tsx scripts/launch-check.ts",
     "push:keys": "node scripts/generate-vapid-keys.mjs",
     "db:backup": "node scripts/backup-db.mjs",

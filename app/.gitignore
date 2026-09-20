@@ -60,3 +60,6 @@ next-env.d.ts
 
 # Sauvegardes de la base (Lot 118) : données personnelles, jamais dans git
 /backups/
+
+# Dossier de relecture des textes arabes (Lot 128) : fichiers dérivés, à régénérer avec npm run i18n:review
+/review-arabe/
