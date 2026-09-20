@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { uniqueAccount, registerAndLogin, generateTestPhoto } from "./fixtures";
+import { uniquePhone } from "./db";
 
 // Le parcours le plus complexe et le plus touché du site : les 11 étapes de
 // l'assistant de publication (src/app/[locale]/publier/etape-1 à etape-11),
@@ -7,6 +8,9 @@ import { uniqueAccount, registerAndLogin, generateTestPhoto } from "./fixtures";
 // sa propre fiche. Compte fraîchement inscrit (jamais un compte de
 // démonstration partagé) pour ne jamais polluer les données existantes.
 test("un vendeur peut publier une annonce de bout en bout via l'assistant en 11 étapes", async ({ page }) => {
+  // Lot 131 — 11 pages visitées pour la première fois : chacune est compilée à la demande par le serveur de
+  // développement (plusieurs secondes sur une machine chargée). Le délai par défaut de 30 s ne suffisait plus.
+  test.setTimeout(120_000);
   const seller = uniqueAccount("seller");
   await registerAndLogin(page, "fr", seller);
 
@@ -66,7 +70,8 @@ test("un vendeur peut publier une annonce de bout en bout via l'assistant en 11 
   // téléphone déjà enregistré : le champ est donc éditable).
   await expect(page).toHaveURL(/etape-8/);
   await page.locator("#wizard-wilaya").selectOption({ label: "Oran" });
-  await page.locator("#wizard-phone").fill("0555123456");
+  // Numéro unique par exécution : le téléphone est unique dans la base (un numéro fixe échouerait dès la 2e exécution).
+  await page.locator("#wizard-phone").fill(uniquePhone());
   await page.getByRole("button", { name: "Suivant" }).click();
 
   // Étape 9 — prévisualisation, aucun champ requis.

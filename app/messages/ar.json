@@ -342,7 +342,8 @@
     "sortPriceDesc": "السعر تنازليًا",
     "previous": "السابق",
     "next": "التالي",
-    "pageOf": "صفحة {page} / {totalPages}"
+    "pageOf": "صفحة {page} / {totalPages}",
+    "pageTitle": "البحث عن إعلان"
   },
   "Estimate": {
     "title": "تقييم سوق أوتو",
@@ -458,6 +459,12 @@
     "categoryPOIDS_LOURD": "شاحنات ثقيلة",
     "categoryDEUX_ROUES": "دراجات نارية",
     "emptyCategory": "لا توجد ماركات في هذه الفئة."
+  },
+  "NotFound": {
+    "title": "الصفحة غير موجودة",
+    "message": "هذه الصفحة غير موجودة أو لم تعد متاحة.",
+    "home": "العودة إلى الصفحة الرئيسية",
+    "search": "تصفّح الإعلانات"
   },
   "Status": {
     "BROUILLON": "مسودة",

@@ -129,6 +129,8 @@ export default async function SearchPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 grid sm:grid-cols-[260px_1fr] gap-8">
+      {/* Lot 131 — titre de la page pour les lecteurs d'écran et les moteurs de recherche (il n'y en avait pas). */}
+      <h1 className="sr-only">{t("pageTitle")}</h1>
       <aside>
         <SearchFilters
           brands={brands}

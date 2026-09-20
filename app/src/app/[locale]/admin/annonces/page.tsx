@@ -49,9 +49,9 @@ export default async function AdminListingsPage() {
   return (
     <div className="space-y-10">
       <section>
-        <h2 className="text-lg font-medium text-slate-900 mb-4">
+        <h1 className="text-lg font-medium text-slate-900 mb-4">
           {t("pendingListings")} ({pending.length})
-        </h2>
+        </h1>
         {pending.length === 0 ? (
           <p className="text-slate-500 text-sm">{t("noPending")}</p>
         ) : (

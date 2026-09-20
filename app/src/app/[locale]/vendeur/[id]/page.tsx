@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
@@ -24,13 +25,8 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
     getCurrentUser(),
   ]);
 
-  if (!seller) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-slate-600">{t("notFound")}</p>
-      </div>
-    );
-  }
+  // Lot 131 — vraie réponse 404 pour un profil inexistant.
+  if (!seller) notFound();
 
   const [reviews, listings, trust] = await Promise.all([
     prisma.review.findMany({

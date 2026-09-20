@@ -20,9 +20,9 @@ export default async function AdminReviewsPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-medium text-slate-900 mb-4">
+      <h1 className="text-lg font-medium text-slate-900 mb-4">
         {t("allReviews")} ({reviews.length})
-      </h2>
+      </h1>
       {reviews.length === 0 ? (
         <p className="text-slate-500 text-sm">{t("noReviewsYet")}</p>
       ) : (

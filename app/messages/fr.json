@@ -342,7 +342,8 @@
     "sortPriceDesc": "Prix décroissant",
     "previous": "Précédent",
     "next": "Suivant",
-    "pageOf": "Page {page} / {totalPages}"
+    "pageOf": "Page {page} / {totalPages}",
+    "pageTitle": "Rechercher une annonce"
   },
   "Estimate": {
     "title": "Cote Souq Auto",
@@ -458,6 +459,12 @@
     "categoryPOIDS_LOURD": "Poids lourds",
     "categoryDEUX_ROUES": "Deux-roues",
     "emptyCategory": "Aucune marque dans cette catégorie."
+  },
+  "NotFound": {
+    "title": "Page introuvable",
+    "message": "Cette page n'existe pas ou n'est plus disponible.",
+    "home": "Retour à l'accueil",
+    "search": "Voir les annonces"
   },
   "Status": {
     "BROUILLON": "Brouillon",

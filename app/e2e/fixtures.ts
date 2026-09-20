@@ -27,7 +27,18 @@ export function uniqueAccount(prefix: string): NewAccount {
   };
 }
 
+// Lot 131 — l'inscription et la connexion sont limitées à 10 par quart d'heure et par adresse IP (src/app/api/auth/*).
+// Tous les tests viennent de 127.0.0.1 : dès la onzième inscription de la suite, les suivantes seraient refusées (429),
+// sans rapport avec ce que le test vérifie. Chaque navigateur de test annonce donc SA propre adresse dans
+// X-Forwarded-For (le site, sans TRUSTED_PROXY_HOPS, en prend la première valeur, cf. src/lib/client-ip.ts) ; les limites
+// restent actives et sont testées telles quelles, seulement réparties par navigateur comme elles le seraient par visiteur.
+export async function giveOwnClientIp(page: Page): Promise<void> {
+  const octet = () => 1 + Math.floor(Math.random() * 253);
+  await page.context().setExtraHTTPHeaders({ "x-forwarded-for": `10.${octet()}.${octet()}.${octet()}` });
+}
+
 export async function registerAndLogin(page: Page, locale: "fr" | "ar", account: NewAccount): Promise<void> {
+  await giveOwnClientIp(page);
   await page.goto(`/${locale}/inscription`);
   await page.locator("#register-name").fill(account.displayName);
   await page.locator("#register-email").fill(account.email);
@@ -47,6 +58,7 @@ export async function generateTestPhoto(): Promise<Buffer> {
 }
 
 export async function loginAs(page: Page, locale: "fr" | "ar", email: string, password: string): Promise<void> {
+  await giveOwnClientIp(page);
   await page.goto(`/${locale}/connexion`);
   await page.locator("#login-email").fill(email);
   await page.locator("#login-password").fill(password);

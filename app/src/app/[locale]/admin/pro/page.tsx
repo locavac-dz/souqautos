@@ -13,9 +13,9 @@ export default async function AdminProAccountsPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-medium text-slate-900 mb-4">
+      <h1 className="text-lg font-medium text-slate-900 mb-4">
         {t("proAccounts")} ({accounts.length})
-      </h2>
+      </h1>
       {accounts.length === 0 ? (
         <p className="text-slate-500 text-sm">{t("noProAccounts")}</p>
       ) : (

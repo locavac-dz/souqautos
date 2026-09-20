@@ -2607,3 +2607,34 @@ Le catalogue ne connaissait que des voitures (24 marques) ; les utilitaires et l
 - Le cas « Autre » de l'API n'est vérifié que par test unitaire (la limite de 5 créations d'annonce par heure a interrompu la vérification réelle) ; la modification d'annonce (PATCH) partage le même validateur mais n'a pas été rejouée à la main.
 - L'estimateur de prix, les guides et les essais listent toutes les marques sans filtre de catégorie. Le plan du site contient désormais ~410 pages de modèles, dont la plupart sans annonce.
 - Les tests ont laissé **11 lignes de journal d'audit** (créations/modifications/suppressions de modèles de test) attribuées à deux comptes administrateurs jetables `cat.admin.*`, neutralisés (rôle particulier) ; les lignes d'audit ne se suppriment pas.
+
+## Lot 131 — Bloc 5 : tests de bout en bout des lots récents (2026-09-20)
+
+Dernier lot du bloc « qualité technique » : la suite de bout en bout passe de **9 à 67 tests** et couvre les parcours des lots 110 à 130, sur le vrai site et la vraie base jetable. Elle a **trouvé quatre défauts réels** du site, corrigés dans ce lot.
+
+**Livré** (8 fichiers dans `app/e2e/`)
+- **`public-pages`** : chaque page publique, en français et en arabe (26 pages), répond, porte la bonne langue et le bon sens d'écriture, a un titre `h1`, ne déclenche ni exception ni erreur dans le navigateur, et **ne déborde pas de l'écran d'un téléphone** ; sélecteur de langue ; pages introuvables.
+- **`search`** : le nombre de résultats affiché est comparé **à la base** (10 filtres : prix, année, kilométrage, carburant, boîte, marque, catégorie, combinaison) ; tri par prix ; pagination sans répétition ; valeurs extrêmes ou hostiles ; une moto n'apparaît que dans « Deux-roues » ; une annonce en attente de modération n'apparaît jamais.
+- **`listing-page`** : titre, prix et données structurées valides ; annonce en attente visible de son seul auteur ; **le numéro de téléphone n'est jamais dans le code de la page** (il n'apparaît qu'au clic, est compté, et limité en débit) ; crédits des photos sous licence libre, avec liens sûrs seulement (`javascript:` et sites hors liste blanche jamais publiés), en français et en arabe.
+- **`pro`** : avec un vrai visiteur et un vrai acheteur, les statistiques affichées sont **exactement** celles de la base (vues, numéros affichés, conversations) ; les visites du vendeur ne comptent pas ; détail par annonce réservé aux paliers Pro et Premium ; suivi des prospects (statut, note privée enregistrés et retrouvés) inaccessible à l'acheteur.
+- **`guides`** : création par l'administration, lecture publique en français et en arabe, page du modèle, plan du site ; brouillon invisible partout ; publication programmée qui apparaît d'elle-même à sa date ; droits d'accès et validation ; un modèle qui a un guide ne peut pas être supprimé.
+- **`admin`** : accès (visiteur, compte ordinaire, modérateur), 23 écrans ouverts sans erreur, écrans récents en arabe, **modération d'une annonce de bout en bout** (invisible puis publique après approbation, tracée dans le journal), journal d'audit, écran d'audience.
+- **`technical`** : `robots.txt` (règles interprétées comme les moteurs, avec le joker `*`), plan du site (annonces publiées seulement, tous les types de véhicules, deux langues), `/api/health`, **mesure d'audience sans cookie** (page réellement comptée ; « Ne pas me suivre », robots et pages privées ignorés ; ni IP, ni recherche, ni User-Agent conservés).
+- **`arabic`** : inscription, connexion, assistant de publication, recherche et fiche d'annonce avec affichage du numéro, en arabe. Les textes attendus sont lus dans `messages/ar.json`, jamais recopiés.
+- Aides : `e2e/db.ts` (accès direct à la base **de test seulement**, pour préparer un état : administrateur, annonce publiée, abonnement, ou lire ce que le site a écrit), `e2e/api-helpers.ts`.
+
+**Défauts trouvés par ces tests, corrigés**
+1. **La page de recherche n'avait aucun titre `h1`** (accessibilité et référencement) : titre ajouté, invisible à l'écran (`Search.pageTitle`).
+2. **Une annonce ou un profil inexistant répondait 200** avec un message (une « page introuvable » que les moteurs de recherche gardent en mémoire) : vraie réponse 404, identique pour une annonce inexistante et pour une annonce non publique d'un autre vendeur.
+3. **Toute adresse inconnue affichait la page 404 anglaise par défaut de Next.js**, même en arabe : page « introuvable » traduite (`[locale]/not-found.tsx` et attrape-tout `[locale]/[...rest]`), dans la langue du visiteur et de droite à gauche en arabe.
+4. **Six écrans d'administration** (annonces, signalements, avis, avis propriétaires, comptes pro, identité) utilisaient `<h2>` comme titre de page : passés en `<h1>`, aspect identique.
+
+**Vérification** : `npm run verify -- --e2e` — 1 147 tests unitaires, **67 tests de bout en bout**, 7 de l'application installable, écart de migrations nul. **Vérifié par sabotage** sur le site : une règle `robots.txt` trop large, un filtre de prix rendu strict, le détail par annonce ouvert à tous les paliers, une annonce inexistante qui répond de nouveau 200 font tous échouer les tests. **Ce sabotage a d'abord révélé un test creux** (`robots.txt` : le joker `*` n'était pas interprété, donc une règle `/*/annonce` passait inaperçue) : corrigé et re-vérifié.
+
+**Ajustements de la suite** : chaque navigateur de test annonce sa propre adresse (`X-Forwarded-For`) : l'inscription et la connexion sont limitées à 10 par quart d'heure et par adresse, et la suite complète crée bien plus de comptes que cette limite n'en accepte (elle reste active et testée telle quelle) ; délai d'attente des vérifications porté de 5 à 15 s (`playwright.config.ts`) car le serveur de test compile chaque page à sa première visite ; le test de publication utilise un numéro de téléphone unique par exécution (un numéro fixe échouait dès la 2e exécution) et un délai de 120 s.
+
+**Limites**
+- Les tests tournent sur `next dev` (comme les précédents) : ils ne prouvent pas le comportement d'une version de production, sauf pour l'application installable (`test:e2e:pwa`). En développement, le HTML initial d'une page 404 est l'enveloppe d'erreur de Next.js avant hydratation ; le statut 404 et `noindex` sont vérifiés, la version de production ne l'est pas.
+- La suite dure environ 5 minutes : la CI la lance après les contrôles rapides (`checks`), et son travail `e2e` a un délai de 30 minutes.
+- Non couverts : paiement par virement, messagerie au-delà du premier échange, alertes de recherche, notifications push et installation sur un vrai appareil, import en masse, avis, signalements, favoris, comparateur, assistant d'achat par IA (un test existe, non modifié).
+- Le journal d'audit de la base de développement n'est pas touché : ces tests n'écrivent que dans la base jetable `_e2e`.

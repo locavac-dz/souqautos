@@ -3,6 +3,7 @@ import Image from "next/image";
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { publishedNow } from "@/lib/blog-publication";
@@ -119,13 +120,9 @@ export default async function ListingDetailPage({
   ]);
 
   const isOwner = currentUser?.id === listing?.sellerId;
-  if (!listing || (listing.status !== "PUBLIEE" && !isOwner)) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-slate-600">{tListing("notFound")}</p>
-      </div>
-    );
-  }
+  // Lot 131 — vraie réponse 404 (et non une page « introuvable » servie en 200, que les moteurs de recherche
+  // gardent en mémoire) : même réponse pour une annonce inexistante et pour une annonce non publique d'un autre vendeur.
+  if (!listing || (listing.status !== "PUBLIEE" && !isOwner)) notFound();
 
   // Lot 122 — ni le vendeur, ni les robots (indexation, aperçus de liens, supervision) : leurs passages
   // fausseraient les vues et le taux de contact des statistiques. Compté après l'envoi de la page.

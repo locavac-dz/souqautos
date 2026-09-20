@@ -11,6 +11,10 @@ const PORT = 5185;
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
+  // Lot 131 — attente des vérifications (URL, texte visible) : 15 s au lieu de 5 s. Le serveur de test est un `next dev`
+  // qui compile chaque page à sa première visite ; sur une machine chargée, cela dépasse 5 s sans qu'il y ait le moindre
+  // défaut (constaté sur l'étape 6 de l'assistant de publication). Un vrai défaut échoue toujours, seulement 10 s plus tard.
+  expect: { timeout: 15_000 },
   // Une seule base de données partagée par tous les specs (E2E_DATABASE_URL) —
   // un seul worker pour éviter toute course entre eux (ex. deux specs qui
   // créeraient une annonce en même temps et se disputeraient la limite de

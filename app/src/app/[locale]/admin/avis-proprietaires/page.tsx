@@ -23,9 +23,9 @@ export default async function AdminOwnerReviewsPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-medium text-slate-900 mb-1">
+      <h1 className="text-lg font-medium text-slate-900 mb-1">
         {t("title")} ({reviews.length})
-      </h2>
+      </h1>
       <p className="text-sm text-slate-500 mb-4">{t("subtitle")}</p>
 
       {reviews.length === 0 ? (

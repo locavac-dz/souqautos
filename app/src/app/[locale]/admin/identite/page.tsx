@@ -14,9 +14,9 @@ export default async function AdminIdentityRequestsPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-medium text-slate-900 mb-4">
+      <h1 className="text-lg font-medium text-slate-900 mb-4">
         {t("identityRequests")} ({requests.length})
-      </h2>
+      </h1>
       {requests.length === 0 ? (
         <p className="text-slate-500 text-sm">{t("noIdentityRequests")}</p>
       ) : (

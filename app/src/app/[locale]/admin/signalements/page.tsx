@@ -34,9 +34,9 @@ export default async function AdminReportsPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-medium text-slate-900 mb-4">
+      <h1 className="text-lg font-medium text-slate-900 mb-4">
         {t("openReports")} ({reports.length})
-      </h2>
+      </h1>
       {reports.length === 0 ? (
         <p className="text-slate-500 text-sm">{t("noOpenReports")}</p>
       ) : (
