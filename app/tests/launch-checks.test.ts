@@ -134,6 +134,35 @@ describe("evaluateLaunchReadiness", () => {
   });
 });
 
+describe("evaluateLaunchReadiness — double authentification de l'équipe (Lot 138)", () => {
+  it("is fine by default: it is required of the team in production", () => {
+    const results = evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts });
+    expect(level(results, "staff-2fa")).toEqual(["ok"]);
+    expect(level(results, "staff-2fa-accounts")).toEqual([]);
+  });
+
+  it("warns when someone turned the requirement off (a stolen admin password would be enough)", () => {
+    const results = evaluateLaunchReadiness({ env: { ...goodEnv, REQUIRE_STAFF_2FA: "0" }, facts: goodFacts });
+    expect(level(results, "staff-2fa")).toEqual(["warning"]);
+    expect(results.find((r) => r.id === "staff-2fa")?.fix).toContain("REQUIRE_STAFF_2FA");
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+  });
+
+  it("warns, without blocking, about team accounts that would lose their powers until they enrol", () => {
+    const results = evaluateLaunchReadiness({ env: goodEnv, facts: { ...goodFacts, staffWithoutTwoFactor: 3 } });
+    expect(level(results, "staff-2fa-accounts")).toEqual(["warning"]);
+    const check = results.find((r) => r.id === "staff-2fa-accounts")!;
+    expect(check.message).toContain("3");
+    expect(check.fix).toContain("/compte/securite");
+    expect(check.fix).toContain("auth:reset-2fa");
+    expect(summarizeChecks(results).ready).toBe(true);
+  });
+
+  it("says nothing about accounts when the requirement is off", () => {
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, REQUIRE_STAFF_2FA: "0" }, facts: { ...goodFacts, staffWithoutTwoFactor: 3 } }), "staff-2fa-accounts")).toEqual([]);
+  });
+});
+
 describe("evaluateLaunchReadiness — alertes techniques (Lot 136)", () => {
   const { OPS_ALERT_EMAILS, ...withoutAlerts } = goodEnv;
   void OPS_ALERT_EMAILS;

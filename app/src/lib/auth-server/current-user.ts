@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionFromCookies } from "./session";
+import { effectiveRole, staffTwoFactorRequired } from "@/lib/staff-two-factor";
 
 export async function getCurrentUser() {
   const session = await getSessionFromCookies();
@@ -22,6 +23,13 @@ export async function getCurrentUser() {
 
   // Lot 133 — session ouverte AVANT la dernière réinitialisation du mot de passe : refusée (à la milliseconde).
   if (user?.sessionsValidAfter && session.issuedAtMs < user.sessionsValidAfter.getTime()) return null;
+
+  // Lot 138 — un compte d'équipe SANS double authentification n'a aucun pouvoir d'équipe (rôle effectif : simple particulier)
+  // quand elle est exigée (src/lib/staff-two-factor.ts). Point unique : toutes les vérifications de droits passent ici.
+  if (user) {
+    const role = effectiveRole(user, staffTwoFactorRequired(process.env));
+    if (role !== user.role) return { ...user, role };
+  }
 
   return user;
 }

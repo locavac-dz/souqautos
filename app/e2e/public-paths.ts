@@ -60,6 +60,7 @@ export const MEMBER_PAGES = [
   "/compte/alertes",
   "/compte/messages",
   "/compte/profil",
+  "/compte/securite",
   "/compte/assistant-achat",
   ...Array.from({ length: 11 }, (_, index) => `/publier/etape-${index + 1}`),
 ];

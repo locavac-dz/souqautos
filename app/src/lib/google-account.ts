@@ -20,7 +20,8 @@ import { GOOGLE_PROVIDER, type GoogleLoginLocale, type GoogleProfile } from "@/l
 //  3. Sinon, un compte est créé : adresse vérifiée d'office (Google l'a attestée), aucun mot de passe.
 export type GoogleSignInRefusal = "suspended" | "staff" | "unverified_account" | "deleted";
 export type GoogleSignInResult =
-  | { ok: true; user: { id: string; role: Role }; created: boolean; linked: boolean }
+  // totpEnabledAt (Lot 138) : la connexion Google d'un compte qui a la double authentification exige encore le code.
+  | { ok: true; user: { id: string; role: Role; totpEnabledAt: Date | null }; created: boolean; linked: boolean }
   | { ok: false; reason: GoogleSignInRefusal };
 
 type AccountRow = { id: string; role: Role; suspendedAt: Date | null; deletedAt: Date | null };
@@ -41,16 +42,16 @@ function displayNameFor(profile: GoogleProfile): string {
 export async function signInWithGoogleProfile(profile: GoogleProfile, locale: GoogleLoginLocale, attempt = 0): Promise<GoogleSignInResult> {
   const link = await prisma.oAuthAccount.findUnique({
     where: { provider_providerAccountId: { provider: GOOGLE_PROVIDER, providerAccountId: profile.sub } },
-    include: { user: { select: { id: true, role: true, suspendedAt: true, deletedAt: true } } },
+    include: { user: { select: { id: true, role: true, suspendedAt: true, deletedAt: true, totpEnabledAt: true } } },
   });
   if (link) {
     const refusal = gate(link.user);
-    return refusal ? { ok: false, reason: refusal } : { ok: true, user: { id: link.user.id, role: link.user.role }, created: false, linked: false };
+    return refusal ? { ok: false, reason: refusal } : { ok: true, user: { id: link.user.id, role: link.user.role, totpEnabledAt: link.user.totpEnabledAt }, created: false, linked: false };
   }
 
   const existing = await prisma.user.findUnique({
     where: { email: profile.email },
-    select: { id: true, role: true, suspendedAt: true, deletedAt: true, emailVerifiedAt: true },
+    select: { id: true, role: true, suspendedAt: true, deletedAt: true, emailVerifiedAt: true, totpEnabledAt: true },
   });
   if (existing) {
     const refusal = gate(existing);
@@ -62,7 +63,7 @@ export async function signInWithGoogleProfile(profile: GoogleProfile, locale: Go
       // Deux retours de Google simultanés pour le même compte : l'autre a déjà écrit le lien, c'est le même résultat.
       if (!isUniqueViolation(error)) throw error;
     }
-    return { ok: true, user: { id: existing.id, role: existing.role }, created: false, linked: true };
+    return { ok: true, user: { id: existing.id, role: existing.role, totpEnabledAt: existing.totpEnabledAt }, created: false, linked: true };
   }
 
   try {
@@ -77,7 +78,7 @@ export async function signInWithGoogleProfile(profile: GoogleProfile, locale: Go
       },
       select: { id: true, role: true },
     });
-    return { ok: true, user, created: true, linked: false };
+    return { ok: true, user: { ...user, totpEnabledAt: null }, created: true, linked: false };
   } catch (error) {
     // Une inscription est survenue entre la vérification et la création : on repart de zéro, une seule fois.
     if (isUniqueViolation(error) && attempt === 0) return signInWithGoogleProfile(profile, locale, 1);

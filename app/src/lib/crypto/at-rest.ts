@@ -76,3 +76,13 @@ export function decryptBuffer(encoded: Buffer): Buffer {
   decipher.setAuthTag(authTag);
   return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 }
+
+/**
+ * Empreinte À CLÉ (HMAC-SHA256, clé dérivée de la clé maîtresse pour un usage donné), en hexadécimal. Sert à stocker une valeur
+ * qu'on ne doit jamais pouvoir relire mais seulement COMPARER (codes de secours de la double authentification, Lot 138).
+ * Contrairement à un SHA-256 seul, une copie de la base ne permet pas de retrouver la valeur par force brute hors ligne :
+ * il faudrait aussi la clé du serveur.
+ */
+export function keyedHash(purpose: string, value: string): string {
+  return createHmac("sha256", deriveKey(purpose)).update(value, "utf8").digest("hex");
+}

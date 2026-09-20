@@ -4,6 +4,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
 import { SITE_URL } from "@/lib/site";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
+import { createPendingToken, setPendingCookie } from "@/lib/auth-server/two-factor-pending";
 import { signInWithGoogleProfile } from "@/lib/google-account";
 import {
   GOOGLE_FLOW_COOKIE,
@@ -76,6 +77,13 @@ export async function GET(request: NextRequest) {
 
   const result = await signInWithGoogleProfile(validated.profile, flow.locale);
   if (!result.ok) return fail(REFUSAL_CODE[result.reason]);
+
+  // Lot 138 — Google a prouvé l'identité, pas la possession du second facteur : un compte qui a la double authentification
+  // passe par la même page de saisie du code que la connexion par mot de passe, avant toute session.
+  if (result.user.totpEnabledAt) {
+    await setPendingCookie(await createPendingToken({ sub: result.user.id, next: flow.next }));
+    return redirectTo(`/${flow.locale}/connexion/verification`);
+  }
 
   await setSessionCookie(await createSessionToken({ sub: result.user.id, role: result.user.role }));
   return redirectTo(`/${flow.locale}${flow.next}`);

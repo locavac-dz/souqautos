@@ -40,6 +40,9 @@ export async function verifySessionToken(
     if (typeof payload.sub !== "string" || typeof payload.role !== "string") {
       return null;
     }
+    // Lot 138 — un jeton « connexion en attente du second facteur » (src/lib/auth-server/two-factor-pending.ts) est signé de la
+    // même clé : il ne doit JAMAIS être pris pour une session, même si quelqu'un le recopiait dans le cookie de session.
+    if (payload.purpose !== undefined) return null;
     const issuedAtMs = typeof payload.ims === "number" ? payload.ims : (typeof payload.iat === "number" ? payload.iat : 0) * 1000;
     return { sub: payload.sub, role: payload.role, issuedAtMs };
   } catch {

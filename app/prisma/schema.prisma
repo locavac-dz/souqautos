@@ -72,6 +72,15 @@ model User {
   // serveur : sans cette date, on ne pourrait pas les révoquer). Posée à la réinitialisation du mot de passe : la
   // personne qui a perdu son mot de passe — ou dont le compte a été pris — déconnecte tous les appareils.
   sessionsValidAfter      DateTime?
+  // Lot 138 — double authentification par application (TOTP, RFC 6238). Le secret n'est JAMAIS stocké en clair : chiffré
+  // (AES-256-GCM, IV aléatoire, clé dérivée de ENCRYPTION_KEY) comme les pièces d'identité. `totpPendingSecretEnc` est le secret
+  // affiché pendant l'activation, tant que la personne n'a pas prouvé qu'elle le lit dans son application : il ne sert à rien
+  // avant confirmation. `totpLastStep` est le dernier pas de 30 s accepté : un code déjà utilisé (ou plus ancien) est refusé.
+  totpSecretEnc           String?
+  totpPendingSecretEnc    String?
+  totpEnabledAt           DateTime?
+  totpLastStep            Int?
+  twoFactorRecoveryCodes  TwoFactorRecoveryCode[]
   emailChangeRequests     EmailChangeRequest[]
   phoneVerificationCodes  PhoneVerificationCode[]
   professionalAccount     ProfessionalAccount?
@@ -1251,5 +1260,20 @@ model PasswordResetToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  @@index([userId])
+}
+
+// Lot 138 — codes de secours de la double authentification : dix codes à usage unique, à utiliser si le téléphone est perdu.
+// On ne garde que leur empreinte HMAC (clé dérivée de ENCRYPTION_KEY) : une copie de la base ne donne aucun code utilisable,
+// et un code de 60 bits ne peut pas être retrouvé par force brute hors ligne sans la clé du serveur.
+model TwoFactorRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, codeHash])
   @@index([userId])
 }

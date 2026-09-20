@@ -26,7 +26,9 @@ export function LoginForm() {
     setPending(false);
 
     if (res.ok) {
-      router.replace("/compte/tableau-de-bord");
+      // Lot 138 — mot de passe correct mais double authentification : pas de session encore, le code se saisit sur la page suivante.
+      const body = (await res.json().catch(() => null)) as { twoFactorRequired?: boolean } | null;
+      router.replace(body?.twoFactorRequired ? "/connexion/verification" : "/compte/tableau-de-bord");
       router.refresh();
       return;
     }

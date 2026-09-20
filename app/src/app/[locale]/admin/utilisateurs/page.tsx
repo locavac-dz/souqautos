@@ -5,6 +5,7 @@ import { isAdmin, isStaff } from "@/lib/auth-server/roles";
 import { RoleSelect } from "@/components/admin/RoleSelect";
 import { SuspendUserButton } from "@/components/admin/SuspendUserButton";
 import { UnlockUserButton } from "@/components/admin/UnlockUserButton";
+import { ResetTwoFactorButton } from "@/components/admin/ResetTwoFactorButton";
 import { isAccountLocked } from "@/lib/login-lockout";
 
 const ROLE_KEY: Record<string, string> = {
@@ -16,6 +17,7 @@ const ROLE_KEY: Record<string, string> = {
 
 export default async function AdminUsersPage() {
   const t = await getTranslations("Admin");
+  const tTwoFactor = await getTranslations("TwoFactor");
   const currentUser = await getCurrentUser();
   const canChangeRoles = Boolean(currentUser && isAdmin(currentUser.role));
   const canSuspend = Boolean(currentUser && isStaff(currentUser.role));
@@ -37,6 +39,7 @@ export default async function AdminUsersPage() {
               <div>
                 <p className="font-medium text-slate-900">{user.profile?.displayName ?? user.email}</p>
                 <p className="text-slate-500 text-xs">{user.email}</p>
+                {user.totpEnabledAt && <p className="mt-0.5 text-xs text-emerald-700">{tTwoFactor("adminColumn")} : {tTwoFactor("adminEnabled")}</p>}
                 {user.deletedAt ? (
                   <p className="mt-0.5 text-xs text-slate-500">{t("deletedLabel")}</p>
                 ) : (
@@ -67,6 +70,7 @@ export default async function AdminUsersPage() {
                       <span className="text-slate-600">{t(ROLE_KEY[user.role])}</span>
                     )}
                     {canSuspend && locked && <UnlockUserButton userId={user.id} />}
+                    {canChangeRoles && user.totpEnabledAt && user.id !== currentUser?.id && <ResetTwoFactorButton userId={user.id} />}
                     {canSuspend && !isStaff(user.role) && user.id !== currentUser?.id && (
                       <SuspendUserButton userId={user.id} suspended={Boolean(user.suspendedAt)} />
                     )}

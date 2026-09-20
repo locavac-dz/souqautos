@@ -17,7 +17,7 @@ import { signInWithGoogleProfile } from "@/lib/google-account";
 
 const profile = { sub: "google-sub-1", email: "amina@gmail.com", name: "Amina Test" };
 const unique = () => new Prisma.PrismaClientKnownRequestError("Unique constraint failed", { code: "P2002", clientVersion: "test" });
-const account = (overrides: Record<string, unknown> = {}) => ({ id: "user-1", role: "PARTICULIER", suspendedAt: null, deletedAt: null, emailVerifiedAt: new Date("2026-01-01"), ...overrides });
+const account = (overrides: Record<string, unknown> = {}) => ({ id: "user-1", role: "PARTICULIER", suspendedAt: null, deletedAt: null, emailVerifiedAt: new Date("2026-01-01"), totpEnabledAt: null, ...overrides });
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -31,10 +31,20 @@ describe("a Google account already linked to a site account", () => {
   it("opens that account, whatever the current address of the Google account is", async () => {
     linkFindUnique.mockResolvedValue({ user: account() });
     const result = await signInWithGoogleProfile({ ...profile, email: "nouvelle-adresse@gmail.com" }, "fr");
-    expect(result).toEqual({ ok: true, user: { id: "user-1", role: "PARTICULIER" }, created: false, linked: false });
+    expect(result).toEqual({ ok: true, user: { id: "user-1", role: "PARTICULIER", totpEnabledAt: null }, created: false, linked: false });
     expect(linkFindUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { provider_providerAccountId: { provider: "google", providerAccountId: "google-sub-1" } } }));
     expect(userFindUnique).not.toHaveBeenCalled(); // l'adresse n'est même pas consultée
     expect(userCreate).not.toHaveBeenCalled();
+  });
+
+  it("tells the caller when the account has two-factor authentication (Lot 138): Google alone must not open a session", async () => {
+    const enabledAt = new Date("2026-09-01");
+    linkFindUnique.mockResolvedValue({ user: account({ totpEnabledAt: enabledAt }) });
+    expect(await signInWithGoogleProfile(profile, "fr")).toMatchObject({ ok: true, user: { id: "user-1", totpEnabledAt: enabledAt } });
+    // Aussi quand le compte est retrouvé par son adresse (rattachement).
+    linkFindUnique.mockResolvedValue(null);
+    userFindUnique.mockResolvedValue(account({ totpEnabledAt: enabledAt }));
+    expect(await signInWithGoogleProfile(profile, "fr")).toMatchObject({ ok: true, linked: true, user: { totpEnabledAt: enabledAt } });
   });
 
   it("refuses a suspended, deleted or staff account, even though the link exists", async () => {
@@ -53,7 +63,7 @@ describe("a site account already exists at the same address", () => {
   it("links the Google account when the site has verified the address", async () => {
     userFindUnique.mockResolvedValue(account());
     const result = await signInWithGoogleProfile(profile, "fr");
-    expect(result).toEqual({ ok: true, user: { id: "user-1", role: "PARTICULIER" }, created: false, linked: true });
+    expect(result).toEqual({ ok: true, user: { id: "user-1", role: "PARTICULIER", totpEnabledAt: null }, created: false, linked: true });
     expect(linkCreate).toHaveBeenCalledWith({ data: { provider: "google", providerAccountId: "google-sub-1", userId: "user-1" } });
     expect(userCreate).not.toHaveBeenCalled();
   });
@@ -104,7 +114,7 @@ describe("a site account already exists at the same address", () => {
 describe("a first Google sign-in with an unknown address", () => {
   it("creates a verified account without a password, a profile and the link — and stores nothing else from Google", async () => {
     const result = await signInWithGoogleProfile(profile, "ar");
-    expect(result).toEqual({ ok: true, user: { id: "new-user", role: "PARTICULIER" }, created: true, linked: false });
+    expect(result).toEqual({ ok: true, user: { id: "new-user", role: "PARTICULIER", totpEnabledAt: null }, created: true, linked: false });
 
     const { data } = userCreate.mock.calls[0][0];
     expect(data.email).toBe("amina@gmail.com");

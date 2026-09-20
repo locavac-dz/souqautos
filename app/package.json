@@ -25,6 +25,7 @@
     "db:backup": "node scripts/backup-db.mjs",
     "db:restore-check": "node scripts/restore-check.mjs",
     "ops:check": "tsx scripts/ops-check.ts",
+    "auth:reset-2fa": "tsx scripts/reset-2fa.ts",
     "load:seed": "tsx prisma/seed-load.ts",
     "load:test": "tsx scripts/load-test.ts"
   },
@@ -42,6 +43,7 @@
     "next-intl": "^4.14.2",
     "nodemailer": "^9.1.1",
     "prisma": "^6.19.3",
+    "qrcode-generator": "2.0.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-markdown": "^10.1.0",

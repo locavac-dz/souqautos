@@ -1,3 +1,4 @@
+import { staffTwoFactorRequired } from "@/lib/staff-two-factor";
 import { resolveOpsRecipients } from "@/lib/alert-recipients";
 import { resolveMailConfig, DEFAULT_MAIL_FROM } from "@/lib/mail-config";
 import { parseTrustedProxyHops } from "@/lib/client-ip";
@@ -31,6 +32,8 @@ export type LaunchFacts = {
   // Migrations présentes dans prisma/migrations / effectivement appliquées.
   migrationsOnDisk: number;
   migrationsApplied: number;
+  // Lot 138 — comptes d'équipe (administrateurs, modérateurs) actifs SANS double authentification.
+  staffWithoutTwoFactor?: number;
 };
 
 type Env = Record<string, string | undefined>;
@@ -197,6 +200,28 @@ function checkAlertRecipients(env: Env): CheckResult {
   };
 }
 
+// Lot 138 — la double authentification de l'ÉQUIPE : exigée par défaut en production. « 0 » la désactive : le compte d'un
+// administrateur (dont le mot de passe peut fuiter, être deviné, ou être réutilisé d'un autre site) redevient sa seule protection.
+function checkStaffTwoFactor(env: Env, facts: LaunchFacts): CheckResult[] {
+  const required = staffTwoFactorRequired({ ...env, NODE_ENV: "production" });
+  const results: CheckResult[] = [];
+  if (!required) {
+    results.push({ id: "staff-2fa", level: "warning", message: "La double authentification n'est PAS exigée de l'équipe (REQUIRE_STAFF_2FA=0) : un mot de passe administrateur volé suffit à prendre le site.", fix: "Retirer REQUIRE_STAFF_2FA (elle est exigée par défaut en production)." });
+    return results;
+  }
+  results.push({ id: "staff-2fa", level: "ok", message: "La double authentification est exigée de l'équipe (administrateurs et modérateurs)." });
+  const missing = facts.staffWithoutTwoFactor ?? 0;
+  if (missing > 0) {
+    results.push({
+      id: "staff-2fa-accounts",
+      level: "warning",
+      message: `${missing} compte(s) d'équipe sans double authentification : ils n'auront que les droits d'un compte ordinaire tant qu'elle n'est pas activée.`,
+      fix: "Chacun se connecte, ouvre « Sécurité du compte » (/compte/securite) et l'active. Perdu l'accès ? npm run auth:reset-2fa -- --email …",
+    });
+  }
+  return results;
+}
+
 function checkInfrastructure(env: Env): CheckResult[] {
   const results: CheckResult[] = [];
 
@@ -259,6 +284,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkSearchConsole(env),
     checkSecurityPolicy(env),
     checkAlertRecipients(env),
+    ...checkStaffTwoFactor(env, facts),
     ...checkInfrastructure(env),
     ...checkFacts(facts),
   ];

@@ -45,11 +45,17 @@ async function collectFacts(): Promise<LaunchFacts> {
   try {
     const applied = await prisma.$queryRaw<{ count: bigint }[]>`SELECT count(*) AS count FROM "_prisma_migrations" WHERE finished_at IS NOT NULL`;
     const admin = await prisma.user.findUnique({ where: { email: DEV_ADMIN_EMAIL }, select: { passwordHash: true } });
+    // Lot 138 — cette colonne vient d'une migration : tant qu'elle n'est pas appliquée, la requête échoue. Ce n'est pas une raison de
+    // planter (le contrôle « migrations » le dit déjà, en clair) : le chiffre reste simplement inconnu.
+    const staffWithoutTwoFactor = await prisma.user
+      .count({ where: { role: { in: ["ADMIN", "MODERATEUR"] }, totpEnabledAt: null, deletedAt: null, suspendedAt: null } })
+      .catch(() => undefined);
     const demoAccounts = await prisma.user.count({ where: { OR: DEMO_DOMAINS.map((domain) => ({ email: { endsWith: domain, mode: "insensitive" as const } })) } });
     return {
       dbReachable: true,
       adminUsesDevPassword: admin?.passwordHash ? await bcrypt.compare(DEV_ADMIN_PASSWORD, admin.passwordHash) : false,
       demoAccounts,
+      staffWithoutTwoFactor,
       migrationsOnDisk,
       migrationsApplied: Number(applied[0]?.count ?? 0),
     };

@@ -6,6 +6,7 @@ import { EditProfileForm } from "@/components/EditProfileForm";
 import { EmailChangeForm } from "@/components/EmailChangeForm";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { DeleteAccountForm } from "@/components/DeleteAccountForm";
+import { Link } from "@/i18n/navigation";
 
 export default async function EditProfilePage() {
   const locale = await getLocale();
@@ -16,6 +17,7 @@ export default async function EditProfilePage() {
   }
 
   const t = await getTranslations("ProfileEdit");
+  const tSecurity = await getTranslations("TwoFactor");
   const wilayas = await prisma.wilaya.findMany({ orderBy: { id: "asc" } });
 
   return (
@@ -28,6 +30,12 @@ export default async function EditProfilePage() {
       <div className="mb-6">
         <EmailChangeForm currentEmail={user.email} />
       </div>
+      {/* Lot 138 — double authentification. */}
+      <p className="mb-6 text-sm">
+        <Link href="/compte/securite" className="font-medium text-slate-900 underline hover:text-slate-700">
+          {tSecurity("securityLink")}
+        </Link>
+      </p>
       <EditProfileForm
         wilayas={wilayas}
         initialDisplayName={user.profile?.displayName ?? ""}

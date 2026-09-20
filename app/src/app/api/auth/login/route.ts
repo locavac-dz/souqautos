@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validation/auth";
 import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/auth-server/password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
+import { createPendingToken, setPendingCookie } from "@/lib/auth-server/two-factor-pending";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, safeUser } from "@/lib/http";
 import { isAccountLocked, lockedUntilForAttempts, LOGIN_ACCOUNT_LIMIT } from "@/lib/login-lockout";
@@ -80,6 +81,15 @@ export async function POST(request: NextRequest) {
       { error: "account_suspended", reason: user.suspensionReason },
       { status: 403 }
     );
+  }
+
+  // Lot 138 — mot de passe correct, mais le compte a la double authentification : PAS de session. On pose seulement le jeton
+  // « en attente du second facteur » (il ne donne aucun accès) et la personne saisit son code sur la page suivante.
+  // Le compteur d'échecs n'est PAS remis à zéro ici, seulement après un code valable : sinon un attaquant qui connaît le mot
+  // de passe le remettrait à zéro avant chaque série d'essais de code, et le verrouillage ne se déclencherait jamais.
+  if (user.totpEnabledAt) {
+    await setPendingCookie(await createPendingToken({ sub: user.id }));
+    return NextResponse.json({ twoFactorRequired: true });
   }
 
   // Connexion réussie : réinitialise le compteur d'échecs.
