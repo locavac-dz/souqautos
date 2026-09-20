@@ -74,7 +74,9 @@ export function connectionArgs(db) {
 // Exécute un outil PostgreSQL et renvoie { status, stdout, stderr }.
 export function runPg(tool, args, db, options = {}) {
   const result = spawnSync(findPgTool(tool), args, {
-    env: { ...process.env, PGPASSWORD: db.password },
+    // Sous Windows, les messages des outils PostgreSQL sont écrits dans la page de code de la console (pas en UTF-8) : lus
+    // ici, les accents deviennent « � », y compris dans les courriels du veilleur. Messages en anglais (ASCII) : lisibles partout.
+    env: { ...process.env, PGPASSWORD: db.password, ...(process.platform === "win32" ? { LC_MESSAGES: "C" } : {}) },
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
     ...options,

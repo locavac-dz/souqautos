@@ -16,6 +16,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { argValue, connectionArgs, fail, loadEnv, parseDatabaseUrl, runPg } from "./pg-helpers.mjs";
+import { recordRun } from "./ops-state.mjs";
 
 loadEnv();
 const db = parseDatabaseUrl();
@@ -48,10 +49,13 @@ function count(database, table) {
 
 console.log(`Test de restauration de ${path.basename(dumpFile)} dans la base temporaire « ${scratch} »`);
 let exitCode = 0;
+let failureReason = "";
+const problemTables = [];
 try {
   runPg("dropdb", [...connectionArgs(db), "--if-exists", scratch], db);
   const created = runPg("createdb", [...connectionArgs(db), scratch], db);
   if (created.status !== 0) {
+    recordRun(outDir, "restoreCheck", "lastFailure", { file: path.basename(dumpFile), reason: "impossible de créer la base temporaire (rôle sans CREATEDB ?)" });
     fail(`Impossible de créer la base temporaire (le rôle « ${db.user} » a-t-il CREATEDB ?) :\n${created.stderr.trim()}`);
   }
 
@@ -59,6 +63,7 @@ try {
   if (restore.status !== 0) {
     console.error(`✗ La restauration a ÉCHOUÉ :\n${restore.stderr.trim()}`);
     exitCode = 1;
+    failureReason = `pg_restore a échoué : ${restore.stderr.replace(/\s+/g, " ").trim().slice(0, 250)}`;
   } else {
     console.log("✓ Restauration terminée sans erreur.\n");
     console.log("Table".padEnd(18) + "base réelle".padStart(13) + "restaurée".padStart(13));
@@ -67,7 +72,10 @@ try {
       const restored = count(scratch, table);
       const problem = restored === null || (source !== null && source > 0 && restored === 0);
       const changed = !problem && source !== null && restored !== source;
-      if (problem) exitCode = 1;
+      if (problem) {
+        exitCode = 1;
+        problemTables.push(table);
+      }
       console.log(`${table.padEnd(18)}${String(source ?? "?").padStart(13)}${String(restored ?? "absente").padStart(13)}  ${problem ? "✗" : changed ? "≠" : "✓"}`);
     }
     console.log("\n✓ = identique · ≠ = la base a changé depuis la sauvegarde (normal si elle est en service) · ✗ = table absente ou vide alors que la base réelle a des lignes");
@@ -76,6 +84,10 @@ try {
   const dropped = runPg("dropdb", [...connectionArgs(db), "--if-exists", scratch], db);
   console.log(dropped.status === 0 ? `\nBase temporaire « ${scratch} » supprimée.` : `\n⚠ Base temporaire « ${scratch} » à supprimer à la main : ${dropped.stderr.trim()}`);
 }
+
+// Enregistré pour le veilleur (npm run ops:check) : c'est LA preuve que la sauvegarde sert à quelque chose.
+if (exitCode === 0) recordRun(outDir, "restoreCheck", "lastSuccess", { file: path.basename(dumpFile), tables: TABLES.length });
+else recordRun(outDir, "restoreCheck", "lastFailure", { file: path.basename(dumpFile), reason: failureReason || `tables absentes ou vides : ${problemTables.join(", ")}` });
 
 console.log(exitCode === 0 ? "\nRESTAURATION VÉRIFIÉE." : "\nRESTAURATION NON CONFORME : ne pas se fier à cette sauvegarde.");
 process.exit(exitCode);

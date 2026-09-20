@@ -31,6 +31,7 @@ const goodEnv = {
   GOOGLE_SITE_VERIFICATION: "abcDEF1234567890_-abcDEF1234567890",
   GOOGLE_CLIENT_ID: "123456789-abcdef.apps.googleusercontent.com",
   GOOGLE_CLIENT_SECRET: "secret-de-test",
+  OPS_ALERT_EMAILS: "technique@souqauto.example",
 };
 
 const level = (results: ReturnType<typeof evaluateLaunchReadiness>, id: string) => results.filter((r) => r.id === id).map((r) => r.level);
@@ -130,6 +131,29 @@ describe("evaluateLaunchReadiness", () => {
     const results = evaluateLaunchReadiness({ env: { ...goodEnv, VAPID_PRIVATE_KEY: other.privateKey }, facts: goodFacts });
     expect(level(results, "push")).toEqual(["error"]);
     expect(results.find((r) => r.id === "push")?.message).toContain("ne correspond pas");
+  });
+});
+
+describe("evaluateLaunchReadiness — alertes techniques (Lot 136)", () => {
+  const { OPS_ALERT_EMAILS, ...withoutAlerts } = goodEnv;
+  void OPS_ALERT_EMAILS;
+
+  it("is fine when technical alerts have a recipient, and says how many", () => {
+    const results = evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts });
+    expect(level(results, "ops-alerts")).toEqual(["ok"]);
+    expect(results.find((r) => r.id === "ops-alerts")?.message).toContain("1 adresse");
+  });
+
+  it("warns, without blocking, when nobody would be told about a failed backup or a server error", () => {
+    const results = evaluateLaunchReadiness({ env: withoutAlerts, facts: goodFacts });
+    expect(level(results, "ops-alerts")).toEqual(["warning"]);
+    expect(results.find((r) => r.id === "ops-alerts")?.fix).toContain("OPS_ALERT_EMAILS");
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+  });
+
+  it("falls back to the moderation team's addresses, and ignores malformed ones", () => {
+    expect(level(evaluateLaunchReadiness({ env: { ...withoutAlerts, STAFF_ALERT_EMAILS: "equipe@souqauto.example" }, facts: goodFacts }), "ops-alerts")).toEqual(["ok"]);
+    expect(level(evaluateLaunchReadiness({ env: { ...withoutAlerts, OPS_ALERT_EMAILS: "pas-une-adresse, @x" }, facts: goodFacts }), "ops-alerts")).toEqual(["warning"]);
   });
 });
 

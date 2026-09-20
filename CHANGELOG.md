@@ -2746,3 +2746,29 @@ Troisième lot du bloc 6 « prêt pour la mise en ligne ». Pour la première fo
 - Mesures de performance **sur cette machine, sans limitation réseau** : les millisecondes ne sont pas des seuils. Pas de mesure sur mobile 3G/4G, ni sous charge (lot suivant), ni « terrain ».
 - Les images restent en WebP (pas d'AVIF) : plus léger mais plus coûteux à produire sur un petit serveur ; à réévaluer avec l'hébergement.
 - Mode sombre toujours absent (le site reste en thème clair, décision documentée dans `globals.css`).
+
+## Lot 136 — Bloc 6 : sauvegardes surveillées et alertes d'erreur (2026-09-20)
+
+Quatrième lot du bloc 6 « prêt pour la mise en ligne ». Les sauvegardes existaient déjà (Lot 118) ; ce qui manquait, c'est **de savoir quand elles cessent de fonctionner** — on ne l'aurait découvert qu'au jour du sinistre — et **d'être prévenu quand le serveur plante**.
+
+**Livré**
+- **Journal d'état des sauvegardes** (`backups/status.json`) : `db:backup` et `db:restore-check` y enregistrent chaque réussite ET chaque échec (date, fichier, taille, empreinte, message d'erreur ; ni secret ni donnée personnelle). Une sauvegarde qui échoue **supprime son archive incomplète** (laissée là, elle aurait été prise pour une vraie).
+- **Le veilleur** — `npm run ops:check [-- --notify --strict --url … --no-health]`, code de sortie 0/1. Bloquant : aucune sauvegarde, dernière sauvegarde en échec, plus de 26 h sans réussite, archive introuvable ou < 1 Ko, restauration échouée, place insuffisante pour la prochaine, site injoignable. Attention : archive < moitié de la médiane des 7 précédentes (table vidée ?), restauration jamais testée ou > 35 jours, site lent. Il est **indépendant de ce qu'il surveille** : une tâche planifiée morte ne peut pas signaler sa propre mort.
+- **Courriel** (`--notify`, à `OPS_ALERT_EMAILS`, à défaut `STAFF_ALERT_EMAILS`) : dès qu'un problème apparaît, rappel toutes les 6 h tant qu'il dure, silence quand tout va bien (et oubli une fois rétabli).
+- **Alertes d'erreur du serveur** (`src/instrumentation.ts` → `onRequestError`) : chaque erreur 500 (page, API, action) est écrite en une ligne dans les journaux (`[erreur] …`, sans paramètres d'adresse ni pile) et envoyée par courriel, **au plus 1 par écran et par type d'erreur toutes les 30 min, 6 par heure au total** (limite partagée via Redis). Le courriel masque e-mails, téléphones et jetons, et donne le code (« digest ») pour retrouver la pile dans les journaux. Redirections, « introuvable » et visiteurs qui coupent la connexion sont ignorés. L'envoi n'est jamais attendu et ne lève jamais d'exception.
+- `npm run launch:check` : nouvel avertissement si personne ne reçoit les alertes techniques.
+- Modèles de planification dans `app/ops/` : `crontab.example` (sauvegarde 02h15, veilleur toutes les heures, test de restauration le dimanche) et `windows-schedule.ps1` (aperçu par défaut, `-Apply` pour créer les tâches). Documentation : `docs/EXPLOITATION.md` (sections 2 et 3) et `.env.example`.
+- Sous Windows, les messages des outils PostgreSQL sont désormais lus proprement (ils arrivaient avec des caractères illisibles dans les journaux et les courriels).
+
+**Vérification** : `npm run verify -- --e2e` — 1 306 tests unitaires (43 nouveaux), 131 de bout en bout, 15 en production. **Preuves en conditions réelles, hors tests** : vraie sauvegarde, vraie restauration dans une base temporaire, puis pannes provoquées — base inexistante (échec enregistré, aucune archive partielle), archive tronquée à 300 octets, archive effacée, journal vieilli de 30 h, site injoignable — chacune détectée par le veilleur, avec courriel réel vers le faux serveur SMTP du projet (un seul envoi, le second passage muet). Une vraie erreur 500 sur un vrai serveur **de développement puis de production** : deux erreurs, un courriel. `tests/backup-chain.test.ts` rejoue la chaîne sauvegarde → restauration → veilleur avec les vrais outils PostgreSQL (se saute si la base est absente). **Mutations vérifiées** : 7 règles du veilleur et l'écriture du journal des scripts cassées volontairement → chacune fait échouer un test.
+- Défaut trouvé pendant l'essai et corrigé : la raison d'un échec était tronquée à la première ligne (« pg_dump a échoué : » sans la suite).
+
+**Limites**
+- **Aucune copie hors du serveur n'est automatisée** : elle dépend de l'hébergement (autre machine, stockage objet) et reste à faire à la main. Une sauvegarde sur le même disque disparaît avec lui.
+- **Les modèles cron et Windows n'ont pas été essayés sur un vrai serveur** (cron : jamais lancé ; Windows : aperçu vérifié, création des tâches non essayée). À essayer une fois à la main.
+- Le veilleur tourne sur la même machine que la sauvegarde : si tout le serveur tombe, il ne dit rien. Le **moniteur de disponibilité extérieur** (section 3) reste indispensable.
+- Les courriels n'ont été testés que vers un **faux serveur SMTP** : remise réelle, SPF/DKIM et courriers indésirables ne se vérifient qu'avec votre vrai serveur.
+- Le nettoyage de l'archive **incomplète** après un échec en cours de route n'est pas prouvé par un test (un `pg_dump` qui échoue à la connexion n'en crée pas) ; le code est simple mais non exercé.
+- Les archives ne sont **pas chiffrées** (téléphones et pièces d'identité le sont déjà par l'application avec `ENCRYPTION_KEY`, le reste de la base ne l'est pas) : à protéger comme la base elle-même.
+- Le contrôle du site se limite à `/api/health` (base de données). Pas de suivi d'erreurs du **navigateur** des visiteurs, pas de tableau de bord ni de graphiques, pas de service extérieur de type Sentry.
+- Le veilleur ne détecte pas une sauvegarde **réussie mais inutile** (base vide, mauvaise base) au-delà de la comparaison de taille : c'est le test de restauration hebdomadaire qui le prouve.

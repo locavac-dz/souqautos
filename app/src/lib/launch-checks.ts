@@ -1,3 +1,4 @@
+import { resolveOpsRecipients } from "@/lib/alert-recipients";
 import { resolveMailConfig, DEFAULT_MAIL_FROM } from "@/lib/mail-config";
 import { parseTrustedProxyHops } from "@/lib/client-ip";
 import { resolvePushConfig, vapidKeysMatch } from "@/lib/push";
@@ -180,6 +181,22 @@ function checkSecurityPolicy(env: Env): CheckResult {
   return { id: "csp", level: "ok", message: "Politique de sécurité des contenus appliquée (bloque les scripts non autorisés)." };
 }
 
+// Lot 136 — sans destinataire, les alertes techniques (sauvegarde en retard ou en échec, erreurs du serveur) ne partent nulle
+// part : les problèmes ne sont alors vus que si quelqu'un lit les journaux. Non bloquant, mais c'est ce qui transforme
+// « on l'a découvert au jour du sinistre » en « on a été prévenu la nuit même ».
+function checkAlertRecipients(env: Env): CheckResult {
+  const recipients = resolveOpsRecipients(env);
+  if (recipients.length > 0) {
+    return { id: "ops-alerts", level: "ok", message: `Alertes techniques (sauvegardes, erreurs du serveur) envoyées à ${recipients.length} adresse(s).` };
+  }
+  return {
+    id: "ops-alerts",
+    level: "warning",
+    message: "Aucun destinataire d'alertes techniques : une sauvegarde qui cesse de tourner ou une page en erreur ne préviendrait personne.",
+    fix: "Définir OPS_ALERT_EMAILS (ou STAFF_ALERT_EMAILS), puis planifier npm run ops:check -- --notify (docs/EXPLOITATION.md, section 3).",
+  };
+}
+
 function checkInfrastructure(env: Env): CheckResult[] {
   const results: CheckResult[] = [];
 
@@ -241,6 +258,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkGoogleLogin(env),
     checkSearchConsole(env),
     checkSecurityPolicy(env),
+    checkAlertRecipients(env),
     ...checkInfrastructure(env),
     ...checkFacts(facts),
   ];

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { escapeHtml, sendEmail } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
+import { MAX_ALERT_RECIPIENTS, parseAlertEmails } from "@/lib/alert-recipients";
 
 // Lot 118 — prévient l'équipe de modération quand du contenu attend une décision
 // (annonce, avis de propriétaire, demande de vérification d'identité, signalement).
@@ -18,7 +19,7 @@ import { SITE_URL } from "@/lib/site";
 export type StaffAlertKind = "listing" | "ownerReview" | "identity" | "report";
 
 export const STAFF_ALERT_WINDOW_MS = 30 * 60 * 1000;
-export const MAX_STAFF_RECIPIENTS = 10;
+export const MAX_STAFF_RECIPIENTS = MAX_ALERT_RECIPIENTS;
 
 export type PendingCounts = {
   listings: number;
@@ -27,17 +28,8 @@ export type PendingCounts = {
   reports: number;
 };
 
-const EMAIL_SHAPE = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/;
-
-export function parseStaffEmails(raw: string | undefined): string[] {
-  if (!raw) return [];
-  const seen = new Set<string>();
-  for (const part of raw.split(/[,;]/)) {
-    const email = part.trim().toLowerCase();
-    if (EMAIL_SHAPE.test(email)) seen.add(email);
-  }
-  return [...seen].slice(0, MAX_STAFF_RECIPIENTS);
-}
+// Lot 136 : l'analyse des adresses vit dans un module léger partagé avec les alertes techniques (alert-recipients.ts).
+export const parseStaffEmails = parseAlertEmails;
 
 export function totalPending(counts: PendingCounts): number {
   return counts.listings + counts.ownerReviews + counts.identityRequests + counts.reports;
