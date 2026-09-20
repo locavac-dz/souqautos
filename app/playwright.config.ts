@@ -10,7 +10,9 @@ const PORT = 5185;
 
 export default defineConfig({
   testDir: "./e2e",
-  timeout: 30_000,
+  // Lot 133 — 60 s par test (30 s auparavant) : le serveur de test est un `next dev` démarré à froid, qui compile chaque page
+  // à sa première visite ; le premier test de la suite (écrans d'administration) dépassait 30 s sans aucun défaut du site.
+  timeout: 60_000,
   // Lot 131 — attente des vérifications (URL, texte visible) : 15 s au lieu de 5 s. Le serveur de test est un `next dev`
   // qui compile chaque page à sa première visite ; sur une machine chargée, cela dépasse 5 s sans qu'il y ait le moindre
   // défaut (constaté sur l'étape 6 de l'assistant de publication). Un vrai défaut échoue toujours, seulement 10 s plus tard.
@@ -42,6 +44,13 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 30_000,
     },
+    // Lot 133 — faux serveur SMTP (e2e/mock-smtp.mjs) : reçoit les courriels du site pour que les tests les lisent.
+    {
+      command: "node e2e/mock-smtp.mjs",
+      url: "http://localhost:5189/__health",
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
     {
     command: `npx next dev -p ${PORT}`,
     url: `http://localhost:${PORT}`,
@@ -65,6 +74,13 @@ export default defineConfig({
       GOOGLE_CLIENT_SECRET: "e2e-secret-factice",
       GOOGLE_OAUTH_TEST_BASE_URL: "http://localhost:5187",
       NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`,
+      // Lot 133 — les courriels du site partent vers le faux serveur SMTP (identifiants vidés : pas d'authentification).
+      SMTP_HOST: "localhost",
+      SMTP_PORT: "5188",
+      SMTP_SECURE: "false",
+      SMTP_USER: "",
+      SMTP_PASS: "",
+      SMTP_FROM: "Souq Auto <test@example.dz>",
     },
     },
   ],

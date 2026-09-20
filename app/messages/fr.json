@@ -58,7 +58,9 @@
     "googleError_compte_suspendu": "Ce compte est suspendu.",
     "googleError_compte_equipe": "Les comptes de l'équipe se connectent avec leur mot de passe.",
     "googleError_compte_non_verifie": "Un compte existe déjà avec cette adresse email, mais elle n'a pas été vérifiée. Connectez-vous avec votre mot de passe et vérifiez votre adresse, puis vous pourrez utiliser Google.",
-    "googleError_trop_de_tentatives": "Trop de tentatives. Réessayez dans quelques minutes."
+    "googleError_trop_de_tentatives": "Trop de tentatives. Réessayez dans quelques minutes.",
+    "forgotPasswordLink": "Mot de passe oublié ?",
+    "passwordResetDone": "Votre mot de passe a été modifié. Connectez-vous avec le nouveau."
   },
   "Dashboard": {
     "welcome": "Bienvenue, {name}",
@@ -477,6 +479,26 @@
     "message": "Cette page n'existe pas ou n'est plus disponible.",
     "home": "Retour à l'accueil",
     "search": "Voir les annonces"
+  },
+  "PasswordReset": {
+    "forgotTitle": "Mot de passe oublié",
+    "forgotIntro": "Saisissez l'adresse email de votre compte : nous vous enverrons un lien pour choisir un nouveau mot de passe.",
+    "emailLabel": "Adresse email",
+    "submitRequest": "Envoyer le lien",
+    "sent": "Si un compte existe avec cette adresse, un email vient d'être envoyé. Le lien est valable 1 heure. Pensez à vérifier vos courriers indésirables.",
+    "errorRateLimited": "Trop de demandes. Réessayez dans un moment.",
+    "errorGeneric": "Une erreur est survenue. Réessayez.",
+    "errorValidation": "Adresse email invalide.",
+    "backToLogin": "Retour à la connexion",
+    "resetTitle": "Choisir un nouveau mot de passe",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "confirmPasswordLabel": "Confirmez le mot de passe",
+    "passwordHint": "8 caractères au moins",
+    "errorMismatch": "Les deux mots de passe ne sont pas identiques.",
+    "submitReset": "Enregistrer le mot de passe",
+    "invalidLinkTitle": "Lien invalide ou expiré",
+    "invalidLinkBody": "Ce lien n'est plus valable : il a déjà servi, ou plus d'une heure s'est écoulée. Demandez-en un nouveau.",
+    "requestAnother": "Demander un nouveau lien"
   },
   "Status": {
     "BROUILLON": "Brouillon",

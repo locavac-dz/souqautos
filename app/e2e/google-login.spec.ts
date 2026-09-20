@@ -33,7 +33,8 @@ async function continueWithGoogle(page: Page, locale: "fr" | "ar" = "fr") {
   await page.getByRole("link", { name: locale === "fr" ? fr.Auth.googleContinue : ar.Auth.googleContinue }).click();
 }
 
-const alertText = (page: Page) => page.getByRole("alert");
+// Le paragraphe d'erreur du site (et non l'annonceur de navigation de Next.js, qui a aussi le rôle « alert »).
+const alertText = (page: Page) => page.locator('p[role="alert"]');
 async function expectRefusal(page: Page, code: string, message: string) {
   await expect(page).toHaveURL(new RegExp(`/connexion\\?erreur=${code}`));
   await expect(alertText(page)).toHaveText(message);

@@ -18,22 +18,30 @@ export type SessionPayload = {
 };
 
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
-  return new SignJWT(payload)
+  // Lot 133 — `ims` : date d'émission en MILLISECONDES (le champ standard `iat` n'a que la seconde), pour que la
+  // révocation des sessions (User.sessionsValidAfter) soit exacte même dans la seconde du changement de mot de passe.
+  return new SignJWT({ ...payload, ims: Date.now() })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_DURATION_SECONDS}s`)
     .sign(getSecretKey());
 }
 
+// Lot 133 — date d'émission de la session (millisecondes), comparée à User.sessionsValidAfter pour révoquer les
+// sessions ouvertes avant une réinitialisation de mot de passe. Une session émise avant ce lot n'a pas `ims` : on
+// prend le DÉBUT de sa seconde (`iat`), donc elle est révoquée dès qu'une révocation la précède, jamais l'inverse.
+export type VerifiedSession = SessionPayload & { issuedAtMs: number };
+
 export async function verifySessionToken(
   token: string
-): Promise<SessionPayload | null> {
+): Promise<VerifiedSession | null> {
   try {
     const { payload } = await jwtVerify(token, getSecretKey());
     if (typeof payload.sub !== "string" || typeof payload.role !== "string") {
       return null;
     }
-    return { sub: payload.sub, role: payload.role };
+    const issuedAtMs = typeof payload.ims === "number" ? payload.ims : (typeof payload.iat === "number" ? payload.iat : 0) * 1000;
+    return { sub: payload.sub, role: payload.role, issuedAtMs };
   } catch {
     return null;
   }
@@ -55,7 +63,7 @@ export async function clearSessionCookie() {
   store.delete(SESSION_COOKIE);
 }
 
-export async function getSessionFromCookies(): Promise<SessionPayload | null> {
+export async function getSessionFromCookies(): Promise<VerifiedSession | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;

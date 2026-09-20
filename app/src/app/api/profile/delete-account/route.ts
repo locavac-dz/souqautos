@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
     // Lot 132 — le lien avec le compte Google est rompu : sans cela, la même personne (ou quiconque contrôlerait ce
     // compte Google) se reconnecterait dans le compte anonymisé.
     prisma.oAuthAccount.deleteMany({ where: { userId: user.id } }),
+    // Lot 133 — un lien de réinitialisation encore valable ne doit pas survivre au compte.
+    prisma.passwordResetToken.deleteMany({ where: { userId: user.id } }),
     // Retire du marché toute annonce encore active — un compte supprimé ne
     // peut plus jamais répondre à un acheteur ni compléter un brouillon.
     prisma.listing.updateMany({

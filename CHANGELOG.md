@@ -2668,3 +2668,29 @@ Un bouton « Continuer avec Google » sur les pages de connexion et d'inscriptio
 - Le logo « G » est celui que Google demande pour ses boutons de connexion, reproduit en SVG et contrôlé visuellement ; à comparer aux consignes de marque de Google avant la mise en ligne.
 - Pas de rattachement manuel depuis la page du profil (« lier mon compte Google »), pas de « délier », pas d'autre fournisseur (Facebook, Apple) ; les comptes de l'équipe ne peuvent pas utiliser Google.
 - Le mode de connexion d'un compte Google-seul (aucun mot de passe) n'offre aucun moyen d'en définir un : à ajouter avec une future réinitialisation de mot de passe.
+
+## Lot 133 — Bloc 6 : mot de passe oublié et révocation des sessions (2026-09-20)
+
+Premier lot du bloc 6 « prêt pour la mise en ligne ». Jusqu'ici, une personne qui perdait son mot de passe perdait son compte, et rien ne permettait de reprendre un compte usurpé (Lot 132) ni de donner un mot de passe à un compte créé avec Google. Les deux sont réglés.
+
+**Livré**
+- **Page « Mot de passe oublié »** (`/mot-de-passe-oublie`, lien sous le formulaire de connexion) et **page du lien** (`/reinitialiser-mot-de-passe/[jeton]`), en français et en arabe (de droite à gauche). Non indexées (`noindex`, `robots.txt`), et la page du lien ne transmet pas son adresse à d'autres sites (`no-referrer`).
+- **Le site répond toujours la même chose**, que l'adresse existe ou non (même code, même corps, mêmes en-têtes, courriel envoyé après la réponse). Un compte suspendu ou supprimé ne reçoit rien.
+- **Lien valable 1 heure, à usage unique**, 256 bits aléatoires. **La base ne garde que son empreinte SHA-256** : une copie de la base ne contient aucun lien utilisable. Une nouvelle demande remplace le lien précédent. Deux confirmations simultanées : une seule aboutit (la suppression du jeton tranche).
+- **Limites** : 5 demandes par quart d'heure et par adresse IP, 3 par heure et par adresse e-mail (même inconnue : la limite ne trahit rien non plus).
+- **Au changement de mot de passe** : l'adresse est marquée vérifiée (la personne vient de lire ce courrier), le verrouillage par échecs de connexion est levé, **toutes les sessions ouvertes avant sont révoquées**, et la personne reçoit un courriel « votre mot de passe a été modifié » (français ou arabe selon sa langue). Elle n'est pas connectée automatiquement.
+- **Révocation des sessions** (`User.sessionsValidAfter`) : les sessions sont des jetons signés sans état côté serveur, donc non révocables jusqu'ici. Chaque session porte maintenant sa date d'émission **à la milliseconde** (`ims`) ; une session antérieure à la dernière réinitialisation est refusée. Les sessions émises avant ce lot sont traitées prudemment (début de leur seconde).
+- **Comptes concernés** : un compte créé avec Google (sans mot de passe) peut s'en donner un par ce parcours (Google continue de fonctionner) ; **un compte usurpé (adresse non vérifiée) est récupéré** par la vraie personne, ce qui débloque ensuite Google (Lot 132). La suppression d'un compte supprime aussi son lien en attente.
+- Migration `20260920120000_password_reset` (table `PasswordResetToken`, colonne `sessionsValidAfter`). Documentation : `docs/EXPLOITATION.md` (section 5 quinquies, section Google mise à jour).
+
+**Vérification** : `npm run verify -- --e2e` — 1 225 tests unitaires (26 nouveaux : jeton, courriels, service avec base et envoi simulés, révocation des sessions), **107 tests de bout en bout (15 nouveaux)**, 7 de l'application installable, écart de migrations nul. Les tests de bout en bout utilisent un **vrai envoi SMTP vers un faux serveur** (`e2e/mock-smtp.mjs`, port 5188) : les liens sont lus dans les courriels reçus, comme le ferait une personne. Ils couvrent le parcours complet, l'ancien mot de passe refusé, le lien à usage unique, le lien remplacé, l'expiration, les jetons falsifiés, les demandes simultanées, la non-divulgation de l'existence d'un compte, les limites, l'arabe, la révocation des sessions, la récupération d'un compte usurpé et d'un compte Google. **Vérifié par sabotage** : jeton stocké en clair, expiration ignorée, compte suspendu qui reçoit un courriel, jeton non consommé, sessions non révoquées, comparaison de session retirée font tous échouer les tests.
+- **Défaut trouvé par ces tests, corrigé** : les sessions ne portaient que la seconde, donc une session ouverte dans la MÊME seconde que la réinitialisation échappait à la révocation. Passé à la milliseconde.
+- Délai par test de la suite de bout en bout porté de 30 à 60 s (`playwright.config.ts`) : le premier test, sur un serveur de développement démarré à froid, dépassait 30 s en compilant les écrans d'administration, sans aucun défaut du site.
+- Le faux serveur Google appliquait l'ordre `reset` puis identité à l'envers (corrigé) ; le test des messages d'erreur Google ciblait un rôle `alert` que Next.js utilise aussi pour ses annonces de navigation (sélecteur précisé).
+
+**Limites**
+- **Aucun courriel réel n'a été envoyé** : la remise, le SPF/DKIM du domaine d'envoi et les courriers indésirables ne se vérifient qu'avec votre vrai serveur SMTP.
+- Pas de réinitialisation par SMS, pas de questions de sécurité, pas d'authentification à deux facteurs ; pas de page « changer mon mot de passe » pour une personne connectée (la réinitialisation par courriel sert aussi à cela).
+- Les limites de débit sont conservées en mémoire sans Redis (par instance, perdues au redémarrage).
+- Une personne bloquée par les limites doit attendre : pas d'outil de déblocage pour l'équipe.
+- Les sessions restent des jetons sans état : la révocation est **par compte** (toutes les sessions d'un coup), pas par appareil.

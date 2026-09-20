@@ -35,7 +35,9 @@ describe("session tokens", () => {
     process.env.JWT_SECRET = "test-secret-at-least-32-chars-long!!";
     const token = await createSessionToken({ sub: "user_1", role: "PARTICULIER" });
     const payload = await verifySessionToken(token);
-    expect(payload).toEqual({ sub: "user_1", role: "PARTICULIER" });
+    expect(payload).toMatchObject({ sub: "user_1", role: "PARTICULIER" });
+    expect(payload?.issuedAtMs).toBeGreaterThan(Date.now() - 5000); // Lot 133 : date d'émission, utilisée pour révoquer les sessions
+    expect(payload?.issuedAtMs).toBeLessThanOrEqual(Date.now());
   });
 
   it("rejects a tampered token", async () => {

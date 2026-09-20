@@ -67,6 +67,11 @@ model User {
   reviewsWritten        Review[]       @relation("AuthorReviews")
   emailVerificationTokens EmailVerificationToken[]
   oauthAccounts           OAuthAccount[]
+  passwordResetTokens     PasswordResetToken[]
+  // Lot 133 — toute session ouverte AVANT cette date est refusée (les sessions sont des jetons signés sans état côté
+  // serveur : sans cette date, on ne pourrait pas les révoquer). Posée à la réinitialisation du mot de passe : la
+  // personne qui a perdu son mot de passe — ou dont le compte a été pris — déconnecte tous les appareils.
+  sessionsValidAfter      DateTime?
   emailChangeRequests     EmailChangeRequest[]
   phoneVerificationCodes  PhoneVerificationCode[]
   professionalAccount     ProfessionalAccount?
@@ -1227,5 +1232,19 @@ model OAuthAccount {
   createdAt         DateTime @default(now())
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// Lot 133 — lien « mot de passe oublié ». On ne garde JAMAIS le jeton lui-même, seulement son empreinte SHA-256 : une
+// copie de la base ne donne alors aucun lien utilisable. Un seul lien valable à la fois par compte (une nouvelle demande
+// supprime les précédents), à usage unique, valable une heure.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
   @@index([userId])
 }

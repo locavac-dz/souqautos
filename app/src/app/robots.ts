@@ -20,6 +20,8 @@ export const ROBOTS_DISALLOW = [
   "/*/inscription",
   "/*/verifier-email",
   "/*/confirmer-email",
+  "/*/mot-de-passe-oublie",
+  "/*/reinitialiser-mot-de-passe",
 ];
 
 export default function robots(): MetadataRoute.Robots {

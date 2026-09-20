@@ -20,5 +20,8 @@ export async function getCurrentUser() {
   // utilisable jusqu'à expiration du cookie.
   if (user?.deletedAt) return null;
 
+  // Lot 133 — session ouverte AVANT la dernière réinitialisation du mot de passe : refusée (à la milliseconde).
+  if (user?.sessionsValidAfter && session.issuedAtMs < user.sessionsValidAfter.getTime()) return null;
+
   return user;
 }

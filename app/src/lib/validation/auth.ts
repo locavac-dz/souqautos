@@ -10,10 +10,13 @@ import { INT4_MAX } from "./int-bounds";
 // `20260919110000_normalize_emails` (adresses existantes + index unique insensible à la casse).
 export const emailSchema = z.string().trim().toLowerCase().pipe(z.email().max(255));
 
+// Lot 133 — règle du mot de passe, commune à l'inscription et à la réinitialisation.
+export const newPasswordSchema = z.string().min(8).max(200);
+
 export const registerSchema = z.object({
   displayName: z.string().trim().min(2).max(80),
   email: emailSchema,
-  password: z.string().min(8).max(200),
+  password: newPasswordSchema,
   wilayaId: z.number().int().positive().max(INT4_MAX).optional(),
 });
 

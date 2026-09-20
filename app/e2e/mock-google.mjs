@@ -46,13 +46,14 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "POST" && url.pathname === "/__control") {
     const body = JSON.parse((await readBody(req)) || "{}");
-    if (body.identity) identity = { ...DEFAULT_IDENTITY, ...body.identity };
-    if (body.behavior) behavior = body.behavior;
+    // La remise à zéro d'abord : `{ reset: true, identity }` signifie « repartir de zéro PUIS choisir cette identité ».
     if (body.reset) {
       identity = { ...DEFAULT_IDENTITY };
       behavior = "ok";
       exchanges = 0;
     }
+    if (body.identity) identity = { ...DEFAULT_IDENTITY, ...body.identity };
+    if (body.behavior) behavior = body.behavior;
     return send(res, 204);
   }
   if (req.method === "GET" && url.pathname === "/__state") return send(res, 200, { exchanges });
