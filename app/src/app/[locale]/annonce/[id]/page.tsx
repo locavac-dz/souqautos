@@ -60,7 +60,7 @@ export async function generateMetadata({
   const { id, locale } = await params;
   const listing = await prisma.listing.findUnique({
     where: { id },
-    include: { photos: { orderBy: { position: "asc" }, take: 1 }, brand: true, model: true },
+    include: { brand: true, model: true },
   });
   if (!listing || listing.status !== "PUBLIEE") return {};
 
@@ -68,18 +68,17 @@ export async function generateMetadata({
   const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
   const title = `${listing.title} — ${brandLabel} ${modelLabel} ${listing.year}`.trim();
   const canonical = `${SITE_URL}/${locale}/annonce/${listing.id}`;
-  const image = listing.photos[0] ? resolveAbsolutePhotoUrl(listing.photos[0].path) : undefined;
-
   return {
     title: `${title} — Souq Auto`,
     description: listing.description.slice(0, 160),
     alternates: { canonical },
+    // Lot 142 — PAS d'`images` ici : elle l'emporterait sur le fichier `opengraph-image.tsx` voisin (la carte de partage avec prix
+    // et caractéristiques) et on partagerait de nouveau la photo brute du vendeur, sans dimensions déclarées.
     openGraph: {
       title,
       description: listing.description.slice(0, 160),
       url: canonical,
       type: "website",
-      images: image ? [image] : undefined,
     },
   };
 }

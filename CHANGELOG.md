@@ -2924,3 +2924,33 @@ Sur un site d'annonces, l'acheteur doit décider s'il fait confiance à un incon
 - Les badges ne sont **pas** affichés sur les cartes de résultats : ce serait une mesure par vendeur affiché, non mesurée à ce jour. À faire seulement après l'avoir chiffré.
 - Rien n'empêche un vendeur de répondre « ok » à tout pour gagner le badge : c'est une mesure de **réactivité**, jamais de qualité des réponses.
 - Textes arabes rédigés ici, **à faire relire par un locuteur natif**.
+
+## Lot 142 — Images de partage des annonces (2026-09-21)
+
+Quand le lien d'une annonce est collé dans WhatsApp, Facebook ou Messenger, l'aperçu montrait la **photo brute du vendeur** : sans prix, sans caractéristiques, de format quelconque. Et une annonce publiée **sans photo n'avait aucune image** — WhatsApp n'affichait qu'un lien nu. Or le partage par WhatsApp est le canal principal d'une place de marché en Algérie.
+
+**Livré**
+- **Une carte générée par annonce** (`/{langue}/annonce/{id}/opengraph-image`, JPEG 1200 × 630) : la photo cadrée en fond, un dégradé sombre, la marque et le modèle, l'année, le kilométrage, le carburant, la wilaya, et le prix dans une pastille blanche lisible sur n'importe quelle photo. Sans photo, un fond en dégradé avec les mêmes textes.
+- **La fiche l'annonce** : `og:image` avec type, largeur, hauteur et texte alternatif, plus la carte Twitter grand format.
+- **Uniquement les annonces publiées**, comme la fiche : brouillon, en attente, refusée, suspendue, vendue ou expirée répondent 404 — ni prix ni photo ne fuient par une adresse d'image devinée.
+
+**Décisions techniques, et pourquoi**
+- **JPEG et non PNG** : le moteur (`ImageResponse`) ne produit que du PNG, ~1 Mo avec une photo dessous, et WhatsApp affiche mal les aperçus lourds (repère : ~300 Ko). Le calque de texte seul est dessiné par le moteur (un PNG transparent de ~34 Ko), posé avec `sharp` sur la photo recadrée, puis encodé en JPEG : **153 Ko au plus** (mesuré).
+- **Texte latin uniquement** : la police embarquée (Geist) n'a pas l'arabe, et le moteur va chercher les emojis sur un service externe. Tout caractère hors latin saisi par un vendeur est retiré ; une marque saisie uniquement en arabe donne « Souq Auto ». La carte est **identique dans toutes les langues** (vérifié octet pour octet, français et arabe).
+- **Coût mesuré** : ~110 ms de processeur pour dessiner une carte à froid, 0 ms depuis le cache. Un premier essai à 231 ms utilisait `mozjpeg`, qui coûtait à lui seul ~120 ms pour un poids à peine plus léger : retiré. Cache mémoire de 120 cartes dont la **clé est le texte et la photo** (jamais une carte périmée : un prix modifié donne une autre image) ; les demandes simultanées d'une même carte ne la dessinent qu'une fois. En-têtes HTTP : `max-age=300, s-maxage=600`.
+- **Sécurité de la photo lue** : un chemin local doit rester dans `public/uploads/` (aucune remontée de dossier, aucun dossier voisin au nom proche) ; une adresse distante n'est suivie que sous `S3_PUBLIC_URL`, sans redirection, 3 s et 10 Mo au plus ; au moindre doute, la carte se dessine sans photo.
+
+**Défaut trouvé en cours de route** : `generateMetadata` de la fiche déclarait encore l'ancienne photo brute, qui **l'emportait** sur ma carte (`og:image` pointait vers le fichier de l'envoi, sans dimensions). Retirée — un test de bout en bout garde désormais ce point. La requête de la première photo, devenue inutile dans cette fonction, est supprimée avec elle.
+
+**Vérification** : `npm run verify -- --e2e` — 1 681 tests unitaires (38 nouveaux : texte, sécurité de la photo, dessin et cache), **169 de bout en bout (7 nouveaux)**, 20 en production, **build de production compris**. Les tests de bout en bout vérifient dans le vrai serveur : les balises de la fiche en français et en arabe, l'image servie (JPEG, 1200 × 630, < 300 Ko, en-têtes de cache, bas plus sombre que le haut), une annonce sans photo, le prix modifié, l'identité français/arabe, les six statuts non publiés (404, puis 200 une fois republiée), et les identifiants absurdes (404, jamais 500). **Sabotages : 21 sur 22 détectés**, dont 2 de bout en bout (contrôle du statut retiré ; ancienne photo redéclarée). Le seul survivant est le rétrécissement du titre long, purement visuel. La première passe de ces sabotages en avait laissé survivre quatre, qui révélaient de vrais trous dans mes propres tests — dossier voisin `uploads-evil`, fichier trop lourd (mon « gros fichier » n'était que des zéros, refusé pour la mauvaise raison), éviction du cache, et un mauvais outil de mesure (`sharp` ignore `extract()` avant `stats()`) — tous corrigés.
+
+**Deux constats hors périmètre, vérifiés en rejouant l'état d'avant ce lot**
+- Le journal de la phase de production contient l'erreur serveur « The destination stream closed early » sur la fiche d'annonce et sur la page marque. Elle **existe déjà avant ce lot** (même identifiant, même page, mesurée sur le code du Lot 141) et se produit quand le navigateur de test passe à la page suivante avant la fin du rendu en flux. Sans effet sur les visiteurs à ce jour, mais elle apparaît dans les alertes d'erreur : à filtrer si elle devient bruyante.
+- Sur ce même état d'avant, **un test de production du Lot 138** (`auth:reset-2fa`) a échoué une fois, sur `ECONNRESET` à la première requête suivant un script bloquant. **Cause non établie** : une première hypothèse (délai de garde de connexion dépassé pendant le script) a été **infirmée par la mesure** (le script dure ~1,1 s pour 5 s nécessaires), le serveur n'a rien journalisé, et le test passe 10 fois sur 10 en rejeu. Rien n'a été modifié : ajouter une reprise automatique masquerait la cause.
+
+**Limites**
+- **Pas testé avec les vrais robots de WhatsApp ou Facebook** : cela suppose un site public. À vérifier au déploiement avec le **débogueur de partage de Facebook**, et en collant un lien dans WhatsApp.
+- **Aucune limitation de débit dans l'application** : demander la carte de très nombreuses annonces distinctes ferait dessiner ~110 ms chacune. À traiter à l'hébergement (limitation de débit, réseau de diffusion) ; les en-têtes de cache sont prêts pour cela. Le cache mémoire est propre à chaque processus.
+- Tout est en **caractères latins** : un acheteur arabophone voit « DA » et des noms de marque latins sur la carte. Pas de gras (la police embarquée n'a que la graisse normale). Une photo verticale est recadrée au centre et peut couper le haut ou le bas du véhicule.
+- La fiche d'un **brouillon** porte quand même la balise d'image (Next l'ajoute), qui pointe vers un 404 : aperçu vide, rien de divulgué.
+- Le `og:title` de la fiche répète marque, modèle et année (« Renault Clio 2018 — Renault Clio 2018 ») : défaut **antérieur**, non traité ici.
