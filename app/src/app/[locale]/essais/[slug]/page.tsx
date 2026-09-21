@@ -10,7 +10,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { StarRating } from "@/components/StarRating";
 import { ArticleBody } from "@/components/ArticleBody";
 import { publishedNow, shouldShowUpdatedDate } from "@/lib/blog-publication";
-import { resolveArticleForViewer } from "@/lib/article-preview";
+import { previewTokenFrom, resolveArticleForViewer } from "@/lib/article-preview";
 import { ArticlePreviewBanner } from "@/components/ArticlePreviewBanner";
 import { formatRating, splitLines } from "@/lib/road-test";
 
@@ -29,15 +29,18 @@ async function findRoadTest(slug: string, publishedOnly: boolean) {
   return { ...article, roadTest: article.roadTest };
 }
 
-const getRoadTestForViewer = (slug: string) => resolveArticleForViewer(() => findRoadTest(slug, true), () => findRoadTest(slug, false));
+const getRoadTestForViewer = (slug: string, previewToken: string | null) =>
+  resolveArticleForViewer(() => findRoadTest(slug, true), () => findRoadTest(slug, false), { previewToken });
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ apercu?: string | string[] }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const resolved = await getRoadTestForViewer(slug);
+  const resolved = await getRoadTestForViewer(slug, previewTokenFrom((await searchParams).apercu));
   if (!resolved) return {};
   const { article, preview } = resolved;
 
@@ -75,12 +78,14 @@ function BulletIcon({ kind }: { kind: "plus" | "minus" }) {
 
 export default async function RoadTestPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ apercu?: string | string[] }>;
 }) {
   const { slug } = await params;
   const locale = await getLocale();
-  const resolved = await getRoadTestForViewer(slug);
+  const resolved = await getRoadTestForViewer(slug, previewTokenFrom((await searchParams).apercu));
   if (!resolved) notFound();
   const { article, preview } = resolved;
 

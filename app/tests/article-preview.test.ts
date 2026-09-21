@@ -5,8 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getCurrentUser = vi.fn();
 vi.mock("@/lib/auth-server/current-user", () => ({ getCurrentUser: () => getCurrentUser() }));
+// Lot 146 — la lecture d'un lien de relecture est simulée : ce fichier éprouve la RÈGLE d'accès, pas la base.
+const findUsablePreviewLink = vi.fn();
+vi.mock("@/lib/article-preview-links", () => ({ findUsablePreviewLink: (...args: unknown[]) => findUsablePreviewLink(...args) }));
 
-import { previewFor, resolveArticleForViewer } from "@/lib/article-preview";
+import { previewFor, previewTokenFrom, resolveArticleForViewer } from "@/lib/article-preview";
 
 const NOW = new Date("2026-09-21T12:00:00Z");
 const PAST = new Date("2026-09-01T00:00:00Z");
@@ -17,6 +20,7 @@ const row = (publishedAt: Date | null): Row => ({ id: "a1", publishedAt });
 
 beforeEach(() => {
   getCurrentUser.mockReset();
+  findUsablePreviewLink.mockReset();
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
@@ -94,5 +98,84 @@ describe("resolveArticleForViewer — un contenu non paru", () => {
   it("une erreur d'authentification n'ouvre JAMAIS l'aperçu : l'échec se propage, il ne devient pas un accès", async () => {
     getCurrentUser.mockRejectedValue(new Error("base indisponible"));
     await expect(draft()).rejects.toThrow("base indisponible");
+  });
+});
+
+describe("previewTokenFrom — le jeton tel qu'il figure dans l'adresse", () => {
+  it("garde la première valeur d'un paramètre répété, et ignore l'absent ou le vide", () => {
+    expect(previewTokenFrom("abc")).toBe("abc");
+    expect(previewTokenFrom(["premier", "second"])).toBe("premier");
+    expect(previewTokenFrom(undefined)).toBeNull();
+    expect(previewTokenFrom("")).toBeNull();
+    expect(previewTokenFrom([])).toBeNull();
+  });
+});
+
+describe("resolveArticleForViewer — lien de relecture (Lot 146)", () => {
+  const LINK_EXPIRY = new Date("2026-09-28T12:00:00Z");
+  const draft = (token: string | null) => resolveArticleForViewer(async () => null, async () => row(null), { previewToken: token });
+
+  it("un lien VALIDE pour ce contenu ouvre l'aperçu SANS compte : lecture seule, avec l'échéance du lien", async () => {
+    findUsablePreviewLink.mockResolvedValue({ id: "l1", expiresAt: LINK_EXPIRY });
+    const result = await draft("jeton");
+    expect(result).toEqual({ article: row(null), preview: { status: "draft", scheduledFor: null, reviewLink: { expiresAt: LINK_EXPIRY } } });
+    expect(getCurrentUser).not.toHaveBeenCalled(); // aucun compte n'est nécessaire, ni même regardé
+  });
+
+  it("le jeton est vérifié POUR CE contenu précis (son identifiant), à l'instant présent", async () => {
+    findUsablePreviewLink.mockResolvedValue({ id: "l1", expiresAt: LINK_EXPIRY });
+    await draft("jeton");
+    expect(findUsablePreviewLink).toHaveBeenCalledWith("jeton", "a1", NOW);
+  });
+
+  it("marche aussi pour un contenu programmé, avec sa date de parution", async () => {
+    findUsablePreviewLink.mockResolvedValue({ id: "l1", expiresAt: LINK_EXPIRY });
+    const result = await resolveArticleForViewer(async () => null, async () => row(FUTURE), { previewToken: "jeton" });
+    expect(result?.preview).toEqual({ status: "scheduled", scheduledFor: FUTURE, reviewLink: { expiresAt: LINK_EXPIRY } });
+  });
+
+  it("un jeton INVALIDE (inconnu, autre contenu, révoqué, expiré) ne donne RIEN : même 404 qu'un visiteur anonyme", async () => {
+    findUsablePreviewLink.mockResolvedValue(null);
+    getCurrentUser.mockResolvedValue(null);
+    expect(await draft("jeton")).toBeNull();
+  });
+
+  it("un jeton invalide ne retire rien à un administrateur : il retombe sur son droit d'administrateur, SANS marque de lien", async () => {
+    findUsablePreviewLink.mockResolvedValue(null);
+    getCurrentUser.mockResolvedValue({ role: "ADMIN" });
+    const result = await draft("jeton");
+    expect(result?.preview).toEqual({ status: "draft", scheduledFor: null });
+    expect(result?.preview?.reviewLink).toBeUndefined();
+  });
+
+  it("un jeton invalide ne donne rien non plus à un modérateur ou à un membre", async () => {
+    findUsablePreviewLink.mockResolvedValue(null);
+    for (const role of ["MODERATEUR", "PARTICULIER"]) {
+      getCurrentUser.mockResolvedValue({ role });
+      expect(await draft("jeton"), role).toBeNull();
+    }
+  });
+
+  it("le jeton n'est consulté QUE pour un contenu non paru : jamais sur le chemin public", async () => {
+    const published = await resolveArticleForViewer(async () => row(PAST), async () => null, { previewToken: "jeton" });
+    expect(published?.preview).toBeNull();
+    expect(findUsablePreviewLink).not.toHaveBeenCalled();
+
+    // Un contenu déjà paru mais masqué pour une autre raison : ni jeton, ni compte ne l'ouvrent.
+    findUsablePreviewLink.mockResolvedValue({ id: "l1", expiresAt: LINK_EXPIRY });
+    expect(await resolveArticleForViewer(async () => null, async () => row(PAST), { previewToken: "jeton" })).toBeNull();
+    expect(findUsablePreviewLink).not.toHaveBeenCalled();
+  });
+
+  it("sans jeton, la lecture des liens n'est jamais sollicitée : le comportement du Lot 145 est inchangé", async () => {
+    getCurrentUser.mockResolvedValue({ role: "ADMIN" });
+    await draft(null);
+    await resolveArticleForViewer(async () => null, async () => row(null));
+    expect(findUsablePreviewLink).not.toHaveBeenCalled();
+  });
+
+  it("une erreur pendant la vérification du jeton n'ouvre JAMAIS l'aperçu : l'échec se propage", async () => {
+    findUsablePreviewLink.mockRejectedValue(new Error("base indisponible"));
+    await expect(draft("jeton")).rejects.toThrow("base indisponible");
   });
 });

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { BlogArticleForm } from "@/components/admin/BlogArticleForm";
+import { PreviewLinksSection } from "@/components/admin/PreviewLinksSection";
 import { articleStatus } from "@/lib/blog-publication";
 import { articleAdminSection } from "@/lib/blog";
 
@@ -34,6 +35,7 @@ export default async function EditBlogArticlePage({
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("editArticle")}</h1>
       <BlogArticleForm article={article} status={articleStatus(article.publishedAt, new Date())} />
+      <PreviewLinksSection articleId={article.id} publishedAt={article.publishedAt} />
     </div>
   );
 }

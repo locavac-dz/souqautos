@@ -3063,3 +3063,36 @@ Un brouillon ou un contenu programmé répond **404 au public** : c'est voulu. M
 - L'aperçu montre l'état **enregistré**, pas les modifications non enregistrées du formulaire.
 - Un modérateur ne peut pas aperçevoir (il ne peut pas non plus éditer ces contenus).
 - Le texte arabe du bandeau (4 libellés) est à faire relire par un locuteur natif.
+
+## Lot 146 — Lien de relecture d'un brouillon, pour un relecteur sans compte (2026-09-21)
+
+L'aperçu du Lot 145 est réservé aux administrateurs. Or les personnes qui doivent relire le guide d'achat — un juriste pour les démarches, un locuteur natif pour la version arabe — n'ont pas de compte administrateur. Sans ce lot, la seule façon de les laisser lire un brouillon était de le **publier**, ou de leur donner un compte d'administration.
+
+**Livré**
+- **Un lien de relecture** créé depuis la page d'édition d'un contenu non publié (magazine, essais, guides), avec une durée choisie (1, 3, 7, 14 ou 30 jours), en **deux versions** — français et arabe, puisque le relecteur arabophone doit lire la page en arabe. Le relecteur lit le contenu mis en page sous un bandeau « Aperçu de relecture » qui annonce l'échéance du lien, en **lecture seule** : aucun lien « Modifier », aucun accès à l'administration, aucune session.
+- **Un écran d'administration** : création, copie (avec un libellé relié à son champ), liste des liens (actif, expiré, révoqué, échéance, **dernière consultation**) et **révocation immédiate**.
+
+**Un lien est un secret : ce qui le protège**
+- **Le jeton n'est jamais stocké.** Il est aléatoire (256 bits) ; seule son empreinte (HMAC avec la clé du serveur, comme les codes de secours de la double authentification) est écrite. Une copie de la base ne permet ni de forger un lien ni de retrouver un jeton.
+- **Il n'est affiché qu'une fois**, à la création : perdu, on en crée un autre. La liste ne le contient jamais, ni son empreinte.
+- **Lié à un seul contenu** : le jeton d'un guide n'ouvre ni un autre guide, ni un essai, ni un article. **Plafonné** à 10 liens actifs par contenu (en révoquer un libère une place).
+- **Le même 404** pour un jeton inconnu, mal formé, expiré, révoqué ou d'un autre contenu : rien ne dit pourquoi. Un jeton de forme absurde n'atteint même pas la base.
+- **Créer, lister, révoquer : administrateur seulement** (anonyme, membre et modérateur reçoivent 403 sur les trois routes). Trace dans le journal d'audit, **sans le jeton ni son empreinte**.
+- **Jamais indexé, jamais mis en cache public, sans données structurées**, comme l'aperçu du Lot 145. Un contenu qui passe à « publié » redevient une page ordinaire (le jeton n'y change rien, sans bandeau) ; un contenu supprimé supprime ses liens. On refuse d'en créer un pour un contenu déjà paru.
+- Ouvert par l'ancienne adresse `/mag`, le lien d'un essai ou d'un guide est renvoyé vers sa rubrique **en gardant son jeton**.
+
+**Vérification** : `npm run verify -- --e2e` — **1 774 tests unitaires (+30)**, **210 de bout en bout (+14)**, **22 en production**, build compris ; le test de production ajouté ensuite (voir ci-dessous) a été rejoué seul, et passe.
+- **Sur le vrai serveur de production** : un relecteur sans compte lit le brouillon en français et en arabe **sans la moindre violation de la politique de sécurité stricte** (aucun script en ligne, nonce respecté), sans erreur de console, avec les bons en-têtes ; le lien est créé par un administrateur protégé par la double authentification ; un jeton faux ou absent donne 404. **Sabotage vérifié** : un script en ligne injecté dans le bandeau est bloqué par la politique de production et fait échouer le test.
+- **Sabotages : 26 détectés sur 27.** Bibliothèque des liens (jeton stocké en clair, recherche par jeton, jeton d'un contenu valable pour un autre, révoqué encore valable, une milliseconde de trop après l'échéance, plafond retiré ou comptant les liens révoqués, durée libre, jeton absurde jusqu'à la base, écriture à chaque affichage, échec du compteur bloquant, jeton de 128 bits, mauvaise finalité d'empreinte, révocation sans vérifier le contenu) et règle d'accès (jeton vérifié pour un autre identifiant, lecture des liens sans jeton), puis **de bout en bout** (droit administrateur ignoré, page qui ignore le jeton, bouton « Modifier » montré au relecteur, jeton perdu au renvoi `/mag`, jeton dans le journal d'audit, lien créé pour un contenu publié, réponse de création cachable, révocation sans vérifier le contenu, empreinte renvoyée par la liste). Le seul survivant est **équivalent** : `reviewPreview` vaut déjà `null` sans lien, donc la condition `link &&` n'est qu'une aide au typage.
+- Les tests de bout en bout couvrent **3 types de contenu × 2 langues**, l'isolation entre contenus, la révocation et l'expiration (**à la milliseconde**), la publication et la suppression, le contenu programmé, le secret (base, liste, journal d'audit), les droits (anonyme, membre, modérateur) et la validation (durées, plafond), et l'écran d'administration de bout en bout (création, copie, consultation notée, révocation).
+
+**Ce que les tests ont révélé sur mon propre travail**
+- **Un défaut d'accessibilité réel** : dans mon composant, le libellé « Version française » n'était **pas relié** à son champ — un lecteur d'écran n'aurait annoncé qu'un champ sans nom. Corrigé (`htmlFor`).
+- Un test de mon cru passait `undefined` à une aide dont la valeur par défaut le transformait en durée valide : le cas « sans durée » est maintenant testé à part.
+
+**Limites**
+- **Toute personne qui possède le lien peut lire le contenu** jusqu'à son échéance ou sa révocation, et peut le transférer. Envoyez-le par un canal privé, choisissez la durée la plus courte utile, révoquez-le après la relecture.
+- Le jeton figure dans l'adresse : il peut rester dans l'historique du navigateur du relecteur. Les liens externes du contenu portent `noreferrer` (le jeton n'est pas transmis à d'autres sites).
+- **Pas de limitation de débit sur les jetons devinés** : à 256 bits, deviner un jeton est infaisable ; une attaque par volume relèverait de l'hébergement.
+- L'aperçu montre l'état **enregistré**, pas les modifications non enregistrées du formulaire.
+- Le texte arabe de l'écran et du bandeau (32 libellés) est à faire relire par un locuteur natif.

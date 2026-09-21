@@ -5,7 +5,7 @@ import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { articlePublicPath } from "@/lib/blog";
 import { publishedNow } from "@/lib/blog-publication";
-import { resolveArticleForViewer } from "@/lib/article-preview";
+import { previewTokenFrom, resolveArticleForViewer } from "@/lib/article-preview";
 import { ArticlePreviewBanner } from "@/components/ArticlePreviewBanner";
 import { SITE_URL } from "@/lib/site";
 import { buildBreadcrumbJsonLd, buildArticleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
@@ -18,15 +18,18 @@ async function findArticle(slug: string, publishedOnly: boolean) {
   return prisma.blogArticle.findFirst({ where: { slug, ...(publishedOnly ? publishedNow(new Date()) : {}) } });
 }
 
-const getArticleForViewer = (slug: string) => resolveArticleForViewer(() => findArticle(slug, true), () => findArticle(slug, false));
+const getArticleForViewer = (slug: string, previewToken: string | null) =>
+  resolveArticleForViewer(() => findArticle(slug, true), () => findArticle(slug, false), { previewToken });
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ apercu?: string | string[] }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const resolved = await getArticleForViewer(slug);
+  const resolved = await getArticleForViewer(slug, previewTokenFrom((await searchParams).apercu));
   if (!resolved) return {};
   const { article, preview } = resolved;
 
@@ -46,17 +49,22 @@ export async function generateMetadata({
 
 export default async function BlogArticlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ apercu?: string | string[] }>;
 }) {
   const { locale, slug } = await params;
-  const resolved = await getArticleForViewer(slug);
+  const previewToken = previewTokenFrom((await searchParams).apercu);
+  const resolved = await getArticleForViewer(slug, previewToken);
   if (!resolved) notFound();
   const { article, preview } = resolved;
   // Les articles, les essais et les guides partagent le même espace de slugs : un essai (ou un
   // guide) ouvert par son ancienne adresse /mag est renvoyé vers sa rubrique.
   if (article.kind === "ESSAI" || article.kind === "GUIDE") {
-    redirect({ href: articlePublicPath(article.kind, article.slug), locale });
+    // Le jeton d'un lien de relecture est CONSERVÉ dans le renvoi : sans lui, un relecteur qui ouvrirait ce lien par /mag perdrait son accès.
+    const target = articlePublicPath(article.kind, article.slug);
+    redirect({ href: preview?.reviewLink && previewToken ? `${target}?apercu=${encodeURIComponent(previewToken)}` : target, locale });
     return null;
   }
 

@@ -211,4 +211,67 @@ test.describe("l'équipe en production", () => {
       await e2eDb().blogArticle.deleteMany({ where: { id: article.id } });
     }
   });
+
+  // Lot 146 — le lien de relecture, sur la VERSION DE PRODUCTION : un relecteur SANS compte lit un brouillon sous la politique de sécurité
+  // stricte (aucun script en ligne), sans la moindre violation ni erreur, avec les bons en-têtes ; un administrateur PROTÉGÉ par la double
+  // authentification crée le lien, un autre visiteur n'obtient rien avec un jeton faux.
+  test("un relecteur sans compte lit un brouillon par lien de relecture, sans violation de la politique de sécurité", async ({ page, browser }) => {
+    const admin = await createStaff("ADMIN");
+    const stamp = Date.now().toString(36);
+    const article = await e2eDb().blogArticle.create({
+      data: {
+        slug: `pwa-relecture-${stamp}`,
+        kind: "ARTICLE",
+        titleFr: `Brouillon de relecture en production ${stamp}`,
+        titleAr: "مسودة المراجعة في الإنتاج للاختبار",
+        excerptFr: "Brouillon de test du lien de relecture, lu sans compte sur la version de production.",
+        excerptAr: "مسودة اختبار رابط المراجعة، تُقرأ دون حساب على نسخة الإنتاج.",
+        contentFr: "Contenu de test du lien de relecture. ".repeat(5),
+        contentAr: "محتوى اختبار رابط المراجعة. ".repeat(5),
+        authorId: admin.id,
+        publishedAt: null,
+      },
+      select: { id: true, slug: true },
+    });
+    const reviewerContext = await browser.newContext();
+    try {
+      await apiLogin(page, admin.email);
+      await enableViaApi(page);
+      const created = await page.request.post(`/api/admin/blog/${article.id}/preview-links`, { data: { days: 1 } });
+      expect(created.status(), await created.text()).toBe(201);
+      const { paths } = await created.json();
+
+      const problems: string[] = [];
+      const reader = await reviewerContext.newPage();
+      reader.on("console", (message: ConsoleMessage) => {
+        if (message.type() === "error") problems.push(`console : ${message.text().slice(0, 200)}`);
+      });
+      reader.on("pageerror", (error) => problems.push(`exception : ${error.message}`));
+      await reader.addInitScript(() => {
+        (window as unknown as { __violations: string[] }).__violations = [];
+        document.addEventListener("securitypolicyviolation", (event) => {
+          (window as unknown as { __violations: string[] }).__violations.push(`${event.effectiveDirective} ${event.blockedURI || "inline"}`);
+        });
+      });
+
+      for (const [locale, path] of [["fr", paths.fr], ["ar", paths.ar]] as const) {
+        const response = await reader.goto(path);
+        expect(response?.status(), locale).toBe(200);
+        await expect(reader.locator("[data-article-preview]"), locale).toBeVisible();
+        await expect(reader.getByRole("heading", { level: 1 }), locale).toBeVisible();
+        // Hydratée sans la moindre violation de la politique de sécurité (aucun script en ligne, nonce respecté).
+        expect(await reader.evaluate(() => (window as unknown as { __violations: string[] }).__violations), `${locale} : violations`).toEqual([]);
+        expect(response?.headers()["content-security-policy"] ?? "", `${locale} : politique`).toMatch(/script-src[^;]*'nonce-/);
+        expect(response?.headers()["cache-control"] ?? "", `${locale} : cache`).toMatch(/no-store|private|no-cache/);
+      }
+      expect(problems, "aucune erreur de console ni exception").toEqual([]);
+
+      // Un jeton faux, ou l'absence de jeton : le même 404 qu'un contenu inexistant.
+      expect((await reviewerContext.request.get(`/fr/mag/${article.slug}?apercu=${"A".repeat(43)}`)).status()).toBe(404);
+      expect((await reviewerContext.request.get(`/fr/mag/${article.slug}`)).status()).toBe(404);
+    } finally {
+      await reviewerContext.close();
+      await e2eDb().blogArticle.deleteMany({ where: { id: article.id } });
+    }
+  });
 });

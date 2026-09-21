@@ -9,7 +9,7 @@ import { buildArticleJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ArticleBody } from "@/components/ArticleBody";
 import { publishedNow, shouldShowUpdatedDate } from "@/lib/blog-publication";
-import { resolveArticleForViewer } from "@/lib/article-preview";
+import { previewTokenFrom, resolveArticleForViewer } from "@/lib/article-preview";
 import { ArticlePreviewBanner } from "@/components/ArticlePreviewBanner";
 import { splitLines } from "@/lib/road-test";
 
@@ -28,11 +28,12 @@ async function findGuide(slug: string, publishedOnly: boolean) {
   return { ...article, guide: article.guide };
 }
 
-const getGuideForViewer = (slug: string) => resolveArticleForViewer(() => findGuide(slug, true), () => findGuide(slug, false));
+const getGuideForViewer = (slug: string, previewToken: string | null) =>
+  resolveArticleForViewer(() => findGuide(slug, true), () => findGuide(slug, false), { previewToken });
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ apercu?: string | string[] }> }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const resolved = await getGuideForViewer(slug);
+  const resolved = await getGuideForViewer(slug, previewTokenFrom((await searchParams).apercu));
   if (!resolved) return {};
   const { article, preview } = resolved;
 
@@ -67,10 +68,10 @@ function CheckIcon() {
   );
 }
 
-export default async function GuidePage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+export default async function GuidePage({ params, searchParams }: { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ apercu?: string | string[] }> }) {
   const { slug } = await params;
   const locale = await getLocale();
-  const resolved = await getGuideForViewer(slug);
+  const resolved = await getGuideForViewer(slug, previewTokenFrom((await searchParams).apercu));
   if (!resolved) notFound();
   const { article, preview } = resolved;
 

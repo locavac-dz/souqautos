@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { BlogArticleForm } from "@/components/admin/BlogArticleForm";
+import { PreviewLinksSection } from "@/components/admin/PreviewLinksSection";
 import { getCatalogueForRoadTests } from "@/lib/road-test-catalogue";
 import { articleStatus } from "@/lib/blog-publication";
 
@@ -36,6 +37,7 @@ export default async function EditRoadTestPage({
         status={articleStatus(article.publishedAt, new Date())}
         brands={brands}
       />
+      <PreviewLinksSection articleId={article.id} publishedAt={article.publishedAt} />
     </div>
   );
 }
