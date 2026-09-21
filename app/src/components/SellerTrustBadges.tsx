@@ -49,7 +49,7 @@ export async function SellerTrustBadges({
 }
 
 // Décoratif : le sens est porté par le texte à côté, le lecteur d'écran n'a donc rien à en dire.
-function CheckMark() {
+export function CheckMark() {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0 fill-current">
       <path d="M6.2 11.7 2.9 8.4l1.1-1.1 2.2 2.2 5.8-5.8 1.1 1.1z" />

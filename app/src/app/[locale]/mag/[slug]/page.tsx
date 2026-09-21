@@ -5,15 +5,20 @@ import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { articlePublicPath } from "@/lib/blog";
 import { publishedNow } from "@/lib/blog-publication";
+import { resolveArticleForViewer } from "@/lib/article-preview";
+import { ArticlePreviewBanner } from "@/components/ArticlePreviewBanner";
 import { SITE_URL } from "@/lib/site";
 import { buildBreadcrumbJsonLd, buildArticleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 // Publié = date de parution atteinte (Lot 110 : un article programmé reste
-// invisible, et renvoie un 404, jusqu'à sa date).
-async function getPublishedArticle(slug: string) {
-  return prisma.blogArticle.findFirst({ where: { slug, ...publishedNow(new Date()) } });
+// invisible, et renvoie un 404, jusqu'à sa date). Exception (Lot 145) : un ADMINISTRATEUR connecté voit un brouillon ou un article
+// programmé en APERÇU, sous un bandeau et sans être indexé (src/lib/article-preview.ts).
+async function findArticle(slug: string, publishedOnly: boolean) {
+  return prisma.blogArticle.findFirst({ where: { slug, ...(publishedOnly ? publishedNow(new Date()) : {}) } });
 }
+
+const getArticleForViewer = (slug: string) => resolveArticleForViewer(() => findArticle(slug, true), () => findArticle(slug, false));
 
 export async function generateMetadata({
   params,
@@ -21,12 +26,15 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const article = await getPublishedArticle(slug);
-  if (!article) return {};
+  const resolved = await getArticleForViewer(slug);
+  if (!resolved) return {};
+  const { article, preview } = resolved;
 
   const title = locale === "ar" ? article.titleAr : article.titleFr;
   const excerpt = locale === "ar" ? article.excerptAr : article.excerptFr;
   const canonical = `${SITE_URL}/${locale}/mag/${article.slug}`;
+  // Un aperçu n'a ni adresse canonique ni partage, et ne doit JAMAIS être indexé : ce contenu n'est pas public.
+  if (preview) return { title: `${title} — Souq Auto`, robots: { index: false, follow: false } };
 
   return {
     title: `${title} — Souq Auto`,
@@ -42,8 +50,9 @@ export default async function BlogArticlePage({
   params: Promise<{ locale: string; slug: string }>;
 }) {
   const { locale, slug } = await params;
-  const article = await getPublishedArticle(slug);
-  if (!article) notFound();
+  const resolved = await getArticleForViewer(slug);
+  if (!resolved) notFound();
+  const { article, preview } = resolved;
   // Les articles, les essais et les guides partagent le même espace de slugs : un essai (ou un
   // guide) ouvert par son ancienne adresse /mag est renvoyé vers sa rubrique.
   if (article.kind === "ESSAI" || article.kind === "GUIDE") {
@@ -71,29 +80,35 @@ export default async function BlogArticlePage({
     { name: t("indexTitle"), url: `${SITE_URL}/${locale}/mag` },
     { name: title, url: canonical },
   ]);
-  const articleJsonLd = buildArticleJsonLd({
-    title,
-    description: excerpt,
-    url: canonical,
-    // Éditorial de la marque, jamais attribué publiquement à un compte admin
-    // précis (l'auteur réel n'a aucune pertinence pour le lecteur).
-    authorName: "Souq Auto",
-    datePublished: article.publishedAt!.toISOString(),
-    dateModified: article.updatedAt.toISOString(),
-    isBasedOn: article.sourceUrl ?? undefined,
-  });
+  // Pas de données structurées pour un aperçu : ce contenu n'est pas public, il n'a pas de date de parution.
+  const articleJsonLd = article.publishedAt
+    ? buildArticleJsonLd({
+        title,
+        description: excerpt,
+        url: canonical,
+        // Éditorial de la marque, jamais attribué publiquement à un compte admin
+        // précis (l'auteur réel n'a aucune pertinence pour le lecteur).
+        authorName: "Souq Auto",
+        datePublished: article.publishedAt.toISOString(),
+        dateModified: article.updatedAt.toISOString(),
+        isBasedOn: article.sourceUrl ?? undefined,
+      })
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
-      />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(articleJsonLd) }} />
+      {preview && <ArticlePreviewBanner preview={preview} editHref={`/admin/mag/${article.id}/modifier`} />}
+      {!preview && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+        />
+      )}
+      {articleJsonLd && !preview && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(articleJsonLd) }} />}
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <p className="text-xs text-slate-500">{dateFormatter.format(article.publishedAt!)}</p>
+      {article.publishedAt && <p className="text-xs text-slate-500">{dateFormatter.format(article.publishedAt)}</p>}
       <h1 className="mt-1 text-2xl font-semibold text-slate-900">{title}</h1>
 
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-slate-700">

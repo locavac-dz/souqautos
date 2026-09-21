@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
-import { createListingGenerator, type Catalogue } from "../scripts/load-data";
+import { createListingGenerator, mulberry32, type Catalogue } from "../scripts/load-data";
 import { databaseName, getLoadDatabaseUrl } from "../scripts/load-database";
 
 // Lot 137 — remplit la base de TEST DE CHARGE avec un volume réaliste d'annonces fabriquées :
@@ -36,6 +36,52 @@ async function ensureDatabase(loadUrl: string) {
   } finally {
     await admin.$disconnect();
   }
+}
+
+// Lot 143 — des conversations réalistes, pour que le test de charge exerce aussi la mesure de réactivité des vendeurs (badge sur les
+// cartes de résultats). Sans elles, la base de charge n'avait AUCUNE conversation et cette mesure paraissait gratuite.
+// Déterministe et idempotent : ne fait rien si des conversations de charge existent déjà.
+//  - ~12 % des annonces reçoivent une conversation ; comme les vendeurs sont tirés selon une loi de Zipf, quelques gros vendeurs en
+//    ont des centaines (au-delà du plafond de 200 de la mesure), la plupart quelques-unes ;
+//  - chaque vendeur a un profil fixe : réactif (45 %), moyen (30 %) ou quasi muet (25 %) ;
+//  - dates réparties sur 90 jours, dont quelques-unes dans les 48 dernières heures (trop récentes pour être jugées).
+async function seedConversations(prisma: PrismaClient, sellerIds: string[]) {
+  if ((await prisma.conversation.count({ where: { id: { startsWith: "charge-conv-" } } })) > 0) {
+    console.log("Des conversations de charge existent déjà : rien à ajouter.");
+    return;
+  }
+  const listings = await prisma.listing.findMany({ where: { id: { startsWith: "charge-" } }, select: { id: true, sellerId: true }, orderBy: { id: "asc" } });
+  const rand = mulberry32(143);
+  const now = Date.now();
+  const DAY = 86_400_000;
+  const profileOf = (sellerId: string) => {
+    let hash = 0;
+    for (const ch of sellerId) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+    const bucket = (hash % 100) / 100;
+    return bucket < 0.45 ? { replyProbability: 0.95, medianMinutes: 20 } : bucket < 0.75 ? { replyProbability: 0.8, medianMinutes: 300 } : { replyProbability: 0.3, medianMinutes: 2880 };
+  };
+
+  const conversations: { id: string; listingId: string; buyerId: string; sellerId: string; createdAt: Date }[] = [];
+  const messages: { conversationId: string; senderId: string; content: string; createdAt: Date }[] = [];
+  for (const [index, listing] of listings.entries()) {
+    if (rand() > 0.12) continue;
+    let buyerId = sellerIds[Math.floor(rand() * sellerIds.length)];
+    if (buyerId === listing.sellerId) buyerId = sellerIds[(sellerIds.indexOf(buyerId) + 1) % sellerIds.length];
+    const asked = new Date(now - (rand() < 0.04 ? rand() * 2 * DAY : rand() * 89 * DAY));
+    const id = `charge-conv-${index}`;
+    conversations.push({ id, listingId: listing.id, buyerId, sellerId: listing.sellerId, createdAt: asked });
+    messages.push({ conversationId: id, senderId: buyerId, content: "Bonjour, l'annonce est-elle toujours disponible ?", createdAt: asked });
+    const profile = profileOf(listing.sellerId);
+    if (rand() < profile.replyProbability) {
+      // Délai log-normal autour de la médiane du profil : quelques réponses très lentes, beaucoup de rapides.
+      const delay = profile.medianMinutes * Math.exp((rand() + rand() + rand() - 1.5) * 1.2);
+      messages.push({ conversationId: id, senderId: listing.sellerId, content: "Oui, toujours disponible.", createdAt: new Date(Math.min(now, asked.getTime() + delay * 60_000)) });
+    }
+  }
+  const CHUNK = 2000;
+  for (let i = 0; i < conversations.length; i += CHUNK) await prisma.conversation.createMany({ data: conversations.slice(i, i + CHUNK), skipDuplicates: true });
+  for (let i = 0; i < messages.length; i += CHUNK) await prisma.message.createMany({ data: messages.slice(i, i + CHUNK) });
+  console.log(`Conversations de charge : ${conversations.length} conversations, ${messages.length} messages.`);
 }
 
 async function main() {
@@ -87,13 +133,13 @@ async function main() {
     const existing = await prisma.listing.count({ where: { id: { startsWith: "charge-" } } });
     const missing = target - existing;
     if (missing <= 0) {
-      console.log(`La base contient déjà ${existing} annonces de charge (≥ ${target}) : rien à ajouter.`);
-      return;
+      console.log(`La base contient déjà ${existing} annonces de charge (≥ ${target}) : aucune annonce à ajouter.`);
+    } else {
+      console.log(`Génération de ${missing} annonces (${existing} déjà présentes)…`);
     }
-    console.log(`Génération de ${missing} annonces (${existing} déjà présentes)…`);
     const generate = createListingGenerator({ catalogue, sellerIds, now: Date.now(), seed: 137 + existing });
     const started = Date.now();
-    for (let done = 0; done < missing; done += BATCH) {
+    for (let done = 0; missing > 0 && done < missing; done += BATCH) {
       const size = Math.min(BATCH, missing - done);
       const generated = Array.from({ length: size }, (_, i) => generate(existing + done + i));
       await prisma.listing.createMany({
@@ -111,7 +157,8 @@ async function main() {
       });
       process.stdout.write(`\r  ${Math.min(done + size, missing)} / ${missing}`);
     }
-    console.log(`\nTerminé en ${((Date.now() - started) / 1000).toFixed(1)} s.`);
+    if (missing > 0) console.log(`\nTerminé en ${((Date.now() - started) / 1000).toFixed(1)} s.`);
+    await seedConversations(prisma, sellerIds);
     const rows = await prisma.$queryRaw<{ status: string; n: bigint }[]>`SELECT status::text AS status, count(*) AS n FROM "Listing" GROUP BY status ORDER BY n DESC`;
     console.log("Annonces par statut :", rows.map((r) => `${r.status}=${r.n}`).join(", "));
   } finally {

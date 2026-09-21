@@ -23,6 +23,8 @@ import { Pagination } from "@/components/search/Pagination";
 import { estimatePricesForListings } from "@/lib/price-estimation";
 import { computePriceBadge } from "@/lib/price-badge";
 import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
+import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
+import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
 
 export default async function SearchPage({
@@ -115,7 +117,10 @@ export default async function SearchPage({
     })
   );
 
-  const sellerTrustBySeller = await getSellerTrustSummariesForSellers(allListings.map((l) => l.sellerId));
+  const [sellerTrustBySeller, responsivenessBySeller] = await Promise.all([
+    getSellerTrustSummariesForSellers(allListings.map((l) => l.sellerId)),
+    getSellerResponsivenessCached(allListings.map((l) => l.sellerId)),
+  ]);
   const professionalBadgesBySeller = await getProfessionalBadgesForSellers(allListings.map((l) => l.sellerId));
 
   const pages = computeTotalPages(totalCount);
@@ -174,6 +179,7 @@ export default async function SearchPage({
                   isFavorited={favoriteIds.has(listing.id)}
                   priceBadge={priceBadges.get(listing.id)}
                   sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
+                  sellerBadges={cardSellerBadges(sellerTrustBySeller.get(listing.sellerId), responsivenessBySeller.get(listing.sellerId))}
                   professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
                 />
               ))}
@@ -203,6 +209,7 @@ export default async function SearchPage({
                   isFavorited={favoriteIds.has(listing.id)}
                   priceBadge={priceBadges.get(listing.id)}
                   sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
+                  sellerBadges={cardSellerBadges(sellerTrustBySeller.get(listing.sellerId), responsivenessBySeller.get(listing.sellerId))}
                   professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
                 />
               ))}

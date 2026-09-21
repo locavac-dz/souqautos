@@ -1328,6 +1328,7 @@
     "adviceTitle": "Notre conseil",
     "seeListings": "Voir les annonces {vehicle}",
     "seeModel": "Fiche du modèle {vehicle}",
+    "seeAllListings": "Voir toutes les annonces",
     "modelSectionTitle": "Guide d'achat"
   },
   "AdminEditorial": {
@@ -1374,18 +1375,18 @@
   },
   "AdminGuide": {
     "title": "Guides d'achat",
-    "subtitle": "Un guide de fond par modèle, rédigé par l'équipe : il apparaît sur la page du modèle et sur les annonces de ce modèle.",
+    "subtitle": "Un guide de fond par modèle, ou un guide général, rédigé par l'équipe : un guide de modèle apparaît sur la page du modèle et sur les annonces de ce modèle.",
     "newGuide": "Nouveau guide",
     "editGuide": "Modifier le guide",
     "empty": "Aucun guide pour le moment.",
     "sectionModel": "Modèle concerné et fiche du guide",
     "brandLabel": "Marque",
-    "modelLabel": "Modèle (obligatoire)",
+    "modelLabel": "Modèle (facultatif)",
     "generationLabel": "Génération (facultatif)",
     "chooseOption": "Choisir…",
     "noneOption": "Aucune",
-    "modelHelp": "Le guide est rattaché à ce modèle : il s'affiche sur sa page et sur les annonces de ce modèle. Choisissez d'abord la marque.",
-    "modelRequired": "Choisissez le modèle concerné par ce guide.",
+    "modelHelp": "Le guide est rattaché à ce modèle : il s'affiche sur sa page et sur les annonces de ce modèle. Choisissez d'abord la marque. Sans modèle, c'est un guide général (par exemple « acheter une voiture d'occasion ») : il figure dans l'index des guides et sur les annonces dont le modèle n'a pas de guide.",
+    "generalOption": "Aucun : guide général",
     "checklistFrLabel": "À vérifier avant d'acheter (français)",
     "checklistArLabel": "À vérifier avant d'acheter (arabe)",
     "checklistHelp": "Un point par ligne, de 1 à 12 points de 200 caractères au plus.",
@@ -1580,6 +1581,7 @@
     "draft": "Brouillon",
     "publishedOn": "Publié le {date}",
     "view": "Voir",
+    "preview": "Aperçu",
     "edit": "Modifier",
     "delete": "Supprimer",
     "titleFrLabel": "Titre (français)",
@@ -1667,6 +1669,10 @@
     "badgeUnder2h": "Répond généralement en moins de 2 heures",
     "badgeUnder6h": "Répond généralement en moins de 6 heures",
     "badgeUnder24h": "Répond généralement dans la journée",
+    "cardUnder1h": "Répond en moins d'1 h",
+    "cardUnder2h": "Répond en moins de 2 h",
+    "cardUnder6h": "Répond en moins de 6 h",
+    "cardUnder24h": "Répond dans la journée",
     "identityVerified": "Identité vérifiée",
     "proVerified": "Professionnel vérifié",
     "memberSince": "Membre depuis {duration}",
@@ -1681,5 +1687,11 @@
     "minutes": "{count} minutes",
     "hours": "{count} heures",
     "days": "{count} jours"
+  },
+  "ArticlePreview": {
+    "label": "Aperçu réservé à l'équipe",
+    "draft": "ce contenu est un brouillon : il n'est visible que des administrateurs, pas du public.",
+    "scheduled": "publication programmée le {date} : d'ici là, il n'est visible que des administrateurs, pas du public.",
+    "edit": "Modifier"
   }
 }

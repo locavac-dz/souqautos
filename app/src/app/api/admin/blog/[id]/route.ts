@@ -74,15 +74,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
 
-  // Lot 126 — guide d'achat : le modèle est obligatoire et la marque se déduit de lui (jamais lue du
-  // navigateur) ; la génération, si elle est donnée, doit appartenir à ce modèle.
-  let guideBrandId: number | undefined;
-  if (data.guide) {
-    const guideModel = await prisma.model.findUnique({ where: { id: data.guide.modelId }, select: { brandId: true } });
+  // Lot 126 — guide d'achat.
+  let guideBrandId: number | null | undefined;
+  // Lot 144 — sans modèle, le guide est GÉNÉRAL (« acheter une voiture d'occasion ») : aucune marque non plus. Avec un modèle
+  // (Lot 126), la marque se déduit de lui — jamais lue du navigateur — et la génération, si elle est donnée, doit lui appartenir.
+  const guideModelId = data.guide?.modelId;
+  if (data.guide && guideModelId === undefined) {
+    guideBrandId = null;
+  } else if (data.guide && guideModelId !== undefined) {
+    const guideModel = await prisma.model.findUnique({ where: { id: guideModelId }, select: { brandId: true } });
     if (!guideModel) {
       return NextResponse.json({ error: "unknown_model" }, { status: 400 });
     }
-    const guideRefs = await validateVehicleRefs({ brandId: guideModel.brandId, modelId: data.guide.modelId, generationId: data.guide.generationId });
+    const guideRefs = await validateVehicleRefs({ brandId: guideModel.brandId, modelId: guideModelId, generationId: data.guide.generationId });
     if (!guideRefs.ok) {
       return NextResponse.json({ error: guideRefs.error }, { status: 400 });
     }

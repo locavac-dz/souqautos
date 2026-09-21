@@ -8,8 +8,8 @@ import { useRouter } from "@/i18n/navigation";
 type ArticleKind = "ARTICLE" | "ESSAI" | "GUIDE";
 
 type ExistingGuide = {
-  brandId: number;
-  modelId: number;
+  brandId: number | null;
+  modelId: number | null;
   generationId: number | null;
   checklistFr: string;
   checklistAr: string;
@@ -188,12 +188,6 @@ export function BlogArticleForm({
       return;
     }
 
-    if (isGuide && !modelId) {
-      setPending(false);
-      setError(tG("modelRequired"));
-      return;
-    }
-
     const payload = {
       kind,
       titleFr,
@@ -208,7 +202,8 @@ export function BlogArticleForm({
       ...(isGuide && {
         coverImageUrl: coverUrl,
         guide: {
-          modelId: Number(modelId),
+          // Lot 144 — sans modèle, le guide est GÉNÉRAL.
+          modelId: modelId ? Number(modelId) : undefined,
           generationId: generationId ? Number(generationId) : undefined,
           checklistFr,
           checklistAr,
@@ -397,7 +392,7 @@ export function BlogArticleForm({
                 }}
                 className={`${inputClass} bg-white disabled:bg-slate-50`}
               >
-                <option value="">{tG("chooseOption")}</option>
+                <option value="">{tG("generalOption")}</option>
                 {models.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}

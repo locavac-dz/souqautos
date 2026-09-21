@@ -75,13 +75,23 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  {status === "published" && (
+                  {status === "published" ? (
                     <Link
                       href={`${publicBase}/${article.slug}`}
                       target="_blank"
                       className="text-xs text-slate-600 underline hover:text-slate-900"
                     >
                       {t("view")}
+                    </Link>
+                  ) : (
+                    // Lot 145 — un brouillon ou un contenu programmé se lit MIS EN PAGE, à son adresse publique, sous un bandeau
+                    // « aperçu » : seul un administrateur connecté le voit (src/lib/article-preview.ts).
+                    <Link
+                      href={`${publicBase}/${article.slug}`}
+                      target="_blank"
+                      className="text-xs text-slate-600 underline hover:text-slate-900"
+                    >
+                      {t("preview")}
                     </Link>
                   )}
                   <Link

@@ -16,11 +16,14 @@ export function isValidChecklist(text: string): boolean {
 // Conversion d'une fiche de guide validée vers les colonnes de `BuyingGuide`. La liste est normalisée
 // (lignes vides et espaces retirés) pour que l'affichage ne dépende pas de la façon dont la rédaction a
 // saisi les retours à la ligne. La marque n'est jamais lue du navigateur : elle se déduit du modèle.
-export function toBuyingGuideData(input: GuideInput, brandId: number) {
+// Lot 144 — un guide GÉNÉRAL n'a ni modèle, ni marque, ni génération : tout est écrit à `null` EXPLICITEMENT (jamais laissé
+// indéfini), pour qu'une modification qui retire le modèle d'un guide existant le remette bien à zéro.
+export function toBuyingGuideData(input: GuideInput, brandId: number | null) {
+  const modelId = input.modelId ?? null;
   return {
-    brandId,
-    modelId: input.modelId,
-    generationId: input.generationId ?? null,
+    brandId: modelId === null ? null : brandId,
+    modelId,
+    generationId: modelId === null ? null : (input.generationId ?? null),
     checklistFr: splitLines(input.checklistFr).join("\n"),
     checklistAr: splitLines(input.checklistAr).join("\n"),
     adviceFr: input.adviceFr,

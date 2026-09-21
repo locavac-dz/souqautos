@@ -2954,3 +2954,112 @@ Quand le lien d'une annonce est collé dans WhatsApp, Facebook ou Messenger, l'a
 - Tout est en **caractères latins** : un acheteur arabophone voit « DA » et des noms de marque latins sur la carte. Pas de gras (la police embarquée n'a que la graisse normale). Une photo verticale est recadrée au centre et peut couper le haut ou le bas du véhicule.
 - La fiche d'un **brouillon** porte quand même la balise d'image (Next l'ajoute), qui pointe vers un 404 : aperçu vide, rien de divulgué.
 - Le `og:title` de la fiche répète marque, modèle et année (« Renault Clio 2018 — Renault Clio 2018 ») : défaut **antérieur**, non traité ici.
+
+## Lot 143 — Confiance vendeur sur les cartes de résultats (2026-09-21)
+
+Le Lot 141 avait mis les badges de confiance sur la fiche d'annonce, mais l'acheteur **choisit sur les cartes** de la recherche, avant d'ouvrir quoi que ce soit. La carte n'affichait qu'un score opaque (« Confiance vendeur : 72/100 ») et le badge professionnel : ni l'identité vérifiée, ni la réactivité.
+
+**Livré**
+- **Sur chaque carte** (recherche, page d'une marque, d'un modèle, d'une wilaya) : « Identité vérifiée » et le badge de réactivité sous forme courte (« Répond en moins de 2 h »), sous le score de confiance. Mêmes règles qu'au Lot 141 : signaux **positifs et vérifiés** seulement, et une carte sans badge **n'ajoute aucune ligne**.
+- **Le résumé de confiance porte désormais un drapeau explicite `identityVerified`**, au lieu que la carte le déduise des points du score : une pondération qui changerait l'aurait fait mentir en silence.
+- **Une seule requête pour tous les vendeurs d'une page**, au lieu de deux par vendeur (~40 par page de 20 cartes avec la version du Lot 141). La fiche d'annonce en profite aussi.
+- **Un cache dédié** (`src/lib/ttl-cache.ts`) qui charge **tous les manquants en une seule lecture**, avec son propre plafond (5 000 vendeurs) : le cache du référentiel existant charge clé par clé et partage ses 500 entrées avec les listes de la recherche et les comparables de prix, que des centaines de vendeurs auraient évincées.
+- Réglage `RESPONSIVENESS_CACHE_TTL_MS` (5 minutes par défaut ; 0 désactive), documenté dans `.env.example`.
+- La base de charge reçoit ~12 000 **conversations réalistes** (`npm run load:seed`) : vendeurs réactifs, moyens ou quasi muets, plusieurs au-delà du plafond de 200. Elle n'en avait **aucune**, ce qui aurait fait paraître cette mesure gratuite.
+
+**Ce que la mesure a décidé** (100 000 annonces, 600 vendeurs, recherche à 10 visiteurs simultanés, même machine) :
+
+| | p50 | p95 |
+|---|---|---|
+| Avant le lot | 384 ms | 472 ms |
+| Lot 143, **avec** cache | 371 ms | 458 ms |
+| Lot 143, **sans** cache | 1 118 ms | **1 491 ms** (budget de 700 dépassé) |
+
+Le cache n'est donc **pas un confort, il est indispensable** : la requête groupée, refaite à chaque page, coûte 19 à 35 ms de base de données (~7 400 conversations lues pour les 20 plus gros vendeurs), et sous charge ces coûts s'additionnent. Avec le cache, la recherche coûte exactement ce qu'elle coûtait avant. Et contrairement au Lot 137, où le budget n'avait pas détecté le retrait d'un cache, **le budget de 700 ms détecte celui-ci**.
+
+**Conséquence assumée** : sur les cartes, un badge peut apparaître ou disparaître avec **jusqu'à 5 minutes de retard**. La fiche d'annonce, la page du vendeur et son tableau de bord lisent toujours **en direct** : le vendeur qui vérifie son propre état le voit tel qu'il est.
+
+**Ce que j'avais faux, et corrigé**
+- Ma première requête unique s'est révélée **plus lente en temps réel** que 32 requêtes en parallèle (18,6 contre 12,4 ms) : l'ancienne partait sur plusieurs connexions. J'ai cherché à l'accélérer (fonction fenêtre, jointure latérale, index composite) : **aucune variante ne change grand-chose**, le planificateur ignorant l'index composite à cause de la répartition très inégale des vendeurs. Le levier était le cache, pas la requête. Mon commentaire initial (« 10 à 20 % d'une page de recherche ») était une **affirmation non mesurée** : remplacée par les chiffres ci-dessus.
+- Un premier essai de charge sur la fiche d'annonce montrait +26 % (p50 161 → 203 ms). J'ai soupçonné ma requête unique ; **isolée, elle est aussi rapide que l'ancienne** (5,9 contre 6,2 ms pour un gros vendeur, 2,5 contre 0,9 pour un vendeur ordinaire). Trois nouveaux passages : p50 = 168, 188, 168 ms. **C'était du bruit** ; un écart résiduel de 4 à 17 % reste dans la variation entre passages, et je ne peux ni y voir une régression ni prouver qu'il n'y en a aucune.
+
+**Vérification** : `npm run verify -- --e2e` — **1 709 tests unitaires (28 nouveaux)**, 169 de bout en bout (les 4 tests du Lot 141 couvrent maintenant aussi les cartes : français, arabe, page du modèle, identité), **21 en production (+1)**.
+- **Équivalence prouvée** (`tests/seller-responsiveness-batch.test.ts`) : la lecture groupée donne **exactement** la réactivité de l'ancienne lecture pour les **600 vendeurs** de la base de charge, plus des cas piégés insérés puis retirés (question ou réponse supprimée, deux répondeurs, hors fenêtre, bords de fenêtre, sans message, plafond dépassé).
+- **Le cache prouvé sur le vrai serveur de production** (`e2e-pwa/seller-trust-cache.spec.ts`) : la carte garde son badge quand les réponses disparaissent de la base, alors que la fiche d'annonce, elle, ne l'affiche plus. Le serveur de test de développement désactive le cache pour lire les données en direct.
+- **Sabotages : 21 sur 22 détectés** — cache (plafond, durée de vie, LRU, partage des lectures simultanées, résultat périmé après `clear()`, gel des valeurs…), aide de carte, requête SQL (messages supprimés, plafond, partition par vendeur, ordre, pré-filtre de date…) et **2 de bout en bout** (cache contourné ; badges retirés de la recherche). Le seul survivant est **équivalent** : un `LEFT JOIN` laisse passer des conversations sans message, que le code écarte de toute façon.
+- Trois trous de **mes propres tests** trouvés par les sabotages, corrigés : l'éviction LRU (un sabotage n'avait même pas été appliqué : Git Bash avait transformé mon `//` en `/`), la demande faite juste après `clear()`, et un sabotage de bout en bout qui ne touchait qu'une des deux cartes de la page de recherche.
+
+**Limites**
+- Le cache est **propre à chaque processus** : plusieurs instances se rafraîchissent chacune de leur côté, avec au plus 5 minutes de décalage entre elles.
+- Un badge de carte peut être **en retard de 5 minutes** sur la fiche d'annonce du même vendeur.
+- Les 12 000 conversations de charge sont **fabriquées** : la répartition réelle des vendeurs de la place de marché sera différente. Les chiffres valent pour cette machine et comparent l'avant et l'après, ils ne garantissent rien pour un serveur de production.
+- Les cartes de l'accueil, de la page d'un professionnel et de la page d'un vendeur **n'affichent pas** ces badges : ces pages ont leur propre mise en avant du vendeur, ou n'affichent qu'un seul vendeur.
+- Les textes arabes (4 nouveaux libellés courts) sont à faire relire par un locuteur natif.
+- L'erreur serveur « stream closed early » sur la fiche d'annonce reste présente dans le journal de la phase de production ; elle est antérieure au Lot 142 (voir ce lot).
+
+## Lot 144 — Guide d'achat général : « Acheter une voiture d'occasion » (2026-09-21)
+
+La rubrique des guides d'achat (Lot 126) avait été livrée **vide**, avec la consigne que l'équipe rédige le contenu. Et un guide ne pouvait exister que rattaché à **un modèle** : sur 410 modèles au catalogue, presque aucun acheteur n'aurait jamais vu un guide. Vous avez choisi un **guide général**, non lié à un modèle.
+
+**Livré**
+- **Un guide peut être général** : la marque et le modèle deviennent facultatifs (migration `20260921100000_general_buying_guides`, aucune ligne existante modifiée). Un guide général figure dans l'index `/guides`, s'affiche **sans ligne de véhicule ni lien vers une page de modèle** (avec « Voir toutes les annonces »), figure au plan du site, et n'apparaît sur **aucune** page de modèle.
+- **La fiche d'une annonce le propose** quand le modèle de l'annonce n'a pas de guide propre (« Avant d'acheter, lisez notre guide ») ; le guide du modèle passe toujours avant. Un brouillon, un guide programmé ou le guide d'un autre modèle ne sont jamais proposés.
+- **Le formulaire d'administration** : le champ « Modèle » devient facultatif (« Aucun : guide général »), avec son aide en français et en arabe. Modifier un guide pour lui retirer son modèle, ou lui en redonner un, remet tout à zéro explicitement.
+- **Le guide lui-même** (`src/content/general-buying-guide.ts`), en **français et en arabe**, 9 sections : avant de contacter le vendeur, le premier échange et les signes d'arnaque, les papiers, l'inspection (carrosserie, moteur, pneus, intérieur, selon l'énergie), l'essai routier, le professionnel, la négociation, la conclusion, l'après-achat. Une liste de 12 points « à vérifier » et un conseil. Il cite les fonctions du site telles qu'elles sont (Cote Souq Auto, comparateur, « Identité vérifiée », « Très bonne affaire », « Signaler cette annonce », alertes).
+- **`npm run content:guide-general`** crée ce guide **en brouillon**, jamais publié : signé par un administrateur, refuse d'en créer un second, passe par le même schéma de validation que le formulaire. Il est aussi créé en brouillon sur la base de développement, pour que vous le lisiez dans « Administration → Guides d'achat ».
+
+**Ce que j'ai décidé de NE PAS écrire, et pourquoi.** Vous m'avez demandé de ne jamais inventer de contenu, et un guide d'achat touche à des règles que je ne peux pas garantir. Le texte ne cite donc **aucune règle administrative ou juridique algérienne précise** : aucun nom de pièce ou de service, aucun délai, aucun montant, aucun article de loi. Il renvoie à « l'administration compétente », et un avertissement le dit **avant la première section**. Un test le garantit (il échoue si un montant, un pourcentage, un délai chiffré ou un article de loi est ajouté).
+
+**Ce qui doit être relu par des humains AVANT publication** — c'est un brouillon, pas un texte validé :
+- **Les démarches administratives** (sections 3 et 8 : acte de vente, changement de titulaire de la carte grise, gage et saisie, contrôle technique). Une personne qui les connaît peut y **ajouter** les précisions qu'elle peut garantir.
+- **La version arabe**, par un locuteur natif (elle s'ajoute aux textes arabes déjà en attente).
+- **Les conseils techniques** (inspection, essai) : de la connaissance générale d'automobile, vérifiable par un mécanicien, dont je ne garantis pas l'exhaustivité. Je les ai rédigés **sans source**.
+
+**Garanties de la base.** Une contrainte SQL (`BuyingGuide_scope_check`) impose qu'un guide de modèle porte sa marque, et qu'un guide général n'ait ni marque, ni modèle, ni génération. La suppression d'un modèle qui a un guide reste **refusée par la base** grâce à une clé étrangère `RESTRICT` **explicite** : par défaut, une relation devenue facultative se défait en silence (`SET NULL`), et le guide d'un modèle serait devenu un guide général sans que personne l'ait voulu.
+
+**Coût mesuré** : la fiche d'une annonce fait une requête de plus quand son modèle n'a pas de guide — **2,25 ms en médiane (p95 3,35 ms)** sur 300 articles dont 100 guides.
+
+**Vérification** : `npm run verify -- --e2e` — **1 733 tests unitaires (+24), 177 de bout en bout (+8), 21 en production**, build de production compris. Les tests de bout en bout couvrent la création par l'API, par le **vrai formulaire** (sans choisir de modèle) et par le **vrai script** (brouillon, texte identique à celui du dépôt, pas de doublon, refus d'un auteur non administrateur), l'affichage en français et en arabe, la proposition sur les annonces, la conversion d'un guide de modèle en guide général et inversement, et les garanties de la base. Le test du texte garde la **parité français/arabe** (mêmes 9 sections, 6 sous-sections, 56 puces, avertissement et liens), l'**exactitude des libellés cités** (chacun doit être exactement celui de l'interface dans les deux langues, sinon le test échoue quand un libellé change), l'existence des pages vers lesquelles il renvoie, et l'absence de HTML, d'image, de lien externe ou de chiffre juridique.
+- **Sabotages : 25 détectés sur 26.** Contenu (16 : parité, libellés altérés, lien externe, image, HTML, titre de niveau 1, montant, délai légal, article de loi, avertissement retiré, lien cassé, treizième point de liste…), repli de la fiche (3 : brouillon proposé, guide d'un autre modèle proposé, repli supprimé), règles de validation (3), base de données (2 : contrainte de cohérence, clé étrangère). Le seul survivant est **équivalent** : conserver une génération sans modèle dans l'écriture en base est impossible par le chemin normal, le schéma le refusant déjà — c'est une seconde protection.
+
+**Ce que les sabotages ont révélé sur mes propres tests** — deux erreurs, corrigées :
+- Mon test de la clé étrangère `RESTRICT` **passait même avec la protection retirée** : j'essayais de supprimer la Clio, qui est aussi liée à des annonces, donc la base refusait pour une tout autre raison. Il utilise maintenant un modèle neuf, et exige une erreur de **clé étrangère** précisément (la contrainte de cohérence aurait sinon masqué la différence).
+- Une hypothèse fausse sur l'API (`PUT` au lieu de `PATCH`), et une assertion fragile (compter tous les titres de la page), remplacée par des titres précis.
+
+**Limites**
+- Le contenu est un **brouillon non validé** : ni relu par un juriste, ni par un locuteur natif, ni par un mécanicien. Il **n'est pas publié**, et ne doit pas l'être avant cette relecture.
+- **Un seul guide général** est proposé sur les annonces (le plus récent paru).
+- Le guide n'est pas adapté au type de véhicule (moto, utilitaire, camion…) : il parle de **voitures**.
+- Un test échoue si un libellé cité change, mais **pas si une fonction citée disparaît** (Cote, comparateur, alertes).
+- La qualité pédagogique du texte (clarté, ton, utilité réelle pour un acheteur) n'a été éprouvée par **aucun lecteur réel**.
+- Comme aux lots précédents, l'erreur serveur « stream closed early » sur la fiche d'annonce apparaît dans le journal de la phase de production (antérieure au Lot 142, consignée).
+
+## Lot 145 — Aperçu des contenus non publiés, réservé aux administrateurs (2026-09-21)
+
+Un brouillon ou un contenu programmé répond **404 au public** : c'est voulu. Mais l'équipe ne pouvait donc jamais le voir **mis en page** avant de le publier — relire un guide ou un essai dans un formulaire n'est pas le relire tel que le lira le visiteur. Le guide général du Lot 144, créé en brouillon, en a fait la démonstration : il « ne s'affichait pas ».
+
+**Livré**
+- **Un administrateur connecté voit un brouillon ou un contenu programmé à son adresse publique**, sous un bandeau ambre « Aperçu réservé à l'équipe » qui dit pourquoi il n'est pas public (brouillon, ou publication programmée à telle date) et mène à « Modifier ». Magazine (`/mag`), essais (`/essais`) et guides (`/guides`), en français et en arabe.
+- **Un lien « Aperçu »** dans chaque ligne de brouillon ou de contenu programmé de l'administration (un contenu paru garde « Voir »).
+
+**Ce qui le rend sûr** (`src/lib/article-preview.ts`, une seule règle pour les trois pages)
+- **Administrateur seulement** : le droit d'**éditer** ces contenus. Un modérateur, un membre, un professionnel ou un anonyme reçoivent **exactement le même 404** que pour un contenu inexistant — ni le titre, ni le bandeau ne figurent dans la réponse.
+- **Le rôle effectif compte** : un administrateur sans double authentification (Lot 138) n'a que les droits d'un particulier, donc ne voit pas l'aperçu. Éprouvé sur le **vrai serveur de production**.
+- **Jamais indexé** (`noindex, nofollow`, aucune adresse canonique), **jamais mis en cache public** (`no-store`), **aucune donnée structurée**, et toujours **absent des listes publiques et du plan du site**, même pour l'administrateur qui l'aperçoit.
+- **Un contenu déjà paru mais masqué pour une autre raison** (fiche de guide ou d'essai manquante) n'est **jamais** montré en aperçu.
+- **Aucun coût pour les visiteurs** : la page d'un contenu paru se sert exactement comme avant, **sans aucun appel d'authentification** ni seconde lecture — un test le garantit. On ne regarde qui est le visiteur que lorsque la page répondrait 404.
+
+**Vérification** : `npm run verify -- --e2e` — **1 744 tests unitaires (+11)**, **196 de bout en bout (+19)**, **22 en production (+1)**, build de production compris.
+- **Sabotages : 13 détectés sur 13** — à l'échelle unitaire (aperçu pour tout visiteur, pour tout compte connecté, pour un modérateur, pour un contenu déjà paru, authentification appelée sur le chemin public, contenu paru affublé d'un bandeau, erreur d'authentification transformée en accès), et de bout en bout (droit d'accès ignoré, `noindex` retiré, données structurées publiées, bandeau supprimé, lien « Aperçu » supprimé, et — en **production** — n'importe quel compte connecté).
+- Les tests de bout en bout couvrent **3 types de contenu × 2 états (brouillon, programmé) × 4 types de visiteurs (anonyme, membre, modérateur, administrateur) × 2 langues**, et le passage du brouillon à la publication (le bandeau disparaît, le public reçoit 200, les données structurées apparaissent, la page redevient indexable).
+
+**Ce que les sabotages ont révélé sur mes propres tests**
+- Les données structurées publiées à tort **n'étaient pas détectées** : pour un brouillon, elles ne sont de toute façon pas produites (pas de date de parution) ; seul un contenu **programmé**, qui a une date, prouve l'exclusion. Le test couvre maintenant les deux états.
+- Ma première assertion « le bandeau est absent » échouait pour le mauvais motif : le **texte** du bandeau figure dans le dictionnaire envoyé au navigateur avec **toutes** les pages. Le bandeau porte maintenant un attribut (`data-article-preview`) que les tests cherchent, au lieu de sa phrase.
+- Un test du Lot 144 supposait qu'un brouillon répondait 404 « à tout le monde » en utilisant la session de l'administrateur : il distingue maintenant le public de l'administrateur.
+
+**Limites**
+- **Seul un administrateur peut aperçevoir.** Un relecteur sans compte administrateur — un juriste pour les démarches, un locuteur natif pour la version arabe du guide — **ne peut pas** ouvrir un brouillon : il faudrait lui donner un compte, ou publier. Un **lien d'aperçu à durée limitée** pour un relecteur externe serait la suite naturelle ; il n'existe pas.
+- L'aperçu montre l'état **enregistré**, pas les modifications non enregistrées du formulaire.
+- Un modérateur ne peut pas aperçevoir (il ne peut pas non plus éditer ces contenus).
+- Le texte arabe du bandeau (4 libellés) est à faire relire par un locuteur natif.

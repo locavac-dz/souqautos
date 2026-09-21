@@ -6,6 +6,8 @@ import { CompareToggle } from "@/components/compare/CompareToggle";
 import type { PriceBadge } from "@/lib/price-badge";
 import { PRICE_BADGE_STYLE, PRICE_BADGE_KEY } from "@/lib/price-badge-style";
 import { resolveListingLabels } from "@/lib/site";
+import { CheckMark } from "@/components/SellerTrustBadges";
+import type { CardSellerBadges } from "@/lib/seller-card-badges";
 
 type CardListing = {
   id: string;
@@ -46,6 +48,7 @@ export async function ListingCard({
   priceBadge,
   sellerTrustScore,
   professionalBadge,
+  sellerBadges,
   eager = false,
 }: {
   listing: CardListing;
@@ -54,6 +57,8 @@ export async function ListingCard({
   priceBadge?: { badge: PriceBadge; deviationPct: number } | null;
   sellerTrustScore?: number | null;
   professionalBadge?: { badgeVerifie: boolean } | null;
+  // Lot 143 — signaux de confiance VÉRIFIÉS du vendeur (identité, réactivité), positifs seulement : `null`/absent = aucune ligne ajoutée.
+  sellerBadges?: CardSellerBadges | null;
   // Cartes visibles dès l'ouverture de la page (première rangée) : leur photo est chargée tout de suite, en priorité. Sans cela,
   // le navigateur attend d'avoir mis la page en forme pour la demander, et la plus grande image affichée (LCP) arrive plus tard.
   eager?: boolean;
@@ -65,6 +70,8 @@ export async function ListingCard({
   const tCompare = await getTranslations("Compare");
   const tPriceBadge = await getTranslations("PriceBadge");
   const tPro = await getTranslations("Pro");
+  const tSellerTrust = await getTranslations("SellerTrust");
+  const CARD_RESPONSIVENESS_KEY = { under1h: "cardUnder1h", under2h: "cardUnder2h", under6h: "cardUnder6h", under24h: "cardUnder24h" } as const;
 
   const { brandLabel, modelLabel, wilayaLabel } = resolveListingLabels(listing, locale);
   const communeLabel = listing.commune ? (locale === "ar" ? listing.commune.nomAr : listing.commune.nomFr) : null;
@@ -137,6 +144,22 @@ export async function ListingCard({
           <p className="mt-1 text-xs text-slate-500">
             {tSearch("sellerTrustScore", { score: sellerTrustScore })}
           </p>
+        )}
+        {sellerBadges && (
+          <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-emerald-800">
+            {sellerBadges.identityVerified && (
+              <li className="flex items-center gap-1">
+                <CheckMark />
+                {tSellerTrust("identityVerified")}
+              </li>
+            )}
+            {sellerBadges.responsiveness && (
+              <li className="flex items-center gap-1">
+                <CheckMark />
+                {tSellerTrust(CARD_RESPONSIVENESS_KEY[sellerBadges.responsiveness])}
+              </li>
+            )}
+          </ul>
         )}
       </div>
     </Link>

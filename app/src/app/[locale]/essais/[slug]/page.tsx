@@ -10,21 +10,26 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { StarRating } from "@/components/StarRating";
 import { ArticleBody } from "@/components/ArticleBody";
 import { publishedNow, shouldShowUpdatedDate } from "@/lib/blog-publication";
+import { resolveArticleForViewer } from "@/lib/article-preview";
+import { ArticlePreviewBanner } from "@/components/ArticlePreviewBanner";
 import { formatRating, splitLines } from "@/lib/road-test";
 
 // Un essai n'existe publiquement que s'il est de type ESSAI ET paru : un
-// brouillon, un essai programmé ou un article du magazine renvoient un vrai 404.
-async function getPublishedRoadTest(slug: string) {
+// brouillon, un essai programmé ou un article du magazine renvoient un vrai 404. Exception (Lot 145) : un ADMINISTRATEUR connecté voit
+// un brouillon ou un essai programmé en APERÇU, sous un bandeau et sans être indexé (src/lib/article-preview.ts).
+async function findRoadTest(slug: string, publishedOnly: boolean) {
   const article = await prisma.blogArticle.findFirst({
-    where: { slug, kind: "ESSAI", ...publishedNow(new Date()) },
+    where: { slug, kind: "ESSAI", ...(publishedOnly ? publishedNow(new Date()) : {}) },
     include: {
       roadTest: { include: { brand: true, model: true } },
       author: { include: { profile: true } },
     },
   });
-  if (!article || !article.roadTest || !article.publishedAt) return null;
-  return { ...article, roadTest: article.roadTest, publishedAt: article.publishedAt };
+  if (!article || !article.roadTest) return null;
+  return { ...article, roadTest: article.roadTest };
 }
+
+const getRoadTestForViewer = (slug: string) => resolveArticleForViewer(() => findRoadTest(slug, true), () => findRoadTest(slug, false));
 
 export async function generateMetadata({
   params,
@@ -32,12 +37,15 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const article = await getPublishedRoadTest(slug);
-  if (!article) return {};
+  const resolved = await getRoadTestForViewer(slug);
+  if (!resolved) return {};
+  const { article, preview } = resolved;
 
   const title = locale === "ar" ? article.titleAr : article.titleFr;
   const excerpt = locale === "ar" ? article.excerptAr : article.excerptFr;
   const canonical = `${SITE_URL}/${locale}/essais/${article.slug}`;
+  // Un aperçu n'a ni adresse canonique ni partage, et ne doit JAMAIS être indexé : ce contenu n'est pas public.
+  if (preview) return { title: `${title} — Souq Auto`, robots: { index: false, follow: false } };
 
   return {
     title: `${title} — Souq Auto`,
@@ -48,7 +56,7 @@ export async function generateMetadata({
       description: excerpt,
       url: canonical,
       type: "article",
-      publishedTime: article.publishedAt.toISOString(),
+      publishedTime: article.publishedAt?.toISOString(),
       modifiedTime: article.updatedAt.toISOString(),
       images: article.coverImageUrl ? [resolveAbsolutePhotoUrl(article.coverImageUrl)] : undefined,
     },
@@ -72,8 +80,9 @@ export default async function RoadTestPage({
 }) {
   const { slug } = await params;
   const locale = await getLocale();
-  const article = await getPublishedRoadTest(slug);
-  if (!article) notFound();
+  const resolved = await getRoadTestForViewer(slug);
+  if (!resolved) notFound();
+  const { article, preview } = resolved;
 
   const t = await getTranslations("RoadTest");
   const isAr = locale === "ar";
@@ -106,23 +115,27 @@ export default async function RoadTestPage({
     { name: t("indexTitle"), url: `${SITE_URL}/${locale}/essais` },
     { name: title, url: canonical },
   ]);
-  const reviewJsonLd = buildReviewJsonLd({
-    url: canonical,
-    title,
-    verdict,
-    itemName: vehicle || title,
-    brandName: rt.brand?.name,
-    ratingValue: rt.rating,
-    authorName,
-    authorIsPerson: Boolean(profile),
-    datePublished: article.publishedAt.toISOString(),
-    dateModified: article.updatedAt.toISOString(),
-  });
+  // Pas de données structurées pour un aperçu : ce contenu n'est pas public, il n'a pas de date de parution.
+  const reviewJsonLd = article.publishedAt
+    ? buildReviewJsonLd({
+        url: canonical,
+        title,
+        verdict,
+        itemName: vehicle || title,
+        brandName: rt.brand?.name,
+        ratingValue: rt.rating,
+        authorName,
+        authorIsPerson: Boolean(profile),
+        datePublished: article.publishedAt.toISOString(),
+        dateModified: article.updatedAt.toISOString(),
+      })
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(reviewJsonLd) }} />
+      {preview && <ArticlePreviewBanner preview={preview} editHref={`/admin/essais/${article.id}/modifier`} />}
+      {!preview && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }} />}
+      {reviewJsonLd && !preview && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(reviewJsonLd) }} />}
 
       <Breadcrumbs items={breadcrumbItems} />
 
@@ -149,7 +162,7 @@ export default async function RoadTestPage({
         <div className="text-sm">
           <p className="font-medium text-slate-900">{t("byline", { author: authorName })}</p>
           <p className="text-xs text-slate-500">
-            {t("publishedOn", { date: dateFormatter.format(article.publishedAt) })}
+            {article.publishedAt && t("publishedOn", { date: dateFormatter.format(article.publishedAt) })}
             {showUpdated && <> · {t("updatedOn", { date: dateFormatter.format(article.updatedAt) })}</>}
           </p>
         </div>

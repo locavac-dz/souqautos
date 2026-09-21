@@ -26,6 +26,7 @@
     "db:restore-check": "node scripts/restore-check.mjs",
     "ops:check": "tsx scripts/ops-check.ts",
     "auth:reset-2fa": "tsx scripts/reset-2fa.ts",
+    "content:guide-general": "tsx scripts/create-general-guide.ts",
     "load:seed": "tsx prisma/seed-load.ts",
     "load:test": "tsx scripts/load-test.ts"
   },

@@ -17,6 +17,8 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { estimateFromIndex, indexComparables } from "@/lib/price-estimation";
 import { computePriceBadge } from "@/lib/price-badge";
 import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
+import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
+import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
 
 async function getBrandAndModel(brandSlug: string, modelSlug: string) {
@@ -147,7 +149,10 @@ export default async function ModelPage({
     })
   );
 
-  const sellerTrustBySeller = await getSellerTrustSummariesForSellers(listings.map((l) => l.sellerId));
+  const [sellerTrustBySeller, responsivenessBySeller] = await Promise.all([
+    getSellerTrustSummariesForSellers(listings.map((l) => l.sellerId)),
+    getSellerResponsivenessCached(listings.map((l) => l.sellerId)),
+  ]);
   const professionalBadgesBySeller = await getProfessionalBadgesForSellers(listings.map((l) => l.sellerId));
 
   const breadcrumbItems = [
@@ -256,6 +261,7 @@ export default async function ModelPage({
               isFavorited={favoriteIds.has(listing.id)}
               priceBadge={priceBadges.get(listing.id)}
               sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
+                  sellerBadges={cardSellerBadges(sellerTrustBySeller.get(listing.sellerId), responsivenessBySeller.get(listing.sellerId))}
               professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
             />
           ))}

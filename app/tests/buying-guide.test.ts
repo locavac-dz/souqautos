@@ -58,13 +58,35 @@ describe("toBuyingGuideData", () => {
   it("leaves the generation empty when none is chosen", () => {
     expect(toBuyingGuideData(guideSchema.parse(guide), 7).generationId).toBeNull();
   });
+
+  it("a GENERAL guide (no model) writes brand, model and generation as explicit nulls, whatever brand the caller passed", () => {
+    const { modelId, ...withoutModel } = guide;
+    void modelId;
+    const data = toBuyingGuideData(guideSchema.parse(withoutModel), 7);
+    // Explicitement `null`, jamais absent : une modification qui RETIRE le modèle d'un guide existant doit le remettre à zéro.
+    expect(data).toMatchObject({ brandId: null, modelId: null, generationId: null });
+    expect("brandId" in data && "modelId" in data && "generationId" in data).toBe(true);
+    expect(toBuyingGuideData(guideSchema.parse(withoutModel), null)).toMatchObject({ brandId: null, modelId: null });
+  });
 });
 
 describe("guideSchema", () => {
-  it("requires the model (that is what links a guide to its model page and its listings)", () => {
+  it("the model is OPTIONAL (Lot 144): without it the guide is a GENERAL guide, shown on no model page", () => {
     const { modelId, ...withoutModel } = guide;
     void modelId;
-    expect(guideSchema.safeParse(withoutModel).success).toBe(false);
+    expect(guideSchema.safeParse(withoutModel).success).toBe(true);
+    expect(guideSchema.parse(withoutModel).modelId).toBeUndefined();
+  });
+
+  it("a generation exists only with its model", () => {
+    const { modelId, ...withoutModel } = guide;
+    void modelId;
+    expect(guideSchema.safeParse({ ...withoutModel, generationId: 3 }).success).toBe(false); // une génération sans modèle
+    expect(guideSchema.safeParse({ ...guide, generationId: 3 }).success).toBe(true);
+    expect(guideSchema.safeParse({ ...guide }).success).toBe(true);
+  });
+
+  it("still rejects a model that is present but invalid", () => {
     expect(guideSchema.safeParse({ ...guide, modelId: 0 }).success).toBe(false);
     expect(guideSchema.safeParse({ ...guide, modelId: -3 }).success).toBe(false);
     expect(guideSchema.safeParse({ ...guide, modelId: 1.5 }).success).toBe(false);

@@ -1058,10 +1058,14 @@ model RoadTest {
 model BuyingGuide {
   articleId    String      @id
   article      BlogArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  brandId      Int
-  brand        Brand       @relation(fields: [brandId], references: [id])
-  modelId      Int
-  model        Model       @relation(fields: [modelId], references: [id])
+  // Lot 144 — un guide peut être GÉNÉRAL (aucun modèle : « acheter une voiture d'occasion ») : marque, modèle et génération sont
+  // alors tous nuls. Une contrainte SQL (BuyingGuide_scope_check, non modélisable ici) garantit la cohérence : un modèle porte toujours
+  // sa marque, et une génération n'existe jamais sans modèle. `Restrict` explicite : sans lui, une relation facultative se défait
+  // silencieusement (SET NULL) à la suppression d'un modèle, ce qui transformerait un guide de modèle en guide général.
+  brandId      Int?
+  brand        Brand?      @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  modelId      Int?
+  model        Model?      @relation(fields: [modelId], references: [id], onDelete: Restrict)
   generationId Int?
   generation   Generation? @relation(fields: [generationId], references: [id])
   checklistFr  String

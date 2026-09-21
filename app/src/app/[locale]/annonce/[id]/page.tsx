@@ -132,14 +132,23 @@ export default async function ListingDetailPage({
     after(() => recordListingView(listingId));
   }
 
-  // Lot 126 — guide d'achat de ce modèle, s'il en existe un de paru.
-  const modelGuide = listing.modelId
-    ? await prisma.blogArticle.findFirst({
-        where: { kind: "GUIDE", ...publishedNow(new Date()), guide: { modelId: listing.modelId } },
-        orderBy: { publishedAt: "desc" },
-        select: { slug: true, titleFr: true, titleAr: true },
-      })
-    : null;
+  // Lot 126 — guide d'achat de ce modèle, s'il en existe un de paru. Lot 144 — à défaut, le guide GÉNÉRAL (« acheter une voiture
+  // d'occasion »), s'il en existe un de paru : la plupart des modèles n'auront jamais de guide propre, et l'acheteur qui hésite devant
+  // une annonce est précisément celui à qui il sert. Le guide du modèle passe toujours avant.
+  const guideSelect = { slug: true, titleFr: true, titleAr: true } as const;
+  const modelGuide =
+    (listing.modelId
+      ? await prisma.blogArticle.findFirst({
+          where: { kind: "GUIDE", ...publishedNow(new Date()), guide: { modelId: listing.modelId } },
+          orderBy: { publishedAt: "desc" },
+          select: guideSelect,
+        })
+      : null) ??
+    (await prisma.blogArticle.findFirst({
+      where: { kind: "GUIDE", ...publishedNow(new Date()), guide: { modelId: null } },
+      orderBy: { publishedAt: "desc" },
+      select: guideSelect,
+    }));
 
   const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
   const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";

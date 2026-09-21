@@ -4,6 +4,9 @@ import { accountAgeInDays, computeTrustScore, type TrustScoreBreakdown } from "@
 
 export type SellerTrustSummary = {
   trustBreakdown: TrustScoreBreakdown;
+  // Lot 143 — dit explicitement ce que le score ne fait que compter en points : les cartes de résultats affichent « identité vérifiée »,
+  // et ne doivent pas le déduire des points (une pondération qui changerait le ferait mentir en silence).
+  identityVerified: boolean;
   averageRating: number;
   reviewCount: number;
   confirmedReportCount: number;
@@ -40,6 +43,7 @@ function buildSellerTrustSummary(
 
   return {
     trustBreakdown,
+    identityVerified: Boolean(seller.identityVerifiedAt),
     averageRating: average,
     reviewCount: count,
     confirmedReportCount,

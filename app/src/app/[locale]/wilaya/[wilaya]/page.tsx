@@ -12,6 +12,8 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { estimatePricesForListings } from "@/lib/price-estimation";
 import { computePriceBadge } from "@/lib/price-badge";
 import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
+import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
+import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
 
 async function getWilaya(slug: string) {
@@ -97,9 +99,10 @@ export default async function WilayaPage({
     })
   );
 
-  const sellerTrustBySeller = await getSellerTrustSummariesForSellers(
-    recentListings.map((l) => l.sellerId)
-  );
+  const [sellerTrustBySeller, responsivenessBySeller] = await Promise.all([
+    getSellerTrustSummariesForSellers(recentListings.map((l) => l.sellerId)),
+    getSellerResponsivenessCached(recentListings.map((l) => l.sellerId)),
+  ]);
   const professionalBadgesBySeller = await getProfessionalBadgesForSellers(
     recentListings.map((l) => l.sellerId)
   );
@@ -184,6 +187,7 @@ export default async function WilayaPage({
                     isFavorited={favoriteIds.has(listing.id)}
                     priceBadge={priceBadges.get(listing.id)}
                     sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
+                  sellerBadges={cardSellerBadges(sellerTrustBySeller.get(listing.sellerId), responsivenessBySeller.get(listing.sellerId))}
                     professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
                   />
                 ))}

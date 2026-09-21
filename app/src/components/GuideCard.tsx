@@ -9,14 +9,15 @@ export type GuideCardArticle = {
   excerptAr: string;
   publishedAt: Date | null;
   coverImageUrl?: string | null;
-  guide: { brand: { name: string }; model: { name: string } } | null;
+  // Lot 144 — un guide GÉNÉRAL n'a ni marque ni modèle : la carte n'affiche alors aucune ligne de véhicule.
+  guide: { brand: { name: string } | null; model: { name: string } | null } | null;
 };
 
 // Lot 126 — carte d'un guide d'achat, partagée par l'index /guides et la page d'un modèle du catalogue.
 export function GuideCard({ article, locale }: { article: GuideCardArticle; locale: string }) {
   const isAr = locale === "ar";
   const dateFormatter = new Intl.DateTimeFormat(isAr ? "ar-DZ" : "fr-DZ", { dateStyle: "long" });
-  const vehicle = article.guide ? `${article.guide.brand.name} ${article.guide.model.name}` : "";
+  const vehicle = article.guide?.brand && article.guide.model ? `${article.guide.brand.name} ${article.guide.model.name}` : "";
 
   return (
     <Link href={`/guides/${article.slug}`} className="flex flex-col overflow-hidden rounded-lg border border-slate-200 hover:border-slate-300">

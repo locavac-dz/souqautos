@@ -178,4 +178,37 @@ test.describe("l'équipe en production", () => {
     await apiLogin(page, admin.email);
     expect((await adminApi(page)).status()).toBe(403);
   });
+
+  // Lot 145 — l'aperçu d'un brouillon suit le rôle EFFECTIF : sans double authentification, un administrateur n'a que les droits d'un
+  // simple particulier, donc il ne voit pas un contenu non publié ; dès qu'il l'active, il le voit.
+  test("un administrateur SANS double authentification ne voit pas l'aperçu d'un brouillon ; il le voit dès qu'il l'active", async ({ page }) => {
+    const admin = await createStaff("ADMIN");
+    const stamp = Date.now().toString(36);
+    const article = await e2eDb().blogArticle.create({
+      data: {
+        slug: `pwa-apercu-${stamp}`,
+        kind: "ARTICLE",
+        titleFr: `Brouillon de l'aperçu en production ${stamp}`,
+        titleAr: "مسودة المعاينة في الإنتاج للاختبار",
+        excerptFr: "Brouillon de test de l'aperçu réservé aux administrateurs protégés.",
+        excerptAr: "مسودة اختبار المعاينة الخاصة بالمشرفين المحميين بالتحقق الثنائي.",
+        contentFr: "x".repeat(120),
+        contentAr: "y".repeat(120),
+        authorId: admin.id,
+        publishedAt: null,
+      },
+      select: { id: true, slug: true },
+    });
+    try {
+      await apiLogin(page, admin.email);
+      const preview = () => page.request.get(`/fr/mag/${article.slug}`);
+      expect((await preview()).status(), "sans double authentification : rôle effectif = particulier").toBe(404);
+      await enableViaApi(page);
+      const allowed = await preview();
+      expect(allowed.status(), "avec double authentification : aperçu").toBe(200);
+      expect(await allowed.text()).toContain("data-article-preview");
+    } finally {
+      await e2eDb().blogArticle.deleteMany({ where: { id: article.id } });
+    }
+  });
 });

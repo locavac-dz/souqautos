@@ -9,30 +9,38 @@ import { buildArticleJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ArticleBody } from "@/components/ArticleBody";
 import { publishedNow, shouldShowUpdatedDate } from "@/lib/blog-publication";
+import { resolveArticleForViewer } from "@/lib/article-preview";
+import { ArticlePreviewBanner } from "@/components/ArticlePreviewBanner";
 import { splitLines } from "@/lib/road-test";
 
 // Un guide n'existe publiquement que s'il est de type GUIDE ET paru : un brouillon, un guide programmé,
-// un essai ou un article du magazine renvoient un vrai 404.
-async function getPublishedGuide(slug: string) {
+// un essai ou un article du magazine renvoient un vrai 404. Exception (Lot 145) : un ADMINISTRATEUR connecté voit un brouillon ou un
+// guide programmé en APERÇU, sous un bandeau et sans être indexé (src/lib/article-preview.ts).
+async function findGuide(slug: string, publishedOnly: boolean) {
   const article = await prisma.blogArticle.findFirst({
-    where: { slug, kind: "GUIDE", ...publishedNow(new Date()) },
+    where: { slug, kind: "GUIDE", ...(publishedOnly ? publishedNow(new Date()) : {}) },
     include: {
       guide: { include: { brand: true, model: true, generation: true } },
       author: { include: { profile: true } },
     },
   });
-  if (!article || !article.guide || !article.publishedAt) return null;
-  return { ...article, guide: article.guide, publishedAt: article.publishedAt };
+  if (!article || !article.guide) return null;
+  return { ...article, guide: article.guide };
 }
+
+const getGuideForViewer = (slug: string) => resolveArticleForViewer(() => findGuide(slug, true), () => findGuide(slug, false));
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const article = await getPublishedGuide(slug);
-  if (!article) return {};
+  const resolved = await getGuideForViewer(slug);
+  if (!resolved) return {};
+  const { article, preview } = resolved;
 
   const title = locale === "ar" ? article.titleAr : article.titleFr;
   const excerpt = locale === "ar" ? article.excerptAr : article.excerptFr;
   const canonical = `${SITE_URL}/${locale}/guides/${article.slug}`;
+  // Un aperçu n'a ni adresse canonique ni partage, et ne doit JAMAIS être indexé : ce contenu n'est pas public.
+  if (preview) return { title: `${title} — Souq Auto`, robots: { index: false, follow: false } };
 
   return {
     title: `${title} — Souq Auto`,
@@ -43,7 +51,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description: excerpt,
       url: canonical,
       type: "article",
-      publishedTime: article.publishedAt.toISOString(),
+      publishedTime: article.publishedAt?.toISOString(),
       modifiedTime: article.updatedAt.toISOString(),
       images: article.coverImageUrl ? [resolveAbsolutePhotoUrl(article.coverImageUrl)] : undefined,
     },
@@ -62,8 +70,9 @@ function CheckIcon() {
 export default async function GuidePage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { slug } = await params;
   const locale = await getLocale();
-  const article = await getPublishedGuide(slug);
-  if (!article) notFound();
+  const resolved = await getGuideForViewer(slug);
+  if (!resolved) notFound();
+  const { article, preview } = resolved;
 
   const t = await getTranslations("Guide");
   const isAr = locale === "ar";
@@ -77,7 +86,8 @@ export default async function GuidePage({ params }: { params: Promise<{ locale: 
 
   const profile = article.author.profile;
   const authorName = profile?.displayName ?? "Souq Auto";
-  const vehicle = `${g.brand.name} ${g.model.name}`;
+  // Lot 144 — un guide GÉNÉRAL n'a ni marque ni modèle : ni ligne de véhicule, ni lien vers une page de modèle.
+  const vehicle = g.brand && g.model ? `${g.brand.name} ${g.model.name}` : null;
 
   const dateFormatter = new Intl.DateTimeFormat(isAr ? "ar-DZ" : "fr-DZ", { dateStyle: "long" });
   const showUpdated = shouldShowUpdatedDate(article.publishedAt, article.updatedAt);
@@ -89,24 +99,29 @@ export default async function GuidePage({ params }: { params: Promise<{ locale: 
     { name: t("indexTitle"), url: `${SITE_URL}/${locale}/guides` },
     { name: title, url: canonical },
   ]);
-  const articleJsonLd = buildArticleJsonLd({
-    title,
-    description: excerpt,
-    url: canonical,
-    datePublished: article.publishedAt.toISOString(),
-    dateModified: article.updatedAt.toISOString(),
-    authorName,
-  });
+  // Pas de données structurées pour un aperçu : ce contenu n'est pas public, il n'a pas de date de parution.
+  const articleJsonLd = article.publishedAt
+    ? buildArticleJsonLd({
+        title,
+        description: excerpt,
+        url: canonical,
+        datePublished: article.publishedAt.toISOString(),
+        dateModified: article.updatedAt.toISOString(),
+        authorName,
+      })
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(articleJsonLd) }} />
+      {preview && <ArticlePreviewBanner preview={preview} editHref={`/admin/guides/${article.id}/modifier`} />}
+      {!preview && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }} />}
+      {articleJsonLd && !preview && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(articleJsonLd) }} />}
 
       <Breadcrumbs items={breadcrumbItems} />
 
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-        {t("kicker")} · {vehicle}
+        {t("kicker")}
+        {vehicle && <> · {vehicle}</>}
         {g.generation && <> · {g.generation.name}</>}
       </p>
       <h1 className="mt-1 text-2xl font-semibold text-slate-900">{title}</h1>
@@ -114,11 +129,14 @@ export default async function GuidePage({ params }: { params: Promise<{ locale: 
 
       <p className="mt-4 text-sm text-slate-600">
         <span className="font-medium text-slate-900">{t("byline", { author: authorName })}</span>
-        <span className="text-xs text-slate-500">
-          {" · "}
-          {t("publishedOn", { date: dateFormatter.format(article.publishedAt) })}
-          {showUpdated && <> · {t("updatedOn", { date: dateFormatter.format(article.updatedAt) })}</>}
-        </span>
+        {/* Un aperçu n'a pas de date de parution : rien à afficher, et pas de séparateur qui pendrait dans le vide. */}
+        {article.publishedAt && (
+          <span className="text-xs text-slate-500">
+            {" · "}
+            {t("publishedOn", { date: dateFormatter.format(article.publishedAt) })}
+            {showUpdated && <> · {t("updatedOn", { date: dateFormatter.format(article.updatedAt) })}</>}
+          </span>
+        )}
       </p>
 
       {article.coverImageUrl && (
@@ -147,12 +165,20 @@ export default async function GuidePage({ params }: { params: Promise<{ locale: 
       <ArticleBody content={content} />
 
       <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        <Link href={`/recherche?brandId=${g.brandId}&modelId=${g.modelId}`} className="text-slate-900 underline hover:text-slate-700">
-          {t("seeListings", { vehicle })}
-        </Link>
-        <Link href={`/voitures/${g.brand.slug}/${g.model.slug}`} className="text-slate-700 underline hover:text-slate-900">
-          {t("seeModel", { vehicle })}
-        </Link>
+        {vehicle && g.brand && g.model ? (
+          <>
+            <Link href={`/recherche?brandId=${g.brandId}&modelId=${g.modelId}`} className="text-slate-900 underline hover:text-slate-700">
+              {t("seeListings", { vehicle })}
+            </Link>
+            <Link href={`/voitures/${g.brand.slug}/${g.model.slug}`} className="text-slate-700 underline hover:text-slate-900">
+              {t("seeModel", { vehicle })}
+            </Link>
+          </>
+        ) : (
+          <Link href="/recherche" className="text-slate-900 underline hover:text-slate-700">
+            {t("seeAllListings")}
+          </Link>
+        )}
       </div>
     </div>
   );

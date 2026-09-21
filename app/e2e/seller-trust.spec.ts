@@ -3,6 +3,7 @@ import { uniqueAccount, registerAndLogin } from "./fixtures";
 import { createListing } from "./api-helpers";
 import { disconnectE2eDb, e2eDb, userIdOf } from "./db";
 import fr from "../messages/fr.json";
+import ar from "../messages/ar.json";
 
 // Lot 141 — les signaux de confiance d'un vendeur, dans un vrai navigateur, sur de VRAIES conversations : un acheteur écrit,
 // le vendeur répond, et le badge de réactivité apparaît là où l'acheteur décide — sur la fiche de l'annonce.
@@ -60,11 +61,15 @@ test.describe("badge de réactivité du vendeur", () => {
   test("un vendeur qui répond vite obtient le badge, visible sur la fiche de l'annonce et sur sa page", async ({ page, browser }) => {
     const seller = uniqueAccount("trust-fast");
     await registerAndLogin(page, "fr", seller);
-    const { id: listingId } = await createListing(page, { title: `Voiture du vendeur réactif ${Date.now()}` });
+    const title = `Voiture du vendeur réactif ${Date.now()}`;
+    const { id: listingId } = await createListing(page, { title });
+    const cardOf = () => page.getByRole("link").filter({ hasText: title });
 
     // Aucun badge tant qu'il n'y a pas assez de conversations : on le vérifie AVANT, sinon le test ne prouverait rien.
     await page.goto(`/fr/annonce/${listingId}`);
     await expect(page.getByText(T.badgeUnder1h)).toHaveCount(0);
+    await page.goto(`/fr/recherche?q=${encodeURIComponent(title)}`);
+    await expect(cardOf().getByText(T.cardUnder1h)).toHaveCount(0);
 
     await buildHistory(browser, page, listingId, [10, 12, 15, 20, 25, 30]);
 
@@ -72,13 +77,30 @@ test.describe("badge de réactivité du vendeur", () => {
     await expect(page.getByText(T.badgeUnder1h)).toBeVisible();
     await page.goto(`/fr/vendeur/${await userIdOf(seller.email)}`);
     await expect(page.getByText(T.badgeUnder1h)).toBeVisible();
+
+    // Lot 143 — le même badge, sous sa forme courte, sur la CARTE du résultat : sans ouvrir l'annonce. Français, puis arabe (RTL).
+    await page.goto(`/fr/recherche?q=${encodeURIComponent(title)}`);
+    await expect(cardOf().getByText(T.cardUnder1h)).toBeVisible();
+    await page.goto(`/ar/recherche?q=${encodeURIComponent(title)}`);
+    await expect(cardOf().getByText(ar.SellerTrust.cardUnder1h)).toBeVisible();
+    // Et sur la page du modèle, qui affiche aussi des cartes : le badge n'est pas propre à la recherche.
+    await page.goto("/fr/voitures/renault/clio");
+    await expect(page.getByRole("link").filter({ hasText: title }).getByText(T.cardUnder1h)).toBeVisible();
   });
 
   test("un vendeur qui ne répond pas n'a AUCUN badge — et rien de négatif n'est affiché", async ({ page, browser }) => {
     const seller = uniqueAccount("trust-silent");
     await registerAndLogin(page, "fr", seller);
-    const { id: listingId } = await createListing(page, { title: `Voiture du vendeur silencieux ${Date.now()}` });
+    const title = `Voiture du vendeur silencieux ${Date.now()}`;
+    const { id: listingId } = await createListing(page, { title });
     await buildHistory(browser, page, listingId, [null, null, null, null, null, null]);
+
+    // Sa carte non plus n'affiche aucun badge de réactivité — et rien de négatif à la place.
+    await page.goto(`/fr/recherche?q=${encodeURIComponent(title)}`);
+    const silentCard = page.getByRole("link").filter({ hasText: title });
+    await expect(silentCard).toBeVisible();
+    for (const badge of [T.cardUnder1h, T.cardUnder2h, T.cardUnder6h, T.cardUnder24h]) await expect(silentCard.getByText(badge)).toHaveCount(0);
+    await expect(silentCard.getByRole("listitem")).toHaveCount(0); // aucune ligne de badges ajoutée à la carte
 
     await page.goto(`/fr/annonce/${listingId}`);
     for (const badge of [T.badgeUnder1h, T.badgeUnder2h, T.badgeUnder6h, T.badgeUnder24h]) {
@@ -115,13 +137,22 @@ test.describe("badge de réactivité du vendeur", () => {
   test("le badge « identité vérifiée » apparaît sur la fiche dès que l'équipe a validé la pièce", async ({ page }) => {
     const seller = uniqueAccount("trust-identity");
     await registerAndLogin(page, "fr", seller);
-    const { id: listingId } = await createListing(page, { title: `Voiture ${Date.now()}` });
+    const title = `Voiture identite ${Date.now()}`;
+    const { id: listingId } = await createListing(page, { title });
+    const search = `/fr/recherche?q=${encodeURIComponent(title)}`;
+    const card = () => page.getByRole("link").filter({ hasText: title });
 
     await page.goto(`/fr/annonce/${listingId}`);
     await expect(page.getByText(T.identityVerified)).toHaveCount(0);
+    await page.goto(search);
+    await expect(card()).toBeVisible();
+    await expect(card().getByText(T.identityVerified)).toHaveCount(0);
 
     await e2eDb().user.update({ where: { email: seller.email }, data: { identityVerifiedAt: new Date() } });
     await page.goto(`/fr/annonce/${listingId}`);
     await expect(page.getByText(T.identityVerified)).toBeVisible();
+    // Lot 143 — et sur la carte du résultat (le résumé de confiance porte un drapeau explicite, pas seulement des points).
+    await page.goto(search);
+    await expect(card().getByText(T.identityVerified)).toBeVisible();
   });
 });

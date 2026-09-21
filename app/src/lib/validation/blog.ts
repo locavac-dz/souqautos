@@ -29,23 +29,29 @@ export const roadTestSchema = z.object({
 
 export type RoadTestInput = z.infer<typeof roadTestSchema>;
 
-// Lot 126 — un guide d'achat est un article de fond rattaché à UN MODÈLE du catalogue (obligatoire :
-// c'est ce qui le relie à la page du modèle et aux annonces de ce modèle). Aucune marque envoyée : elle
-// se déduit du modèle côté serveur. La génération est facultative. Une liste « à vérifier avant
-// d'acheter » (1 à 12 lignes) et « notre conseil », dans les deux langues.
+// Lot 126 — un guide d'achat est un article de fond, en général rattaché à UN MODÈLE du catalogue : c'est ce qui le relie à la page
+// du modèle et aux annonces de ce modèle. Lot 144 : le modèle est FACULTATIF — sans lui, le guide est GÉNÉRAL (« acheter une voiture
+// d'occasion ») et n'apparaît sur aucune page de modèle. Aucune marque envoyée : elle se déduit du modèle côté serveur. La génération
+// est facultative, mais n'a de sens qu'avec un modèle. Une liste « à vérifier avant d'acheter » (1 à 12 lignes) et « notre
+// conseil », dans les deux langues.
 const checklist = z
   .string()
   .trim()
   .refine(isValidChecklist, { message: `1 à ${MAX_CHECKLIST_ITEMS} lignes de 200 caractères maximum` });
 
-export const guideSchema = z.object({
-  modelId: z.number().int().positive().max(INT4_MAX),
-  generationId: z.number().int().positive().max(INT4_MAX).optional(),
-  checklistFr: checklist,
-  checklistAr: checklist,
-  adviceFr: z.string().trim().min(20).max(400),
-  adviceAr: z.string().trim().min(20).max(400),
-});
+export const guideSchema = z
+  .object({
+    modelId: z.number().int().positive().max(INT4_MAX).optional(),
+    generationId: z.number().int().positive().max(INT4_MAX).optional(),
+    checklistFr: checklist,
+    checklistAr: checklist,
+    adviceFr: z.string().trim().min(20).max(400),
+    adviceAr: z.string().trim().min(20).max(400),
+  })
+  .refine((guide) => guide.generationId === undefined || guide.modelId !== undefined, {
+    path: ["generationId"],
+    message: "Une génération n'existe qu'avec son modèle.",
+  });
 
 export type GuideInput = z.infer<typeof guideSchema>;
 
