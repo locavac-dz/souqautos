@@ -2,7 +2,8 @@
 //
 //   --out <dossier>     où écrire les sauvegardes (défaut : ./backups)
 //   --keep <jours>      supprimer les sauvegardes plus anciennes (défaut : 14 ; 0 = tout garder)
-//   --with-uploads      archiver aussi public/uploads (photos stockées sur le disque)
+//   --with-uploads      archiver aussi les fichiers stockés sur le disque : public/uploads (photos) ET private-uploads (pièces
+//                       d'identité, chiffrées) — chacun dans SA archive, la seconde étant la plus sensible (Lot 147)
 //   --env <fichier>     fichier de configuration (défaut : .env)
 //
 // Écrit `souq_auto-AAAAMMJJ-HHMMSS.dump` (format « custom » de pg_dump, compressé),
@@ -28,6 +29,14 @@ if (!Number.isFinite(keepDays) || keepDays < 0) fail("--keep attend un nombre de
 mkdirSync(outDir, { recursive: true });
 const stamp = timestamp();
 const dumpFile = path.join(outDir, `${db.database}-${stamp}.dump`);
+
+// Sur Windows, Node.js produit des chemins comme C:\dossier que tar (Git Bash) interprète comme un hôte réseau et
+// refuse avec « Cannot connect to C: resolve failed ». Cette fonction les convertit au format POSIX attendu par tar
+// (/c/dossier) sans toucher aux chemins utilisés ailleurs (existsSync, statSync…).
+function toPosix(p) {
+  if (process.platform !== "win32") return p;
+  return p.replace(/^([A-Za-z]):[/\\]/, (_, d) => `/${d.toLowerCase()}/`).replace(/\\/g, "/");
+}
 
 // Un échec est ENREGISTRÉ (status.json) avant de quitter : c'est ce que lit le veilleur (npm run ops:check) pour
 // prévenir l'équipe. L'archive incomplète est supprimée : laissée là, elle serait prise pour une vraie sauvegarde par
@@ -55,17 +64,28 @@ const sha256 = createHash("sha256").update(readFileSync(dumpFile)).digest("hex")
 console.log(`✓ Archive lisible : ${entries} objets, ${humanSize(size)}, sha256 ${sha256.slice(0, 16)}…`);
 
 let uploadsFile;
-if (process.argv.includes("--with-uploads")) {
-  const uploads = path.resolve(process.cwd(), "public/uploads");
-  if (existsSync(uploads)) {
-    const archive = path.join(outDir, `uploads-${stamp}.tar.gz`);
-    const tar = spawnSync("tar", ["-czf", archive, "-C", path.dirname(uploads), path.basename(uploads)], { encoding: "utf8" });
-    if (tar.status !== 0) bail(`L'archivage des photos a échoué : ${(tar.stderr || tar.error?.message || "").trim()}`, archive);
-    uploadsFile = path.basename(archive);
-    console.log(`✓ Photos archivées : ${archive} (${humanSize(statSync(archive).size)})`);
-  } else {
-    console.log("· Aucun dossier public/uploads à archiver (stockage S3 ?).");
+let privateUploadsFile;
+// Archive un dossier de fichiers dans `<préfixe>-<horodatage>.tar.gz`, à côté de la sauvegarde. Rend le nom de l'archive, ou `undefined`
+// si le dossier n'existe pas (stockage S3, ou aucune pièce d'identité envoyée). Un échec est FATAL : « réussi » doit vouloir dire que
+// tout ce qui était demandé est écrit.
+function archiveFolder(relative, prefix, label) {
+  const folder = path.resolve(process.cwd(), relative);
+  if (!existsSync(folder)) {
+    console.log(`· Aucun dossier ${relative} à archiver.`);
+    return undefined;
   }
+  const archive = path.join(outDir, `${prefix}-${stamp}.tar.gz`);
+  const tar = spawnSync("tar", ["-czf", toPosix(archive), "-C", toPosix(path.dirname(folder)), path.basename(folder)], { encoding: "utf8" });
+  if (tar.status !== 0) bail(`L'archivage ${label} a échoué : ${(tar.stderr || tar.error?.message || "").trim()}`, archive);
+  console.log(`✓ ${label[0].toUpperCase()}${label.slice(1)} archivées : ${archive} (${humanSize(statSync(archive).size)})`);
+  return path.basename(archive);
+}
+if (process.argv.includes("--with-uploads")) {
+  uploadsFile = archiveFolder("public/uploads", "uploads", "photos");
+  // Lot 147 — les pièces d'identité des vendeurs (private-uploads/identity, chiffrées avec ENCRYPTION_KEY) vivent sur le disque, hors de
+  // la base : sans cette archive, restaurer la base après un sinistre PERDAIT ces documents. Archive à part, car la plus sensible : à
+  // protéger comme la base, et à conserver séparément de ENCRYPTION_KEY (sans elle, elles restent illisibles).
+  privateUploadsFile = archiveFolder("private-uploads", "private-uploads", "pièces d'identité");
 }
 
 if (keepDays > 0) {
@@ -83,5 +103,5 @@ if (keepDays > 0) {
 }
 
 // Réussite enregistrée en DERNIER : « réussi » veut dire que tout ce qui était demandé est écrit et relu.
-recordRun(outDir, "backup", "lastSuccess", { file: path.basename(dumpFile), sizeBytes: size, objects: entries, sha256, ...(uploadsFile ? { uploadsFile } : {}) });
+recordRun(outDir, "backup", "lastSuccess", { file: path.basename(dumpFile), sizeBytes: size, objects: entries, sha256, ...(uploadsFile ? { uploadsFile } : {}), ...(privateUploadsFile ? { privateUploadsFile } : {}) });
 console.log("Terminé. N'oubliez pas de copier ces fichiers hors du serveur.");

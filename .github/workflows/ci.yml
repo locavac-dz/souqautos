@@ -131,3 +131,26 @@ jobs:
             app/test-results/
             app/playwright-report/
           retention-days: 7
+
+  docker:
+    name: Construction de l'image Docker
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurer Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      # Construction de l'étape runner (la cible par défaut). BUILD_STANDALONE=1 est passé dans le
+      # Dockerfile. NEXT_PUBLIC_SITE_URL pointe sur l'instance de test : elle est intégrée à la
+      # compilation, mais n'importe quelle URL https suffit pour que le build réussisse.
+      - name: Construire l'image (sans la pousser)
+        uses: docker/build-push-action@v6
+        with:
+          context: app
+          push: false
+          tags: souq-auto:ci
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=https://ci.souqauto.test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

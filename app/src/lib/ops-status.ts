@@ -15,6 +15,8 @@ export type RunRecord = {
   objects?: number;
   sha256?: string;
   uploadsFile?: string;
+  // Lot 147 — l'archive des pièces d'identité (private-uploads), à part de celle des photos.
+  privateUploadsFile?: string;
   tables?: number;
   reason?: string; // seulement pour un échec
 };

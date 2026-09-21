@@ -1,9 +1,13 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, statfsSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, statfsSync, utimesSync, writeFileSync } from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+// Git Bash's tar cannot parse Windows paths like C:\... (interprets "C" as a hostname).
+const toPosix = (p: string) =>
+  process.platform === "win32" ? p.replace(/^([A-Za-z]):[/\\]/, (_, d) => `/${d.toLowerCase()}/`).replace(/\\/g, "/") : p;
 import { evaluateOps, isDumpName, type OpsFacts, type OpsStatus } from "@/lib/ops-status";
 
 // Lot 136 — la CHAÎNE réelle, sans simulation : vraie sauvegarde (pg_dump), vraie restauration dans une base temporaire, vrai
@@ -143,4 +147,118 @@ describe("la chaîne sauvegarde → restauration → veilleur (vrais outils Post
     expect(levels({ ...facts, dumps: facts.dumps.map((d) => ({ ...d, sizeBytes: 300 })) })["backup-size"]).toBe("error");
     expect(levels({ ...facts, dumps: [] })["backup-file"]).toBe("error");
   });
+});
+
+// Lot 147 — les fichiers stockés sur le disque. `--with-uploads` n'archivait que les PHOTOS (public/uploads) : les pièces d'identité des
+// vendeurs (private-uploads/identity, chiffrées) vivent aussi sur le disque, hors de la base, et une restauration après sinistre les
+// PERDAIT. Chacune a maintenant SA archive (la seconde est la plus sensible). Vrais outils, vraie sauvegarde, vraie extraction.
+describe("les fichiers du disque : photos ET pièces d'identité", () => {
+  let work = "";
+  let out = "";
+  const PHOTO = Buffer.from("octets-de-photo-" + "p".repeat(500));
+  const IDENTITY = Buffer.from("octets-chiffres-de-piece-d-identite-" + "éÿ".repeat(400), "latin1");
+
+  // Un « serveur » factice : dossier de travail avec ses photos et ses pièces d'identité, sauvegardé avec la vraie base.
+  const backup = (args: string[], withPrivate = true) => {
+    rmSync(path.join(work, "private-uploads"), { recursive: true, force: true });
+    if (withPrivate) {
+      mkdirSync(path.join(work, "private-uploads", "identity"), { recursive: true });
+      writeFileSync(path.join(work, "private-uploads", "identity", "piece.enc"), IDENTITY);
+    }
+    return spawnSync(process.execPath, [path.join(APP, "scripts", "backup-db.mjs"), "--out", out, "--env", ENV_FILE, ...args], { cwd: work, encoding: "utf8", timeout: 120_000 });
+  };
+  const status = () => JSON.parse(readFileSync(path.join(out, "status.json"), "utf8")) as OpsStatus;
+  const archives = (prefix: string) => readdirSync(out).filter((n) => n.startsWith(prefix) && n.endsWith(".tar.gz"));
+
+  beforeAll(() => {
+    if (!ready) return;
+    work = mkdtempSync(path.join(os.tmpdir(), "souq-disque-"));
+    out = path.join(work, "sauvegardes");
+    mkdirSync(path.join(work, "public", "uploads", "listings"), { recursive: true });
+    writeFileSync(path.join(work, "public", "uploads", "listings", "photo.jpg"), PHOTO);
+  });
+  afterAll(() => {
+    if (work) rmSync(work, { recursive: true, force: true });
+  });
+
+  it("archive les photos ET les pièces d'identité, chacune à part, et les journalise", (ctx) => {
+    if (!ready) return ctx.skip();
+    const run = backup(["--with-uploads"]);
+    if (run.status === 2) return ctx.skip(); // outils PostgreSQL absents
+    expect(run.status, run.stderr + run.stdout).toBe(0);
+
+    expect(archives("uploads-")).toHaveLength(1);
+    expect(archives("private-uploads-")).toHaveLength(1);
+    expect(run.stdout).toContain("Photos archivées");
+    expect(run.stdout).toContain("Pièces d'identité archivées");
+    const success = status().backup!.lastSuccess!;
+    expect(success.uploadsFile).toBe(archives("uploads-")[0]);
+    expect(success.privateUploadsFile).toBe(archives("private-uploads-")[0]);
+    expect(success.file).toMatch(/\.dump$/);
+  }, 120_000);
+
+  it("chaque archive se RESTITUE octet pour octet : la sauvegarde qu'on n'a jamais relue n'est pas une sauvegarde", (ctx) => {
+    if (!ready || archives("private-uploads-").length === 0) return ctx.skip();
+    const restored = mkdtempSync(path.join(os.tmpdir(), "souq-restaure-"));
+    try {
+      for (const name of [archives("uploads-")[0], archives("private-uploads-")[0]]) {
+        const untar = spawnSync("tar", ["-xzf", toPosix(path.join(out, name)), "-C", toPosix(restored)], { encoding: "utf8" });
+        expect(untar.status, untar.stderr).toBe(0);
+      }
+      expect(readFileSync(path.join(restored, "uploads", "listings", "photo.jpg")).equals(PHOTO)).toBe(true);
+      expect(readFileSync(path.join(restored, "private-uploads", "identity", "piece.enc")).equals(IDENTITY)).toBe(true);
+    } finally {
+      rmSync(restored, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it("les pièces d'identité ne sont JAMAIS dans l'archive des photos, ni les photos dans la leur", (ctx) => {
+    if (!ready || archives("private-uploads-").length === 0) return ctx.skip();
+    const list = (name: string) => spawnSync("tar", ["-tzf", toPosix(path.join(out, name))], { encoding: "utf8" }).stdout;
+    expect(list(archives("uploads-")[0])).not.toContain("identity");
+    expect(list(archives("uploads-")[0])).not.toContain("private-uploads");
+    expect(list(archives("private-uploads-")[0])).not.toContain("photo.jpg");
+  });
+
+  it("sans pièce d'identité envoyée (dossier absent), la sauvegarde réussit, le dit, et ne journalise pas d'archive fantôme", (ctx) => {
+    if (!ready) return ctx.skip();
+    const before = archives("private-uploads-").length;
+    const run = backup(["--with-uploads"], false);
+    if (run.status === 2) return ctx.skip();
+    expect(run.status, run.stderr + run.stdout).toBe(0);
+    expect(run.stdout).toContain("Aucun dossier private-uploads à archiver");
+    expect(archives("private-uploads-")).toHaveLength(before); // aucune nouvelle archive
+    const success = status().backup!.lastSuccess!;
+    expect(success.uploadsFile).toBeDefined();
+    expect(success.privateUploadsFile).toBeUndefined(); // et rien de faux dans le journal
+  }, 120_000);
+
+  it("sans --with-uploads, aucune archive de fichiers n'est écrite (comportement d'avant, inchangé)", (ctx) => {
+    if (!ready) return ctx.skip();
+    const uploadsBefore = archives("uploads-").length;
+    const privateBefore = archives("private-uploads-").length;
+    const run = backup([]);
+    if (run.status === 2) return ctx.skip();
+    expect(run.status, run.stderr + run.stdout).toBe(0);
+    expect(archives("uploads-")).toHaveLength(uploadsBefore);
+    expect(archives("private-uploads-")).toHaveLength(privateBefore);
+    expect(status().backup!.lastSuccess!.privateUploadsFile).toBeUndefined();
+  }, 120_000);
+
+  it("la conservation (--keep) purge aussi les anciennes archives des pièces d'identité, jamais un fichier étranger", (ctx) => {
+    if (!ready) return ctx.skip();
+    const old = path.join(out, "private-uploads-20200101-000000.tar.gz");
+    const foreign = path.join(out, "notes-de-l-equipe.tar.gz");
+    writeFileSync(old, "ancienne archive");
+    writeFileSync(foreign, "fichier étranger, à ne jamais supprimer");
+    const longAgo = new Date("2020-01-01T00:00:00Z");
+    utimesSync(old, longAgo, longAgo);
+    utimesSync(foreign, longAgo, longAgo);
+    const run = backup(["--with-uploads", "--keep", "7"]);
+    if (run.status === 2) return ctx.skip();
+    expect(run.status, run.stderr + run.stdout).toBe(0);
+    expect(existsSync(old), "l'ancienne archive d'identité est purgée").toBe(false);
+    expect(existsSync(foreign), "un fichier étranger n'est jamais touché").toBe(true);
+    expect(archives("private-uploads-").length).toBeGreaterThan(0); // les récentes restent
+  }, 120_000);
 });

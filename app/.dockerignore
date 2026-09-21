@@ -1,0 +1,35 @@
+# Lot 147 — ce qui n'entre JAMAIS dans l'image Docker (contexte de `docker build`, lancé depuis app/).
+
+# Secrets et configuration locale : aucun secret ne doit se retrouver dans une couche d'image, lisible par quiconque récupère l'image.
+.env
+.env.*
+!.env.example
+
+# Les photos envoyées : elles vivent dans un volume, jamais dans l'image (et un dossier de développement en contient des centaines de Mo).
+public/uploads
+
+# Données et sauvegardes : elles contiennent des données personnelles.
+backups
+*.dump
+
+# Ce qui est reconstruit dans l'image.
+node_modules
+.next
+out
+coverage
+test-results
+playwright-report
+
+# NE PAS exclure `tests/`, `e2e/` ni `e2e-pwa/` : `next build` vérifie les types de TOUS les fichiers que tsconfig.json inclut (`**/*.ts`), et
+# `playwright.config.ts` importe `./e2e/e2e-database`. Sans ces dossiers, la compilation échoue (TS2307) — vérifié en reconstituant le
+# contexte de compilation. Ils ne pèsent rien : l'image finale ne copie que le résultat de la compilation, jamais le contexte.
+*.log
+verify-run*.log
+
+# Dépôt et éditeur.
+.git
+.github
+.claude
+.vscode
+.idea
+**/.DS_Store

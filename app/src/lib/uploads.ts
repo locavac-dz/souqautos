@@ -1,3 +1,4 @@
+import { uploadsRoot } from "@/lib/uploads-serve";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
@@ -65,7 +66,7 @@ export async function storeProcessedImage(
     }
   }
 
-  const dir = path.join(process.cwd(), "public", "uploads", subdir);
+  const dir = path.join(uploadsRoot(), subdir); // le même dossier que celui que sert src/app/uploads/[...path]/route.ts
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, filename), bytes);
   return `/uploads/${subdir}/${filename}`;

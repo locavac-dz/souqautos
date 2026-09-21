@@ -26,6 +26,11 @@ const s3HostIsLocalOrPrivateIp = s3PublicUrl
   : false;
 
 const nextConfig: NextConfig = {
+  // Lot 147 — compilation « autonome » (dossier `.next/standalone` : le serveur et SEULES les dépendances qu'il utilise), pour une
+  // image de conteneur légère. Activée à la demande (`BUILD_STANDALONE=1`, ce que fait le Dockerfile) : la compilation ordinaire,
+  // le démarrage `next start` et les tests de production ne changent pas. La racine de suivi est fixée ici pour la même raison que
+  // celle de Turbopack ci-dessous : sans cela, un dossier parent contenant un package.json déplacerait tout le serveur d'un cran.
+  ...(process.env.BUILD_STANDALONE === "1" ? { output: "standalone" as const, outputFileTracingRoot: __dirname } : {}),
   // Lot 134 — n'annonce plus « X-Powered-By: Next.js » : inutile aux visiteurs, utile à qui cherche une version vulnérable.
   poweredByHeader: false,
   // Lot 120 — le service worker doit toujours être revérifié : sinon une ancienne version

@@ -1,0 +1,72 @@
+# Lot 147 — exemple de docker-compose pour Souq Auto.
+#
+# COMMENT UTILISER CE FICHIER :
+#   1. Copier vers docker-compose.yml (ne pas modifier celui-ci directement).
+#   2. Renseigner les variables d'environnement (voir .env.example, section « Mise en production »).
+#   3. Construire l'image avec le domaine final (intégré à la compilation) :
+#        docker build --build-arg NEXT_PUBLIC_SITE_URL=https://VOTRE-DOMAINE -t souq-auto:latest app/
+#   4. Appliquer les migrations (AVANT le premier démarrage de l'application) :
+#        docker compose run --rm migrate
+#   5. Créer le compte administrateur et les données de référence :
+#        docker compose run --rm tools npm run db:seed
+#   6. Démarrer :
+#        docker compose up -d app
+#
+# Ce fichier suppose que PostgreSQL tourne AILLEURS (serveur dédié, service managé). Ne pas
+# faire tourner une base de production dans un conteneur sans sauvegarde et persistance soignées.
+#
+# Domaine et certificats TLS : ce fichier ne gère pas Nginx ni Certbot. L'image écoute sur le
+# port 5184 : un serveur web (Nginx, Caddy…) doit accepter les connexions HTTPS et les
+# transmettre à ce port. Voir docs/DEPLOIEMENT.md, section « Serveur web et TLS ».
+
+x-app-image: &app-image
+  image: souq-auto:latest     # à construire avec docker build --build-arg NEXT_PUBLIC_SITE_URL=...
+
+x-app-env: &app-env
+  environment:
+    DATABASE_URL:             ${DATABASE_URL}
+    JWT_SECRET:               ${JWT_SECRET}
+    ENCRYPTION_KEY:           ${ENCRYPTION_KEY}
+    NEXT_PUBLIC_SITE_URL:     ${NEXT_PUBLIC_SITE_URL}
+    # Optionnels — voir .env.example pour la liste complète
+    # REDIS_URL:              ${REDIS_URL}
+    # SMTP_HOST:              ${SMTP_HOST}
+    # SMTP_PORT:              ${SMTP_PORT}
+    # SMTP_USER:              ${SMTP_USER}
+    # SMTP_PASS:              ${SMTP_PASS}
+    # SMTP_FROM:              ${SMTP_FROM}
+    # TRUSTED_PROXY_HOPS:     "1"
+    # VAPID_PUBLIC_KEY:       ${VAPID_PUBLIC_KEY}
+    # VAPID_PRIVATE_KEY:      ${VAPID_PRIVATE_KEY}
+    # VAPID_SUBJECT:          ${VAPID_SUBJECT}
+
+services:
+
+  # Lance `prisma migrate deploy` et s'arrête. À lancer AVANT `app` au premier démarrage et
+  # à chaque mise à jour qui ajoute des migrations.
+  migrate:
+    <<: [*app-image, *app-env]
+    restart: "no"
+
+  # L'application. Attend que migrate ait réussi (`depends_on: condition: service_completed_successfully`).
+  app:
+    <<: [*app-image, *app-env]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "5184:5184"      # exposer uniquement vers Nginx/Caddy, jamais directement vers Internet
+    volumes:
+      - uploads:/app/public/uploads       # photos envoyées : persistantes entre les déploiements
+    restart: unless-stopped
+
+  # Outils d'exploitation (npm run launch:check, npm run db:seed, npm run db:backup…). Non lancé en
+  # permanence : `docker compose run --rm tools <commande>`.
+  tools:
+    <<: [*app-image, *app-env]
+    entrypoint: []
+    command: ["echo", "Prêt. Lancer : docker compose run --rm tools <commande>"]
+    restart: "no"
+
+volumes:
+  uploads:    # Photos des annonces, avatars, etc. À sauvegarder avec `npm run db:backup -- --with-uploads`.

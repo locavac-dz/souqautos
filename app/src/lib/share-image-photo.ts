@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { s3KeyFromStoredPath } from "@/lib/storage";
+import { uploadsRoot } from "@/lib/uploads-serve";
 
 // Lot 142 — charge la première photo d'une annonce et la recadre aux dimensions exactes de la carte de partage (1200 × 630, ratio
 // attendu par WhatsApp/Facebook), en JPEG. Renvoie `null` au moindre doute : la carte se dessine alors sans photo, elle n'échoue pas.
@@ -19,7 +20,7 @@ const FETCH_TIMEOUT_MS = 3000;
 
 // Le dossier des envois locaux est injectable pour les tests ; par défaut, celui que remplit src/lib/uploads.ts.
 export function defaultUploadsRoot(): string {
-  return path.join(process.cwd(), "public", "uploads");
+  return uploadsRoot();
 }
 
 async function readStoredBytes(storedPath: string, uploadsRoot: string): Promise<Buffer | null> {

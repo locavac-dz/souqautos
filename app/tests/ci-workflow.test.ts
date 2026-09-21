@@ -25,9 +25,10 @@ const runs = allSteps.map((s) => s.run ?? "").filter(Boolean);
 const indexOfRun = (job: string, fragment: string) => wf.jobs[job].steps.findIndex((s) => (s.run ?? "").includes(fragment));
 
 describe("workflow CI — structure", () => {
-  it("is valid YAML with the two expected jobs, the end-to-end one waiting for the first", () => {
-    expect(Object.keys(wf.jobs)).toEqual(["checks", "e2e"]);
+  it("is valid YAML with the three expected jobs, each waiting for the previous", () => {
+    expect(Object.keys(wf.jobs)).toEqual(["checks", "e2e", "docker"]);
     expect(wf.jobs.e2e.needs).toBe("checks");
+    expect(wf.jobs.docker.needs).toBe("checks");
   });
 
   it("runs on pushes to the main branches and on every pull request", () => {
@@ -40,9 +41,10 @@ describe("workflow CI — structure", () => {
     expect(wf.defaults?.run?.["working-directory"]).toBe("app");
     expect(wf.permissions).toEqual({ contents: "read" });
     expect(existsSync(path.join(APP, "package-lock.json"))).toBe(true);
-    for (const job of Object.values(wf.jobs)) {
+    for (const [name, job] of Object.entries(wf.jobs)) {
       const setup = job.steps.find((s) => s.uses?.startsWith("actions/setup-node"));
-      expect(setup?.with?.["cache-dependency-path"]).toBe("app/package-lock.json");
+      if (!setup) continue; // le job docker n'installe pas Node (il utilise Buildx)
+      expect(setup?.with?.["cache-dependency-path"], name).toBe("app/package-lock.json");
     }
   });
 
