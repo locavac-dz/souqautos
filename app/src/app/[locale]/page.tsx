@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { ListingCard } from "@/components/search/ListingCard";
+import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 
 // Annonces en vedette (Lot 66) : seule la formule PREMIUM_PLUS obtient une
 // mise en avant sur la page d'accueil, cf. docs/ARCHITECTURE.md §11
@@ -91,6 +92,11 @@ export default async function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Lot 151 — annonces récemment vues, lues côté client depuis localStorage */}
+      <div className="mx-auto max-w-6xl px-4 pb-12">
+        <RecentlyViewedSection />
+      </div>
     </div>
   );
 }
