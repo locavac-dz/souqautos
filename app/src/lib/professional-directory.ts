@@ -2,12 +2,14 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { computeAverageRating } from "@/lib/reviews";
 import { numeric } from "@/lib/validation/search";
+import { PRO_CATEGORIES, type ProCategory } from "@/lib/validation/pro-account";
 
 // Lot 107 — annuaire des concessionnaires.
 export const DIRECTORY_PAGE_SIZE = 12;
 
 export const directoryParamsSchema = z.object({
   wilaya: z.string().trim().max(80).optional().catch(undefined),
+  category: z.enum(PRO_CATEGORIES).optional().catch(undefined),
   page: numeric(),
 });
 
@@ -17,6 +19,7 @@ export type DirectoryEntry = {
   logoUrl: string | null;
   badgeVerifie: boolean;
   wilayaId: number | null;
+  categoryPro: ProCategory | null;
   listingCount: number;
   ratingAverage: number;
   ratingCount: number;
@@ -29,6 +32,7 @@ type DirectoryAccount = {
   logoUrl: string | null;
   badgeVerifie: boolean;
   wilayaId: number | null;
+  categoryPro: ProCategory | null;
 };
 
 // Seuls les comptes avec au moins une annonce publiée (donc modérée) sont
@@ -50,6 +54,7 @@ export function assembleDirectoryEntries(input: {
         logoUrl: account.logoUrl,
         badgeVerifie: account.badgeVerifie,
         wilayaId: account.wilayaId,
+        categoryPro: account.categoryPro,
         listingCount,
         ratingAverage: average,
         ratingCount: count,
@@ -74,6 +79,10 @@ export function filterByWilaya(entries: DirectoryEntry[], wilayaId: number | und
   return wilayaId === undefined ? entries : entries.filter((e) => e.wilayaId === wilayaId);
 }
 
+export function filterByCategory(entries: DirectoryEntry[], category: ProCategory | undefined): DirectoryEntry[] {
+  return category === undefined ? entries : entries.filter((e) => e.categoryPro === category);
+}
+
 export function countByWilaya(entries: DirectoryEntry[]): Map<number, number> {
   const counts = new Map<number, number>();
   for (const entry of entries) {
@@ -92,7 +101,7 @@ export { paginate } from "@/lib/pagination";
 // d'une page publique.
 export async function getDirectoryEntries(): Promise<DirectoryEntry[]> {
   const accounts = await prisma.professionalAccount.findMany({
-    select: { id: true, userId: true, nomCommercial: true, logoUrl: true, badgeVerifie: true, wilayaId: true },
+    select: { id: true, userId: true, nomCommercial: true, logoUrl: true, badgeVerifie: true, wilayaId: true, categoryPro: true },
   });
   if (accounts.length === 0) return [];
 

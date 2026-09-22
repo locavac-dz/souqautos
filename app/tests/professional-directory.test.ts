@@ -15,6 +15,7 @@ function entry(overrides: Partial<DirectoryEntry> & { id: string }): DirectoryEn
     logoUrl: null,
     badgeVerifie: false,
     wilayaId: 16,
+    categoryPro: null,
     listingCount: 1,
     ratingAverage: 0,
     ratingCount: 0,
@@ -30,6 +31,7 @@ describe("assembleDirectoryEntries", () => {
     logoUrl: null,
     badgeVerifie: false,
     wilayaId: 16,
+    categoryPro: null as null,
   });
 
   it("keeps only accounts with at least one published listing", () => {

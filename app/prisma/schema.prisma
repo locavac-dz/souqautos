@@ -766,6 +766,10 @@ model ProfessionalAccount {
   nomCommercial String
   presentation  String?
   horaires      String?
+  // Lot 155 — coordonnées et catégorie d'activité
+  phone         String?
+  website       String?
+  categoryPro   ProCategory?
   logoUrl       String?
   bannerUrl     String?
   wilayaId      Int?
@@ -778,6 +782,15 @@ model ProfessionalAccount {
   subscriptionOrders ProSubscriptionOrder[]
 
   @@index([wilayaId])
+  @@index([categoryPro])
+}
+
+enum ProCategory {
+  CONCESSIONNAIRE_NEUF
+  OCCASION
+  GARAGE
+  IMPORTATEUR
+  PIECES_DETACHEES
 }
 
 model ProCollaborator {

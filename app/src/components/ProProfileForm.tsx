@@ -4,11 +4,15 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { shouldRevokeVerifiedBadge } from "@/lib/pro-account";
+import { PRO_CATEGORIES, type ProCategory } from "@/lib/validation/pro-account";
 
 type Initial = {
   nomCommercial: string;
   presentation: string | null;
   horaires: string | null;
+  phone: string | null;
+  website: string | null;
+  categoryPro: ProCategory | null;
   wilayaId: number | null;
 };
 
@@ -31,6 +35,9 @@ export function ProProfileForm({
   const [nomCommercial, setNomCommercial] = useState(initial.nomCommercial);
   const [presentation, setPresentation] = useState(initial.presentation ?? "");
   const [horaires, setHoraires] = useState(initial.horaires ?? "");
+  const [phone, setPhone] = useState(initial.phone ?? "");
+  const [website, setWebsite] = useState(initial.website ?? "");
+  const [categoryPro, setCategoryPro] = useState<ProCategory | "">(initial.categoryPro ?? "");
   const [wilayaId, setWilayaId] = useState(initial.wilayaId ? String(initial.wilayaId) : "");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
@@ -53,6 +60,9 @@ export function ProProfileForm({
         nomCommercial: nomCommercial.trim(),
         presentation: presentation.trim() || undefined,
         horaires: horaires.trim() || undefined,
+        phone: phone.trim() || undefined,
+        website: website.trim() || undefined,
+        categoryPro: categoryPro || null,
         wilayaId: wilayaId ? Number(wilayaId) : null,
       }),
     });
@@ -103,6 +113,41 @@ export function ProProfileForm({
           onChange={(e) => setHoraires(e.target.value)}
           maxLength={200}
           placeholder={t("horairesPlaceholder")}
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm text-slate-700">{t("categoryProLabel")}</span>
+        <select
+          value={categoryPro}
+          onChange={(e) => setCategoryPro(e.target.value as ProCategory | "")}
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        >
+          <option value="">{t("categoryProPlaceholder")}</option>
+          {PRO_CATEGORIES.map((c) => (
+            <option key={c} value={c}>{t(`categoryPro_${c}`)}</option>
+          ))}
+        </select>
+      </label>
+      <label className="block">
+        <span className="text-sm text-slate-700">{t("phoneLabel")}</span>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          maxLength={20}
+          placeholder={t("phonePlaceholder")}
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm text-slate-700">{t("websiteLabel")}</span>
+        <input
+          type="url"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          maxLength={200}
+          placeholder="https://…"
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
       </label>

@@ -866,7 +866,18 @@
     "profileSaving": "جارٍ الحفظ…",
     "profileSaved": "تم حفظ التعديلات.",
     "profileBadgeWarning": "تغيير الاسم التجاري سيؤدي إلى إزالة شارة «موثّق»، وسيتعيّن على الفريق التحقق منها من جديد.",
-    "profileBadgeRevoked": "تم حفظ التعديلات. أُزيلت شارة «موثّق» لأن الاسم التجاري تغيّر."
+    "profileBadgeRevoked": "تم حفظ التعديلات. أُزيلت شارة «موثّق» لأن الاسم التجاري تغيّر.",
+    "categoryProLabel": "نوع النشاط",
+    "categoryProPlaceholder": "اختر نوع النشاط",
+    "categoryPro_CONCESSIONNAIRE_NEUF": "وكيل معتمد (جديد)",
+    "categoryPro_OCCASION": "سيارات مستعملة",
+    "categoryPro_GARAGE": "مرآب / ورشة",
+    "categoryPro_IMPORTATEUR": "مستورد",
+    "categoryPro_PIECES_DETACHEES": "قطع غيار",
+    "phoneLabel": "الهاتف المهني",
+    "phonePlaceholder": "مثال: 05 XX XX XX XX",
+    "websiteLabel": "الموقع الإلكتروني",
+    "websiteLink": "الموقع الإلكتروني"
   },
   "ProDirectory": {
     "breadcrumbHome": "الرئيسية",
@@ -874,6 +885,8 @@
     "subtitle": "المهنيون في مجال السيارات في الجزائر الذين لديهم إعلانات منشورة على سوق أوتو.",
     "wilayaFilterLabel": "الولاية",
     "allWilayas": "كل الولايات",
+    "categoryFilterLabel": "الفئة",
+    "allCategories": "كل الفئات",
     "filterSubmit": "تصفية",
     "resultsCount": "النتائج: {count}",
     "empty": "لا يوجد بعد أي مهني لديه إعلان منشور.",

@@ -12,10 +12,12 @@ import {
   countByWilaya,
   directoryParamsSchema,
   filterByWilaya,
+  filterByCategory,
   getDirectoryEntries,
   paginate,
   sortDirectoryEntries,
 } from "@/lib/professional-directory";
+import { PRO_CATEGORIES } from "@/lib/validation/pro-account";
 
 type RawSearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -76,9 +78,10 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
   const wilayaCounts = countByWilaya(sorted);
   const wilayaLabel = (w: { nomFr: string; nomAr: string }) => (locale === "ar" ? w.nomAr : w.nomFr);
   const wilayaById = new Map(wilayas.map((w) => [w.id, w]));
-  // Un slug inconnu est ignoré (liste complète) plutôt que de renvoyer une erreur.
+  // Filtres : wilaya (slug) et catégorie. Les valeurs inconnues sont ignorées (liste complète).
   const selectedWilaya = wilayas.find((w) => w.slug === params.wilaya);
-  const filtered = filterByWilaya(sorted, selectedWilaya?.id);
+  const selectedCategory = params.category;
+  const filtered = filterByCategory(filterByWilaya(sorted, selectedWilaya?.id), selectedCategory);
   const pageData = paginate(filtered, params.page, DIRECTORY_PAGE_SIZE);
 
   const breadcrumbItems = [{ name: t("breadcrumbHome"), href: "/" }, { name: t("title") }];
@@ -112,6 +115,19 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
                   {wilayaLabel(w)} ({wilayaCounts.get(w.id)})
                 </option>
               ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="block text-sm text-slate-700">{t("categoryFilterLabel")}</span>
+          <select
+            name="category"
+            defaultValue={selectedCategory ?? ""}
+            className="mt-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+          >
+            <option value="">{t("allCategories")}</option>
+            {PRO_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{tPro(`categoryPro_${c}`)}</option>
+            ))}
           </select>
         </label>
         <button
@@ -162,7 +178,10 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
                         </span>
                       )}
                     </p>
-                    {wilaya && <p className="text-sm text-slate-500">{wilayaLabel(wilaya)}</p>}
+                    <p className="text-sm text-slate-500">
+                      {entry.categoryPro && <span>{tPro(`categoryPro_${entry.categoryPro}`)}{wilaya ? " · " : ""}</span>}
+                      {wilaya && wilayaLabel(wilaya)}
+                    </p>
                     <p className="mt-1 text-xs text-slate-500">
                       {tCatalogue("statsCount", { count: entry.listingCount })}
                     </p>
@@ -183,7 +202,7 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
           <Pagination
             page={pageData.page}
             totalPages={pageData.totalPages}
-            searchParams={{ wilaya: selectedWilaya?.slug }}
+            searchParams={{ wilaya: selectedWilaya?.slug, category: selectedCategory }}
             basePath="/concessionnaires"
           />
         </>

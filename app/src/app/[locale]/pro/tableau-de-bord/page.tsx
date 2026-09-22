@@ -108,6 +108,9 @@ export default async function ProDashboardPage() {
               nomCommercial: account.nomCommercial,
               presentation: account.presentation,
               horaires: account.horaires,
+              phone: account.phone,
+              website: account.website,
+              categoryPro: account.categoryPro,
               wilayaId: account.wilayaId,
             }}
             badgeVerifie={account.badgeVerifie}

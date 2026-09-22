@@ -866,7 +866,18 @@
     "profileSaving": "Enregistrement…",
     "profileSaved": "Modifications enregistrées.",
     "profileBadgeWarning": "Modifier le nom commercial retirera votre badge « Vérifié » : l'équipe devra le contrôler de nouveau.",
-    "profileBadgeRevoked": "Modifications enregistrées. Le badge « Vérifié » a été retiré car le nom commercial a changé."
+    "profileBadgeRevoked": "Modifications enregistrées. Le badge « Vérifié » a été retiré car le nom commercial a changé.",
+    "categoryProLabel": "Catégorie d'activité",
+    "categoryProPlaceholder": "Choisir une catégorie",
+    "categoryPro_CONCESSIONNAIRE_NEUF": "Concessionnaire (neuf)",
+    "categoryPro_OCCASION": "Véhicules d'occasion",
+    "categoryPro_GARAGE": "Garage / atelier",
+    "categoryPro_IMPORTATEUR": "Importateur",
+    "categoryPro_PIECES_DETACHEES": "Pièces détachées",
+    "phoneLabel": "Téléphone professionnel",
+    "phonePlaceholder": "ex. 05 XX XX XX XX",
+    "websiteLabel": "Site web",
+    "websiteLink": "Site web"
   },
   "ProDirectory": {
     "breadcrumbHome": "Accueil",
@@ -874,6 +885,8 @@
     "subtitle": "Les professionnels de l'automobile en Algérie ayant des annonces publiées sur Souq Auto.",
     "wilayaFilterLabel": "Wilaya",
     "allWilayas": "Toutes les wilayas",
+    "categoryFilterLabel": "Catégorie",
+    "allCategories": "Toutes les catégories",
     "filterSubmit": "Filtrer",
     "resultsCount": "Résultats : {count}",
     "empty": "Aucun professionnel n'a encore d'annonce publiée.",
