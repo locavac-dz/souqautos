@@ -101,6 +101,7 @@ model User {
   whatsappEnabled               Boolean @default(false)
   contactEvents                 ContactEvent[]
   pushSubscriptions             PushSubscription[]
+  followedPros                  ProFollow[]
 }
 
 model Profile {
@@ -399,7 +400,8 @@ model Listing {
   @@index([contentHash])
   @@index([communeId])
   @@index([generationId])
-  contactEvents ContactEvent[]
+  contactEvents    ContactEvent[]
+  callbackRequests CallbackRequest[]
 }
 
 // Lot 45 — historique des prix (écart documenté depuis le Lot 4). Une entrée
@@ -780,10 +782,12 @@ model ProfessionalAccount {
   wilaya        Wilaya?           @relation(fields: [wilayaId], references: [id])
   badgeVerifie  Boolean           @default(false)
   createdAt     DateTime          @default(now())
-  collaborators ProCollaborator[]
-  reviews       Review[]
-  subscription  ProSubscription?
+  collaborators    ProCollaborator[]
+  reviews          Review[]
+  subscription     ProSubscription?
   subscriptionOrders ProSubscriptionOrder[]
+  callbackRequests CallbackRequest[]
+  followers        ProFollow[]
 
   @@index([wilayaId])
   @@index([categoryPro])
@@ -1259,6 +1263,55 @@ model PushSubscription {
   createdAt  DateTime  @default(now())
   lastSentAt DateTime?
 
+  @@index([userId])
+}
+
+// Lot 160 — demande de rappel téléphonique d'un visiteur vers un vendeur professionnel.
+// Aucun compte n'est requis : le visiteur laisse son nom, son numéro et un créneau préféré.
+// Le professionnel lit et traite les demandes depuis son tableau de bord prospects.
+enum CallbackPreferredTime {
+  MATIN
+  APRES_MIDI
+  SOIR
+  PEU_IMPORTE
+}
+
+enum CallbackStatus {
+  NOUVEAU
+  RAPPELE
+  ANNULE
+}
+
+model CallbackRequest {
+  id            String                @id @default(cuid())
+  proAccountId  String
+  proAccount    ProfessionalAccount   @relation(fields: [proAccountId], references: [id], onDelete: Cascade)
+  listingId     String?
+  listing       Listing?              @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  callerName    String
+  callerPhone   String
+  preferredTime CallbackPreferredTime @default(PEU_IMPORTE)
+  status        CallbackStatus        @default(NOUVEAU)
+  note          String?
+  createdAt     DateTime              @default(now())
+
+  @@index([proAccountId, createdAt])
+  @@index([listingId])
+}
+
+// Lot 161 — abonnement d'un acheteur à un compte professionnel.
+// Quand le pro publie une nouvelle annonce (modération approuvée), chaque abonné
+// reçoit une notification push sur ses appareils enregistrés.
+model ProFollow {
+  id           String              @id @default(cuid())
+  userId       String
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proAccountId String
+  proAccount   ProfessionalAccount @relation(fields: [proAccountId], references: [id], onDelete: Cascade)
+  createdAt    DateTime            @default(now())
+
+  @@unique([userId, proAccountId])
+  @@index([proAccountId])
   @@index([userId])
 }
 

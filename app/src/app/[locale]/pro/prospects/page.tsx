@@ -6,6 +6,8 @@ import { resolveProAccess } from "@/lib/pro-access";
 import { loadProspects } from "@/lib/prospects-data";
 import { PROSPECT_STATUSES, parseProspectStatusFilter, type ProspectStatusValue } from "@/lib/prospects";
 import { ProspectEditor } from "@/components/ProspectEditor";
+import { CallbackEditor } from "@/components/CallbackEditor";
+import { prisma } from "@/lib/prisma";
 
 // Lot 123 — suivi des prospects du compte professionnel : les personnes identifiées qui ont écrit à
 // propos d'une annonce, avec un statut et une note privée. Réservé au propriétaire et aux
@@ -20,6 +22,7 @@ export default async function ProProspectsPage({ searchParams }: { searchParams:
 
   const t = await getTranslations("ProProspects");
   const tPro = await getTranslations("Pro");
+  const tCallback = await getTranslations("CallbackRequest");
   const resolved = await resolveProAccess(user);
   if (!resolved) {
     return (
@@ -42,7 +45,15 @@ export default async function ProProspectsPage({ searchParams }: { searchParams:
   const query = await searchParams;
   const status = parseProspectStatusFilter(query.statut);
   const rawListing = Array.isArray(query.annonce) ? query.annonce[0] : query.annonce;
-  const report = await loadProspects(resolved.account.userId, { listingId: rawListing || null, status });
+  const [report, callbackRequests] = await Promise.all([
+    loadProspects(resolved.account.userId, { listingId: rawListing || null, status }),
+    prisma.callbackRequest.findMany({
+      where: { proAccountId: resolved.account.id },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      include: { listing: { select: { id: true, title: true } } },
+    }),
+  ]);
   // Un identifiant d'annonce inconnu ou étranger au compte n'est pas retenu comme filtre.
   const listingFilter = report.listings.some((l) => l.id === rawListing) ? (rawListing as string) : null;
 
@@ -138,6 +149,45 @@ export default async function ProProspectsPage({ searchParams }: { searchParams:
           <p className="mt-10 text-xs text-slate-500">{t("noteDefinition")}</p>
         </>
       )}
+
+      {/* Lot 160 — Demandes de rappel */}
+      <section className="mt-12">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{tCallback("sectionTitle")}</h2>
+        {callbackRequests.length === 0 ? (
+          <p className="rounded-lg border border-slate-200 p-6 text-center text-sm text-slate-600">
+            {tCallback("sectionEmpty")}
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {callbackRequests.map((req) => (
+              <li key={req.id} className="grid gap-4 rounded-lg border border-slate-200 p-4 sm:grid-cols-[1fr_14rem]">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="font-medium text-slate-900">{req.callerName}</span>
+                    <a href={`tel:${req.callerPhone}`} className="text-sm text-slate-700 hover:underline">{req.callerPhone}</a>
+                    <span className="text-xs text-slate-500">{tCallback(`preferredTime${req.preferredTime}` as "preferredTimeMATIN")}</span>
+                  </div>
+                  {req.listing && (
+                    <p className="mt-1 text-sm text-slate-600">
+                      <Link href={`/annonce/${req.listing.id}`} className="hover:underline">
+                        {req.listing.title}
+                      </Link>
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-slate-500">
+                    {tCallback("requestedAt")} {fmtDate(req.createdAt)}
+                  </p>
+                </div>
+                <CallbackEditor
+                  requestId={req.id}
+                  initialStatus={req.status}
+                  initialNote={req.note}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

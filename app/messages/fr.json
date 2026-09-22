@@ -81,7 +81,8 @@
     "phone": "Téléphone",
     "proDashboardLink": "Tableau de bord professionnel",
     "becomeProLink": "Devenir vendeur professionnel",
-    "editProfileLink": "Modifier mon profil"
+    "editProfileLink": "Modifier mon profil",
+    "activityLink": "Mon activité"
   },
   "Footer": {
     "group": "Une plateforme INGENICA CIVIL EURL",
@@ -898,7 +899,10 @@
     "soldBadge": "Vendu",
     "statVitrineViews": "Visites vitrine",
     "proEncartViewAll": "Voir les {count} annonces →",
-    "stockFilterReset": "Effacer les filtres"
+    "stockFilterReset": "Effacer les filtres",
+    "followButton": "Suivre",
+    "unfollowButton": "Abonné",
+    "followersCount": "{count, plural, =0 {Aucun abonné} =1 {1 abonné} other {# abonnés}}"
   },
   "ProDirectory": {
     "breadcrumbHome": "Accueil",
@@ -1795,5 +1799,54 @@
     "errorGeneric": "Une erreur est survenue. Réessayez.",
     "errorTooMany": "Trop de liens actifs pour ce contenu (10 au plus) : révoquez-en un avant d'en créer un autre.",
     "errorPublished": "Ce contenu est publié : un lien de relecture n'a plus lieu d'être."
+  },
+  "CallbackRequest": {
+    "buttonLabel": "Être rappelé",
+    "modalTitle": "Demande de rappel",
+    "nameLabel": "Votre nom",
+    "namePlaceholder": "Prénom et nom",
+    "phoneLabel": "Votre numéro de téléphone",
+    "phonePlaceholder": "0X XX XX XX XX",
+    "preferredTimeLabel": "Créneau préféré",
+    "preferredTimeMATIN": "Matin",
+    "preferredTimeAPRES_MIDI": "Après-midi",
+    "preferredTimeSOIR": "Soir",
+    "preferredTimePEU_IMPORTE": "Peu importe",
+    "submit": "Envoyer ma demande",
+    "sending": "Envoi…",
+    "success": "Votre demande a été envoyée. Le vendeur vous rappellera bientôt.",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "errorPhone": "Numéro de téléphone invalide (format 0X XX XX XX XX requis)",
+    "errorGeneric": "Erreur lors de l'envoi, veuillez réessayer.",
+    "statusNOUVEAU": "Nouveau",
+    "statusRAPPELE": "Rappelé",
+    "statusANNULE": "Annulé",
+    "sectionTitle": "Demandes de rappel",
+    "sectionEmpty": "Aucune demande de rappel",
+    "callerName": "Nom",
+    "callerPhone": "Téléphone",
+    "preferredTimeShort": "Créneau",
+    "requestedAt": "Reçu le",
+    "statusLabel": "Statut",
+    "noteLabel": "Note interne",
+    "notePlaceholder": "Résultat de l'appel, observations…",
+    "saveNote": "Enregistrer"
+  },
+  "BuyerActivity": {
+    "title": "Mon activité",
+    "favoritesTitle": "Mes favoris",
+    "favoritesCount": "{count, plural, =0 {Aucun favori} =1 {1 favori} other {# favoris}}",
+    "viewAllFavorites": "Voir tous mes favoris →",
+    "alertsTitle": "Mes alertes",
+    "alertsCount": "{count, plural, =0 {Aucune alerte active} =1 {1 alerte active} other {# alertes actives}}",
+    "viewAlerts": "Gérer mes alertes →",
+    "messagesTitle": "Messages récents",
+    "messagesEmpty": "Aucun message",
+    "viewAllMessages": "Voir tous mes messages →",
+    "followedProsTitle": "Concessionnaires suivis",
+    "followedProsEmpty": "Vous ne suivez aucun concessionnaire",
+    "unfollowConfirm": "Se désabonner",
+    "navLabel": "Mon activité"
   }
 }

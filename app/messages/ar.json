@@ -81,7 +81,8 @@
     "phone": "الهاتف",
     "proDashboardLink": "لوحة التحكم الاحترافية",
     "becomeProLink": "أصبح بائعًا محترفًا",
-    "editProfileLink": "تعديل ملفي الشخصي"
+    "editProfileLink": "تعديل ملفي الشخصي",
+    "activityLink": "نشاطي"
   },
   "Footer": {
     "group": "منصة تابعة لـ INGENICA CIVIL EURL",
@@ -898,7 +899,10 @@
     "soldBadge": "مباع",
     "statVitrineViews": "زيارات الواجهة",
     "proEncartViewAll": "عرض الـ{count} إعلان ←",
-    "stockFilterReset": "إلغاء الفلاتر"
+    "stockFilterReset": "إلغاء الفلاتر",
+    "followButton": "تابِع",
+    "unfollowButton": "متابَع",
+    "followersCount": "{count, plural, =0 {لا متابعون} =1 {متابع واحد} other {# متابعون}}"
   },
   "ProDirectory": {
     "breadcrumbHome": "الرئيسية",
@@ -1795,5 +1799,54 @@
     "errorGeneric": "حدث خطأ. حاول مرة أخرى.",
     "errorTooMany": "عدد كبير من الروابط النشطة لهذا المحتوى (10 كحد أقصى): ألغِ رابطًا قبل إنشاء آخر.",
     "errorPublished": "هذا المحتوى منشور: لم تعد هناك حاجة إلى رابط مراجعة."
+  },
+  "CallbackRequest": {
+    "buttonLabel": "طلب معاودة الاتصال",
+    "modalTitle": "طلب معاودة الاتصال",
+    "nameLabel": "اسمك",
+    "namePlaceholder": "الاسم الكامل",
+    "phoneLabel": "رقم هاتفك",
+    "phonePlaceholder": "0X XX XX XX XX",
+    "preferredTimeLabel": "الوقت المفضّل",
+    "preferredTimeMATIN": "صباحاً",
+    "preferredTimeAPRES_MIDI": "بعد الظهر",
+    "preferredTimeSOIR": "مساءً",
+    "preferredTimePEU_IMPORTE": "أي وقت",
+    "submit": "إرسال الطلب",
+    "sending": "جارٍ الإرسال…",
+    "success": "تم إرسال طلبك. سيتصل بك البائع قريبًا.",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "errorPhone": "رقم الهاتف غير صالح (مطلوب تنسيق جزائري)",
+    "errorGeneric": "حدث خطأ أثناء الإرسال. حاول مرة أخرى.",
+    "statusNOUVEAU": "جديد",
+    "statusRAPPELE": "تم الاتصال",
+    "statusANNULE": "ملغى",
+    "sectionTitle": "طلبات معاودة الاتصال",
+    "sectionEmpty": "لا توجد طلبات معاودة اتصال",
+    "callerName": "الاسم",
+    "callerPhone": "الهاتف",
+    "preferredTimeShort": "الوقت",
+    "requestedAt": "الوصول في",
+    "statusLabel": "الحالة",
+    "noteLabel": "ملاحظة داخلية",
+    "notePlaceholder": "نتيجة الاتصال، ملاحظات…",
+    "saveNote": "حفظ"
+  },
+  "BuyerActivity": {
+    "title": "نشاطي",
+    "favoritesTitle": "مفضّلاتي",
+    "favoritesCount": "{count, plural, =0 {لا مفضّلات} =1 {مفضّلة واحدة} other {# مفضّلات}}",
+    "viewAllFavorites": "عرض جميع مفضّلاتي ←",
+    "alertsTitle": "تنبيهاتي",
+    "alertsCount": "{count, plural, =0 {لا تنبيهات نشطة} =1 {تنبيه نشط واحد} other {# تنبيهات نشطة}}",
+    "viewAlerts": "إدارة تنبيهاتي ←",
+    "messagesTitle": "الرسائل الأخيرة",
+    "messagesEmpty": "لا توجد رسائل",
+    "viewAllMessages": "عرض جميع الرسائل ←",
+    "followedProsTitle": "الوكلاء المتابَعون",
+    "followedProsEmpty": "لا تتابع أي وكالة",
+    "unfollowConfirm": "إلغاء المتابعة",
+    "navLabel": "نشاطي"
   }
 }

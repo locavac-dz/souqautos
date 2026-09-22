@@ -26,6 +26,7 @@ import { parseProPermissions } from "@/lib/pro-permissions";
 import { parseHorairesSemaine, isOpenNow, todayDayKey, DAYS } from "@/lib/horaires-semaine";
 import type { Prisma } from "@prisma/client";
 import { ProStockFilters, type StockFilterValues } from "@/components/ProStockFilters";
+import { FollowProButton } from "@/components/FollowProButton";
 
 // Lot 108 — SEO de la vitrine : métadonnées, image de partage (bannière, à
 // défaut le logo), et noindex tant que le compte n'a aucune annonce publiée.
@@ -80,7 +81,10 @@ export default async function ProShowcasePage({
   const tDirectory = await getTranslations("ProDirectory");
 
   const [account, currentUser] = await Promise.all([
-    prisma.professionalAccount.findUnique({ where: { id }, include: { wilaya: true } }),
+    prisma.professionalAccount.findUnique({
+      where: { id },
+      include: { wilaya: true, _count: { select: { followers: true } } },
+    }),
     getCurrentUser(),
   ]);
 
@@ -231,6 +235,17 @@ export default async function ProShowcasePage({
     }
   }
 
+  const isOwner = currentUser?.id === account.userId;
+  const isFollowing =
+    currentUser && !isOwner
+      ? Boolean(
+          await prisma.proFollow.findUnique({
+            where: { userId_proAccountId: { userId: currentUser.id, proAccountId: id } },
+          })
+        )
+      : false;
+  const followerCount = account._count.followers;
+
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "medium" });
   const wilayaLabel = account.wilaya ? (locale === "ar" ? account.wilaya.nomAr : account.wilaya.nomFr) : null;
   const schedule = parseHorairesSemaine(account.horairesSemaine);
@@ -296,6 +311,21 @@ export default async function ProShowcasePage({
           </span>
         )}
       </div>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        {!isOwner && (
+          <FollowProButton
+            proAccountId={id}
+            initialFollowing={isFollowing}
+            isLoggedIn={Boolean(currentUser)}
+          />
+        )}
+        {followerCount > 0 && (
+          <span className="text-xs text-slate-500">
+            {t("followersCount", { count: followerCount })}
+          </span>
+        )}
+      </div>
+
       <div className="mt-2 flex flex-wrap gap-3">
         {account.phone && (
           <a

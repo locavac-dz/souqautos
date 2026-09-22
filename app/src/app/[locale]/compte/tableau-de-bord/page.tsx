@@ -84,12 +84,18 @@ export default async function DashboardPage() {
 
       <OwnResponsiveness responsiveness={await getSellerResponsiveness(user.id)} />
 
-      <div className="mt-6 flex items-center gap-4">
+      <div className="mt-6 flex items-center gap-4 flex-wrap">
         <Link
           href="/compte/mes-annonces"
           className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
         >
           {tNav("myListings")}
+        </Link>
+        <Link
+          href="/compte/activite"
+          className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          {t("activityLink")}
         </Link>
         <Link href="/compte/profil" className="text-sm text-slate-700 underline hover:text-slate-900">
           {t("editProfileLink")}

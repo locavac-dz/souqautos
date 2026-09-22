@@ -7,6 +7,7 @@ import { isStaff } from "@/lib/auth-server/roles";
 import { computeModerationTransition, type ModerationAction } from "@/lib/moderation";
 import { writeAuditLog } from "@/lib/audit-log";
 import { notifyMatchingSearchAlerts } from "@/lib/search-alerts";
+import { notifyProFollowers } from "@/lib/pro-follow";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
 
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (isApproval) {
     await notifyMatchingSearchAlerts(updatedListing);
+    await notifyProFollowers({ id: updatedListing.id, title: updatedListing.title, sellerId: updatedListing.sellerId });
   }
 
   // Écart trouvé en explorant le code (même famille que le Lot 62) : le
