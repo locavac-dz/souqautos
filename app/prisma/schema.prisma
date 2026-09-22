@@ -687,6 +687,16 @@ model Report {
 // d'interaction qu'un avis individuel (conversation sur une annonce du
 // propriétaire du compte) : toutes les annonces d'une entreprise restent
 // rattachées à l'utilisateur propriétaire, pas à un collaborateur distinct.
+// Lot 167 — pré-modération des avis entre particuliers.
+// PENDING : attend validation admin. APPROVED : publié. REJECTED : refusé (non visible).
+// Les avis existants (avant ce lot) ont été migrés vers APPROVED (cf. migration).
+// Auto-approbation : si l'auteur a déjà un avis APPROVED, le nouvel avis est directement APPROVED.
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Review {
   id                     String               @id @default(cuid())
   sellerId               String?
@@ -703,11 +713,13 @@ model Review {
   // compte professionnel), jamais l'auteur de l'avis.
   reply                  String?
   repliedAt              DateTime?
+  status                 ReviewStatus         @default(PENDING)
 
   @@unique([sellerId, authorId])
   @@unique([professionalAccountId, authorId])
   @@index([sellerId])
   @@index([professionalAccountId])
+  @@index([status])
 }
 
 // --- Lot 11 — Vérification email/téléphone (prérequis honnête du score de

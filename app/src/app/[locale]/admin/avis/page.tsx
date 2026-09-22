@@ -2,68 +2,116 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { DeleteReviewButton } from "@/components/admin/DeleteReviewButton";
+import { ModerateReviewButton } from "@/components/admin/ModerateReviewButton";
 
 export default async function AdminReviewsPage() {
   const locale = await getLocale();
   const t = await getTranslations("Admin");
   const tReview = await getTranslations("Review");
+  const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "medium" });
 
-  const reviews = await prisma.review.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: {
-      seller: { include: { profile: true } },
-      professionalAccount: true,
-      author: { include: { profile: true } },
-    },
-  });
+  const [pending, reviews] = await Promise.all([
+    prisma.review.findMany({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      include: {
+        seller: { include: { profile: true } },
+        professionalAccount: true,
+        author: { include: { profile: true } },
+      },
+    }),
+    prisma.review.findMany({
+      where: { status: { not: "PENDING" } },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: {
+        seller: { include: { profile: true } },
+        professionalAccount: true,
+        author: { include: { profile: true } },
+      },
+    }),
+  ]);
+
+  function ReviewRow({ review, showModerate }: { review: typeof pending[0]; showModerate: boolean }) {
+    const statusBadge = review.status === "APPROVED"
+      ? <span className="text-xs text-emerald-600">{t("statusApproved")}</span>
+      : review.status === "REJECTED"
+      ? <span className="text-xs text-red-500">{t("statusRejected")}</span>
+      : null;
+
+    return (
+      <div key={review.id} className="rounded-lg border border-slate-200 p-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <p className="text-amber-600 text-sm">
+            {"★".repeat(review.rating)}
+            {"☆".repeat(5 - review.rating)}
+          </p>
+          <div className="flex items-center gap-3">
+            {statusBadge}
+            {showModerate && (
+              <>
+                <ModerateReviewButton reviewId={review.id} action="APPROVED" />
+                <ModerateReviewButton reviewId={review.id} action="REJECTED" />
+              </>
+            )}
+            <DeleteReviewButton reviewId={review.id} />
+          </div>
+        </div>
+        {review.comment && <p className="text-sm text-slate-700 mt-1">{review.comment}</p>}
+        <p className="text-xs text-slate-500 mt-1">
+          {review.seller ? (
+            <>
+              {t("sellerLabel")}:{" "}
+              <Link href={`/vendeur/${review.sellerId}`} className="hover:underline">
+                {review.seller.profile?.displayName ?? review.seller.email}
+              </Link>
+            </>
+          ) : (
+            review.professionalAccount && (
+              <>
+                {t("proAccountLabel")}:{" "}
+                <Link href={`/pro/${review.professionalAccountId}`} className="hover:underline">
+                  {review.professionalAccount.nomCommercial}
+                </Link>
+              </>
+            )
+          )}{" "}
+          · {tReview("byAuthor", { name: review.author.profile?.displayName ?? review.author.email })} ·{" "}
+          {dateFormatter.format(review.createdAt)}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1 className="text-lg font-medium text-slate-900 mb-4">
-        {t("allReviews")} ({reviews.length})
-      </h1>
-      {reviews.length === 0 ? (
-        <p className="text-slate-500 text-sm">{t("noReviewsYet")}</p>
-      ) : (
-        <div className="space-y-3">
-          {reviews.map((review) => (
-            <div key={review.id} className="rounded-lg border border-slate-200 p-3">
-              <div className="flex items-center justify-between">
-                <p className="text-amber-600 text-sm">
-                  {"★".repeat(review.rating)}
-                  {"☆".repeat(5 - review.rating)}
-                </p>
-                <DeleteReviewButton reviewId={review.id} />
-              </div>
-              {review.comment && <p className="text-sm text-slate-700 mt-1">{review.comment}</p>}
-              <p className="text-xs text-slate-500 mt-1">
-                {review.seller ? (
-                  <>
-                    {t("sellerLabel")}:{" "}
-                    <Link href={`/vendeur/${review.sellerId}`} className="hover:underline">
-                      {review.seller.profile?.displayName ?? review.seller.email}
-                    </Link>
-                  </>
-                ) : (
-                  review.professionalAccount && (
-                    <>
-                      {t("proAccountLabel")}:{" "}
-                      <Link href={`/pro/${review.professionalAccountId}`} className="hover:underline">
-                        {review.professionalAccount.nomCommercial}
-                      </Link>
-                    </>
-                  )
-                )}{" "}
-                · {tReview("byAuthor", { name: review.author.profile?.displayName ?? review.author.email })} ·{" "}
-                {new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "medium" }).format(
-                  review.createdAt
-                )}
-              </p>
-            </div>
-          ))}
-        </div>
+      {pending.length > 0 && (
+        <section className="mb-8">
+          <h1 className="text-lg font-medium text-slate-900 mb-4">
+            {t("pendingReviews")} ({pending.length})
+          </h1>
+          <div className="space-y-3">
+            {pending.map((review) => (
+              <ReviewRow key={review.id} review={review} showModerate={true} />
+            ))}
+          </div>
+        </section>
       )}
+
+      <section>
+        <h2 className={`font-medium text-slate-900 mb-4 ${pending.length > 0 ? "text-base" : "text-lg"}`}>
+          {t("allReviews")} ({reviews.length})
+        </h2>
+        {reviews.length === 0 ? (
+          <p className="text-slate-500 text-sm">{t("noReviewsYet")}</p>
+        ) : (
+          <div className="space-y-3">
+            {reviews.map((review) => (
+              <ReviewRow key={review.id} review={review} showModerate={false} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

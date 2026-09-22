@@ -13,6 +13,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
+  // Lot 168 — vérification d'identité réservée aux comptes professionnels.
+  if (user.role !== "PROFESSIONNEL" && user.role !== "MODERATEUR" && user.role !== "ADMIN") {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   if (!(await checkRateLimit(`identity-request:${user.id}`, { limit: 3, windowMs: 24 * 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }

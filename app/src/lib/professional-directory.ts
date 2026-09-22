@@ -112,7 +112,7 @@ export async function getDirectoryEntries(): Promise<DirectoryEntry[]> {
       _count: true,
     }),
     prisma.review.findMany({
-      where: { professionalAccountId: { in: accounts.map((a) => a.id) } },
+      where: { professionalAccountId: { in: accounts.map((a) => a.id) }, status: "APPROVED" },
       select: { professionalAccountId: true, rating: true },
     }),
   ]);

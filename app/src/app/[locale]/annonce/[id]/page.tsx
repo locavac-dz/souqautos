@@ -216,7 +216,7 @@ export default async function ListingDetailPage({
   const tReview = await getTranslations("Review");
   const tPro = await getTranslations("Pro");
   const sellerReviews = await prisma.review.findMany({
-    where: { sellerId: listing.sellerId },
+    where: { sellerId: listing.sellerId, status: "APPROVED" },
     select: { rating: true },
   });
   const sellerRating = computeAverageRating(sellerReviews.map((r) => r.rating));

@@ -41,7 +41,7 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
   // Lot 141 — réactivité mesurée sur les vraies conversations (badge positif seulement).
   const [reviews, listings, trust, responsiveness] = await Promise.all([
     prisma.review.findMany({
-      where: { sellerId: id },
+      where: { sellerId: id, status: "APPROVED" },
       orderBy: { createdAt: "desc" },
       include: { author: { include: { profile: true } } },
     }),

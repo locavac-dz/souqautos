@@ -62,7 +62,7 @@ export async function getSellerTrustSummary(sellerId: string): Promise<SellerTru
   if (!seller) return null;
 
   const [reviews, confirmedReportCount] = await Promise.all([
-    prisma.review.findMany({ where: { sellerId }, select: { rating: true } }),
+    prisma.review.findMany({ where: { sellerId, status: "APPROVED" }, select: { rating: true } }),
     prisma.report.count({ where: { status: "TRAITE", listing: { sellerId } } }),
   ]);
 
@@ -97,7 +97,7 @@ export async function getSellerTrustSummariesForSellers(
       select: { id: true, createdAt: true, emailVerifiedAt: true, phoneVerifiedAt: true, identityVerifiedAt: true },
     }),
     prisma.review.findMany({
-      where: { sellerId: { in: uniqueIds } },
+      where: { sellerId: { in: uniqueIds }, status: "APPROVED" },
       select: { sellerId: true, rating: true },
     }),
     prisma.report.findMany({

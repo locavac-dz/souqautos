@@ -157,7 +157,7 @@ export default async function ProShowcasePage({
       },
     }),
     prisma.review.findMany({
-      where: { professionalAccountId: id },
+      where: { professionalAccountId: id, status: "APPROVED" },
       orderBy: { createdAt: "desc" },
       include: { author: { include: { profile: true } } },
     }),

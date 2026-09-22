@@ -52,6 +52,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: eligibility.error }, { status: 400 });
   }
 
+  // Lot 167 — auto-approbation : si l'auteur a déjà un avis APPROVED, le nouvel
+  // avis est publié directement (expérience connue), sinon il part en PENDING.
+  const priorApproved = await prisma.review.count({
+    where: { authorId: user.id, status: "APPROVED" },
+  });
+  const status = priorApproved > 0 ? "APPROVED" : "PENDING";
+
   try {
     await prisma.review.create({
       data: {
@@ -59,6 +66,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         authorId: user.id,
         rating: parsed.data.rating,
         comment: parsed.data.comment?.trim() || null,
+        status,
       },
     });
   } catch (error) {

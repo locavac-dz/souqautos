@@ -21,12 +21,13 @@ export default async function DashboardPage() {
   const t = await getTranslations("Dashboard");
   const tNav = await getTranslations("Nav");
 
-  const latestIdentityRequest = user.identityVerifiedAt
-    ? null
-    : await prisma.identityVerificationRequest.findFirst({
+  const isPro = user.role === "PROFESSIONNEL" || user.role === "MODERATEUR" || user.role === "ADMIN";
+  const latestIdentityRequest = isPro && !user.identityVerifiedAt
+    ? await prisma.identityVerificationRequest.findFirst({
         where: { userId: user.id },
         orderBy: { createdAt: "desc" },
-      });
+      })
+    : null;
 
   const roleLabel = user.role === "PARTICULIER" ? t("roleParticulier") : user.role;
   const wilayaLabel = user.profile?.wilaya
@@ -73,13 +74,15 @@ export default async function DashboardPage() {
       <div className="mt-6 rounded-lg border border-slate-200 p-4 space-y-4">
         <EmailVerificationStatus verified={Boolean(user.emailVerifiedAt)} />
         <PhoneVerificationStatus verified={Boolean(user.phoneVerifiedAt)} hasPhone={Boolean(user.phone)} />
-        <IdentityVerificationStatus
-          verified={Boolean(user.identityVerifiedAt)}
-          pending={latestIdentityRequest?.status === "EN_ATTENTE"}
-          rejectionNote={
-            latestIdentityRequest?.status === "REFUSEE" ? latestIdentityRequest.reviewNote : null
-          }
-        />
+        {isPro && (
+          <IdentityVerificationStatus
+            verified={Boolean(user.identityVerifiedAt)}
+            pending={latestIdentityRequest?.status === "EN_ATTENTE"}
+            rejectionNote={
+              latestIdentityRequest?.status === "REFUSEE" ? latestIdentityRequest.reviewNote : null
+            }
+          />
+        )}
       </div>
 
       <OwnResponsiveness responsiveness={await getSellerResponsiveness(user.id)} />
