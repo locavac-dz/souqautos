@@ -153,6 +153,8 @@ export default async function SearchPage({
             gearbox: flatParams.gearbox,
             condition: flatParams.condition,
             equipmentIds: flatParams.equipmentIds,
+            sellerType: flatParams.sellerType,
+            categoryPro: flatParams.categoryPro,
           }}
         />
         {currentUser && (

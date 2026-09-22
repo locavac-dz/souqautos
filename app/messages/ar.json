@@ -366,6 +366,10 @@
     "sellerTrustScore": "ثقة البائع: {score}/100",
     "sellerRatingCard": "★ {average} · {count} تقييم",
     "noResults": "لا يوجد إعلان يطابق بحثك.",
+    "sellerType": "نوع البائع",
+    "sellerTypePro": "محترف",
+    "sellerTypeParticulier": "فرد",
+    "categoryProFilterLabel": "نوع النشاط",
     "sortLabel": "ترتيب الإعلانات",
     "sortRecent": "الأحدث",
     "sortPriceAsc": "السعر تصاعديًا",
@@ -892,7 +896,8 @@
     "closedNow": "مغلق",
     "soldListingsTitle": "المركبات المباعة مؤخراً",
     "soldBadge": "مباع",
-    "statVitrineViews": "زيارات الواجهة"
+    "statVitrineViews": "زيارات الواجهة",
+    "proEncartViewAll": "عرض الـ{count} إعلان ←"
   },
   "ProDirectory": {
     "breadcrumbHome": "الرئيسية",

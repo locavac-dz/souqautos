@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { listingCategories, fuelTypes, gearboxes, conditions } from "./listing";
+import { PRO_CATEGORIES } from "./pro-account";
 import { INT4_MAX } from "./int-bounds";
 
 export const sortOptions = ["recent", "price_asc", "price_desc"] as const;
@@ -57,6 +58,8 @@ export const searchParamsSchema = z.object({
   equipmentIds: equipmentIdsParam,
   sort: z.enum(sortOptions).optional().catch(undefined),
   page: numeric(),
+  sellerType: z.enum(["pro", "particulier"]).optional().catch(undefined),
+  categoryPro: z.enum(PRO_CATEGORIES).optional().catch(undefined),
 });
 
 export type SearchParams = z.infer<typeof searchParamsSchema>;

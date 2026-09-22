@@ -41,6 +41,7 @@ import { PhotoGallery } from "@/components/PhotoGallery";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { getSimilarListings } from "@/lib/similar-listings";
 import { ListingCard } from "@/components/search/ListingCard";
+import { parseHorairesSemaine, isOpenNow } from "@/lib/horaires-semaine";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
 const BADGE_KEY = PRICE_BADGE_KEY;
@@ -161,6 +162,14 @@ export default async function ListingDetailPage({
     modelId: listing.modelId,
     price: listing.price,
   });
+
+  // Lot 158 — encart pro : statut ouverture + compteur stock actif
+  const proAccount = listing.seller.professionalAccount;
+  const proSchedule = proAccount ? parseHorairesSemaine(proAccount.horairesSemaine) : null;
+  const proOpenNow = proSchedule ? isOpenNow(proSchedule) : null;
+  const proActiveListingCount = proAccount
+    ? await prisma.listing.count({ where: { sellerId: listing.sellerId, status: "PUBLIEE" } })
+    : 0;
 
   const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
   const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
@@ -565,13 +574,31 @@ export default async function ListingDetailPage({
                 responsiveness={sellerResponsiveness}
                 className="mt-1.5"
               />
-              {listing.seller.professionalAccount && (
-                <Link
-                  href={`/pro/${listing.seller.professionalAccount.id}`}
-                  className="mt-1 inline-block text-xs text-slate-500 hover:underline"
-                >
-                  {tPro("viewShopLink", { name: listing.seller.professionalAccount.nomCommercial })}
-                </Link>
+              {proAccount && (
+                <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-slate-900">{proAccount.nomCommercial}</span>
+                    {proAccount.badgeVerifie && (
+                      <span className="text-xs font-medium text-emerald-700">✓</span>
+                    )}
+                  </div>
+                  {proAccount.categoryPro && (
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {tPro(`categoryPro_${proAccount.categoryPro}`)}
+                    </p>
+                  )}
+                  {proOpenNow !== null && (
+                    <p className={`text-xs mt-1 font-medium ${proOpenNow ? "text-emerald-700" : "text-slate-400"}`}>
+                      {proOpenNow ? tPro("openNow") : tPro("closedNow")}
+                    </p>
+                  )}
+                  <Link
+                    href={`/pro/${proAccount.id}`}
+                    className="mt-2 inline-block text-xs text-slate-700 hover:underline"
+                  >
+                    {tPro("proEncartViewAll", { count: proActiveListingCount })}
+                  </Link>
+                </div>
               )}
             </div>
 

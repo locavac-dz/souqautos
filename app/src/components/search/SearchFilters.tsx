@@ -12,6 +12,7 @@ import {
   optionsWithCurrent,
   yearOptions,
 } from "@/lib/search-filter-options";
+import { PRO_CATEGORIES } from "@/lib/validation/pro-account";
 
 type ModelRow = { id: number; name: string; brandId: number; categories: ListingCategory[] };
 type BrandRow = { id: number; name: string; models: ModelRow[] };
@@ -35,6 +36,8 @@ export type SearchFilterValues = {
   gearbox?: string;
   condition?: string;
   equipmentIds?: string;
+  sellerType?: string;
+  categoryPro?: string;
 };
 
 const CATEGORY_KEY: Record<string, string> = {
@@ -73,6 +76,7 @@ export function SearchFilters({
 }) {
   const t = useTranslations("Search");
   const tWizard = useTranslations("Wizard");
+  const tPro = useTranslations("Pro");
   const locale = useLocale();
   const router = useRouter();
   const numberLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
@@ -104,6 +108,7 @@ export function SearchFilters({
         [key]: value || undefined,
         ...(key === "brandId" ? { modelId: undefined } : {}),
         ...(key === "wilayaId" ? { communeId: undefined } : {}),
+        ...(key === "sellerType" && value !== "pro" ? { categoryPro: undefined } : {}),
       } as SearchFilterValues;
       if (key === "category") {
         // Une marque ou un modèle devenu impossible dans la nouvelle catégorie est retiré du filtre.
@@ -355,6 +360,35 @@ export function SearchFilters({
               <option value="OCCASION">{tWizard("conditionOccasion")}</option>
             </select>
           </Field>
+
+          <Field id="filter-seller-type" label={t("sellerType")}>
+            <select
+              value={values.sellerType ?? ""}
+              onChange={(e) => set("sellerType", e.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            >
+              <option value="">{t("any")}</option>
+              <option value="pro">{t("sellerTypePro")}</option>
+              <option value="particulier">{t("sellerTypeParticulier")}</option>
+            </select>
+          </Field>
+
+          {values.sellerType === "pro" && (
+            <Field id="filter-category-pro" label={t("categoryProFilterLabel")}>
+              <select
+                value={values.categoryPro ?? ""}
+                onChange={(e) => set("categoryPro", e.target.value)}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              >
+                <option value="">{t("any")}</option>
+                {PRO_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {tPro(`categoryPro_${cat}`)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
 
           {equipments.length > 0 && (
             <Field label={tWizard("equipmentsTitle")}>

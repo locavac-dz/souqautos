@@ -78,6 +78,15 @@ export function buildListingWhere(params: SearchParams, catalogueMatches?: Catal
     }));
   }
 
+  // Lot 158 — filtre par type de vendeur et catégorie de professionnel
+  if (params.sellerType === "particulier") {
+    where.seller = { professionalAccount: { is: null } };
+  } else if (params.categoryPro) {
+    where.seller = { professionalAccount: { categoryPro: params.categoryPro } };
+  } else if (params.sellerType === "pro") {
+    where.seller = { professionalAccount: { isNot: null } };
+  }
+
   return where;
 }
 

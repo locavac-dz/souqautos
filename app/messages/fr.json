@@ -366,6 +366,10 @@
     "sellerTrustScore": "Confiance vendeur : {score}/100",
     "sellerRatingCard": "★ {average} · {count} avis",
     "noResults": "Aucune annonce ne correspond à votre recherche.",
+    "sellerType": "Type de vendeur",
+    "sellerTypePro": "Professionnel",
+    "sellerTypeParticulier": "Particulier",
+    "categoryProFilterLabel": "Catégorie d'activité",
     "sortLabel": "Trier les annonces",
     "sortRecent": "Plus récent",
     "sortPriceAsc": "Prix croissant",
@@ -892,7 +896,8 @@
     "closedNow": "Fermé",
     "soldListingsTitle": "Véhicules vendus récemment",
     "soldBadge": "Vendu",
-    "statVitrineViews": "Visites vitrine"
+    "statVitrineViews": "Visites vitrine",
+    "proEncartViewAll": "Voir les {count} annonces →"
   },
   "ProDirectory": {
     "breadcrumbHome": "Accueil",
