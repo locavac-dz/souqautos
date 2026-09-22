@@ -889,7 +889,10 @@
     "day_sam": "السبت",
     "dayClosed": "مغلق",
     "openNow": "مفتوح الآن",
-    "closedNow": "مغلق"
+    "closedNow": "مغلق",
+    "soldListingsTitle": "المركبات المباعة مؤخراً",
+    "soldBadge": "مباع",
+    "statVitrineViews": "زيارات الواجهة"
   },
   "ProDirectory": {
     "breadcrumbHome": "الرئيسية",

@@ -889,7 +889,10 @@
     "day_sam": "Samedi",
     "dayClosed": "Fermé",
     "openNow": "Ouvert maintenant",
-    "closedNow": "Fermé"
+    "closedNow": "Fermé",
+    "soldListingsTitle": "Véhicules vendus récemment",
+    "soldBadge": "Vendu",
+    "statVitrineViews": "Visites vitrine"
   },
   "ProDirectory": {
     "breadcrumbHome": "Accueil",

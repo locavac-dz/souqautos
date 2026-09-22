@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
@@ -85,11 +86,18 @@ export default async function ProShowcasePage({
   // indexé comme une page valide.
   if (!account) notFound();
 
+  // Lot 157 — compteur visites vitrine (non filtré bots, toutes sources)
+  after(() =>
+    prisma.professionalAccount
+      .update({ where: { id }, data: { vitrineViews: { increment: 1 } } })
+      .catch((err: Error) => console.error(`[vitrine] compteur impossible : ${err.message}`))
+  );
+
   // Lot 137 — annonces paginées (20 par page) : un concessionnaire en publie des milliers, la vitrine les chargeait toutes.
   const publishedTotal = await prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } });
   const { page, totalPages: pages, skip } = pageWindow(publishedTotal, parseRequestedPage((await searchParams).page), PAGE_SIZE);
 
-  const [listings, reviews] = await Promise.all([
+  const [listings, reviews, soldListings] = await Promise.all([
     prisma.listing.findMany({
       where: { sellerId: account.userId, status: "PUBLIEE" },
       orderBy: { publishedAt: "desc" },
@@ -108,6 +116,23 @@ export default async function ProShowcasePage({
       where: { professionalAccountId: id },
       orderBy: { createdAt: "desc" },
       include: { author: { include: { profile: true } } },
+    }),
+    // Lot 157 — 6 dernières annonces vendues (preuve sociale / réalisations)
+    prisma.listing.findMany({
+      where: { sellerId: account.userId, status: "VENDUE" },
+      orderBy: { publishedAt: "desc" },
+      take: 6,
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        year: true,
+        brand: { select: { name: true } },
+        model: { select: { name: true } },
+        brandFreeText: true,
+        modelFreeText: true,
+        photos: { orderBy: { position: "asc" }, take: 1, select: { path: true } },
+      },
     }),
   ]);
 
@@ -318,6 +343,46 @@ export default async function ProShowcasePage({
             </div>
           )}
           <Pagination page={page} totalPages={pages} searchParams={{}} basePath={`/pro/${id}`} />
+
+          {soldListings.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-medium text-slate-900 mb-3">{t("soldListingsTitle")}</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {soldListings.map((listing) => {
+                  const brandName = listing.brand?.name ?? listing.brandFreeText ?? "";
+                  const modelName = listing.model?.name ?? listing.modelFreeText ?? "";
+                  return (
+                    <div key={listing.id} className="rounded-lg border border-slate-200 overflow-hidden">
+                      {listing.photos[0] ? (
+                        <div className="relative h-24">
+                          <Image
+                            src={listing.photos[0].path}
+                            alt=""
+                            fill
+                            sizes="180px"
+                            className="object-cover grayscale"
+                          />
+                          <span className="absolute top-1 end-1 rounded bg-emerald-700 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                            {t("soldBadge")}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex h-24 items-center justify-center bg-slate-100 text-xs text-slate-400">
+                          <span className="rounded bg-emerald-700 px-1.5 py-0.5 text-[10px] font-medium text-white">{t("soldBadge")}</span>
+                        </div>
+                      )}
+                      <div className="p-2">
+                        <p className="truncate text-xs font-medium text-slate-700">
+                          {brandName} {modelName} {listing.year}
+                        </p>
+                        <p className="text-xs text-slate-500">{listing.price.toLocaleString()} DA</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="sm:col-span-1 space-y-4">

@@ -119,10 +119,11 @@ export default async function ProDashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-4 mt-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
         <StatCard label={t("statListings")} value={listingCount} />
         <StatCard label={t("statViews")} value={viewsAgg._sum.views ?? 0} />
         <StatCard label={t("statConversations")} value={conversationCount} />
+        <StatCard label={t("statVitrineViews")} value={account.vitrineViews} />
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-4">

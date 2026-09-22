@@ -772,6 +772,8 @@ model ProfessionalAccount {
   categoryPro   ProCategory?
   // Lot 156 — horaires structurés par jour (JSON sérialisé, 7 jours × {open, debut, fin})
   horairesSemaine String?
+  // Lot 157 — nombre de visites de la vitrine publique (toutes sources confondues, non filtré bots)
+  vitrineViews    Int     @default(0)
   logoUrl       String?
   bannerUrl     String?
   wilayaId      Int?
