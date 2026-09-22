@@ -393,6 +393,19 @@
     "noData": "Pas encore assez d'annonces publiées pour ce modèle pour proposer une estimation — revenez quand le catalogue aura grandi.",
     "disclaimer": "Estimation indicative basée sur les données disponibles sur le marché. Ce n'est ni une expertise ni une garantie de prix."
   },
+  "CreditCalculator": {
+    "title": "Simulateur de crédit",
+    "downPayment": "Apport personnel",
+    "annualRate": "Taux annuel",
+    "duration": "Durée",
+    "months": "{count} mois",
+    "monthlyPayment": "Mensualité estimée",
+    "perMonth": "/mois",
+    "totalCost": "Coût total",
+    "totalInterest": "Intérêts",
+    "noLoan": "L'apport couvre le prix total — aucun crédit nécessaire.",
+    "disclaimer": "Simulation indicative. Les conditions réelles dépendent de votre établissement bancaire."
+  },
   "PriceBadge": {
     "estimationTitle": "Estimation Souq Auto",
     "tresBonneAffaire": "Très bonne affaire",

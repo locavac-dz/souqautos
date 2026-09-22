@@ -36,6 +36,7 @@ import { ReportListingButton } from "@/components/ReportListingButton";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
 import { buildVehicleJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
+import { CreditCalculator } from "@/components/CreditCalculator";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
 const BADGE_KEY = PRICE_BADGE_KEY;
@@ -484,6 +485,9 @@ export default async function ListingDetailPage({
               <p className="mt-2 text-xs text-slate-500">{tEstimate("disclaimer")}</p>
             </div>
           )}
+
+          {/* Lot 149 — simulateur de crédit */}
+          <CreditCalculator price={listing.price} />
 
           {listing.priceHistory.length > 1 && (
             <div className="mt-6">
