@@ -6,7 +6,10 @@ import { checkCanMessage } from "@/lib/messaging";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 
-const bodySchema = z.object({ listingId: z.string().min(1) });
+const bodySchema = z.object({
+  listingId: z.string().min(1),
+  initialMessage: z.string().trim().max(500).optional(),
+});
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -61,6 +64,16 @@ export async function POST(request: NextRequest) {
     if (!isUniqueViolation(error)) throw error;
     conversation = await prisma.conversation.findUnique({ where: conversationKey, select: { id: true } });
     if (!conversation) throw error;
+  }
+
+  const { initialMessage } = parsed.data;
+  if (initialMessage && initialMessage.length > 0) {
+    const existingCount = await prisma.message.count({ where: { conversationId: conversation.id } });
+    if (existingCount === 0) {
+      await prisma.message.create({
+        data: { conversationId: conversation.id, senderId: user.id, content: initialMessage },
+      });
+    }
   }
 
   return NextResponse.json({ conversation }, { status: 201 });
