@@ -1409,7 +1409,8 @@
     "seeListings": "عرض إعلانات {vehicle}",
     "seeModel": "صفحة الطراز {vehicle}",
     "seeAllListings": "عرض جميع الإعلانات",
-    "modelSectionTitle": "دليل الشراء"
+    "modelSectionTitle": "دليل الشراء",
+    "rssLink": "خلاصة RSS لأدلة الشراء"
   },
   "AdminEditorial": {
     "title": "الإيقاع التحريري",
@@ -1650,7 +1651,8 @@
     "indexSubtitle": "نصائح وأخبار لشراء وبيع وصيانة السيارات في الجزائر.",
     "empty": "لا يوجد مقال منشور حاليًا.",
     "sourceLabel": "المصدر:",
-    "sourceNote": "مقال حرّرته هيئة تحرير سوق أوتو انطلاقًا من هذا المصدر."
+    "sourceNote": "مقال حرّرته هيئة تحرير سوق أوتو انطلاقًا من هذا المصدر.",
+    "rssLink": "خلاصة RSS للمجلة"
   },
   "AdminBlog": {
     "title": "مجلة سوق أوتو",

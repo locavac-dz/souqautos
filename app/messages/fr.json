@@ -1409,7 +1409,8 @@
     "seeListings": "Voir les annonces {vehicle}",
     "seeModel": "Fiche du modèle {vehicle}",
     "seeAllListings": "Voir toutes les annonces",
-    "modelSectionTitle": "Guide d'achat"
+    "modelSectionTitle": "Guide d'achat",
+    "rssLink": "Flux RSS des guides d'achat"
   },
   "AdminEditorial": {
     "title": "Rythme éditorial",
@@ -1650,7 +1651,8 @@
     "indexSubtitle": "Conseils et actualités pour acheter, vendre et entretenir un véhicule en Algérie.",
     "empty": "Aucun article publié pour le moment.",
     "sourceLabel": "Source :",
-    "sourceNote": "article rédigé par la rédaction Souq Auto à partir de cette source."
+    "sourceNote": "article rédigé par la rédaction Souq Auto à partir de cette source.",
+    "rssLink": "Flux RSS du magazine"
   },
   "AdminBlog": {
     "title": "Souq Auto Mag",

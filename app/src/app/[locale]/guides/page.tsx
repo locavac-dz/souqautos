@@ -31,7 +31,10 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   return {
     title: `${t("indexTitle")} — Souq Auto`,
     description: t("indexSubtitle"),
-    alternates: { canonical },
+    alternates: {
+      canonical,
+      types: { "application/rss+xml": `${SITE_URL}/${locale}/guides/feed.xml` },
+    },
     openGraph: { title: t("indexTitle"), url: canonical, type: "website" },
   };
 }
@@ -67,6 +70,11 @@ export default async function GuidesIndexPage({ searchParams }: { searchParams: 
 
       <h1 className="text-2xl font-semibold text-slate-900">{t("indexTitle")}</h1>
       <p className="mt-1 text-sm text-slate-500">{t("indexSubtitle")}</p>
+      <p className="mt-1 text-xs">
+        <a href={`/${locale}/guides/feed.xml`} className="text-slate-500 underline hover:text-slate-900">
+          {t("rssLink")}
+        </a>
+      </p>
 
       {articles.length === 0 ? (
         <p className="mt-8 py-12 text-center text-slate-500">{t("empty")}</p>

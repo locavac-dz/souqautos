@@ -93,9 +93,6 @@ export const blogArticleSchema = z
     if ((value.sourceName?.trim() || value.sourceUrl?.trim()) && value.kind !== "ARTICLE") {
       ctx.addIssue({ code: "custom", path: ["sourceName"], message: "Un essai ou un guide est rédigé par la rédaction : pas de source externe." });
     }
-    if (value.coverImageUrl && value.kind === "ARTICLE") {
-      ctx.addIssue({ code: "custom", path: ["coverImageUrl"], message: "Seul un essai ou un guide porte une photo de couverture." });
-    }
     if (value.kind === "ESSAI" && !value.roadTest) {
       ctx.addIssue({ code: "custom", path: ["roadTest"], message: "Un essai exige sa fiche (note, points forts/faibles, verdict)." });
     }

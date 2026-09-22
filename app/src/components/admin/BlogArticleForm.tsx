@@ -198,7 +198,7 @@ export function BlogArticleForm({
       contentAr,
       publication,
       // Lot 115 — source d'un article du magazine (jamais pour un essai).
-      ...(kind === "ARTICLE" && { sourceName: sourceName.trim() || null, sourceUrl: sourceUrl.trim() || null }),
+      ...(kind === "ARTICLE" && { coverImageUrl: coverUrl, sourceName: sourceName.trim() || null, sourceUrl: sourceUrl.trim() || null }),
       ...(isGuide && {
         coverImageUrl: coverUrl,
         guide: {
@@ -313,7 +313,7 @@ export function BlogArticleForm({
         </div>
       </div>
 
-      {(isEssai || isGuide) && (
+      {(isEssai || isGuide || kind === "ARTICLE") && (
         <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
           <legend className="px-1 text-sm font-medium text-slate-900">{tRt("coverTitle")}</legend>
           <div className="flex items-center gap-4">
@@ -663,7 +663,7 @@ export function BlogArticleForm({
           />
         </div>
       </div>
-      <p className="text-xs text-slate-500 -mt-4">{isEssai || isGuide ? tRt("markdownHelp") : t("contentHelp")}</p>
+      <p className="text-xs text-slate-500 -mt-4">{tRt("markdownHelp")}</p>
 
       {kind === "ARTICLE" && (
         <fieldset className="space-y-3 rounded-lg border border-slate-200 p-4">

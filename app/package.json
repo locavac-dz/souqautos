@@ -17,6 +17,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo-listings.ts",
     "db:price-history": "tsx prisma/seed-price-history.ts",
+    "db:seed:mag": "tsx prisma/seed-mag-articles.ts",
     "db:demo-photos": "tsx prisma/apply-demo-photos.ts",
     "verify": "node scripts/verify.mjs",
     "i18n:check": "vitest run tests/i18n-messages.test.ts tests/i18n-audit.test.ts",

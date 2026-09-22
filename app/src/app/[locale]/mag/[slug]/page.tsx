@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
@@ -7,9 +8,10 @@ import { articlePublicPath } from "@/lib/blog";
 import { publishedNow } from "@/lib/blog-publication";
 import { previewTokenFrom, resolveArticleForViewer } from "@/lib/article-preview";
 import { ArticlePreviewBanner } from "@/components/ArticlePreviewBanner";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
 import { buildBreadcrumbJsonLd, buildArticleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ArticleBody } from "@/components/ArticleBody";
 
 // Publié = date de parution atteinte (Lot 110 : un article programmé reste
 // invisible, et renvoie un 404, jusqu'à sa date). Exception (Lot 145) : un ADMINISTRATEUR connecté voit un brouillon ou un article
@@ -39,11 +41,18 @@ export async function generateMetadata({
   // Un aperçu n'a ni adresse canonique ni partage, et ne doit JAMAIS être indexé : ce contenu n'est pas public.
   if (preview) return { title: `${title} — Souq Auto`, robots: { index: false, follow: false } };
 
+  const coverAbsoluteUrl = article.coverImageUrl ? resolveAbsolutePhotoUrl(article.coverImageUrl) : undefined;
   return {
     title: `${title} — Souq Auto`,
     description: excerpt,
     alternates: { canonical },
-    openGraph: { title, description: excerpt, url: canonical, type: "article" },
+    openGraph: {
+      title,
+      description: excerpt,
+      url: canonical,
+      type: "article",
+      ...(coverAbsoluteUrl && { images: [{ url: coverAbsoluteUrl }] }),
+    },
   };
 }
 
@@ -119,11 +128,20 @@ export default async function BlogArticlePage({
       {article.publishedAt && <p className="text-xs text-slate-500">{dateFormatter.format(article.publishedAt)}</p>}
       <h1 className="mt-1 text-2xl font-semibold text-slate-900">{title}</h1>
 
-      <div className="mt-6 space-y-4 text-sm leading-relaxed text-slate-700">
-        {content.split(/\n{2,}/).map((paragraph, index) => (
-          <p key={index}>{paragraph}</p>
-        ))}
-      </div>
+      {article.coverImageUrl && (
+        <div className="relative mt-6 aspect-video w-full overflow-hidden rounded-lg">
+          <Image
+            src={resolveAbsolutePhotoUrl(article.coverImageUrl)}
+            alt={title}
+            fill
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="object-cover"
+            priority
+          />
+        </div>
+      )}
+
+      <ArticleBody content={content} />
 
       {article.sourceName && (
         <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">
