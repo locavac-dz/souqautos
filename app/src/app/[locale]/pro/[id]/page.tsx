@@ -24,6 +24,8 @@ import { isStaff } from "@/lib/auth-server/roles";
 import { canReplyToProReviews } from "@/lib/pro-account";
 import { parseProPermissions } from "@/lib/pro-permissions";
 import { parseHorairesSemaine, isOpenNow, todayDayKey, DAYS } from "@/lib/horaires-semaine";
+import type { Prisma } from "@prisma/client";
+import { ProStockFilters, type StockFilterValues } from "@/components/ProStockFilters";
 
 // Lot 108 — SEO de la vitrine : métadonnées, image de partage (bannière, à
 // défaut le logo), et noindex tant que le compte n'a aucune annonce publiée.
@@ -69,7 +71,7 @@ export default async function ProShowcasePage({
   searchParams,
 }: {
   params: Promise<{ id: string; locale: string }>;
-  searchParams: Promise<{ page?: string | string[] }>;
+  searchParams: Promise<{ page?: string | string[]; brandId?: string; priceMin?: string; priceMax?: string; yearMin?: string; yearMax?: string }>;
 }) {
   const { id } = await params;
   const locale = await getLocale();
@@ -93,13 +95,51 @@ export default async function ProShowcasePage({
       .catch((err: Error) => console.error(`[vitrine] compteur impossible : ${err.message}`))
   );
 
-  // Lot 137 — annonces paginées (20 par page) : un concessionnaire en publie des milliers, la vitrine les chargeait toutes.
-  const publishedTotal = await prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } });
-  const { page, totalPages: pages, skip } = pageWindow(publishedTotal, parseRequestedPage((await searchParams).page), PAGE_SIZE);
+  // Lot 159 — filtres rapides sur le stock du pro
+  const rawParams = await searchParams;
+  const parsedBrandId = rawParams.brandId ? (parseInt(rawParams.brandId, 10) || undefined) : undefined;
+  const parsedPriceMin = rawParams.priceMin ? (parseInt(rawParams.priceMin, 10) || undefined) : undefined;
+  const parsedPriceMax = rawParams.priceMax ? (parseInt(rawParams.priceMax, 10) || undefined) : undefined;
+  const parsedYearMin = rawParams.yearMin ? (parseInt(rawParams.yearMin, 10) || undefined) : undefined;
+  const parsedYearMax = rawParams.yearMax ? (parseInt(rawParams.yearMax, 10) || undefined) : undefined;
 
-  const [listings, reviews, soldListings] = await Promise.all([
+  const stockWhere: Prisma.ListingWhereInput = { sellerId: account.userId, status: "PUBLIEE" };
+  if (parsedBrandId) stockWhere.brandId = parsedBrandId;
+  if (parsedPriceMin !== undefined || parsedPriceMax !== undefined) {
+    stockWhere.price = {
+      ...(parsedPriceMin !== undefined ? { gte: parsedPriceMin } : {}),
+      ...(parsedPriceMax !== undefined ? { lte: parsedPriceMax } : {}),
+    };
+  }
+  if (parsedYearMin !== undefined || parsedYearMax !== undefined) {
+    stockWhere.year = {
+      ...(parsedYearMin !== undefined ? { gte: parsedYearMin } : {}),
+      ...(parsedYearMax !== undefined ? { lte: parsedYearMax } : {}),
+    };
+  }
+
+  const stockFilterValues: StockFilterValues = {
+    brandId: rawParams.brandId,
+    priceMin: rawParams.priceMin,
+    priceMax: rawParams.priceMax,
+    yearMin: rawParams.yearMin,
+    yearMax: rawParams.yearMax,
+  };
+  const stockFilterParams: Record<string, string | undefined> = {
+    brandId: rawParams.brandId,
+    priceMin: rawParams.priceMin,
+    priceMax: rawParams.priceMax,
+    yearMin: rawParams.yearMin,
+    yearMax: rawParams.yearMax,
+  };
+
+  // Lot 137 — annonces paginées (20 par page) : un concessionnaire en publie des milliers, la vitrine les chargeait toutes.
+  const publishedTotal = await prisma.listing.count({ where: stockWhere });
+  const { page, totalPages: pages, skip } = pageWindow(publishedTotal, parseRequestedPage(rawParams.page), PAGE_SIZE);
+
+  const [listings, reviews, soldListings, stockBrands] = await Promise.all([
     prisma.listing.findMany({
-      where: { sellerId: account.userId, status: "PUBLIEE" },
+      where: stockWhere,
       orderBy: { publishedAt: "desc" },
       skip,
       take: PAGE_SIZE,
@@ -133,6 +173,13 @@ export default async function ProShowcasePage({
         modelFreeText: true,
         photos: { orderBy: { position: "asc" }, take: 1, select: { path: true } },
       },
+    }),
+    // Lot 159 — marques disponibles dans le stock (pour le sélecteur de filtre)
+    prisma.listing.findMany({
+      where: { sellerId: account.userId, status: "PUBLIEE", brandId: { not: null } },
+      select: { brandId: true, brand: { select: { name: true } } },
+      distinct: ["brandId"],
+      orderBy: { brand: { name: "asc" } },
     }),
   ]);
 
@@ -326,6 +373,11 @@ export default async function ProShowcasePage({
       <div className="grid sm:grid-cols-3 gap-8 mt-8">
         <div className="sm:col-span-2">
           <h2 className="text-lg font-medium text-slate-900 mb-3">{t("listingsTitle")}</h2>
+          <ProStockFilters
+            accountId={id}
+            brands={stockBrands.filter((r) => r.brand).map((r) => ({ id: r.brandId!, name: r.brand!.name }))}
+            initialValues={stockFilterValues}
+          />
           {listings.length === 0 ? (
             <p className="text-slate-500 text-sm">{t("noListings")}</p>
           ) : (
@@ -342,7 +394,7 @@ export default async function ProShowcasePage({
               ))}
             </div>
           )}
-          <Pagination page={page} totalPages={pages} searchParams={{}} basePath={`/pro/${id}`} />
+          <Pagination page={page} totalPages={pages} searchParams={stockFilterParams} basePath={`/pro/${id}`} />
 
           {soldListings.length > 0 && (
             <div className="mt-8">

@@ -897,7 +897,8 @@
     "soldListingsTitle": "المركبات المباعة مؤخراً",
     "soldBadge": "مباع",
     "statVitrineViews": "زيارات الواجهة",
-    "proEncartViewAll": "عرض الـ{count} إعلان ←"
+    "proEncartViewAll": "عرض الـ{count} إعلان ←",
+    "stockFilterReset": "إلغاء الفلاتر"
   },
   "ProDirectory": {
     "breadcrumbHome": "الرئيسية",

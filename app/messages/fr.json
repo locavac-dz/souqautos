@@ -897,7 +897,8 @@
     "soldListingsTitle": "Véhicules vendus récemment",
     "soldBadge": "Vendu",
     "statVitrineViews": "Visites vitrine",
-    "proEncartViewAll": "Voir les {count} annonces →"
+    "proEncartViewAll": "Voir les {count} annonces →",
+    "stockFilterReset": "Effacer les filtres"
   },
   "ProDirectory": {
     "breadcrumbHome": "Accueil",
