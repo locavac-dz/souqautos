@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
+import { PriceRangeHint } from "@/components/wizard/PriceRangeHint";
 
 export default function Step5Page() {
   const t = useTranslations("Wizard");
@@ -33,6 +34,9 @@ export default function Step5Page() {
       </label>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
+
+      {/* Lot 148 — fourchette du marché : visible dès que le modèle et l'année sont renseignés */}
+      <PriceRangeHint data={data} price={data.price} />
     </StepShell>
   );
 }
