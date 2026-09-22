@@ -4,13 +4,14 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
-import { getListingStats } from "@/lib/catalogue-stats";
+import { getListingStats, getModelPriceHistory } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RoadTestCard } from "@/components/RoadTestCard";
 import { GuideCard, guideCardSelect } from "@/components/GuideCard";
 import { PressReviewCard } from "@/components/PressReviewCard";
 import { OwnerReviewsSection } from "@/components/OwnerReviewsSection";
+import { MonthlyPriceBars } from "@/components/MonthlyPriceBars";
 import { publishedNow } from "@/lib/blog-publication";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -67,8 +68,9 @@ export default async function ModelPage({
   const tGuide = await getTranslations("Guide");
   const tPress = await getTranslations("PressReview");
 
-  const [stats, listings, currentUser, roadTests, guides, pressReviews] = await Promise.all([
+  const [stats, priceHistory, listings, currentUser, roadTests, guides, pressReviews] = await Promise.all([
     getListingStats({ brandId: brand.id, modelId: model.id }),
+    getModelPriceHistory({ brandId: brand.id, modelId: model.id }),
     prisma.listing.findMany({
       where: { brandId: brand.id, modelId: model.id, status: "PUBLIEE" },
       orderBy: { createdAt: "desc" },
@@ -198,6 +200,18 @@ export default async function ModelPage({
             </div>
           )}
         </div>
+      )}
+
+      {priceHistory.length >= 3 && (
+        <section className="mt-6">
+          <h2 className="text-sm font-medium text-slate-700 mb-2">{t("priceHistoryTitle")}</h2>
+          <MonthlyPriceBars
+            points={priceHistory}
+            label={t("priceHistoryLabel", { brand: brand.name, model: model.name })}
+            locale={locale}
+          />
+          <p className="mt-2 text-xs text-slate-500">{t("priceHistoryNote")}</p>
+        </section>
       )}
 
       <div className="mt-4 flex flex-wrap gap-3">

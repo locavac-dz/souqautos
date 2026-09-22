@@ -187,8 +187,10 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
             confirmedReportCount={confirmedReportCount}
             accountAgeDays={accountAgeDays}
           />
-          {canReview && <ReviewForm endpoint={`/api/users/${id}/reviews`} />}
-          {alreadyReviewed && <p className="text-sm text-slate-500">{t("alreadyReviewed")}</p>}
+          <div id="donner-avis">
+            {canReview && <ReviewForm endpoint={`/api/users/${id}/reviews`} />}
+            {alreadyReviewed && <p className="text-sm text-slate-500">{t("alreadyReviewed")}</p>}
+          </div>
 
           <div>
             <h2 className="text-lg font-medium text-slate-900 mb-3">{t("reviewsTitle")}</h2>

@@ -507,7 +507,10 @@
     "categoryUTILITAIRE": "Utilitaires",
     "categoryPOIDS_LOURD": "Poids lourds",
     "categoryDEUX_ROUES": "Deux-roues",
-    "emptyCategory": "Aucune marque dans cette catégorie."
+    "emptyCategory": "Aucune marque dans cette catégorie.",
+    "priceHistoryTitle": "Évolution du prix moyen (12 mois)",
+    "priceHistoryLabel": "Prix moyen des {brand} {model} sur 12 mois",
+    "priceHistoryNote": "Prix calculé sur les annonces publiées chaque mois. Survolez les barres pour le détail."
   },
   "NotFound": {
     "title": "Page introuvable",
@@ -1764,8 +1767,8 @@
     "label": "Aperçu réservé à l'équipe",
     "draft": "ce contenu est un brouillon : il n'est visible que des administrateurs, pas du public.",
     "scheduled": "publication programmée le {date} : d'ici là, il n'est visible que des administrateurs, pas du public.",
-  "reviewLabel": "Aperçu de relecture",
-  "reviewNotice": "ce contenu n'est pas encore publié : vous le lisez grâce à un lien privé, valable jusqu'au {date}. Ne le partagez pas.",
+    "reviewLabel": "Aperçu de relecture",
+    "reviewNotice": "ce contenu n'est pas encore publié : vous le lisez grâce à un lien privé, valable jusqu'au {date}. Ne le partagez pas.",
     "edit": "Modifier"
   },
   "PreviewLinks": {

@@ -87,6 +87,35 @@ export async function getModelCountsForBrand(brandId: number): Promise<Map<numbe
   );
 }
 
+export type MonthPoint = { month: string; avgPrice: number; count: number };
+
+// Lot 164 — évolution du prix moyen mensuel pour un modèle sur les 12 derniers mois.
+// Retourne uniquement les mois avec au moins 2 annonces (évite les valeurs aberrantes).
+export async function getModelPriceHistory({
+  brandId,
+  modelId,
+}: {
+  brandId: number;
+  modelId: number;
+}): Promise<MonthPoint[]> {
+  const rows = await prisma.$queryRaw<{ month: string; avg_price: number; cnt: bigint }[]>`
+    SELECT
+      TO_CHAR(DATE_TRUNC('month', "createdAt"), 'YYYY-MM') AS month,
+      ROUND(AVG(price))::integer                            AS avg_price,
+      COUNT(*)                                              AS cnt
+    FROM "Listing"
+    WHERE "brandId" = ${brandId}
+      AND "modelId" = ${modelId}
+      AND status = 'PUBLIEE'
+      AND "createdAt" >= NOW() - INTERVAL '12 months'
+    GROUP BY DATE_TRUNC('month', "createdAt")
+    ORDER BY DATE_TRUNC('month', "createdAt") ASC
+  `;
+  return rows
+    .filter((r) => Number(r.cnt) >= 2)
+    .map((r) => ({ month: r.month, avgPrice: Number(r.avg_price), count: Number(r.cnt) }));
+}
+
 export type WilayaBrandCount = { brandId: number; count: number; minPrice: number | null };
 
 // Lot 75 — mêmes conventions que getModelCountsForBrand (une seule requête

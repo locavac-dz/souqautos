@@ -569,6 +569,15 @@ export default async function ListingDetailPage({
                   {tReview("averageRating", { average: sellerRating.average, count: sellerRating.count })}
                 </p>
               )}
+              {/* Lot 165 — CTA avis : visible pour les acheteurs connectés uniquement */}
+              {currentUser && !isOwner && (
+                <Link
+                  href={`/vendeur/${listing.sellerId}#donner-avis`}
+                  className="mt-1 inline-block text-xs text-slate-400 hover:text-slate-700 hover:underline"
+                >
+                  {tReview("leaveReview")} →
+                </Link>
+              )}
               <SellerTrustBadges
                 identityVerified={Boolean(listing.seller.identityVerifiedAt)}
                 proVerified={listing.seller.professionalAccount?.badgeVerifie}
