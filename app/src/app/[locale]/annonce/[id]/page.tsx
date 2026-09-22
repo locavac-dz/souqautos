@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -37,6 +36,11 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
 import { buildVehicleJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { CreditCalculator } from "@/components/CreditCalculator";
+import { RecentlyViewedTracker } from "@/components/RecentlyViewedTracker";
+import { PhotoGallery } from "@/components/PhotoGallery";
+import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
+import { getSimilarListings } from "@/lib/similar-listings";
+import { ListingCard } from "@/components/search/ListingCard";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
 const BADGE_KEY = PRICE_BADGE_KEY;
@@ -150,6 +154,13 @@ export default async function ListingDetailPage({
       orderBy: { publishedAt: "desc" },
       select: guideSelect,
     }));
+
+  const similarListings = await getSimilarListings({
+    excludeId: listing.id,
+    brandId: listing.brandId,
+    modelId: listing.modelId,
+    price: listing.price,
+  });
 
   const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
   const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
@@ -379,29 +390,7 @@ export default async function ListingDetailPage({
         </div>
       )}
 
-      {listing.photos.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
-          {listing.photos.map((photo, i) => (
-            <div
-              key={photo.id}
-              className={`relative aspect-[16/10] ${i === 0 ? "col-span-2 sm:col-span-2 sm:row-span-2" : ""}`}
-            >
-              <Image
-                src={photo.path}
-                alt={listing.title}
-                fill
-                className="rounded-md object-cover border border-slate-200"
-                // La première photo occupe deux colonnes sur trois (toute la largeur sur téléphone) : sans
-                // cette indication, le site en servait une version au tiers de la largeur, agrandie donc floue.
-                sizes={i === 0 ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"}
-                // C'est l'image principale de la page : chargée sans attendre (Lot 125).
-                loading={i === 0 ? "eager" : undefined}
-                fetchPriority={i === 0 ? "high" : undefined}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      <PhotoGallery photos={listing.photos} alt={listing.title} />
       <PhotoCredits credits={collectPhotoCredits(listing.photos)} />
 
       <div className="grid sm:grid-cols-3 gap-8">
@@ -588,7 +577,7 @@ export default async function ListingDetailPage({
 
             {!isOwner && (
               <div className="mt-4 space-y-2">
-                <ContactSellerButton listingId={listing.id} isLoggedIn={Boolean(currentUser)} />
+                <ContactSellerButton listingId={listing.id} listingTitle={listing.title} isLoggedIn={Boolean(currentUser)} />
                 {/* Lot 119 — le numéro n'est JAMAIS envoyé avec la page : seul le fait qu'il existe
                     (et le choix WhatsApp du vendeur) est transmis ; le numéro est demandé au clic. */}
                 {listing.seller.phone && (
@@ -606,6 +595,42 @@ export default async function ListingDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Lot 151 — tracker (invisible) + section "Récemment consultés" */}
+      <RecentlyViewedTracker
+        entry={{
+          id: listing.id,
+          title: listing.title,
+          price: listing.price,
+          photo: listing.photos[0]?.path ?? null,
+          brandLabel,
+          modelLabel,
+          year: listing.year,
+          wilayaNomFr: listing.wilaya.nomFr,
+          wilayaNomAr: listing.wilaya.nomAr,
+          viewedAt: 0,
+        }}
+      />
+      <RecentlyViewedSection excludeId={listing.id} />
+
+      {/* Lot 152 — annonces similaires (même modèle puis même marque/fourchette) */}
+      {similarListings.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-sm font-medium text-slate-700 mb-3">{tListing("similarTitle")}</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+            {similarListings.map((similar, index) => (
+              <div key={similar.id} className="snap-start shrink-0 w-56">
+                <ListingCard
+                  listing={similar}
+                  isLoggedIn={Boolean(currentUser)}
+                  isFavorited={false}
+                  eager={index === 0}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -21,6 +21,9 @@
     "skipToContent": "Aller au contenu principal",
     "breadcrumb": "Fil d'Ariane"
   },
+  "RecentlyViewed": {
+    "title": "Récemment consultés"
+  },
   "Home": {
     "heroTitle": "Que recherchez-vous ?",
     "heroSubtitle": "Le premier moteur de recherche automobile pensé pour l'Algérie.",
@@ -284,6 +287,7 @@
     "detailsTitle": "Caractéristiques",
     "equipmentsTitle": "Équipements",
     "priceHistoryTitle": "Historique du prix",
+    "similarTitle": "Annonces similaires",
     "renewalHistoryTitle": "Historique des renouvellements",
     "renewalUntil": "Prolongée jusqu'au {date}",
     "successTitle": "Annonce envoyée !",
@@ -684,7 +688,16 @@
     "attachmentAlt": "Pièce jointe",
     "attachmentPreview": "📎 Image",
     "errorAttachmentTooLarge": "L'image est trop lourde (5 Mo maximum).",
-    "errorAttachmentInvalidType": "Format d'image non pris en charge (JPEG, PNG ou WebP uniquement)."
+    "errorAttachmentInvalidType": "Format d'image non pris en charge (JPEG, PNG ou WebP uniquement).",
+    "templatePanelTitle": "Votre message",
+    "template_availability_label": "Disponible ?",
+    "template_availability_text": "Bonjour, votre annonce « {title} » m'intéresse. Est-elle toujours disponible ?",
+    "template_price_label": "Meilleur prix ?",
+    "template_price_text": "Bonjour, quel est votre meilleur prix pour « {title} » ?",
+    "template_testDrive_label": "Essai possible ?",
+    "template_testDrive_text": "Bonjour, puis-je faire un essai de « {title} » ?",
+    "sendMessage": "Envoyer",
+    "cancelMessage": "Annuler"
   },
   "Review": {
     "notFound": "Ce profil est introuvable.",

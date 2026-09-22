@@ -21,6 +21,9 @@
     "skipToContent": "انتقل إلى المحتوى الرئيسي",
     "breadcrumb": "مسار التنقل"
   },
+  "RecentlyViewed": {
+    "title": "شوهدت مؤخرًا"
+  },
   "Home": {
     "heroTitle": "عن ماذا تبحث؟",
     "heroSubtitle": "أول محرك بحث للسيارات مصمم خصيصًا للجزائر.",
@@ -284,6 +287,7 @@
     "detailsTitle": "المواصفات",
     "equipmentsTitle": "التجهيزات",
     "priceHistoryTitle": "سجل الأسعار",
+    "similarTitle": "إعلانات مشابهة",
     "renewalHistoryTitle": "سجل التجديدات",
     "renewalUntil": "مُمدد حتى {date}",
     "successTitle": "تم إرسال الإعلان!",
@@ -684,7 +688,16 @@
     "attachmentAlt": "مرفق",
     "attachmentPreview": "📎 صورة",
     "errorAttachmentTooLarge": "الصورة كبيرة جدًا (5 ميغابايت كحد أقصى).",
-    "errorAttachmentInvalidType": "صيغة الصورة غير مدعومة (JPEG أو PNG أو WebP فقط)."
+    "errorAttachmentInvalidType": "صيغة الصورة غير مدعومة (JPEG أو PNG أو WebP فقط).",
+    "templatePanelTitle": "رسالتك",
+    "template_availability_label": "متاح؟",
+    "template_availability_text": "مرحباً، إعلانك « {title} » يثير اهتمامي. هل لا يزال متاحاً؟",
+    "template_price_label": "أفضل سعر؟",
+    "template_price_text": "مرحباً، ما هو أفضل سعر لديك لـ « {title} »؟",
+    "template_testDrive_label": "تجربة قيادة؟",
+    "template_testDrive_text": "مرحباً، هل يمكنني تجربة قيادة « {title} »؟",
+    "sendMessage": "إرسال",
+    "cancelMessage": "إلغاء"
   },
   "Review": {
     "notFound": "هذا الملف الشخصي غير موجود.",
