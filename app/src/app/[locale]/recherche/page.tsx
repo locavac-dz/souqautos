@@ -26,6 +26,7 @@ import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
 import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
 import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
+import { getSellerRatingsForSellers } from "@/lib/seller-review-service";
 
 export default async function SearchPage({
   searchParams,
@@ -117,11 +118,13 @@ export default async function SearchPage({
     })
   );
 
-  const [sellerTrustBySeller, responsivenessBySeller] = await Promise.all([
-    getSellerTrustSummariesForSellers(allListings.map((l) => l.sellerId)),
-    getSellerResponsivenessCached(allListings.map((l) => l.sellerId)),
+  const sellerIds = allListings.map((l) => l.sellerId);
+  const [sellerTrustBySeller, responsivenessBySeller, sellerRatingsBySeller] = await Promise.all([
+    getSellerTrustSummariesForSellers(sellerIds),
+    getSellerResponsivenessCached(sellerIds),
+    getSellerRatingsForSellers(sellerIds),
   ]);
-  const professionalBadgesBySeller = await getProfessionalBadgesForSellers(allListings.map((l) => l.sellerId));
+  const professionalBadgesBySeller = await getProfessionalBadgesForSellers(sellerIds);
 
   const pages = computeTotalPages(totalCount);
 
@@ -181,6 +184,7 @@ export default async function SearchPage({
                   sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
                   sellerBadges={cardSellerBadges(sellerTrustBySeller.get(listing.sellerId), responsivenessBySeller.get(listing.sellerId))}
                   professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
+                  sellerRating={sellerRatingsBySeller.get(listing.sellerId)}
                 />
               ))}
             </div>
@@ -211,6 +215,7 @@ export default async function SearchPage({
                   sellerTrustScore={sellerTrustBySeller.get(listing.sellerId)?.trustBreakdown.score}
                   sellerBadges={cardSellerBadges(sellerTrustBySeller.get(listing.sellerId), responsivenessBySeller.get(listing.sellerId))}
                   professionalBadge={professionalBadgesBySeller.get(listing.sellerId)}
+                  sellerRating={sellerRatingsBySeller.get(listing.sellerId)}
                 />
               ))}
             </div>

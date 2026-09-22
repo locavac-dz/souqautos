@@ -360,6 +360,7 @@
     "formulaPremiumPlusBadge": "Premium+",
     "featuredTitle": "إعلانات في المقدمة",
     "sellerTrustScore": "ثقة البائع: {score}/100",
+    "sellerRatingCard": "★ {average} · {count} تقييم",
     "noResults": "لا يوجد إعلان يطابق بحثك.",
     "sortLabel": "ترتيب الإعلانات",
     "sortRecent": "الأحدث",

@@ -8,6 +8,7 @@ import { PRICE_BADGE_STYLE, PRICE_BADGE_KEY } from "@/lib/price-badge-style";
 import { resolveListingLabels } from "@/lib/site";
 import { CheckMark } from "@/components/SellerTrustBadges";
 import type { CardSellerBadges } from "@/lib/seller-card-badges";
+import type { SellerRating } from "@/lib/seller-review-service";
 
 type CardListing = {
   id: string;
@@ -49,6 +50,7 @@ export async function ListingCard({
   sellerTrustScore,
   professionalBadge,
   sellerBadges,
+  sellerRating,
   eager = false,
 }: {
   listing: CardListing;
@@ -59,6 +61,8 @@ export async function ListingCard({
   professionalBadge?: { badgeVerifie: boolean } | null;
   // Lot 143 — signaux de confiance VÉRIFIÉS du vendeur (identité, réactivité), positifs seulement : `null`/absent = aucune ligne ajoutée.
   sellerBadges?: CardSellerBadges | null;
+  // Lot 150 — note moyenne du vendeur issue des avis acheteurs.
+  sellerRating?: SellerRating | null;
   // Cartes visibles dès l'ouverture de la page (première rangée) : leur photo est chargée tout de suite, en priorité. Sans cela,
   // le navigateur attend d'avoir mis la page en forme pour la demander, et la plus grande image affichée (LCP) arrive plus tard.
   eager?: boolean;
@@ -160,6 +164,11 @@ export async function ListingCard({
               </li>
             )}
           </ul>
+        )}
+        {sellerRating && sellerRating.count > 0 && (
+          <p className="mt-1 text-xs text-slate-500">
+            {tSearch("sellerRatingCard", { average: sellerRating.average, count: sellerRating.count })}
+          </p>
         )}
       </div>
     </Link>

@@ -360,6 +360,7 @@
     "formulaPremiumPlusBadge": "Premium+",
     "featuredTitle": "Annonces en avant",
     "sellerTrustScore": "Confiance vendeur : {score}/100",
+    "sellerRatingCard": "★ {average} · {count} avis",
     "noResults": "Aucune annonce ne correspond à votre recherche.",
     "sortLabel": "Trier les annonces",
     "sortRecent": "Plus récent",
