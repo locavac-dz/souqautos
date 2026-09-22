@@ -877,7 +877,19 @@
     "phoneLabel": "الهاتف المهني",
     "phonePlaceholder": "مثال: 05 XX XX XX XX",
     "websiteLabel": "الموقع الإلكتروني",
-    "websiteLink": "الموقع الإلكتروني"
+    "websiteLink": "الموقع الإلكتروني",
+    "horairesSemaineLabel": "أوقات العمل",
+    "horairesSemaineTitle": "أوقات العمل",
+    "day_dim": "الأحد",
+    "day_lun": "الاثنين",
+    "day_mar": "الثلاثاء",
+    "day_mer": "الأربعاء",
+    "day_jeu": "الخميس",
+    "day_ven": "الجمعة",
+    "day_sam": "السبت",
+    "dayClosed": "مغلق",
+    "openNow": "مفتوح الآن",
+    "closedNow": "مغلق"
   },
   "ProDirectory": {
     "breadcrumbHome": "الرئيسية",

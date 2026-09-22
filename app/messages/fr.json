@@ -877,7 +877,19 @@
     "phoneLabel": "Téléphone professionnel",
     "phonePlaceholder": "ex. 05 XX XX XX XX",
     "websiteLabel": "Site web",
-    "websiteLink": "Site web"
+    "websiteLink": "Site web",
+    "horairesSemaineLabel": "Horaires par jour",
+    "horairesSemaineTitle": "Horaires d'ouverture",
+    "day_dim": "Dimanche",
+    "day_lun": "Lundi",
+    "day_mar": "Mardi",
+    "day_mer": "Mercredi",
+    "day_jeu": "Jeudi",
+    "day_ven": "Vendredi",
+    "day_sam": "Samedi",
+    "dayClosed": "Fermé",
+    "openNow": "Ouvert maintenant",
+    "closedNow": "Fermé"
   },
   "ProDirectory": {
     "breadcrumbHome": "Accueil",

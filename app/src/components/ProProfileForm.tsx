@@ -5,14 +5,15 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { shouldRevokeVerifiedBadge } from "@/lib/pro-account";
 import { PRO_CATEGORIES, type ProCategory } from "@/lib/validation/pro-account";
+import { StructuredHoursEditor } from "@/components/StructuredHoursEditor";
 
 type Initial = {
   nomCommercial: string;
   presentation: string | null;
-  horaires: string | null;
   phone: string | null;
   website: string | null;
   categoryPro: ProCategory | null;
+  horairesSemaine: string | null;
   wilayaId: number | null;
 };
 
@@ -34,10 +35,10 @@ export function ProProfileForm({
   const router = useRouter();
   const [nomCommercial, setNomCommercial] = useState(initial.nomCommercial);
   const [presentation, setPresentation] = useState(initial.presentation ?? "");
-  const [horaires, setHoraires] = useState(initial.horaires ?? "");
   const [phone, setPhone] = useState(initial.phone ?? "");
   const [website, setWebsite] = useState(initial.website ?? "");
   const [categoryPro, setCategoryPro] = useState<ProCategory | "">(initial.categoryPro ?? "");
+  const [horairesSemaine, setHorairesSemaine] = useState<string | null>(initial.horairesSemaine);
   const [wilayaId, setWilayaId] = useState(initial.wilayaId ? String(initial.wilayaId) : "");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
@@ -59,10 +60,10 @@ export function ProProfileForm({
       body: JSON.stringify({
         nomCommercial: nomCommercial.trim(),
         presentation: presentation.trim() || undefined,
-        horaires: horaires.trim() || undefined,
         phone: phone.trim() || undefined,
         website: website.trim() || undefined,
         categoryPro: categoryPro || null,
+        horairesSemaine,
         wilayaId: wilayaId ? Number(wilayaId) : null,
       }),
     });
@@ -105,17 +106,15 @@ export function ProProfileForm({
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
       </label>
-      <label className="block">
-        <span className="text-sm text-slate-700">{t("horairesLabel")}</span>
-        <input
-          type="text"
-          value={horaires}
-          onChange={(e) => setHoraires(e.target.value)}
-          maxLength={200}
-          placeholder={t("horairesPlaceholder")}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
-      </label>
+      <div className="block">
+        <span className="text-sm text-slate-700">{t("horairesSemaineLabel")}</span>
+        <div className="mt-2">
+          <StructuredHoursEditor
+            initialJson={initial.horairesSemaine}
+            onChange={setHorairesSemaine}
+          />
+        </div>
+      </div>
       <label className="block">
         <span className="text-sm text-slate-700">{t("categoryProLabel")}</span>
         <select

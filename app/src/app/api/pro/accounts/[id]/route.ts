@@ -39,16 +39,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     nextName: parsed.data.nomCommercial,
   });
 
+  const { nomCommercial, presentation, horaires, phone, website, categoryPro, horairesSemaine, wilayaId } = parsed.data;
+
   const account = await prisma.professionalAccount.update({
     where: { id },
     data: {
-      nomCommercial: parsed.data.nomCommercial,
-      presentation: parsed.data.presentation || null,
-      horaires: parsed.data.horaires || null,
-      phone: parsed.data.phone || null,
-      website: parsed.data.website || null,
-      categoryPro: parsed.data.categoryPro ?? null,
-      wilayaId: parsed.data.wilayaId ?? null,
+      nomCommercial,
+      presentation: presentation || null,
+      // horaires only updated when explicitly sent (legacy text field, replaced by horairesSemaine)
+      ...(horaires !== undefined ? { horaires: horaires || null } : {}),
+      phone: phone || null,
+      website: website || null,
+      categoryPro: categoryPro ?? null,
+      // undefined = not in body = do not touch existing value
+      ...(horairesSemaine !== undefined ? { horairesSemaine } : {}),
+      wilayaId: wilayaId ?? null,
       ...(revokeBadge ? { badgeVerifie: false } : {}),
     },
   });

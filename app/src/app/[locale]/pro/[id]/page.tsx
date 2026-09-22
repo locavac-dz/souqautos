@@ -22,6 +22,7 @@ import { DeleteReviewButton } from "@/components/admin/DeleteReviewButton";
 import { isStaff } from "@/lib/auth-server/roles";
 import { canReplyToProReviews } from "@/lib/pro-account";
 import { parseProPermissions } from "@/lib/pro-permissions";
+import { parseHorairesSemaine, isOpenNow, todayDayKey, DAYS } from "@/lib/horaires-semaine";
 
 // Lot 108 — SEO de la vitrine : métadonnées, image de partage (bannière, à
 // défaut le logo), et noindex tant que le compte n'a aucune annonce publiée.
@@ -160,6 +161,9 @@ export default async function ProShowcasePage({
 
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "medium" });
   const wilayaLabel = account.wilaya ? (locale === "ar" ? account.wilaya.nomAr : account.wilaya.nomFr) : null;
+  const schedule = parseHorairesSemaine(account.horairesSemaine);
+  const openNow = schedule ? isOpenNow(schedule) : null;
+  const todayKey = schedule ? todayDayKey() : null;
 
   const showcaseUrl = `${SITE_URL}/${locale}/pro/${account.id}`;
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
@@ -214,7 +218,11 @@ export default async function ProShowcasePage({
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
         {account.categoryPro && <span>{t(`categoryPro_${account.categoryPro}`)}</span>}
         {wilayaLabel && <span>{wilayaLabel}</span>}
-        {account.horaires && <span>{account.horaires}</span>}
+        {openNow !== null && (
+          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${openNow ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+            {openNow ? t("openNow") : t("closedNow")}
+          </span>
+        )}
       </div>
       <div className="mt-2 flex flex-wrap gap-3">
         {account.phone && (
@@ -242,6 +250,35 @@ export default async function ProShowcasePage({
           </a>
         )}
       </div>
+      {schedule && (
+        <div className="mt-4">
+          <p className="text-sm font-medium text-slate-700 mb-1.5">{t("horairesSemaineTitle")}</p>
+          <div className="space-y-0.5">
+            {DAYS.map((day) => {
+              const entry = schedule[day];
+              const isToday = day === todayKey;
+              return (
+                <div
+                  key={day}
+                  className={`flex items-center gap-3 text-sm rounded px-1.5 py-0.5 ${isToday ? "bg-slate-50 font-medium" : ""}`}
+                >
+                  <span className={`w-20 shrink-0 ${isToday ? "text-slate-900" : "text-slate-600"}`}>{t(`day_${day}`)}</span>
+                  {entry.open ? (
+                    <span className={isToday ? "text-slate-900" : "text-slate-600"}>
+                      {entry.debut} – {entry.fin}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">{t("dayClosed")}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {!schedule && account.horaires && (
+        <p className="text-sm text-slate-600 mt-2">{account.horaires}</p>
+      )}
       {account.presentation && <p className="text-sm text-slate-700 mt-4 whitespace-pre-wrap">{account.presentation}</p>}
 
       <p className="mt-4 text-sm">

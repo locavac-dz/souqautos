@@ -21,5 +21,6 @@ export const proAccountFieldsSchema = z.object({
   phone: z.string().trim().max(20).optional(),
   website: z.string().trim().url().max(200).optional().or(z.literal("")),
   categoryPro: z.enum(PRO_CATEGORIES).nullable().optional(),
+  horairesSemaine: z.string().max(2000).nullable().optional(),
   wilayaId: z.number().int().max(INT4_MAX).nullable().optional(),
 });

@@ -770,6 +770,8 @@ model ProfessionalAccount {
   phone         String?
   website       String?
   categoryPro   ProCategory?
+  // Lot 156 — horaires structurés par jour (JSON sérialisé, 7 jours × {open, debut, fin})
+  horairesSemaine String?
   logoUrl       String?
   bannerUrl     String?
   wilayaId      Int?
