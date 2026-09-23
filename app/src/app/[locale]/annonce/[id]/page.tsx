@@ -43,6 +43,7 @@ import { getSimilarListings } from "@/lib/similar-listings";
 import { ListingCard } from "@/components/search/ListingCard";
 import { parseHorairesSemaine, isOpenNow } from "@/lib/horaires-semaine";
 import { CallbackRequestButton } from "@/components/CallbackRequestButton";
+import { MakeOfferButton } from "@/components/MakeOfferButton";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
 const BADGE_KEY = PRICE_BADGE_KEY;
@@ -615,6 +616,7 @@ export default async function ListingDetailPage({
             {!isOwner && (
               <div className="mt-4 space-y-2">
                 <ContactSellerButton listingId={listing.id} listingTitle={listing.title} isLoggedIn={Boolean(currentUser)} />
+                <MakeOfferButton listingId={listing.id} listingPrice={listing.price} isLoggedIn={Boolean(currentUser)} />
                 {/* Lot 160 — demande de rappel, uniquement pour les annonces pro */}
                 {proAccount && <CallbackRequestButton listingId={listing.id} />}
                 {/* Lot 119 — le numéro n'est JAMAIS envoyé avec la page : seul le fait qu'il existe

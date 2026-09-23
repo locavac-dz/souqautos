@@ -100,6 +100,12 @@ export default async function DashboardPage() {
         >
           {t("activityLink")}
         </Link>
+        <Link
+          href="/compte/offres"
+          className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          {t("offresLink")}
+        </Link>
         <Link href="/compte/profil" className="text-sm text-slate-700 underline hover:text-slate-900">
           {t("editProfileLink")}
         </Link>
