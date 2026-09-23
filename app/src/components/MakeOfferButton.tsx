@@ -8,9 +8,10 @@ type Props = {
   listingId: string;
   listingPrice: number;
   isLoggedIn: boolean;
+  hasPendingOffer: boolean;
 };
 
-export function MakeOfferButton({ listingId, listingPrice, isLoggedIn }: Props) {
+export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendingOffer }: Props) {
   const t = useTranslations("Offer");
   const router = useRouter();
 
@@ -55,6 +56,13 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn }: Props) 
   }
 
   if (!open) {
+    if (hasPendingOffer) {
+      return (
+        <div className="w-full rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-center text-sm font-medium text-amber-700 dark:border-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+          {t("pendingBadge")}
+        </div>
+      );
+    }
     return (
       <button
         onClick={handleOpen}

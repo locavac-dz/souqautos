@@ -1157,7 +1157,8 @@
     "accept": "Accepter",
     "decline": "Refuser",
     "withdraw": "Retirer l'offre",
-    "confirmWithdraw": "Retirer cette offre ?"
+    "confirmWithdraw": "Retirer cette offre ?",
+    "pendingBadge": "Offre en attente de réponse"
   },
   "AdminCatalogue": {
     "title": "Marques & modèles",

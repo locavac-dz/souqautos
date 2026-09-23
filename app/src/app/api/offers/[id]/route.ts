@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -42,10 +43,19 @@ export async function PATCH(
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const updated = await prisma.offer.update({
-    where: { id },
-    data: { status: action },
+  const updated = await prisma.$transaction(async (tx) => {
+    const result = await tx.offer.update({ where: { id }, data: { status: action } });
+    // Quand une offre est acceptée, on clôture toutes les autres offres en attente sur la même annonce.
+    if (action === "ACCEPTED") {
+      await tx.offer.updateMany({
+        where: { listingId: offer.listingId, status: "PENDING", id: { not: id } },
+        data: { status: "DECLINED" },
+      });
+    }
+    return result;
   });
+
+  revalidatePath("/compte/offres");
 
   after(async () => {
     const buyerLocale = offer.buyer.locale ?? "fr";

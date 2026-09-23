@@ -1157,7 +1157,8 @@
     "accept": "قبول",
     "decline": "رفض",
     "withdraw": "سحب العرض",
-    "confirmWithdraw": "سحب هذا العرض؟"
+    "confirmWithdraw": "سحب هذا العرض؟",
+    "pendingBadge": "عرض في انتظار الرد"
   },
   "AdminCatalogue": {
     "title": "الماركات والموديلات",

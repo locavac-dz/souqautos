@@ -214,6 +214,16 @@ export default async function ListingDetailPage({
       )
     : false;
 
+  const hasPendingOffer =
+    currentUser && !isOwner
+      ? Boolean(
+          await prisma.offer.findFirst({
+            where: { listingId: listing.id, buyerId: currentUser.id, status: "PENDING" },
+            select: { id: true },
+          })
+        )
+      : false;
+
   const tReview = await getTranslations("Review");
   const tPro = await getTranslations("Pro");
   const sellerReviews = await prisma.review.findMany({
@@ -616,7 +626,7 @@ export default async function ListingDetailPage({
             {!isOwner && (
               <div className="mt-4 space-y-2">
                 <ContactSellerButton listingId={listing.id} listingTitle={listing.title} isLoggedIn={Boolean(currentUser)} />
-                <MakeOfferButton listingId={listing.id} listingPrice={listing.price} isLoggedIn={Boolean(currentUser)} />
+                <MakeOfferButton listingId={listing.id} listingPrice={listing.price} isLoggedIn={Boolean(currentUser)} hasPendingOffer={hasPendingOffer} />
                 {/* Lot 160 — demande de rappel, uniquement pour les annonces pro */}
                 {proAccount && <CallbackRequestButton listingId={listing.id} />}
                 {/* Lot 119 — le numéro n'est JAMAIS envoyé avec la page : seul le fait qu'il existe
