@@ -1112,7 +1112,15 @@
     "offerDeclinedBody": "Le vendeur a refusé votre offre de {amount} DA pour l'annonce « {title} ».",
     "offerDeclinedLink": "Voir mes offres sur Souq Auto",
     "pushOfferDeclinedTitle": "Offre refusée",
-    "pushOfferDeclinedBody": "Votre offre pour « {title} » a été refusée."
+    "pushOfferDeclinedBody": "Votre offre pour « {title} » a été refusée.",
+    "counterOfferSubject": "Le vendeur vous fait une contre-offre — Souq Auto",
+    "counterOfferBody": "Le vendeur propose {amount} DA pour l'annonce « {title} ».",
+    "counterOfferLink": "Voir la contre-offre sur Souq Auto",
+    "pushCounterOfferTitle": "Contre-offre reçue",
+    "pushCounterOfferBody": "{amount} DA proposé par le vendeur pour « {title} »",
+    "counterDeclinedSubject": "Votre contre-offre a été refusée — Souq Auto",
+    "counterDeclinedBody": "L'acheteur a refusé votre contre-offre pour l'annonce « {title} ».",
+    "counterDeclinedLink": "Voir mes offres sur Souq Auto"
   },
   "Alerts": {
     "title": "Mes alertes",
@@ -1158,7 +1166,15 @@
     "decline": "Refuser",
     "withdraw": "Retirer l'offre",
     "confirmWithdraw": "Retirer cette offre ?",
-    "pendingBadge": "Offre en attente de réponse"
+    "pendingBadge": "Offre en attente de réponse",
+    "statusCOUNTERED": "Contre-offre",
+    "counter": "Contre-offre",
+    "counterSubmit": "Envoyer",
+    "counterOfferProposal": "Le vendeur propose {amount} DA",
+    "acceptCounter": "Accepter",
+    "declineCounter": "Refuser",
+    "editOffer": "Modifier",
+    "editSubmit": "Mettre à jour"
   },
   "AdminCatalogue": {
     "title": "Marques & modèles",

@@ -3,7 +3,9 @@ import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { WithdrawOfferButton } from "@/components/WithdrawOfferButton";
+import { EditOfferButton } from "@/components/EditOfferButton";
 import { RespondOfferButtons } from "@/components/RespondOfferButtons";
+import { RespondCounterButtons } from "@/components/RespondCounterButtons";
 
 export default async function OffresPage() {
   const locale = await getLocale();
@@ -38,6 +40,7 @@ export default async function OffresPage() {
     ACCEPTED:  t("statusAccepted"),
     DECLINED:  t("statusDeclined"),
     WITHDRAWN: t("statusWithdrawn"),
+    COUNTERED: t("statusCOUNTERED"),
   };
 
   const statusColor: Record<string, string> = {
@@ -45,6 +48,7 @@ export default async function OffresPage() {
     ACCEPTED:  "bg-green-100 text-green-800",
     DECLINED:  "bg-red-100 text-red-800",
     WITHDRAWN: "bg-slate-100 text-slate-600",
+    COUNTERED: "bg-blue-100 text-blue-800",
   };
 
   return (
@@ -116,13 +120,25 @@ export default async function OffresPage() {
                     {offer.message && (
                       <p className="text-sm text-slate-600 dark:text-slate-400">&ldquo;{offer.message}&rdquo;</p>
                     )}
+                    {/* Contre-offre du vendeur */}
+                    {offer.status === "COUNTERED" && offer.counterAmount && (
+                      <p className="rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
+                        {t("counterOfferProposal", { amount: offer.counterAmount.toLocaleString() })}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor[offer.status]}`}>
                       {statusLabel[offer.status]}
                     </span>
                     {offer.status === "PENDING" && (
-                      <WithdrawOfferButton offerId={offer.id} />
+                      <div className="flex gap-2">
+                        <EditOfferButton offerId={offer.id} currentAmount={offer.amount} />
+                        <WithdrawOfferButton offerId={offer.id} />
+                      </div>
+                    )}
+                    {offer.status === "COUNTERED" && (
+                      <RespondCounterButtons offerId={offer.id} />
                     )}
                   </div>
                 </div>

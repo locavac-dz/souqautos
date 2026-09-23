@@ -1112,7 +1112,15 @@
     "offerDeclinedBody": "رفض البائع عرضك بقيمة {amount} د.ج للإعلان « {title} ».",
     "offerDeclinedLink": "عرض عروضي على سوق أوتو",
     "pushOfferDeclinedTitle": "تم رفض العرض",
-    "pushOfferDeclinedBody": "تم رفض عرضك على « {title} »."
+    "pushOfferDeclinedBody": "تم رفض عرضك على « {title} ».",
+    "counterOfferSubject": "البائع يقدم عرضًا مضادًا — سوق أوتو",
+    "counterOfferBody": "يقترح البائع {amount} د.ج للإعلان « {title} ».",
+    "counterOfferLink": "عرض العرض المضاد على سوق أوتو",
+    "pushCounterOfferTitle": "عرض مضاد مستلم",
+    "pushCounterOfferBody": "{amount} د.ج مقترح من البائع لـ « {title} »",
+    "counterDeclinedSubject": "تم رفض عرضك المضاد — سوق أوتو",
+    "counterDeclinedBody": "رفض المشتري عرضك المضاد للإعلان « {title} ».",
+    "counterDeclinedLink": "عرض عروضي على سوق أوتو"
   },
   "Alerts": {
     "title": "تنبيهاتي",
@@ -1158,7 +1166,15 @@
     "decline": "رفض",
     "withdraw": "سحب العرض",
     "confirmWithdraw": "سحب هذا العرض؟",
-    "pendingBadge": "عرض في انتظار الرد"
+    "pendingBadge": "عرض في انتظار الرد",
+    "statusCOUNTERED": "عرض مضاد",
+    "counter": "عرض مضاد",
+    "counterSubmit": "إرسال",
+    "counterOfferProposal": "يقترح البائع {amount} د.ج",
+    "acceptCounter": "قبول",
+    "declineCounter": "رفض",
+    "editOffer": "تعديل",
+    "editSubmit": "تحديث"
   },
   "AdminCatalogue": {
     "title": "الماركات والموديلات",

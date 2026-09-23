@@ -1019,23 +1019,25 @@ model SearchAlertNotification {
 enum OfferStatus {
   PENDING   // en attente de réponse du vendeur
   ACCEPTED  // acceptée par le vendeur
-  DECLINED  // refusée par le vendeur
+  DECLINED  // refusée par le vendeur (vendeur) ou par l'acheteur (contre-offre)
   WITHDRAWN // retirée par l'acheteur
+  COUNTERED // contre-offre proposée par le vendeur, en attente de l'acheteur
 }
 
 model Offer {
-  id        String      @id @default(cuid())
-  listingId String
-  listing   Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  buyerId   String
-  buyer     User        @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
-  sellerId  String
-  seller    User        @relation("SellerOffers", fields: [sellerId], references: [id], onDelete: Cascade)
-  amount    Int
-  message   String?     @db.VarChar(500)
-  status    OfferStatus @default(PENDING)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id            String      @id @default(cuid())
+  listingId     String
+  listing       Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId       String
+  buyer         User        @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId      String
+  seller        User        @relation("SellerOffers", fields: [sellerId], references: [id], onDelete: Cascade)
+  amount        Int
+  message       String?     @db.VarChar(500)
+  status        OfferStatus @default(PENDING)
+  counterAmount Int?        // renseigné uniquement quand status = COUNTERED
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([listingId])
   @@index([buyerId])
