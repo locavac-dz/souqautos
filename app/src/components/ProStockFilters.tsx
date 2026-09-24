@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { PRICE_STEPS_DZD, yearOptions, optionsWithCurrent, normalizeFilterValue } from "@/lib/search-filter-options";
@@ -33,6 +33,11 @@ export function ProStockFilters({
   const numberLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
   const router = useRouter();
   const [values, setValues] = useState<StockFilterValues>(initialValues);
+
+  useEffect(() => {
+    setValues(initialValues);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues.brandId, initialValues.priceMin, initialValues.priceMax, initialValues.yearMin, initialValues.yearMax]);
 
   function set(key: keyof StockFilterValues, value: string) {
     setValues((prev) => ({ ...prev, [key]: value || undefined }));

@@ -75,8 +75,9 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
             ) : (
               <form onSubmit={submit} className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">{t("nameLabel")}</label>
+                  <label htmlFor="callback-name" className="mb-1 block text-xs font-medium text-slate-600">{t("nameLabel")}</label>
                   <input
+                    id="callback-name"
                     required
                     minLength={2}
                     maxLength={100}
@@ -88,8 +89,9 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">{t("phoneLabel")}</label>
+                  <label htmlFor="callback-phone" className="mb-1 block text-xs font-medium text-slate-600">{t("phoneLabel")}</label>
                   <input
+                    id="callback-phone"
                     required
                     type="tel"
                     value={phone}

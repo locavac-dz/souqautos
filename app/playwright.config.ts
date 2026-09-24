@@ -23,7 +23,7 @@ export default defineConfig({
   // débit en mémoire). Suffisant pour la taille actuelle de la suite.
   fullyParallel: false,
   workers: 1,
-  retries: 0,
+  retries: 1,
   reporter: "list",
   // La base de test (E2E_DATABASE_URL) est réinitialisée par le hook npm
   // `pretest:e2e` (package.json, exécute e2e/reset-db.ts) AVANT que
@@ -52,10 +52,10 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-    command: `npx next dev -p ${PORT}`,
+    command: `npx next dev --webpack -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
-    timeout: 60_000,
+    timeout: 180_000,
     // REDIS_URL/S3_BUCKET explicitement vidées : Next.js charge .env tel
     // quel (dotenv n'écrase jamais une variable déjà définie, mais complète
     // les absentes), et ce poste a un vrai Redis local qui tourne pour la

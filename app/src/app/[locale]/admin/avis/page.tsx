@@ -99,6 +99,9 @@ export default async function AdminReviewsPage() {
       )}
 
       <section>
+        {pending.length === 0 && (
+          <h1 className="sr-only">{t("allReviews")}</h1>
+        )}
         <h2 className={`font-medium text-slate-900 mb-4 ${pending.length > 0 ? "text-base" : "text-lg"}`}>
           {t("allReviews")} ({reviews.length})
         </h2>

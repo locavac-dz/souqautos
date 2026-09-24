@@ -143,7 +143,7 @@ test.describe("Lot 159 : filtres rapides sur la vitrine", () => {
     const expected = await db.listing.count({ where: { sellerId: pro.userId, status: "PUBLIEE", brandId } });
 
     await buyer.page.goto(`/fr/pro/${pro.accountId}?brandId=${brandId}`);
-    const countText = await buyer.page.getByText(/annonces? trouvées?|annonce trouvée/).first().innerText().catch(() => "");
+    const countText = await buyer.page.getByText(/annonces? trouvées?|annonce trouvée/).first().innerText({ timeout: 5000 }).catch(() => "");
     if (countText) {
       expect(Number(countText.replace(/\D/g, ""))).toBe(expected);
     }

@@ -66,7 +66,7 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendin
     return (
       <button
         onClick={handleOpen}
-        className="w-full rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 active:bg-emerald-800"
+        className="w-full rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 active:bg-emerald-900"
       >
         {t("cta")}
       </button>
@@ -147,7 +147,7 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendin
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                className="flex-1 rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
               >
                 {loading ? t("sending") : t("submit")}
               </button>

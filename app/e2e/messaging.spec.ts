@@ -16,12 +16,11 @@ test("un acheteur peut contacter un vendeur et le vendeur reçoit le message", a
   await buyerPage.getByRole("link", { name: /Renault Clio 2018/i }).first().click();
   await expect(buyerPage).toHaveURL(/\/fr\/annonce\//);
 
-  await buyerPage.getByRole("button", { name: "Contacter le vendeur" }).click();
-  await expect(buyerPage).toHaveURL(/\/fr\/compte\/messages\//);
-
   const messageText = `Message de test E2E ${Date.now()}`;
-  await buyerPage.getByRole("textbox", { name: "Écrire un message…" }).fill(messageText);
+  await buyerPage.getByRole("button", { name: "Contacter le vendeur" }).click();
+  await buyerPage.getByRole("textbox").fill(messageText);
   await buyerPage.getByRole("button", { name: "Envoyer" }).click();
+  await expect(buyerPage).toHaveURL(/\/fr\/compte\/messages\//);
   await expect(buyerPage.getByText(messageText)).toBeVisible();
 
   const conversationUrl = buyerPage.url();

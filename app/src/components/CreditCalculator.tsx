@@ -42,8 +42,9 @@ export function CreditCalculator({ price }: { price: number }) {
             value={downPayment}
             onChange={(e) => setDownPayment(Number(e.target.value))}
             className="w-full accent-emerald-600"
+            aria-label={t("downPayment")}
           />
-          <div className="flex justify-between text-xs text-slate-400 mt-0.5">
+          <div className="flex justify-between text-xs text-slate-500 mt-0.5">
             <span>0</span>
             <span>{fmt(maxDown)} DA</span>
           </div>
@@ -63,8 +64,9 @@ export function CreditCalculator({ price }: { price: number }) {
             value={annualRate}
             onChange={(e) => setAnnualRate(Number(e.target.value))}
             className="w-full accent-emerald-600"
+            aria-label={t("annualRate")}
           />
-          <div className="flex justify-between text-xs text-slate-400 mt-0.5">
+          <div className="flex justify-between text-xs text-slate-500 mt-0.5">
             <span>1 %</span>
             <span>20 %</span>
           </div>
@@ -80,7 +82,7 @@ export function CreditCalculator({ price }: { price: number }) {
                 onClick={() => setMonths(m)}
                 className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
                   months === m
-                    ? "bg-emerald-600 border-emerald-600 text-white"
+                    ? "bg-emerald-700 border-emerald-700 text-white"
                     : "border-slate-300 text-slate-600 hover:border-emerald-400"
                 }`}
               >
@@ -110,7 +112,7 @@ export function CreditCalculator({ price }: { price: number }) {
           <p className="text-xs text-slate-500 text-center">{t("noLoan")}</p>
         )}
 
-        <p className="text-xs text-slate-400">{t("disclaimer")}</p>
+        <p className="text-xs text-slate-500">{t("disclaimer")}</p>
       </div>
     </div>
   );

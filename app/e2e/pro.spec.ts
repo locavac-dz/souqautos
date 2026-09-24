@@ -52,9 +52,9 @@ test.beforeAll(async ({ browser }) => {
   await registerAndLogin(buyerPage, "fr", buyerAccount);
   await buyerPage.goto(`/fr/annonce/${listing.id}`);
   await buyerPage.getByRole("button", { name: "Contacter le vendeur" }).click();
-  await expect(buyerPage).toHaveURL(/\/fr\/compte\/messages\//);
-  await buyerPage.getByRole("textbox", { name: "Écrire un message…" }).fill("Bonjour, ce véhicule est-il toujours disponible ?");
+  await buyerPage.getByRole("textbox").fill("Bonjour, ce véhicule est-il toujours disponible ?");
   await buyerPage.getByRole("button", { name: "Envoyer" }).click();
+  await expect(buyerPage).toHaveURL(/\/fr\/compte\/messages\//);
   await expect(buyerPage.getByText("ce véhicule est-il toujours disponible")).toBeVisible();
 
   scene = { contexts, pro: { page: proPage, userId, businessName }, buyer: { page: buyerPage, name: buyerAccount.displayName }, listing };

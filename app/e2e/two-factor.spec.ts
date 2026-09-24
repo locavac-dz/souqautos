@@ -323,6 +323,7 @@ test.describe("connexion", () => {
     await other.goto("/fr/connexion");
     await other.getByRole("link", { name: fr.Auth.googleContinue }).click();
     await expect(other).toHaveURL(/\/fr\/connexion\/verification/);
+    await other.waitForLoadState("networkidle"); // laisser React hydrater après la chaîne de redirections OAuth
     expect(await me(other), "Google a prouvé l'identité, pas le second facteur").toBe(401);
     expect(await cookieNames(context)).not.toContain("souq_auto_session");
 

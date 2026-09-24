@@ -88,7 +88,7 @@ export function ContactSellerButton({
             onClick={() => selectTemplate(key)}
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
               selected === key
-                ? "border-emerald-600 bg-emerald-600 text-white"
+                ? "border-emerald-700 bg-emerald-700 text-white"
                 : "border-slate-300 bg-white text-slate-600 hover:border-emerald-400 hover:text-emerald-700"
             }`}
           >
@@ -120,7 +120,7 @@ export function ContactSellerButton({
           type="button"
           onClick={handleSend}
           disabled={pending || text.trim().length === 0}
-          className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="rounded-md bg-emerald-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
         >
           {pending ? "…" : t("sendMessage")}
         </button>

@@ -411,7 +411,7 @@ export default async function ListingDetailPage({
         </div>
       )}
 
-      <PhotoGallery photos={listing.photos} alt={listing.title} />
+      <PhotoGallery photos={listing.photos.map((p) => ({ id: p.id, path: p.path }))} alt={listing.title} />
       <PhotoCredits credits={collectPhotoCredits(listing.photos)} />
 
       <div className="grid sm:grid-cols-3 gap-8">

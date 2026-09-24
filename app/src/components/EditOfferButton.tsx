@@ -72,7 +72,7 @@ export function EditOfferButton({ offerId, currentAmount }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="rounded-md bg-emerald-700 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
         >
           {loading ? "…" : t("editSubmit")}
         </button>
