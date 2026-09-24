@@ -4,6 +4,7 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 import { LogoutButton } from "./LogoutButton";
 import { MobileMenuToggle } from "./MobileMenuToggle";
 import { SiteLogoMark } from "./SiteLogoMark";
+import { SiteWordMark } from "./SiteWordMark";
 import { isStaff } from "@/lib/auth-server/roles";
 import type { Role } from "@prisma/client";
 
@@ -89,9 +90,9 @@ export async function SiteHeader({
   return (
     <header className="border-b border-slate-200">
       <div className="relative mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight text-slate-900">
+        <Link href="/" className="flex items-center gap-2" aria-label={tBrand("name")}>
           <SiteLogoMark className="h-7 w-7 shrink-0" />
-          {tBrand("name")}
+          <SiteWordMark className="text-lg" />
         </Link>
 
         <nav aria-label={tNav("main")} className="hidden sm:flex items-center gap-4 text-sm">{navContent}</nav>
