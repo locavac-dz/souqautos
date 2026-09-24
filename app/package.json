@@ -14,6 +14,8 @@
     "test:e2e:ui": "playwright test --ui",
     "pretest:e2e:pwa": "tsx e2e/reset-db.ts",
     "test:e2e:pwa": "playwright test -c playwright.pwa.config.ts",
+    "android:sync": "cap sync android",
+    "android:open": "cap open android",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo-listings.ts",
     "db:price-history": "tsx prisma/seed-price-history.ts",
@@ -37,6 +39,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1132.0",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "file-type": "^22.0.2",
