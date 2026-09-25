@@ -116,6 +116,46 @@ export async function getModelPriceHistory({
     .map((r) => ({ month: r.month, avgPrice: Number(r.avg_price), count: Number(r.cnt) }));
 }
 
+export type ModelYearStats = {
+  count: number;
+  p25: number | null;
+  p75: number | null;
+};
+
+// Lot 172 — fourchette de prix P25–P75 pour un modèle ET une année donnée, sur les
+// annonces actuellement en ligne. Utilisé par MarketStatsWidget sur la page annonce.
+// Minimum 3 annonces pour retourner une fourchette (en dessous, les percentiles sont
+// trop instables pour être présentés à un acheteur comme une référence de marché).
+export async function getModelYearStats({
+  brandId,
+  modelId,
+  year,
+}: {
+  brandId: number;
+  modelId: number;
+  year: number;
+}): Promise<ModelYearStats> {
+  const rows = await prisma.$queryRaw<{ cnt: bigint; p25: number | null; p75: number | null }[]>`
+    SELECT
+      COUNT(*)                                                                AS cnt,
+      PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY price)::integer           AS p25,
+      PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY price)::integer           AS p75
+    FROM "Listing"
+    WHERE "brandId" = ${brandId}
+      AND "modelId" = ${modelId}
+      AND year     = ${year}
+      AND status   = 'PUBLIEE'
+  `;
+  const row = rows[0];
+  const cnt = Number(row?.cnt ?? 0);
+  if (cnt < 3) return { count: cnt, p25: null, p75: null };
+  return {
+    count: cnt,
+    p25: row?.p25 !== null && row?.p25 !== undefined ? Math.round(Number(row.p25)) : null,
+    p75: row?.p75 !== null && row?.p75 !== undefined ? Math.round(Number(row.p75)) : null,
+  };
+}
+
 export type WilayaBrandCount = { brandId: number; count: number; minPrice: number | null };
 
 // Lot 75 — mêmes conventions que getModelCountsForBrand (une seule requête

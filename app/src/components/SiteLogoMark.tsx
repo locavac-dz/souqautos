@@ -15,7 +15,7 @@ export function SiteLogoMark({ className }: { className?: string }) {
         fill="white"
         fontSize="50"
         fontWeight="bold"
-        fontFamily="'Bebas Neue', 'Arial Black', Impact, sans-serif"
+        fontFamily="var(--font-bebas-neue), 'Arial Black', Impact, sans-serif"
       >
         S
       </text>

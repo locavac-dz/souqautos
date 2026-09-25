@@ -44,6 +44,7 @@ import { ListingCard } from "@/components/search/ListingCard";
 import { parseHorairesSemaine, isOpenNow } from "@/lib/horaires-semaine";
 import { CallbackRequestButton } from "@/components/CallbackRequestButton";
 import { MakeOfferButton } from "@/components/MakeOfferButton";
+import { MarketStatsWidget } from "@/components/MarketStatsWidget";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
 const BADGE_KEY = PRICE_BADGE_KEY;
@@ -456,6 +457,18 @@ export default async function ListingDetailPage({
               {listing.accidented && <DetailRow label={tListing("accidented")} value="✓" />}
               {listing.color && <DetailRow label={tWizard("color")} value={listing.color} />}
               {listing.powerHp && <DetailRow label={tWizard("powerHp")} value={`${listing.powerHp} ch`} />}
+              {listing.controltechniqueExpiry && (
+                <DetailRow
+                  label={tListing("controltechniqueExpiry")}
+                  value={new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "long" }).format(listing.controltechniqueExpiry)}
+                />
+              )}
+              {listing.assuranceExpiry && (
+                <DetailRow
+                  label={tListing("assuranceExpiry")}
+                  value={new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "long" }).format(listing.assuranceExpiry)}
+                />
+              )}
             </div>
           </div>
 
@@ -567,6 +580,20 @@ export default async function ListingDetailPage({
                     : tPriceBadge("deviationBelow", { value: priceBadge.deviationPct })}
                 </p>
               </div>
+            )}
+
+            {/* Lot 172 — encart statistiques de marché par modèle + année */}
+            {listing.brandId && listing.modelId && listing.brand && listing.model && (
+              <MarketStatsWidget
+                brandId={listing.brandId}
+                modelId={listing.modelId}
+                year={listing.year}
+                listingPrice={listing.price}
+                brandName={brandLabel}
+                modelName={modelLabel}
+                brandSlug={listing.brand.slug}
+                modelSlug={listing.model.slug}
+              />
             )}
 
             <div className="mt-4 pt-4 border-t border-slate-100">

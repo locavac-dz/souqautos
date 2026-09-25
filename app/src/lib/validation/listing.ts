@@ -42,6 +42,8 @@ const listingBaseSchema = z.object({
   condition: z.enum(conditions),
   firstHand: z.boolean().default(false),
   accidented: z.boolean().default(false),
+  controltechniqueExpiry: z.coerce.date().optional(),
+  assuranceExpiry: z.coerce.date().optional(),
   wilayaId: z.number().int().positive().max(INT4_MAX),
   communeId: z.number().int().positive().max(INT4_MAX).optional(),
   phone: z.string().trim().regex(algerianPhoneRegex).optional(),

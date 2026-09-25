@@ -4,7 +4,7 @@
 // fonctionnalité exotique/fabriquée) ; à enrichir progressivement au fil des
 // prochains lots, même discipline que catalogue-data.ts.
 
-export type EquipmentCategoryKey = "CONFORT" | "SECURITE" | "MULTIMEDIA" | "EXTERIEUR";
+export type EquipmentCategoryKey = "CONFORT" | "SECURITE" | "MULTIMEDIA" | "EXTERIEUR" | "ACCESSOIRE";
 
 export const equipmentCatalogue: {
   slug: string;
@@ -39,4 +39,11 @@ export const equipmentCatalogue: {
   { slug: "barres-toit", nameFr: "Barres de toit", nameAr: "حاملات السقف", category: "EXTERIEUR" },
   { slug: "retroviseurs-electriques", nameFr: "Rétroviseurs électriques", nameAr: "مرايا كهربائية", category: "EXTERIEUR" },
   { slug: "phares-led", nameFr: "Phares LED", nameAr: "مصابيح LED", category: "EXTERIEUR" },
+
+  // Accessoires / remorquage / transport
+  { slug: "attelage-remorque", nameFr: "Attelage remorque", nameAr: "خطاف مقطورة", category: "ACCESSOIRE" },
+  { slug: "coffre-de-toit", nameFr: "Coffre de toit", nameAr: "صندوق سقف", category: "ACCESSOIRE" },
+  { slug: "porte-velo", nameFr: "Porte-vélo", nameAr: "حامل دراجات", category: "ACCESSOIRE" },
+  { slug: "galerie-de-toit", nameFr: "Galerie de toit", nameAr: "رف السقف", category: "ACCESSOIRE" },
+  { slug: "porte-ski", nameFr: "Porte-ski", nameAr: "حامل تزلج", category: "ACCESSOIRE" },
 ];

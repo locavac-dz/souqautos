@@ -66,6 +66,18 @@ export default function Step9Page() {
         {data.fuelType && <Row label={t("fuelType")} value={t(FUEL_KEY[data.fuelType])} />}
         {data.gearbox && <Row label={t("gearbox")} value={t(GEARBOX_KEY[data.gearbox])} />}
         {data.condition && <Row label={t("condition")} value={t(CONDITION_KEY[data.condition])} />}
+        {data.controltechniqueExpiry && (
+          <Row
+            label={t("controltechniqueExpiry")}
+            value={new Date(data.controltechniqueExpiry + "T00:00:00").toLocaleDateString("fr-DZ", { dateStyle: "long" })}
+          />
+        )}
+        {data.assuranceExpiry && (
+          <Row
+            label={t("assuranceExpiry")}
+            value={new Date(data.assuranceExpiry + "T00:00:00").toLocaleDateString("fr-DZ", { dateStyle: "long" })}
+          />
+        )}
         <Row label={t("price")} value={data.price ? `${data.price.toLocaleString()} DA` : undefined} />
         <Row label={t("wilaya")} value={data.wilayaName} />
         {data.communeName && <Row label={t("commune")} value={data.communeName} />}

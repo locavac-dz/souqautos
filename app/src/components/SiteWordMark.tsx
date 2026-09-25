@@ -6,7 +6,7 @@ export function SiteWordMark({ className }: { className?: string }) {
         display: "inline-flex",
         lineHeight: 1,
         letterSpacing: "0.06em",
-        fontFamily: "'Bebas Neue', 'Arial Black', sans-serif",
+        fontFamily: "var(--font-bebas-neue), 'Arial Black', sans-serif",
         fontWeight: 400,
       }}
     >

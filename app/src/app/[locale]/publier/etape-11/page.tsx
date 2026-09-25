@@ -39,6 +39,8 @@ export default function Step11Page() {
       condition: data.condition,
       firstHand: data.firstHand ?? false,
       accidented: data.accidented ?? false,
+      controltechniqueExpiry: data.controltechniqueExpiry || undefined,
+      assuranceExpiry: data.assuranceExpiry || undefined,
       wilayaId: data.wilayaId,
       communeId: data.communeId,
       phone: data.phone,

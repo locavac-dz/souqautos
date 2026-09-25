@@ -30,7 +30,8 @@
     "sellButton": "بيع سيارتي",
     "estimateButton": "تقييم سيارتي",
     "browseBrandsButton": "تصفح الماركات",
-    "featuredTitle": "إعلانات مميزة"
+    "featuredTitle": "إعلانات مميزة",
+    "seeAllListings": "عرض جميع الإعلانات"
   },
   "Auth": {
     "registerTitle": "إنشاء حساب فردي",
@@ -214,12 +215,17 @@
     "conditionOccasion": "مستعملة",
     "firstHand": "يد أولى",
     "accidented": "تعرضت لحادث",
+    "controltechniqueExpiry": "الفحص التقني (تاريخ الانتهاء)",
+    "controltechniqueExpiryHint": "اختياري — اتركه فارغًا إذا لم يكن متوفرًا",
+    "assuranceExpiry": "التأمين (تاريخ الانتهاء)",
+    "assuranceExpiryHint": "اختياري — اتركه فارغًا إذا لم يكن متوفرًا",
     "equipmentsTitle": "التجهيزات",
     "equipmentsHelp": "حدد التجهيزات الموجودة في السيارة — تُؤخذ بعين الاعتبار عند مقارنة السعر مع إعلانات مماثلة.",
     "equipmentCategoryConfort": "الراحة",
     "equipmentCategorySecurite": "الأمان",
     "equipmentCategoryMultimedia": "الوسائط المتعددة",
     "equipmentCategoryExterieur": "الخارجية",
+    "equipmentCategoryAccessoire": "الإكسسوارات (القطر / النقل)",
     "step5Title": "السعر",
     "price": "السعر المطلوب (دج)",
     "priceEstimateTitle": "سعر السوق",
@@ -285,6 +291,8 @@
     "conditionOccasion": "مستعملة",
     "firstHand": "يد أولى",
     "accidented": "تعرضت لحادث",
+    "controltechniqueExpiry": "الفحص التقني صالح حتى",
+    "assuranceExpiry": "التأمين صالح حتى",
     "descriptionTitle": "الوصف",
     "detailsTitle": "المواصفات",
     "equipmentsTitle": "التجهيزات",
@@ -416,6 +424,14 @@
     "totalInterest": "الفوائد",
     "noLoan": "الدفعة الأولى تغطي السعر الإجمالي — لا حاجة لقرض.",
     "disclaimer": "محاكاة تقريبية. تعتمد الشروط الفعلية على مؤسستك المصرفية."
+  },
+  "MarketStats": {
+    "title": "السوق · {brand} {model} {year}",
+    "countLabel": "{count} إعلان متاح",
+    "badge_within": "السعر ضمن نطاق السوق",
+    "badge_below": "السعر أقل من نطاق السوق",
+    "badge_above": "السعر أعلى من نطاق السوق",
+    "viewModel": "عرض إعلانات {model} ←"
   },
   "PriceBadge": {
     "estimationTitle": "تقييم سوق أوتو",

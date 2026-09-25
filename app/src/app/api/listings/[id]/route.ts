@@ -146,6 +146,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         condition: data.condition,
         firstHand: data.firstHand,
         accidented: data.accidented,
+        controltechniqueExpiry: data.controltechniqueExpiry ?? null,
+        assuranceExpiry: data.assuranceExpiry ?? null,
         wilayaId: data.wilayaId,
         communeId: data.communeId ?? null,
         status: "EN_ATTENTE",

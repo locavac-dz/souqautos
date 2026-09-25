@@ -28,6 +28,8 @@ export type WizardData = {
   condition?: ListingCondition;
   firstHand?: boolean;
   accidented?: boolean;
+  controltechniqueExpiry?: string; // ISO YYYY-MM-DD
+  assuranceExpiry?: string;        // ISO YYYY-MM-DD
   equipmentIds?: number[];
   price?: number;
   title?: string;

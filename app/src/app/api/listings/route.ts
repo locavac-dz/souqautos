@@ -121,6 +121,8 @@ export async function POST(request: NextRequest) {
       condition: data.condition,
       firstHand: data.firstHand,
       accidented: data.accidented,
+      controltechniqueExpiry: data.controltechniqueExpiry ?? null,
+      assuranceExpiry: data.assuranceExpiry ?? null,
       wilayaId: data.wilayaId,
       communeId: data.communeId ?? null,
       // Lot 7 : file de modération — publication seulement après approbation admin (§39).

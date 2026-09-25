@@ -1,4 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { Bebas_Neue } from "next/font/google";
+
+const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas-neue", display: "swap" });
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
@@ -74,7 +77,7 @@ export default async function LocaleLayout({
     : 0;
 
   return (
-    <html lang={locale} dir={direction}>
+    <html lang={locale} dir={direction} className={bebasNeue.variable}>
       <body className="min-h-screen flex flex-col antialiased">
         <NextIntlClientProvider messages={messages}>
           <CompareProvider>

@@ -30,7 +30,8 @@
     "sellButton": "Vendre mon véhicule",
     "estimateButton": "Estimer mon véhicule",
     "browseBrandsButton": "Parcourir les marques",
-    "featuredTitle": "Annonces en vedette"
+    "featuredTitle": "Annonces en vedette",
+    "seeAllListings": "Voir toutes les annonces"
   },
   "Auth": {
     "registerTitle": "Créer un compte particulier",
@@ -214,12 +215,17 @@
     "conditionOccasion": "Occasion",
     "firstHand": "Première main",
     "accidented": "Déjà accidenté",
+    "controltechniqueExpiry": "Contrôle technique (date d'expiration)",
+    "controltechniqueExpiryHint": "Optionnel — laissez vide si non renseigné",
+    "assuranceExpiry": "Assurance (date d'expiration)",
+    "assuranceExpiryHint": "Optionnel — laissez vide si non renseigné",
     "equipmentsTitle": "Équipements",
     "equipmentsHelp": "Cochez les équipements présents sur le véhicule — ils sont pris en compte dans la comparaison de prix avec des annonces similaires.",
     "equipmentCategoryConfort": "Confort",
     "equipmentCategorySecurite": "Sécurité",
     "equipmentCategoryMultimedia": "Multimédia",
     "equipmentCategoryExterieur": "Extérieur",
+    "equipmentCategoryAccessoire": "Accessoires (remorquage / transport)",
     "step5Title": "Prix",
     "price": "Prix demandé (DA)",
     "priceEstimateTitle": "Prix du marché",
@@ -285,6 +291,8 @@
     "conditionOccasion": "Occasion",
     "firstHand": "Première main",
     "accidented": "Déjà accidenté",
+    "controltechniqueExpiry": "Contrôle technique jusqu'au",
+    "assuranceExpiry": "Assurance jusqu'au",
     "descriptionTitle": "Description",
     "detailsTitle": "Caractéristiques",
     "equipmentsTitle": "Équipements",
@@ -416,6 +424,14 @@
     "totalInterest": "Intérêts",
     "noLoan": "L'apport couvre le prix total — aucun crédit nécessaire.",
     "disclaimer": "Simulation indicative. Les conditions réelles dépendent de votre établissement bancaire."
+  },
+  "MarketStats": {
+    "title": "Marché · {brand} {model} {year}",
+    "countLabel": "{count} annonces en ligne",
+    "badge_within": "Prix dans la fourchette du marché",
+    "badge_below": "Prix inférieur à la fourchette",
+    "badge_above": "Prix supérieur à la fourchette",
+    "viewModel": "Voir les {model} →"
   },
   "PriceBadge": {
     "estimationTitle": "Estimation Souq Auto",

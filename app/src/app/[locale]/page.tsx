@@ -44,41 +44,49 @@ export default async function HomePage() {
 
   return (
     <div>
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="text-3xl sm:text-4xl font-semibold text-slate-900 text-balance">
-          {t("heroTitle")}
-        </h1>
-        <p className="mt-3 text-slate-600">{t("heroSubtitle")}</p>
+      {/* Hero — bande colorée pleine largeur */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950">
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <h1 className="text-3xl sm:text-4xl font-semibold text-white text-balance">
+            {t("heroTitle")}
+          </h1>
+          <p className="mt-3 text-slate-300">{t("heroSubtitle")}</p>
 
-        <div className="mt-8">
-          <SearchFilters brands={[]} wilayas={[]} initialValues={{}} compact />
-        </div>
+          <div className="mt-8 bg-white rounded-xl p-3 shadow-lg">
+            <SearchFilters brands={[]} wilayas={[]} initialValues={{}} compact />
+          </div>
 
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/vendre"
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:border-slate-400"
-          >
-            {t("sellButton")}
-          </Link>
-          <Link
-            href="/cote-souq-auto"
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:border-slate-400"
-          >
-            {t("estimateButton")}
-          </Link>
-          <Link
-            href="/voitures"
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:border-slate-400"
-          >
-            {t("browseBrandsButton")}
-          </Link>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/vendre"
+              className="rounded-md border border-white/30 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/15"
+            >
+              {t("sellButton")}
+            </Link>
+            <Link
+              href="/cote-souq-auto"
+              className="rounded-md border border-white/30 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/15"
+            >
+              {t("estimateButton")}
+            </Link>
+            <Link
+              href="/voitures"
+              className="rounded-md border border-white/30 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/15"
+            >
+              {t("browseBrandsButton")}
+            </Link>
+          </div>
         </div>
       </div>
 
       {featuredListings.length > 0 && (
-        <div className="mx-auto max-w-6xl px-4 pb-16">
-          <h2 className="text-lg font-medium text-slate-900 mb-4">{t("featuredTitle")}</h2>
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-slate-900">{t("featuredTitle")}</h2>
+            <Link href="/recherche" className="text-sm text-emerald-600 hover:underline">
+              {t("seeAllListings")}
+            </Link>
+          </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {featuredListings.map((listing, index) => (
               <ListingCard

@@ -96,9 +96,9 @@ model User {
   proSubscriptionOrders         ProSubscriptionOrder[] @relation("ProSubscriptionOrderAuthor")
   proSubscriptionOrdersReviewed ProSubscriptionOrder[] @relation("ProSubscriptionOrderReviewer")
   ownerReviews                  OwnerReview[]
-  // Lot 119 — le vendeur indique que son numéro est joignable sur WhatsApp ; sans
-  // ce choix explicite, aucun bouton WhatsApp n'est proposé aux acheteurs.
-  whatsappEnabled               Boolean @default(false)
+  // Lot 119 — le vendeur peut désactiver WhatsApp s'il ne souhaite pas être contacté
+  // ainsi ; activé par défaut car c'est le canal dominant en Algérie.
+  whatsappEnabled               Boolean @default(true)
   contactEvents                 ContactEvent[]
   pushSubscriptions             PushSubscription[]
   followedPros                  ProFollow[]
@@ -235,6 +235,7 @@ enum EquipmentCategory {
   SECURITE
   MULTIMEDIA
   EXTERIEUR
+  ACCESSOIRE
 }
 
 model Equipment {
@@ -336,6 +337,10 @@ model Listing {
   condition    ListingCondition
   firstHand    Boolean          @default(false)
   accidented   Boolean          @default(false)
+  // Lot 173 — informations administratives optionnelles (très demandées en Algérie
+  // avant toute visite) : date d'expiration du contrôle technique et de l'assurance.
+  controltechniqueExpiry DateTime?
+  assuranceExpiry        DateTime?
   wilayaId     Int
   wilaya       Wilaya           @relation(fields: [wilayaId], references: [id])
   // Lot 87 — précision géographique optionnelle sous la wilaya (docs/ARCHITECTURE.md

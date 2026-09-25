@@ -13,12 +13,13 @@ type EquipmentOption = {
   category: string;
 };
 
-const CATEGORY_ORDER = ["CONFORT", "SECURITE", "MULTIMEDIA", "EXTERIEUR"] as const;
+const CATEGORY_ORDER = ["CONFORT", "SECURITE", "MULTIMEDIA", "EXTERIEUR", "ACCESSOIRE"] as const;
 const CATEGORY_KEY: Record<string, string> = {
   CONFORT: "equipmentCategoryConfort",
   SECURITE: "equipmentCategorySecurite",
   MULTIMEDIA: "equipmentCategoryMultimedia",
   EXTERIEUR: "equipmentCategoryExterieur",
+  ACCESSOIRE: "equipmentCategoryAccessoire",
 };
 
 export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
@@ -82,6 +83,28 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
           onChange={(e) => setData({ accidented: e.target.checked })}
         />
         {t("accidented")}
+      </label>
+
+      <label className="block">
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("controltechniqueExpiry")}</span>
+        <span className="block text-xs text-slate-400 mb-1.5">{t("controltechniqueExpiryHint")}</span>
+        <input
+          type="date"
+          value={data.controltechniqueExpiry ?? ""}
+          onChange={(e) => setData({ controltechniqueExpiry: e.target.value || undefined })}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+        />
+      </label>
+
+      <label className="block">
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("assuranceExpiry")}</span>
+        <span className="block text-xs text-slate-400 mb-1.5">{t("assuranceExpiryHint")}</span>
+        <input
+          type="date"
+          value={data.assuranceExpiry ?? ""}
+          onChange={(e) => setData({ assuranceExpiry: e.target.value || undefined })}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+        />
       </label>
 
       <div>
