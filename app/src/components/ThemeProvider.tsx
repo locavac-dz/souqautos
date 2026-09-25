@@ -42,6 +42,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem("souq-theme");
     const initial: Theme = stored === "light" || stored === "dark" ? stored : "auto";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setThemeState(initial);
     setIsDark(applyTheme(initial));
   }, []);

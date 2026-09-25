@@ -35,6 +35,7 @@ export function ProStockFilters({
   const [values, setValues] = useState<StockFilterValues>(initialValues);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setValues(initialValues);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues.brandId, initialValues.priceMin, initialValues.priceMax, initialValues.yearMin, initialValues.yearMax]);

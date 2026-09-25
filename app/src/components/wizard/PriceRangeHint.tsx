@@ -42,10 +42,7 @@ export function PriceRangeHint({ data, price }: { data: WizardData; price?: numb
   );
 
   useEffect(() => {
-    if (!data.brandId || !data.modelId) {
-      setEstimate(null);
-      return;
-    }
+    if (!data.brandId || !data.modelId) return;
     startTransition(async () => {
       const result = await getPriceEstimate({
         brandId: data.brandId!,
@@ -60,6 +57,7 @@ export function PriceRangeHint({ data, price }: { data: WizardData; price?: numb
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estimateKey]);
 
+  if (!data.brandId || !data.modelId) return null;
   if (isPending && !estimate) {
     return <p className="mt-3 text-xs text-slate-400">{t("priceEstimateLoading")}</p>;
   }

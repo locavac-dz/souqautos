@@ -14,6 +14,7 @@ export function RecentlyViewedSection({ excludeId }: { excludeId?: string }) {
 
   useEffect(() => {
     const all = getRecentlyViewed().filter((e) => e.id !== excludeId);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEntries(all);
     setMounted(true);
   }, [excludeId]);

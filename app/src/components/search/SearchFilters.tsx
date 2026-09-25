@@ -91,6 +91,7 @@ export function SearchFilters({
   useEffect(() => {
     if (!compact) return;
     const q = values.q ?? "";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (q.length < 2) { setSuggestions([]); return; }
     if (suggestTimer.current) clearTimeout(suggestTimer.current);
     suggestTimer.current = setTimeout(async () => {
