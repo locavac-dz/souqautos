@@ -3,17 +3,15 @@ export function SiteWordMark({ className }: { className?: string }) {
     <span
       className={className}
       style={{
-        background: "linear-gradient(to right, #059669, #0ea5e9)",
-        WebkitBackgroundClip: "text",
-        WebkitTextFillColor: "transparent",
-        backgroundClip: "text",
-        fontWeight: 900,
-        letterSpacing: "0.04em",
-        fontFamily: "'Montserrat', 'Arial Black', sans-serif",
+        display: "inline-flex",
         lineHeight: 1,
+        letterSpacing: "0.06em",
+        fontFamily: "'Bebas Neue', 'Arial Black', sans-serif",
+        fontWeight: 400,
       }}
     >
-      SOUQAUTO
+      <span style={{ color: "#059669" }}>SOUQ</span>
+      <span style={{ color: "#0ea5e9" }}>AUTO</span>
     </span>
   );
 }

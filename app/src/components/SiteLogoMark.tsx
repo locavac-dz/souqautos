@@ -1,11 +1,24 @@
-// Symbole de marque « Double Anneau » — deux arcs décalés, lus comme une
-// jante de loin ou comme un accord conclu entre deux parties de près.
-// Retenu par le porteur de projet parmi trois pistes proposées (2026-09-05).
 export function SiteLogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <circle cx="26" cy="32" r="18" fill="none" stroke="#059669" strokeWidth="6.5" />
-      <circle cx="40" cy="32" r="18" fill="none" stroke="#0ea5e9" strokeWidth="6.5" />
+      <defs>
+        <linearGradient id="slm-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#059669" />
+          <stop offset="100%" stopColor="#0ea5e9" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="14" fill="url(#slm-grad)" />
+      <text
+        x="32"
+        y="49"
+        textAnchor="middle"
+        fill="white"
+        fontSize="50"
+        fontWeight="bold"
+        fontFamily="'Bebas Neue', 'Arial Black', Impact, sans-serif"
+      >
+        S
+      </text>
     </svg>
   );
 }
