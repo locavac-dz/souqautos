@@ -65,7 +65,9 @@ export function StepShell({
             onClick={() => router.push(`/publier/${prevPath}`)}
             className="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
-            ← {t("previous")}
+            <span aria-hidden="true" className="rtl:hidden">← </span>
+            <span aria-hidden="true" className="ltr:hidden">→ </span>
+            {t("previous")}
           </button>
         ) : (
           <span />

@@ -86,18 +86,30 @@ export default async function AdminAuditLogPage({
         <nav aria-label={t("paginationLabel")} className="mt-6 flex items-center justify-center gap-4">
           {page > 1 ? (
             <Link href={hrefForPage(page - 1)} className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:underline">
-              ← {t("previous")}
+              <span aria-hidden="true" className="rtl:hidden">← </span>
+              <span aria-hidden="true" className="ltr:hidden">→ </span>
+              {t("previous")}
             </Link>
           ) : (
-            <span aria-disabled="true" className="text-sm text-slate-500 dark:text-slate-400">← {t("previous")}</span>
+            <span aria-disabled="true" className="text-sm text-slate-500 dark:text-slate-400">
+              <span aria-hidden="true" className="rtl:hidden">← </span>
+              <span aria-hidden="true" className="ltr:hidden">→ </span>
+              {t("previous")}
+            </span>
           )}
           <span className="text-sm text-slate-500 dark:text-slate-400">{t("pageOf", { page, totalPages })}</span>
           {page < totalPages ? (
             <Link href={hrefForPage(page + 1)} className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:underline">
-              {t("next")} →
+              {t("next")}
+              <span aria-hidden="true" className="rtl:hidden"> →</span>
+              <span aria-hidden="true" className="ltr:hidden"> ←</span>
             </Link>
           ) : (
-            <span aria-disabled="true" className="text-sm text-slate-500 dark:text-slate-400">{t("next")} →</span>
+            <span aria-disabled="true" className="text-sm text-slate-500 dark:text-slate-400">
+              {t("next")}
+              <span aria-hidden="true" className="rtl:hidden"> →</span>
+              <span aria-hidden="true" className="ltr:hidden"> ←</span>
+            </span>
           )}
         </nav>
       )}

@@ -68,7 +68,9 @@ export async function MarketStatsWidget({
           href={`/voitures/${brandSlug}/${modelSlug}`}
           className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:underline"
         >
-          {t("viewModel", { model: modelName })} →
+          {t("viewModel", { model: modelName })}
+          <span aria-hidden="true" className="rtl:hidden"> →</span>
+          <span aria-hidden="true" className="ltr:hidden"> ←</span>
         </Link>
       </div>
     </div>

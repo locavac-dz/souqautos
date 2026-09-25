@@ -627,7 +627,9 @@ export default async function ListingDetailPage({
                   href={`/vendeur/${listing.sellerId}#donner-avis`}
                   className="mt-1 inline-block text-xs text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:underline"
                 >
-                  {tReview("leaveReview")} →
+                  {tReview("leaveReview")}
+                  <span aria-hidden="true" className="rtl:hidden"> →</span>
+                  <span aria-hidden="true" className="ltr:hidden"> ←</span>
                 </Link>
               )}
               <SellerTrustBadges

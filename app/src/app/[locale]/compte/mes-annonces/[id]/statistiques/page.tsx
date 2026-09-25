@@ -46,7 +46,9 @@ export default async function ListingStatsPage({
         href="/compte/mes-annonces"
         className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 underline"
       >
-        ← {t("backToListings")}
+        <span aria-hidden="true" className="rtl:hidden">← </span>
+        <span aria-hidden="true" className="ltr:hidden">→ </span>
+        {t("backToListings")}
       </Link>
 
       <h1 className="mt-4 text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("title")}</h1>

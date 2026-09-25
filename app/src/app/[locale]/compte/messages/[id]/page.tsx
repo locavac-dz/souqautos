@@ -58,7 +58,9 @@ export default async function ConversationPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <Link href="/compte/messages" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300">
-        ← {t("backToInbox")}
+        <span aria-hidden="true" className="rtl:hidden">← </span>
+        <span aria-hidden="true" className="ltr:hidden">→ </span>
+        {t("backToInbox")}
       </Link>
 
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mt-2">
