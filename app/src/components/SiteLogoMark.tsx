@@ -4,8 +4,8 @@
 export function SiteLogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <circle cx="26" cy="32" r="18" fill="none" stroke="#12222e" strokeWidth="6.5" />
-      <circle cx="40" cy="32" r="18" fill="none" stroke="#c1622b" strokeWidth="6.5" />
+      <circle cx="26" cy="32" r="18" fill="none" stroke="#059669" strokeWidth="6.5" />
+      <circle cx="40" cy="32" r="18" fill="none" stroke="#0ea5e9" strokeWidth="6.5" />
     </svg>
   );
 }
