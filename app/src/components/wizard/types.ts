@@ -4,6 +4,7 @@ import type {
   Gearbox,
   Transmission,
   ListingCondition,
+  BodyType,
 } from "@prisma/client";
 
 export type WizardData = {
@@ -25,6 +26,9 @@ export type WizardData = {
   doors?: number;
   seats?: number;
   powerHp?: number;
+  fiscalPower?: number;
+  bodyType?: BodyType;
+  negotiable?: boolean;
   condition?: ListingCondition;
   firstHand?: boolean;
   accidented?: boolean;

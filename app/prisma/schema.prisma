@@ -304,6 +304,18 @@ enum ListingFormula {
   PREMIUM_PLUS
 }
 
+enum BodyType {
+  BERLINE
+  SUV
+  BREAK
+  CITADINE
+  COUPE
+  CABRIOLET
+  MONOSPACE
+  PICKUP
+  FOURGON
+}
+
 model Listing {
   id           String           @id @default(cuid())
   sellerId     String
@@ -341,6 +353,12 @@ model Listing {
   // avant toute visite) : date d'expiration du contrôle technique et de l'assurance.
   controltechniqueExpiry DateTime?
   assuranceExpiry        DateTime?
+  // Lot 177 — puissance fiscale (CV fiscaux), distincte de la puissance moteur en ch.
+  // Utilisée en Algérie pour le calcul des primes d'assurance.
+  fiscalPower            Int?
+  // Lot 178 — type de carrosserie et prix négociable.
+  bodyType               BodyType?
+  negotiable             Boolean          @default(false)
   wilayaId     Int
   wilaya       Wilaya           @relation(fields: [wilayaId], references: [id])
   // Lot 87 — précision géographique optionnelle sous la wilaya (docs/ARCHITECTURE.md
@@ -397,6 +415,7 @@ model Listing {
   // n'en garder que 20 (6,7 ms → 0,08 ms avec cet index, et l'écart croît avec le nombre d'annonces), et les annonces d'un
   // modèle (page du modèle, comparables de prix) aussi (3,4 ms → 0,06 ms pour un modèle rare).
   @@index([status, createdAt(sort: Desc)])
+  @@index([status, publishedAt(sort: Desc)])
   @@index([status, brandId, modelId])
   // Lot 139 — recherche par mot : « contient » (ILIKE '%mot%') n'est indexable que par des trigrammes (extension pg_trgm, créée
   // par la migration). Sans eux, chaque recherche lit toute la table, et le comptage de la pagination aussi : 66 à 158 ms à

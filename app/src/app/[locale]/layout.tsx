@@ -16,6 +16,7 @@ import { CompareProvider } from "@/components/compare/CompareContext";
 import { CompareTray } from "@/components/compare/CompareTray";
 import { PwaRegister } from "@/components/PwaRegister";
 import { PageViewTracker } from "@/components/PageViewTracker";
+import { ThemeApplicator } from "@/components/ThemeApplicator";
 import { buildSearchEngineVerification } from "@/lib/seo-verification";
 import "../globals.css";
 
@@ -103,6 +104,7 @@ export default async function LocaleLayout({
             <CompareTray />
             <PwaRegister />
             <PageViewTracker />
+            <ThemeApplicator />
           </CompareProvider>
         </NextIntlClientProvider>
       </body>

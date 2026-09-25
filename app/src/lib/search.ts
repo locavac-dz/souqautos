@@ -78,6 +78,9 @@ export function buildListingWhere(params: SearchParams, catalogueMatches?: Catal
     }));
   }
 
+  if (params.bodyType) where.bodyType = params.bodyType;
+  if (params.negotiable === "1") where.negotiable = true;
+
   // Lot 158 — filtre par type de vendeur et catégorie de professionnel
   if (params.sellerType === "particulier") {
     where.seller = { professionalAccount: { is: null } };
@@ -98,7 +101,7 @@ export function buildListingOrderBy(sort?: SortOption): Prisma.ListingOrderByWit
       return { price: "desc" };
     case "recent":
     default:
-      return { createdAt: "desc" };
+      return { publishedAt: { sort: "desc", nulls: "last" } };
   }
 }
 

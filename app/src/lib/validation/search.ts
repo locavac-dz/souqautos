@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { listingCategories, fuelTypes, gearboxes, conditions } from "./listing";
+import { listingCategories, fuelTypes, gearboxes, conditions, bodyTypes } from "./listing";
 import { PRO_CATEGORIES } from "./pro-account";
 import { INT4_MAX } from "./int-bounds";
 
@@ -55,6 +55,8 @@ export const searchParamsSchema = z.object({
   fuelType: z.enum(fuelTypes).optional().catch(undefined),
   gearbox: z.enum(gearboxes).optional().catch(undefined),
   condition: z.enum(conditions).optional().catch(undefined),
+  bodyType: z.enum(bodyTypes).optional().catch(undefined),
+  negotiable: z.enum(["1"]).optional().catch(undefined),
   equipmentIds: equipmentIdsParam,
   sort: z.enum(sortOptions).optional().catch(undefined),
   page: numeric(),

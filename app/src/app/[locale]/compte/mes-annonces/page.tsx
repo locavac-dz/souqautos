@@ -236,6 +236,12 @@ export default async function MyListingsPage() {
                         {tListing("editListingAction")}
                       </Link>
                     )}
+                    <Link
+                      href={`/compte/mes-annonces/${listing.id}/statistiques`}
+                      className="text-xs text-slate-500 underline hover:text-slate-700"
+                    >
+                      {t("statsAction")}
+                    </Link>
                     {checkListingRenewable(listing.status).ok &&
                       advancedToolsBySellerId.get(listing.sellerId) && (
                         <ListingAutoRenewToggle listingId={listing.id} initialAutoRenew={listing.autoRenew} />

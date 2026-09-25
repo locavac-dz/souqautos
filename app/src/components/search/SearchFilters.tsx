@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, isValidElement, useState, type ReactElement } from "react";
+import { cloneElement, isValidElement, useState, useEffect, useRef, type ReactElement } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ListingCategory } from "@prisma/client";
 import { useRouter } from "@/i18n/navigation";
@@ -35,6 +35,8 @@ export type SearchFilterValues = {
   fuelType?: string;
   gearbox?: string;
   condition?: string;
+  bodyType?: string;
+  negotiable?: string;
   equipmentIds?: string;
   sellerType?: string;
   categoryPro?: string;
@@ -53,12 +55,13 @@ const CATEGORY_KEY: Record<string, string> = {
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_STEPS = yearOptions(CURRENT_YEAR);
 
-const EQUIPMENT_CATEGORY_ORDER = ["CONFORT", "SECURITE", "MULTIMEDIA", "EXTERIEUR"] as const;
+const EQUIPMENT_CATEGORY_ORDER = ["CONFORT", "SECURITE", "MULTIMEDIA", "EXTERIEUR", "ACCESSOIRE"] as const;
 const EQUIPMENT_CATEGORY_KEY: Record<string, string> = {
   CONFORT: "equipmentCategoryConfort",
   SECURITE: "equipmentCategorySecurite",
   MULTIMEDIA: "equipmentCategoryMultimedia",
   EXTERIEUR: "equipmentCategoryExterieur",
+  ACCESSOIRE: "equipmentCategoryAccessoire",
 };
 
 export function SearchFilters({
@@ -81,6 +84,23 @@ export function SearchFilters({
   const router = useRouter();
   const numberLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
   const [values, setValues] = useState<SearchFilterValues>(initialValues);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!compact) return;
+    const q = values.q ?? "";
+    if (q.length < 2) { setSuggestions([]); return; }
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    suggestTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search/suggest?q=${encodeURIComponent(q)}`);
+        if (res.ok) setSuggestions(await res.json());
+      } catch { /* réseau */ }
+    }, 200);
+    return () => { if (suggestTimer.current) clearTimeout(suggestTimer.current); };
+  }, [values.q, compact]);
 
   // Lot 130 — marques et modèles proposés selon la catégorie filtrée (les motos n'affichent pas les marques de camions).
   const visibleBrands = filterCatalogueByCategory(brands, values.category as ListingCategory | undefined);
@@ -162,18 +182,37 @@ export function SearchFilters({
 
   return (
     <form onSubmit={submit} className={compact ? "flex flex-col sm:flex-row gap-2" : "space-y-4"}>
-      <input
-        type="text"
-        value={values.q ?? ""}
-        onChange={(e) => set("q", e.target.value)}
-        placeholder={t("queryPlaceholder")}
-        aria-label={t("queryPlaceholder")}
-        className={
-          compact
-            ? "flex-1 rounded-md border border-slate-300 px-4 py-2.5"
-            : "w-full rounded-md border border-slate-300 px-3 py-2"
-        }
-      />
+      <div className={compact ? "relative flex-1" : "relative"}>
+        <input
+          type="text"
+          value={values.q ?? ""}
+          onChange={(e) => { set("q", e.target.value); setShowSuggestions(true); }}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+          placeholder={t("queryPlaceholder")}
+          aria-label={t("queryPlaceholder")}
+          className={
+            compact
+              ? "w-full rounded-md border border-slate-300 px-4 py-2.5 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+              : "w-full rounded-md border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+          }
+        />
+        {showSuggestions && suggestions.length > 0 && (
+          <ul className="absolute z-20 top-full start-0 end-0 mt-1 rounded-md border border-slate-200 bg-white shadow-md dark:bg-slate-800 dark:border-slate-700">
+            {suggestions.map((s) => (
+              <li key={s}>
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700"
+                  onMouseDown={() => { set("q", s); setShowSuggestions(false); }}
+                >
+                  {s}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {compact ? (
         <button
@@ -188,7 +227,7 @@ export function SearchFilters({
             <select
               value={values.category ?? ""}
               onChange={(e) => set("category", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="">{t("any")}</option>
               {Object.entries(CATEGORY_KEY).map(([value, key]) => (
@@ -203,7 +242,7 @@ export function SearchFilters({
             <select
               value={values.brandId ?? ""}
               onChange={(e) => set("brandId", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="">{t("any")}</option>
               {visibleBrands.map((b) => (
@@ -219,7 +258,7 @@ export function SearchFilters({
               <select
                 value={values.modelId ?? ""}
                 onChange={(e) => set("modelId", e.target.value)}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
               >
                 <option value="">{t("any")}</option>
                 {selectedBrand.models.map((m) => (
@@ -235,7 +274,7 @@ export function SearchFilters({
             <select
               value={values.wilayaId ?? ""}
               onChange={(e) => set("wilayaId", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="">{t("any")}</option>
               {wilayas.map((w) => (
@@ -251,7 +290,7 @@ export function SearchFilters({
               <select
                 value={values.communeId ?? ""}
                 onChange={(e) => set("communeId", e.target.value)}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
               >
                 <option value="">{t("any")}</option>
                 {selectedWilaya.communes.map((c) => (
@@ -326,7 +365,7 @@ export function SearchFilters({
             <select
               value={values.fuelType ?? ""}
               onChange={(e) => set("fuelType", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="">{t("any")}</option>
               <option value="ESSENCE">{tWizard("fuelEssence")}</option>
@@ -341,7 +380,7 @@ export function SearchFilters({
             <select
               value={values.gearbox ?? ""}
               onChange={(e) => set("gearbox", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="">{t("any")}</option>
               <option value="MANUELLE">{tWizard("gearboxManuelle")}</option>
@@ -353,7 +392,7 @@ export function SearchFilters({
             <select
               value={values.condition ?? ""}
               onChange={(e) => set("condition", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="">{t("any")}</option>
               <option value="NEUF">{tWizard("conditionNeuf")}</option>
@@ -361,11 +400,39 @@ export function SearchFilters({
             </select>
           </Field>
 
+          <Field id="filter-body-type" label={tWizard("bodyType")}>
+            <select
+              value={values.bodyType ?? ""}
+              onChange={(e) => set("bodyType", e.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <option value="">{t("any")}</option>
+              <option value="BERLINE">{tWizard("bodyTypeBerline")}</option>
+              <option value="SUV">{tWizard("bodyTypeSuv")}</option>
+              <option value="BREAK">{tWizard("bodyTypeBreak")}</option>
+              <option value="CITADINE">{tWizard("bodyTypeCitadine")}</option>
+              <option value="COUPE">{tWizard("bodyTypeCoupe")}</option>
+              <option value="CABRIOLET">{tWizard("bodyTypeCabriolet")}</option>
+              <option value="MONOSPACE">{tWizard("bodyTypeMonospace")}</option>
+              <option value="PICKUP">{tWizard("bodyTypePickup")}</option>
+              <option value="FOURGON">{tWizard("bodyTypeFourgon")}</option>
+            </select>
+          </Field>
+
+          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <input
+              type="checkbox"
+              checked={values.negotiable === "1"}
+              onChange={(e) => set("negotiable", e.target.checked ? "1" : "")}
+            />
+            {t("negotiableFilter")}
+          </label>
+
           <Field id="filter-seller-type" label={t("sellerType")}>
             <select
               value={values.sellerType ?? ""}
               onChange={(e) => set("sellerType", e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             >
               <option value="">{t("any")}</option>
               <option value="pro">{t("sellerTypePro")}</option>
@@ -378,7 +445,7 @@ export function SearchFilters({
               <select
                 value={values.categoryPro ?? ""}
                 onChange={(e) => set("categoryPro", e.target.value)}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
               >
                 <option value="">{t("any")}</option>
                 {PRO_CATEGORIES.map((cat) => (
@@ -395,12 +462,12 @@ export function SearchFilters({
               <div className="space-y-3">
                 {EQUIPMENT_CATEGORY_ORDER.filter((c) => equipmentsByCategory.has(c)).map((category) => (
                   <div key={category}>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1 dark:text-slate-400">
                       {tWizard(EQUIPMENT_CATEGORY_KEY[category])}
                     </p>
                     <div className="space-y-1">
                       {equipmentsByCategory.get(category)!.map((eq) => (
-                        <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700">
+                        <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                           <input
                             type="checkbox"
                             checked={selectedEquipmentIds.includes(eq.id)}
@@ -440,11 +507,11 @@ function Field({
   return (
     <div>
       {id ? (
-        <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
           {label}
         </label>
       ) : (
-        <span className="block text-sm font-medium text-slate-700 mb-1">{label}</span>
+        <span className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">{label}</span>
       )}
       {id && isValidElement(children)
         ? cloneElement(children as ReactElement<{ id?: string }>, { id })
@@ -483,7 +550,7 @@ function NumberSelect({
       value={normalizeFilterValue(value)}
       aria-label={ariaLabel}
       onChange={(e) => onChange(e.target.value)}
-      className={`${className} rounded-md border border-slate-300 px-3 py-2 bg-white`}
+      className={`${className} rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200`}
     >
       <option value="">{emptyLabel}</option>
       {options.map((n) => (

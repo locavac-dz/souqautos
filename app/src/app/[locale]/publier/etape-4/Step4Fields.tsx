@@ -85,6 +85,15 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
         {t("accidented")}
       </label>
 
+      <label className="flex items-center gap-2 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          checked={data.negotiable ?? false}
+          onChange={(e) => setData({ negotiable: e.target.checked })}
+        />
+        {t("negotiable")}
+      </label>
+
       <label className="block">
         <span className="block text-sm font-medium text-slate-700 mb-1">{t("controltechniqueExpiry")}</span>
         <span className="block text-xs text-slate-400 mb-1.5">{t("controltechniqueExpiryHint")}</span>

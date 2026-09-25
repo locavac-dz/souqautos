@@ -1,8 +1,16 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+/* Lot 177 — palette sombre : navy profond + texte ardoise clair. */
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -12,13 +20,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/*
- * Les composants du site utilisent des couleurs Tailwind fixes (text-slate-700,
- * border-slate-200, etc.) qui supposent un fond clair. Sans palette sombre adaptée,
- * basculer --background en quasi-noir via prefers-color-scheme rendrait ce texte
- * illisible (contraste ~1.9:1). Le site reste donc en thème clair explicite tant
- * qu'un vrai mode sombre n'est pas conçu.
- */
 :root {
   color-scheme: light;
 }

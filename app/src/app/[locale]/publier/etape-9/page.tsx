@@ -23,6 +23,17 @@ const GEARBOX_KEY: Record<string, string> = {
   MANUELLE: "gearboxManuelle",
   AUTOMATIQUE: "gearboxAutomatique",
 };
+const BODY_TYPE_KEY: Record<string, string> = {
+  BERLINE: "bodyTypeBerline",
+  SUV: "bodyTypeSuv",
+  BREAK: "bodyTypeBreak",
+  CITADINE: "bodyTypeCitadine",
+  COUPE: "bodyTypeCoupe",
+  CABRIOLET: "bodyTypeCabriolet",
+  MONOSPACE: "bodyTypeMonospace",
+  PICKUP: "bodyTypePickup",
+  FOURGON: "bodyTypeFourgon",
+};
 const CONDITION_KEY: Record<string, string> = {
   NEUF: "conditionNeuf",
   OCCASION: "conditionOccasion",
@@ -66,6 +77,10 @@ export default function Step9Page() {
         {data.fuelType && <Row label={t("fuelType")} value={t(FUEL_KEY[data.fuelType])} />}
         {data.gearbox && <Row label={t("gearbox")} value={t(GEARBOX_KEY[data.gearbox])} />}
         {data.condition && <Row label={t("condition")} value={t(CONDITION_KEY[data.condition])} />}
+        {data.powerHp && <Row label={t("powerHp")} value={`${data.powerHp} ch`} />}
+        {data.fiscalPower && <Row label={t("fiscalPower")} value={`${data.fiscalPower} CV`} />}
+        {data.bodyType && <Row label={t("bodyType")} value={t(BODY_TYPE_KEY[data.bodyType])} />}
+        {data.negotiable && <Row label={t("negotiable")} value="✓" />}
         {data.controltechniqueExpiry && (
           <Row
             label={t("controltechniqueExpiry")}

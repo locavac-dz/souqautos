@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
 import { hasCarBodyFields } from "@/lib/listing-category-fields";
-import type { FuelType, Gearbox, Transmission } from "@prisma/client";
+import type { FuelType, Gearbox, Transmission, BodyType } from "@prisma/client";
 
 const currentYear = new Date().getFullYear();
 
@@ -160,6 +160,39 @@ export default function Step3Page() {
           onChange={(e) => setData({ powerHp: e.target.value ? Number(e.target.value) : undefined })}
           className="w-full rounded-md border border-slate-300 px-3 py-2"
         />
+      </label>
+
+      <label className="block">
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("fiscalPower")}</span>
+        <p className="text-xs text-slate-500 mb-1">{t("fiscalPowerHint")}</p>
+        <input
+          type="number"
+          min={1}
+          max={40}
+          value={data.fiscalPower ?? ""}
+          onChange={(e) => setData({ fiscalPower: e.target.value ? Number(e.target.value) : undefined })}
+          className="w-full rounded-md border border-slate-300 px-3 py-2"
+        />
+      </label>
+
+      <label className="block">
+        <span className="block text-sm font-medium text-slate-700 mb-1">{t("bodyType")}</span>
+        <select
+          value={data.bodyType ?? ""}
+          onChange={(e) => setData({ bodyType: (e.target.value || undefined) as BodyType | undefined })}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+        >
+          <option value="">{t("bodyTypeNone")}</option>
+          <option value="BERLINE">{t("bodyTypeBerline")}</option>
+          <option value="SUV">{t("bodyTypeSuv")}</option>
+          <option value="BREAK">{t("bodyTypeBreak")}</option>
+          <option value="CITADINE">{t("bodyTypeCitadine")}</option>
+          <option value="COUPE">{t("bodyTypeCoupe")}</option>
+          <option value="CABRIOLET">{t("bodyTypeCabriolet")}</option>
+          <option value="MONOSPACE">{t("bodyTypeMonospace")}</option>
+          <option value="PICKUP">{t("bodyTypePickup")}</option>
+          <option value="FOURGON">{t("bodyTypeFourgon")}</option>
+        </select>
       </label>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

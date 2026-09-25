@@ -14,6 +14,7 @@ export const fuelTypes = ["ESSENCE", "DIESEL", "GPL", "HYBRIDE", "ELECTRIQUE"] a
 export const gearboxes = ["MANUELLE", "AUTOMATIQUE"] as const;
 export const transmissions = ["QUATRE_X_DEUX", "QUATRE_X_QUATRE"] as const;
 export const conditions = ["NEUF", "OCCASION"] as const;
+export const bodyTypes = ["BERLINE", "SUV", "BREAK", "CITADINE", "COUPE", "CABRIOLET", "MONOSPACE", "PICKUP", "FOURGON"] as const;
 
 const currentYear = new Date().getFullYear();
 
@@ -39,6 +40,9 @@ const listingBaseSchema = z.object({
   doors: z.number().int().min(1).max(7).optional(),
   seats: z.number().int().min(1).max(9).optional(),
   powerHp: z.number().int().min(1).max(2000).optional(),
+  fiscalPower: z.number().int().min(1).max(99).optional(),
+  bodyType: z.enum(bodyTypes).optional(),
+  negotiable: z.boolean().default(false),
   condition: z.enum(conditions),
   firstHand: z.boolean().default(false),
   accidented: z.boolean().default(false),

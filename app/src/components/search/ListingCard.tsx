@@ -28,6 +28,9 @@ type CardListing = {
   wilaya: { nomFr: string; nomAr: string };
   commune: { nomFr: string; nomAr: string } | null;
   photos: { path: string }[];
+  controltechniqueExpiry: Date | null;
+  assuranceExpiry: Date | null;
+  negotiable: boolean;
 };
 
 const FUEL_KEY: Record<string, string> = {
@@ -84,9 +87,9 @@ export async function ListingCard({
   return (
     <Link
       href={`/annonce/${listing.id}`}
-      className="block rounded-lg border border-slate-200 overflow-hidden hover:border-slate-300 hover:shadow-sm transition"
+      className="block rounded-lg border border-slate-200 overflow-hidden hover:border-slate-300 hover:shadow-sm transition dark:border-slate-700 dark:hover:border-slate-600 dark:bg-slate-800"
     >
-      <div className="relative aspect-[4/3] bg-slate-100">
+      <div className="relative aspect-[4/3] bg-slate-100 dark:bg-slate-700">
         {listing.photos[0] ? (
           <Image
             src={listing.photos[0].path}
@@ -123,15 +126,40 @@ export async function ListingCard({
         </div>
       </div>
       <div className="p-3">
-        <p className="font-medium text-slate-900 line-clamp-2 min-h-[2.5rem]">{listing.title}</p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="font-medium text-slate-900 line-clamp-2 min-h-[2.5rem] dark:text-slate-100">{listing.title}</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {brandLabel} {modelLabel} · {listing.year} · {listing.mileage.toLocaleString()} km
         </p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {tWizard(FUEL_KEY[listing.fuelType])} · {tWizard(GEARBOX_KEY[listing.gearbox])}
         </p>
+        {(() => {
+          const now = new Date();
+          const vtOk = listing.controltechniqueExpiry && listing.controltechniqueExpiry > now;
+          const assurOk = listing.assuranceExpiry && listing.assuranceExpiry > now;
+          if (!vtOk && !assurOk) return null;
+          return (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {vtOk && (
+                <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                  {tSearch("ctValid")}
+                </span>
+              )}
+              {assurOk && (
+                <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                  {tSearch("assuranceValid")}
+                </span>
+              )}
+            </div>
+          );
+        })()}
         <div className="mt-2 flex items-center gap-2">
-          <p className="text-lg font-semibold text-slate-900">{listing.price.toLocaleString()} DA</p>
+          <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{listing.price.toLocaleString()} DA</p>
+          {listing.negotiable && (
+            <span className="rounded-md border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700">
+              {tSearch("negotiable")}
+            </span>
+          )}
           {priceBadge && (
             <span
               className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${PRICE_BADGE_STYLE[priceBadge.badge]}`}
@@ -140,12 +168,12 @@ export async function ListingCard({
             </span>
           )}
         </div>
-        <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+        <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span>{locationLabel}</span>
           <span>{tSearch("viewsCount", { count: listing.views })}</span>
         </div>
         {sellerTrustScore !== null && sellerTrustScore !== undefined && (
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             {tSearch("sellerTrustScore", { score: sellerTrustScore })}
           </p>
         )}
@@ -166,7 +194,7 @@ export async function ListingCard({
           </ul>
         )}
         {sellerRating && sellerRating.count > 0 && (
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             {tSearch("sellerRatingCard", { average: sellerRating.average, count: sellerRating.count })}
           </p>
         )}
