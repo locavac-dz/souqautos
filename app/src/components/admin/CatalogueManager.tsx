@@ -35,7 +35,7 @@ function CategoryChecks({ value, onChange, idPrefix }: { value: CatalogueCategor
     <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <legend className="sr-only">{t("categoriesLabel")}</legend>
       {CATALOGUE_CATEGORIES.map((category) => (
-        <label key={category} htmlFor={`${idPrefix}-${category}`} className="flex items-center gap-1 text-xs text-slate-600">
+        <label key={category} htmlFor={`${idPrefix}-${category}`} className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
           <input
             id={`${idPrefix}-${category}`}
             type="checkbox"
@@ -104,20 +104,20 @@ export function CatalogueManager({ brands, canEdit }: { brands: BrandRow[]; canE
   return (
     <div className="space-y-6">
       {canEdit && (
-        <form onSubmit={handleAddBrand} className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 p-3">
-          <label className="flex flex-col gap-1 text-xs text-slate-500">
+        <form onSubmit={handleAddBrand} className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+          <label className="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
             {t("brandNameLabel")}
             <input
               type="text"
               value={newBrandName}
               onChange={(e) => setNewBrandName(e.target.value)}
-              className="w-56 rounded-md border border-slate-300 px-2 py-1.5 text-sm text-slate-900"
+              className="w-56 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm text-slate-900"
             />
           </label>
           <button
             type="submit"
             disabled={addBrandPending}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
           >
             {t("addBrandAction")}
           </button>
@@ -194,7 +194,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
   const deletable = brand.models.length === 0 && brand.listingCount === 0;
 
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {editing ? (
           <form onSubmit={handleRename} className="flex flex-wrap items-center gap-2">
@@ -202,12 +202,12 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-48 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
+              className="w-48 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-sm text-slate-900"
             />
             <button
               type="submit"
               disabled={pending}
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+              className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
             >
               {t("saveAction")}
             </button>
@@ -218,15 +218,15 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
                 setName(brand.name);
                 setError(null);
               }}
-              className="text-xs text-slate-500 hover:text-slate-600"
+              className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
               {t("cancelAction")}
             </button>
           </form>
         ) : (
           <div>
-            <p className="font-medium text-slate-900">{brand.name}</p>
-            <p className="text-xs text-slate-500">
+            <p className="font-medium text-slate-900 dark:text-slate-100">{brand.name}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {brand.slug} · {t("listingCount", { count: brand.listingCount })}
             </p>
           </div>
@@ -234,7 +234,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
 
         {canEdit && !editing && (
           <div className="flex items-center gap-3 text-xs">
-            <button type="button" onClick={() => setEditing(true)} className="text-slate-500 underline hover:text-slate-700">
+            <button type="button" onClick={() => setEditing(true)} className="text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300">
               {t("editAction")}
             </button>
             <button
@@ -251,7 +251,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
       </div>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
 
-      <div className="mt-3 pl-4 border-l border-slate-100 space-y-2">
+      <div className="mt-3 pl-4 border-l border-slate-100 dark:border-slate-700 space-y-2">
         {brand.models.map((model) => (
           <ModelRowItem key={model.id} model={model} canEdit={canEdit} />
         ))}
@@ -264,13 +264,13 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
                 value={newModelName}
                 onChange={(e) => setNewModelName(e.target.value)}
                 placeholder={t("modelNameLabel")}
-                className="w-48 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
+                className="w-48 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-sm text-slate-900"
               />
               <CategoryChecks value={newModelCategories} onChange={setNewModelCategories} idPrefix={`new-model-${brand.id}`} />
               <button
                 type="submit"
                 disabled={addModelPending || newModelCategories.length === 0}
-                className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+                className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
               >
                 {t("saveAction")}
               </button>
@@ -281,7 +281,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
                   setNewModelName("");
                   setAddModelError(null);
                 }}
-                className="text-xs text-slate-500 hover:text-slate-600"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               >
                 {t("cancelAction")}
               </button>
@@ -291,7 +291,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
             <button
               type="button"
               onClick={() => setAddingModel(true)}
-              className="text-xs text-slate-500 underline hover:text-slate-700"
+              className="text-xs text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300"
             >
               {t("addModelAction")}
             </button>
@@ -347,13 +347,13 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-40 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
+            className="w-40 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-sm text-slate-900"
           />
           <CategoryChecks value={categories} onChange={setCategories} idPrefix={`model-${model.id}`} />
           <button
             type="submit"
             disabled={pending || categories.length === 0}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
           >
             {t("saveAction")}
           </button>
@@ -365,15 +365,15 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
               setCategories(asCategories(model.categories));
               setError(null);
             }}
-            className="text-xs text-slate-500 hover:text-slate-600"
+            className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
             {t("cancelAction")}
           </button>
         </form>
       ) : (
         <div>
-          <span className="text-slate-800">{model.name}</span>
-          <span className="ml-2 text-xs text-slate-500">
+          <span className="text-slate-800 dark:text-slate-100">{model.name}</span>
+          <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
             {model.slug} · {asCategories(model.categories).map((c) => t(CATEGORY_LABEL[c])).join(", ")} · {t("listingCount", { count: model.listingCount })}
           </span>
         </div>
@@ -381,7 +381,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
 
       {canEdit && !editing && (
         <div className="flex items-center gap-3 text-xs">
-          <button type="button" onClick={() => setEditing(true)} className="text-slate-500 underline hover:text-slate-700">
+          <button type="button" onClick={() => setEditing(true)} className="text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300">
             {t("editAction")}
           </button>
           <button

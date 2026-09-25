@@ -12,7 +12,7 @@ export async function GoogleSignInButton({ locale, next }: { locale: GoogleLogin
     <div className="mb-6">
       <a
         href={href}
-        className="flex w-full items-center justify-center gap-3 rounded-md border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50"
+        className="flex w-full items-center justify-center gap-3 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
       >
         <svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5 shrink-0">
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -22,10 +22,10 @@ export async function GoogleSignInButton({ locale, next }: { locale: GoogleLogin
         </svg>
         {t("googleContinue")}
       </a>
-      <div className="mt-6 flex items-center gap-3 text-xs uppercase text-slate-500" aria-hidden="true">
-        <span className="h-px flex-1 bg-slate-200" />
+      <div className="mt-6 flex items-center gap-3 text-xs uppercase text-slate-500 dark:text-slate-400" aria-hidden="true">
+        <span className="h-px flex-1 bg-slate-200 dark:bg-slate-600" />
         {t("googleOr")}
-        <span className="h-px flex-1 bg-slate-200" />
+        <span className="h-px flex-1 bg-slate-200 dark:bg-slate-600" />
       </div>
     </div>
   );

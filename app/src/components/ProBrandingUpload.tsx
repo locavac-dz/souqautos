@@ -79,16 +79,16 @@ export function ProBrandingUpload({
     kind === "logo" ? "relative h-16 w-16 shrink-0" : "relative h-20 w-40 shrink-0";
   const imageClass =
     kind === "logo"
-      ? "rounded-full object-cover border border-slate-200"
-      : "rounded-md object-cover border border-slate-200";
+      ? "rounded-full object-cover border border-slate-200 dark:border-slate-600"
+      : "rounded-md object-cover border border-slate-200 dark:border-slate-600";
   const placeholderBox =
     kind === "logo"
-      ? "h-16 w-16 shrink-0 rounded-full bg-slate-100 border border-slate-200"
-      : "h-20 w-40 shrink-0 rounded-md bg-slate-100 border border-slate-200";
+      ? "h-16 w-16 shrink-0 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600"
+      : "h-20 w-40 shrink-0 rounded-md bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600";
 
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <h2 className="text-sm font-medium text-slate-900 mb-3">{t(titleKey)}</h2>
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+      <h2 className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-3">{t(titleKey)}</h2>
       <div className="flex items-center gap-4">
         {url ? (
           <div className={imageBox}>
@@ -98,7 +98,7 @@ export function ProBrandingUpload({
           <div className={placeholderBox} />
         )}
         <div className="flex flex-col items-start gap-1">
-          <label className="cursor-pointer text-sm text-slate-700 underline hover:text-slate-900">
+          <label className="cursor-pointer text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
             {pending ? t(uploadingKey) : t(changeKey)}
             <input
               type="file"

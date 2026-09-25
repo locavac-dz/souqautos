@@ -52,7 +52,7 @@ export default async function HomePage() {
           </h1>
           <p className="mt-3 text-slate-300">{t("heroSubtitle")}</p>
 
-          <div className="mt-8 bg-white rounded-xl p-3 shadow-lg">
+          <div className="mt-8 bg-white dark:bg-slate-800 rounded-xl p-3 shadow-lg dark:shadow-slate-900/50">
             <SearchFilters brands={[]} wilayas={[]} initialValues={{}} compact />
           </div>
 
@@ -82,7 +82,7 @@ export default async function HomePage() {
       {featuredListings.length > 0 && (
         <div className="mx-auto max-w-6xl px-4 py-12">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-slate-900">{t("featuredTitle")}</h2>
+            <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t("featuredTitle")}</h2>
             <Link href="/recherche" className="text-sm text-emerald-600 hover:underline">
               {t("seeAllListings")}
             </Link>

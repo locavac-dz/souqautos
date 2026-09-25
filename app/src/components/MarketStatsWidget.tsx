@@ -47,15 +47,15 @@ export async function MarketStatsWidget({
   }[badge];
 
   return (
-    <div className="mt-4 pt-4 border-t border-slate-100">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
         {t("title", { brand: brandName, model: modelName, year })}
       </p>
-      <div className="rounded-md bg-slate-50 border border-slate-200 px-3 py-2">
-        <p className="text-sm font-semibold text-slate-900">
-          {fmt(stats.p25)} – {fmt(stats.p75)} <span className="font-normal text-slate-500">DA</span>
+      <div className="rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2">
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {fmt(stats.p25)} – {fmt(stats.p75)} <span className="font-normal text-slate-500 dark:text-slate-400">DA</span>
         </p>
-        <p className="text-xs text-slate-400 mt-0.5">{t("countLabel", { count: stats.count })}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("countLabel", { count: stats.count })}</p>
       </div>
       <div className={`mt-2 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium ${badgeStyle}`}>
         {badge === "within" && <span aria-hidden="true">✓</span>}
@@ -66,7 +66,7 @@ export async function MarketStatsWidget({
       <div className="mt-2">
         <Link
           href={`/voitures/${brandSlug}/${modelSlug}`}
-          className="text-xs text-slate-400 hover:text-slate-600 hover:underline"
+          className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:underline"
         >
           {t("viewModel", { model: modelName })} →
         </Link>

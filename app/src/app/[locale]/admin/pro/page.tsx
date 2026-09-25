@@ -13,23 +13,23 @@ export default async function AdminProAccountsPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-medium text-slate-900 mb-4">
+      <h1 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
         {t("proAccounts")} ({accounts.length})
       </h1>
       {accounts.length === 0 ? (
-        <p className="text-slate-500 text-sm">{t("noProAccounts")}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{t("noProAccounts")}</p>
       ) : (
         <div className="space-y-3">
           {accounts.map((account) => (
             <div
               key={account.id}
-              className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3"
+              className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 dark:border-slate-700 p-3"
             >
               <div>
-                <Link href={`/pro/${account.id}`} className="font-medium text-slate-900 hover:underline">
+                <Link href={`/pro/${account.id}`} className="font-medium text-slate-900 dark:text-slate-100 hover:underline">
                   {account.nomCommercial}
                 </Link>
-                <p className="text-xs text-slate-500 mt-1">{account.user.email}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{account.user.email}</p>
               </div>
               <ToggleProVerifiedButton accountId={account.id} verified={account.badgeVerifie} />
             </div>

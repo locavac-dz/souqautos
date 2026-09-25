@@ -24,7 +24,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("dashboardTitle")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("dashboardTitle")}</h1>
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
         <StatCard label={t("pendingListings")} value={pendingCount} highlight={pendingCount > 0} />
         <StatCard label={t("publishedListings")} value={publishedCount} />
@@ -58,11 +58,11 @@ function StatCard({
   return (
     <div
       className={`rounded-lg border p-4 ${
-        highlight ? "border-amber-300 bg-amber-50" : "border-slate-200"
+        highlight ? "border-amber-300 bg-amber-50" : "border-slate-200 dark:border-slate-700"
       }`}
     >
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-2xl font-semibold text-slate-900 mt-1">{value}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mt-1">{value}</p>
     </div>
   );
 }

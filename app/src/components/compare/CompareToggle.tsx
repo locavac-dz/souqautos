@@ -20,8 +20,8 @@ export function CompareToggle({ listingId, label }: { listingId: string; label: 
       title={label}
       className={`flex items-center justify-center h-9 w-9 rounded-full border shadow-sm disabled:opacity-40 ${
         selected
-          ? "bg-slate-900 border-slate-900 text-white"
-          : "bg-white/90 border-slate-200 text-slate-500 hover:bg-white"
+          ? "bg-slate-900 dark:bg-slate-100 border-slate-900 dark:border-slate-100 text-white dark:text-slate-900"
+          : "bg-white/90 dark:bg-slate-800/90 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700"
       }`}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8}>

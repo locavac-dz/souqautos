@@ -53,11 +53,11 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
   return (
     <StepShell step={4} title={t("step4Title")} nextLabel={t("next")} onNext={handleNext}>
       <label className="block">
-        <span className="block text-sm font-medium text-slate-700 mb-1">{t("condition")}</span>
+        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("condition")}</span>
         <select
           value={data.condition ?? ""}
           onChange={(e) => setData({ condition: e.target.value as ListingCondition })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         >
           <option value="" disabled>
             —
@@ -67,7 +67,7 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
         </select>
       </label>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
         <input
           type="checkbox"
           checked={data.firstHand ?? false}
@@ -76,7 +76,7 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
         {t("firstHand")}
       </label>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
         <input
           type="checkbox"
           checked={data.accidented ?? false}
@@ -85,7 +85,7 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
         {t("accidented")}
       </label>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
         <input
           type="checkbox"
           checked={data.negotiable ?? false}
@@ -95,24 +95,24 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
       </label>
 
       <label className="block">
-        <span className="block text-sm font-medium text-slate-700 mb-1">{t("controltechniqueExpiry")}</span>
+        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("controltechniqueExpiry")}</span>
         <span className="block text-xs text-slate-400 mb-1.5">{t("controltechniqueExpiryHint")}</span>
         <input
           type="date"
           value={data.controltechniqueExpiry ?? ""}
           onChange={(e) => setData({ controltechniqueExpiry: e.target.value || undefined })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         />
       </label>
 
       <label className="block">
-        <span className="block text-sm font-medium text-slate-700 mb-1">{t("assuranceExpiry")}</span>
+        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("assuranceExpiry")}</span>
         <span className="block text-xs text-slate-400 mb-1.5">{t("assuranceExpiryHint")}</span>
         <input
           type="date"
           value={data.assuranceExpiry ?? ""}
           onChange={(e) => setData({ assuranceExpiry: e.target.value || undefined })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         />
       </label>
 
@@ -127,7 +127,7 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
               </p>
               <div className="grid grid-cols-2 gap-1.5">
                 {byCategory.get(category)!.map((eq) => (
-                  <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700">
+                  <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                     <input
                       type="checkbox"
                       checked={(data.equipmentIds ?? []).includes(eq.id)}

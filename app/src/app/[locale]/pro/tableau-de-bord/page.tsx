@@ -41,8 +41,8 @@ export default async function ProDashboardPage() {
   if (!account) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="text-slate-600 mb-4">{t("noAccountYet")}</p>
-        <Link href="/devenir-professionnel" className="text-sm text-slate-900 underline">
+        <p className="text-slate-600 dark:text-slate-300 mb-4">{t("noAccountYet")}</p>
+        <Link href="/devenir-professionnel" className="text-sm text-slate-900 dark:text-slate-100 underline">
           {t("becomeProLink")}
         </Link>
       </div>
@@ -53,7 +53,7 @@ export default async function ProDashboardPage() {
   if (!canViewProDashboard(access)) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="text-slate-600">{t("forbidden")}</p>
+        <p className="text-slate-600 dark:text-slate-300">{t("forbidden")}</p>
       </div>
     );
   }
@@ -89,7 +89,7 @@ export default async function ProDashboardPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-semibold text-slate-900">{account.nomCommercial}</h1>
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{account.nomCommercial}</h1>
         {account.badgeVerifie && <span className="text-emerald-700 text-sm">{t("verifiedBadge")}</span>}
       </div>
 
@@ -127,31 +127,31 @@ export default async function ProDashboardPage() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
-        <Link href={`/pro/${account.id}`} className="text-sm text-slate-700 underline hover:text-slate-900">
+        <Link href={`/pro/${account.id}`} className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
           {t("viewPublicShowcase")}
         </Link>
-        <Link href="/pro/statistiques" className="text-sm text-slate-700 underline hover:text-slate-900">
+        <Link href="/pro/statistiques" className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
           {t("statsLink")}
         </Link>
         {canManageProListings(access) && (
-          <Link href="/pro/prospects" className="text-sm text-slate-700 underline hover:text-slate-900">
+          <Link href="/pro/prospects" className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
             {t("prospectsLink")}
           </Link>
         )}
         {canManageProListings(access) && (
-          <Link href="/compte/mes-annonces" className="text-sm text-slate-700 underline hover:text-slate-900">
+          <Link href="/compte/mes-annonces" className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
             {t("manageListings")}
           </Link>
         )}
         {canManageProListings(access) && (
-          <Link href="/pro/import" className="text-sm text-slate-700 underline hover:text-slate-900">
+          <Link href="/pro/import" className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
             {t("bulkImportLink")}
           </Link>
         )}
         {canManageProListings(access) && subscriptionStatus && hasAdvancedProTools(subscriptionStatus.tier) && (
           <a
             href={`/api/pro/accounts/${account.id}/export`}
-            className="text-sm text-slate-700 underline hover:text-slate-900"
+            className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100"
           >
             {t("exportLink")}
           </a>
@@ -159,12 +159,12 @@ export default async function ProDashboardPage() {
       </div>
 
       {subscriptionStatus && (
-        <div className="mt-8 rounded-lg border border-slate-200 p-4">
-          <h2 className="text-sm font-medium text-slate-900 mb-1">{t("subscriptionTitle")}</h2>
-          <p className="text-sm text-slate-700">
+        <div className="mt-8 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <h2 className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-1">{t("subscriptionTitle")}</h2>
+          <p className="text-sm text-slate-700 dark:text-slate-300">
             {t("subscriptionCurrentTier", { tier: t(`subscriptionTier${subscriptionStatus.tier}`) })}
           </p>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             {subscriptionStatus.quota === null
               ? t("subscriptionQuotaUnlimited", { count: subscriptionStatus.activeListingCount })
               : t("subscriptionQuotaUsage", {
@@ -173,7 +173,7 @@ export default async function ProDashboardPage() {
                 })}
           </p>
           {!hasAdvancedProTools(subscriptionStatus.tier) && (
-            <p className="text-xs text-slate-500 mt-1">{t("subscriptionAdvancedToolsLocked")}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("subscriptionAdvancedToolsLocked")}</p>
           )}
           {isOwner && upgradableTiers.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
@@ -218,9 +218,9 @@ export default async function ProDashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-2xl font-semibold text-slate-900 mt-1">{value}</p>
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mt-1">{value}</p>
     </div>
   );
 }

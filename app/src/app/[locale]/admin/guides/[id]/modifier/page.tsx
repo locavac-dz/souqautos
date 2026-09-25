@@ -26,7 +26,7 @@ export default async function EditGuidePage({ params }: { params: Promise<{ id: 
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("editGuide")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("editGuide")}</h1>
       <BlogArticleForm kind="GUIDE" article={article} status={articleStatus(article.publishedAt, new Date())} brands={brands} />
       <PreviewLinksSection articleId={article.id} publishedAt={article.publishedAt} />
     </div>

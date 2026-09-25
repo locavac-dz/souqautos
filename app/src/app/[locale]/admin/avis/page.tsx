@@ -40,7 +40,7 @@ export default async function AdminReviewsPage() {
       : null;
 
     return (
-      <div key={review.id} className="rounded-lg border border-slate-200 p-3">
+      <div key={review.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <p className="text-amber-600 text-sm">
             {"★".repeat(review.rating)}
@@ -57,8 +57,8 @@ export default async function AdminReviewsPage() {
             <DeleteReviewButton reviewId={review.id} />
           </div>
         </div>
-        {review.comment && <p className="text-sm text-slate-700 mt-1">{review.comment}</p>}
-        <p className="text-xs text-slate-500 mt-1">
+        {review.comment && <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{review.comment}</p>}
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
           {review.seller ? (
             <>
               {t("sellerLabel")}:{" "}
@@ -87,7 +87,7 @@ export default async function AdminReviewsPage() {
     <div>
       {pending.length > 0 && (
         <section className="mb-8">
-          <h1 className="text-lg font-medium text-slate-900 mb-4">
+          <h1 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
             {t("pendingReviews")} ({pending.length})
           </h1>
           <div className="space-y-3">
@@ -102,11 +102,11 @@ export default async function AdminReviewsPage() {
         {pending.length === 0 && (
           <h1 className="sr-only">{t("allReviews")}</h1>
         )}
-        <h2 className={`font-medium text-slate-900 mb-4 ${pending.length > 0 ? "text-base" : "text-lg"}`}>
+        <h2 className={`font-medium text-slate-900 dark:text-slate-100 mb-4 ${pending.length > 0 ? "text-base" : "text-lg"}`}>
           {t("allReviews")} ({reviews.length})
         </h2>
         {reviews.length === 0 ? (
-          <p className="text-slate-500 text-sm">{t("noReviewsYet")}</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">{t("noReviewsYet")}</p>
         ) : (
           <div className="space-y-3">
             {reviews.map((review) => (

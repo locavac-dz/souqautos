@@ -26,7 +26,7 @@ export function MonthlyPriceBars({
       <div
         role="img"
         aria-label={label}
-        className="flex h-24 items-end gap-0.5 border-b border-slate-200"
+        className="flex h-24 items-end gap-0.5 border-b border-slate-200 dark:border-slate-600"
         dir="ltr"
       >
         {points.map((p) => (

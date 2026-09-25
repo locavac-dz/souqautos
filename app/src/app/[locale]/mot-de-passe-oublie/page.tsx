@@ -11,11 +11,11 @@ export default async function ForgotPasswordPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-12">
-      <h1 className="mb-2 text-2xl font-semibold text-slate-900">{t("forgotTitle")}</h1>
-      <p className="mb-6 text-sm text-slate-600">{t("forgotIntro")}</p>
+      <h1 className="mb-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("forgotTitle")}</h1>
+      <p className="mb-6 text-sm text-slate-600 dark:text-slate-300">{t("forgotIntro")}</p>
       <ForgotPasswordForm />
-      <p className="mt-6 text-sm text-slate-500">
-        <Link href="/connexion" className="text-slate-900 underline">
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        <Link href="/connexion" className="text-slate-900 dark:text-slate-100 underline">
           {t("backToLogin")}
         </Link>
       </p>

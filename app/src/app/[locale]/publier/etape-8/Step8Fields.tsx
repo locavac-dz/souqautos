@@ -43,7 +43,7 @@ export function Step8Fields({
   return (
     <StepShell step={8} title={t("step8Title")} nextLabel={t("next")} onNext={handleNext}>
       <div>
-        <label htmlFor="wizard-wilaya" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="wizard-wilaya" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("wilaya")}
         </label>
         <select
@@ -58,7 +58,7 @@ export function Step8Fields({
               communeName: undefined,
             });
           }}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         >
           <option value="" disabled>
             —
@@ -73,7 +73,7 @@ export function Step8Fields({
 
       {selectedWilaya && selectedWilaya.communes.length > 0 && (
         <div>
-          <label htmlFor="wizard-commune" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="wizard-commune" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("commune")}
           </label>
           <select
@@ -86,7 +86,7 @@ export function Step8Fields({
                 communeName: commune ? (locale === "ar" ? commune.nomAr : commune.nomFr) : undefined,
               });
             }}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
             <option value="">{t("communePlaceholder")}</option>
             {selectedWilaya.communes.map((c) => (
@@ -99,7 +99,7 @@ export function Step8Fields({
       )}
 
       <div>
-        <label htmlFor="wizard-phone" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="wizard-phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("phone")}
         </label>
         {userPhone ? (
@@ -121,7 +121,7 @@ export function Step8Fields({
               value={data.phone ?? ""}
               onChange={(e) => setData({ phone: e.target.value })}
               placeholder="0555123456"
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             />
             <p className="mt-1 text-xs text-slate-500">{t("phoneHint")}</p>
           </>

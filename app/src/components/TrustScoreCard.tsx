@@ -16,14 +16,14 @@ export async function TrustScoreCard({
   const accountAgeMonths = Math.floor(accountAgeDays / 30);
 
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
       <div className="flex items-baseline justify-between">
-        <p className="font-medium text-slate-900">{t("title")}</p>
-        <p className="text-2xl font-semibold text-slate-900">{t("scoreValue", { score: breakdown.score })}</p>
+        <p className="font-medium text-slate-900 dark:text-slate-100">{t("title")}</p>
+        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("scoreValue", { score: breakdown.score })}</p>
       </div>
-      <p className="text-xs text-slate-500 mt-1">{t("disclaimer")}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("disclaimer")}</p>
 
-      <div className="mt-3 space-y-1.5 text-xs text-slate-600">
+      <div className="mt-3 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
         <BreakdownRow
           label={t("signalEmail")}
           value={t("pointsEarned", { points: breakdown.emailPoints, max: 10 })}
@@ -63,7 +63,7 @@ function BreakdownRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
       <span>{label}</span>
-      <span className="text-slate-900 font-medium shrink-0">{value}</span>
+      <span className="text-slate-900 dark:text-slate-100 font-medium shrink-0">{value}</span>
     </div>
   );
 }

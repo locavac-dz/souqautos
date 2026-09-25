@@ -42,9 +42,9 @@ export function StructuredHoursEditor({
                 type="checkbox"
                 checked={entry.open}
                 onChange={(e) => updateDay(day, { open: e.target.checked })}
-                className="rounded border-slate-300"
+                className="rounded border-slate-300 dark:border-slate-600 dark:bg-slate-800"
               />
-              <span className={entry.open ? "text-slate-900" : "text-slate-400"}>{t(`day_${day}`)}</span>
+              <span className={entry.open ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}>{t(`day_${day}`)}</span>
             </label>
             {entry.open ? (
               <>
@@ -52,14 +52,14 @@ export function StructuredHoursEditor({
                   type="time"
                   value={entry.debut}
                   onChange={(e) => updateDay(day, { debut: e.target.value })}
-                  className="rounded border border-slate-300 px-2 py-1 text-sm"
+                  className="rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-sm"
                 />
-                <span className="text-slate-400">–</span>
+                <span className="text-slate-400 dark:text-slate-500">–</span>
                 <input
                   type="time"
                   value={entry.fin}
                   onChange={(e) => updateDay(day, { fin: e.target.value })}
-                  className="rounded border border-slate-300 px-2 py-1 text-sm"
+                  className="rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-sm"
                 />
               </>
             ) : (

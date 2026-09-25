@@ -19,7 +19,7 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto max-w-md px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("loginTitle")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("loginTitle")}</h1>
       {/* Lot 133 — après une réinitialisation réussie du mot de passe. */}
       {reinitialise === "1" && (
         <p role="status" className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
@@ -30,13 +30,13 @@ export default async function LoginPage({
       {googleEnabled && <GoogleSignInButton locale={pickLoginLocale(locale)} next={typeof next === "string" ? next : undefined} />}
       <LoginForm />
       <p className="mt-3 text-sm">
-        <Link href="/mot-de-passe-oublie" className="text-slate-600 underline hover:text-slate-900">
+        <Link href="/mot-de-passe-oublie" className="text-slate-600 dark:text-slate-400 underline hover:text-slate-900 dark:hover:text-slate-200">
           {t("forgotPasswordLink")}
         </Link>
       </p>
-      <p className="mt-6 text-sm text-slate-500">
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
         {t("noAccount")}{" "}
-        <Link href="/inscription" className="text-slate-900 underline">
+        <Link href="/inscription" className="text-slate-900 dark:text-slate-100 underline">
           {t("goToRegister")}
         </Link>
       </p>

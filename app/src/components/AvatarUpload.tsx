@@ -55,8 +55,8 @@ export function AvatarUpload({ initialAvatarUrl }: { initialAvatarUrl: string | 
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <h2 className="text-sm font-medium text-slate-900 mb-3">{t("avatarSectionTitle")}</h2>
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+      <h2 className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-3">{t("avatarSectionTitle")}</h2>
       <div className="flex items-center gap-4">
         {avatarUrl ? (
           <div className="relative h-16 w-16 shrink-0">
@@ -65,14 +65,14 @@ export function AvatarUpload({ initialAvatarUrl }: { initialAvatarUrl: string | 
               alt=""
               fill
               sizes="64px"
-              className="rounded-full object-cover border border-slate-200"
+              className="rounded-full object-cover border border-slate-200 dark:border-slate-700"
             />
           </div>
         ) : (
-          <div className="h-16 w-16 shrink-0 rounded-full bg-slate-100 border border-slate-200" />
+          <div className="h-16 w-16 shrink-0 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700" />
         )}
         <div className="flex flex-col items-start gap-1">
-          <label className="cursor-pointer text-sm text-slate-700 underline hover:text-slate-900">
+          <label className="cursor-pointer text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
             {pending ? t("avatarUploading") : t("avatarChangeAction")}
             <input
               type="file"

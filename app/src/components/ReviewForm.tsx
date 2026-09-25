@@ -49,14 +49,14 @@ export function ReviewForm({ endpoint }: { endpoint: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-slate-200 p-4 space-y-3">
-      <p className="font-medium text-sm text-slate-900">{t("leaveReview")}</p>
+    <form onSubmit={handleSubmit} className="rounded-md border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+      <p className="font-medium text-sm text-slate-900 dark:text-slate-100">{t("leaveReview")}</p>
       <label className="block">
-        <span className="text-xs text-slate-500">{t("ratingLabel")}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">{t("ratingLabel")}</span>
         <select
           value={rating}
           onChange={(e) => setRating(Number(e.target.value))}
-          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm"
         >
           {[5, 4, 3, 2, 1].map((n) => (
             <option key={n} value={n}>
@@ -67,19 +67,19 @@ export function ReviewForm({ endpoint }: { endpoint: string }) {
         </select>
       </label>
       <label className="block">
-        <span className="text-xs text-slate-500">{t("commentLabel")}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">{t("commentLabel")}</span>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           maxLength={1000}
           rows={3}
-          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm"
         />
       </label>
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+        className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
       >
         {t("submit")}
       </button>

@@ -85,7 +85,7 @@ export default function Step11Page() {
         return false; // navigation gérée manuellement après succès
       }}
     >
-      <p className="text-slate-600">{t("step11Body")}</p>
+      <p className="text-slate-600 dark:text-slate-300">{t("step11Body")}</p>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>
   );

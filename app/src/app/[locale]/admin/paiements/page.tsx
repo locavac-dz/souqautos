@@ -46,8 +46,8 @@ export default async function AdminPaymentOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("title")}</h1>
-      <p className="text-sm text-slate-500 mb-6">{t("subtitle")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("title")}</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("subtitle")}</p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-2">
         <StatCard label={t("statRevenueTotal")} value={`${numberFormatter.format(stats.totalRevenueDzd)} DA`} />
@@ -58,41 +58,41 @@ export default async function AdminPaymentOrdersPage() {
         <StatCard label={t("statConfirmedCount")} value={stats.confirmedCount} />
         <StatCard label={t("statRejectedCount")} value={stats.rejectedCount} />
       </div>
-      <p className="text-xs text-slate-500 mb-10">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-10">
         {t("statRevenueByFormula", {
           premium: numberFormatter.format(stats.premiumRevenueDzd),
           premiumPlus: numberFormatter.format(stats.premiumPlusRevenueDzd),
         })}
       </p>
 
-      <h2 className="text-lg font-medium text-slate-900 mb-4">
+      <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
         {t("pending")} ({orders.length})
       </h2>
 
       {orders.length === 0 ? (
-        <p className="text-slate-500 text-sm">{t("empty")}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{t("empty")}</p>
       ) : (
         <div className="space-y-3">
           {orders.map((order) => (
-            <div key={order.id} className="flex flex-col gap-4 rounded-lg border border-slate-200 p-3 sm:flex-row">
+            <div key={order.id} className="flex flex-col gap-4 rounded-lg border border-slate-200 dark:border-slate-700 p-3 sm:flex-row">
               <div className="flex-1">
-                <p className="font-medium text-slate-900">
+                <p className="font-medium text-slate-900 dark:text-slate-100">
                   {order.user.profile?.displayName ?? order.user.email}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {order.user.email} · {dateFormatter.format(order.createdAt)}
                 </p>
                 <Link
                   href={`/annonce/${order.listingId}`}
                   target="_blank"
-                  className="text-sm text-slate-700 underline hover:text-slate-900 mt-1 inline-block"
+                  className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100 mt-1 inline-block"
                 >
                   {order.listing.title}
                 </Link>
-                <p className="text-sm text-slate-700 mt-1">
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                   {t("formulaLabel")} : <strong>{order.formula}</strong> — {numberFormatter.format(order.amountDzd)} DA
                 </p>
-                <p className="text-sm text-slate-700 mt-1">
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                   {t("referenceLabel")} :{" "}
                   <span className="font-mono" dir="ltr">
                     {order.reference}
@@ -107,34 +107,34 @@ export default async function AdminPaymentOrdersPage() {
         </div>
       )}
 
-      <h2 className="text-lg font-medium text-slate-900 mb-4 mt-10">
+      <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4 mt-10">
         {t("subscriptionPending")} ({subscriptionOrders.length})
       </h2>
 
       {subscriptionOrders.length === 0 ? (
-        <p className="text-slate-500 text-sm">{t("subscriptionEmpty")}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{t("subscriptionEmpty")}</p>
       ) : (
         <div className="space-y-3">
           {subscriptionOrders.map((order) => (
-            <div key={order.id} className="flex flex-col gap-4 rounded-lg border border-slate-200 p-3 sm:flex-row">
+            <div key={order.id} className="flex flex-col gap-4 rounded-lg border border-slate-200 dark:border-slate-700 p-3 sm:flex-row">
               <div className="flex-1">
-                <p className="font-medium text-slate-900">
+                <p className="font-medium text-slate-900 dark:text-slate-100">
                   {order.user.profile?.displayName ?? order.user.email}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {order.user.email} · {dateFormatter.format(order.createdAt)}
                 </p>
                 <Link
                   href={`/pro/${order.professionalAccount.id}`}
                   target="_blank"
-                  className="text-sm text-slate-700 underline hover:text-slate-900 mt-1 inline-block"
+                  className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100 mt-1 inline-block"
                 >
                   {order.professionalAccount.nomCommercial}
                 </Link>
-                <p className="text-sm text-slate-700 mt-1">
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                   {t("tierLabel")} : <strong>{order.tier}</strong> — {numberFormatter.format(order.amountDzd)} DA
                 </p>
-                <p className="text-sm text-slate-700 mt-1">
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                   {t("referenceLabel")} :{" "}
                   <span className="font-mono" dir="ltr">
                     {order.reference}
@@ -157,9 +157,9 @@ export default async function AdminPaymentOrdersPage() {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-2xl font-semibold text-slate-900 mt-1">{value}</p>
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mt-1">{value}</p>
     </div>
   );
 }

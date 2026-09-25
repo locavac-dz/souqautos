@@ -6,10 +6,10 @@ import type { PhotoCredit } from "@/lib/photo-credit";
 export async function PhotoCredits({ credits }: { credits: PhotoCredit[] }) {
   if (credits.length === 0) return null;
   const t = await getTranslations("Listing");
-  const linkClass = "underline hover:text-slate-700";
+  const linkClass = "underline hover:text-slate-700 dark:hover:text-slate-200";
 
   return (
-    <div className="-mt-3 mb-6 space-y-0.5 text-xs text-slate-500">
+    <div className="-mt-3 mb-6 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
       <p>{t("photoIllustrative")}</p>
       {credits.map((credit) => (
         <p key={`${credit.author}|${credit.license}|${credit.sourceUrl ?? ""}`}>

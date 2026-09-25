@@ -33,7 +33,7 @@ export default async function EditBlogArticlePage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("editArticle")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("editArticle")}</h1>
       <BlogArticleForm article={article} status={articleStatus(article.publishedAt, new Date())} />
       <PreviewLinksSection articleId={article.id} publishedAt={article.publishedAt} />
     </div>

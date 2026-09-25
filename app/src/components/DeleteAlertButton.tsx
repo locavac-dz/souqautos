@@ -29,7 +29,7 @@ export function DeleteAlertButton({ alertId }: { alertId: string }) {
       onClick={handleDelete}
       onBlur={() => setConfirming(false)}
       disabled={pending}
-      className="shrink-0 text-xs text-slate-500 hover:text-red-600 disabled:opacity-50"
+      className="shrink-0 text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 disabled:opacity-50"
     >
       {confirming ? t("confirmDelete") : t("delete")}
     </button>

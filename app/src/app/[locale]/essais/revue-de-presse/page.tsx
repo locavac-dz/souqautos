@@ -80,12 +80,12 @@ export default async function PressReviewsPage({ searchParams }: { searchParams:
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <h1 className="text-2xl font-semibold text-slate-900">{t("pageTitle")}</h1>
-      <p className="mt-1 text-sm text-slate-500">{t("pageSubtitle")}</p>
-      <p className="mt-1 text-xs text-slate-500">{t("disclaimer")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("pageTitle")}</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("pageSubtitle")}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("disclaimer")}</p>
 
       {items.length === 0 ? (
-        <p className="mt-8 py-12 text-center text-slate-500">{t("empty")}</p>
+        <p className="mt-8 py-12 text-center text-slate-500 dark:text-slate-400">{t("empty")}</p>
       ) : (
         <>
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

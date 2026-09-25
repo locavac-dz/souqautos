@@ -166,14 +166,14 @@ export default async function SearchPage({
 
       <div>
         {flatParams.via === "ai" && (
-          <p className="mb-3 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600">
+          <p className="mb-3 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
             {t("aiSearchNotice")}
           </p>
         )}
 
         {featuredListings.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-sm font-medium text-slate-700 mb-2">{t("featuredTitle")}</h2>
+            <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t("featuredTitle")}</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {featuredListings.map((listing, index) => (
                 <ListingCard
@@ -194,7 +194,7 @@ export default async function SearchPage({
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-slate-500">{t("resultsCount", { count: totalCount })}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("resultsCount", { count: totalCount })}</p>
           <SortSelect current={params.sort ?? "recent"} />
         </div>
 
@@ -202,7 +202,7 @@ export default async function SearchPage({
             toutes les annonces correspondantes sont déjà en avant (ci-dessus, et donc
             exclues de la liste normale), la liste normale est vide mais la page ne l'est pas. */}
         {allListings.length === 0 ? (
-          <p className="text-slate-500 py-12 text-center">{t("noResults")}</p>
+          <p className="text-slate-500 dark:text-slate-400 py-12 text-center">{t("noResults")}</p>
         ) : (
           listings.length > 0 && (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

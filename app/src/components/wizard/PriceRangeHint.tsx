@@ -72,10 +72,10 @@ export function PriceRangeHint({ data, price }: { data: WizardData; price?: numb
   const fmt = (n: number) => n.toLocaleString("fr-DZ");
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+    <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm">
       {/* En-tête */}
       <div className="flex items-center justify-between mb-3">
-        <span className="font-medium text-slate-700">{t("priceEstimateTitle")}</span>
+        <span className="font-medium text-slate-700 dark:text-slate-300">{t("priceEstimateTitle")}</span>
         <span className="text-xs text-slate-400">
           {t("priceEstimateComparables", { count: sampleSize })}
         </span>
@@ -98,17 +98,17 @@ export function PriceRangeHint({ data, price }: { data: WizardData; price?: numb
         <span>
           {t("priceEstimateLow")}
           <br />
-          <span className="text-slate-600 font-medium">{fmt(low)} DA</span>
+          <span className="text-slate-600 dark:text-slate-300 font-medium">{fmt(low)} DA</span>
         </span>
         <span className="text-center">
           {t("priceEstimateMedian")}
           <br />
-          <span className="text-slate-600 font-medium">{fmt(mid)} DA</span>
+          <span className="text-slate-600 dark:text-slate-300 font-medium">{fmt(mid)} DA</span>
         </span>
         <span className="text-end">
           {t("priceEstimateHigh")}
           <br />
-          <span className="text-slate-600 font-medium">{fmt(high)} DA</span>
+          <span className="text-slate-600 dark:text-slate-300 font-medium">{fmt(high)} DA</span>
         </span>
       </div>
 

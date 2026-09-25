@@ -22,8 +22,8 @@ export default async function EditProfilePage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("title")}</h1>
-      <p className="text-sm text-slate-500 mb-6">{t("subtitle")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("title")}</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("subtitle")}</p>
       <div className="mb-6">
         <AvatarUpload initialAvatarUrl={user.profile?.avatarUrl ?? null} />
       </div>
@@ -32,7 +32,7 @@ export default async function EditProfilePage() {
       </div>
       {/* Lot 138 — double authentification. */}
       <p className="mb-6 text-sm">
-        <Link href="/compte/securite" className="font-medium text-slate-900 underline hover:text-slate-700">
+        <Link href="/compte/securite" className="font-medium text-slate-900 dark:text-slate-100 underline hover:text-slate-700 dark:hover:text-slate-300">
           {tSecurity("securityLink")}
         </Link>
       </p>
@@ -45,13 +45,13 @@ export default async function EditProfilePage() {
         initialWhatsappEnabled={user.whatsappEnabled}
         phoneVerified={Boolean(user.phoneVerifiedAt)}
       />
-      <div className="mt-10 border-t border-slate-200 pt-6">
-        <h2 className="text-base font-medium text-slate-900 mb-1">{t("exportDataTitle")}</h2>
-        <p className="text-sm text-slate-500 mb-3">{t("exportDataDescription")}</p>
+      <div className="mt-10 border-t border-slate-200 dark:border-slate-700 pt-6">
+        <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-1">{t("exportDataTitle")}</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{t("exportDataDescription")}</p>
         <a
           href="/api/profile/export"
           download
-          className="inline-block rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-block rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
           {t("exportDataAction")}
         </a>

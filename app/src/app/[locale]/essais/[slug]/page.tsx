@@ -144,9 +144,9 @@ export default async function RoadTestPage({
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      {vehicle && <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{vehicle}</p>}
-      <h1 className="mt-1 text-2xl font-semibold text-slate-900">{title}</h1>
-      <p className="mt-2 text-slate-600">{excerpt}</p>
+      {vehicle && <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{vehicle}</p>}
+      <h1 className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{title}</h1>
+      <p className="mt-2 text-slate-600 dark:text-slate-300">{excerpt}</p>
 
       <div className="mt-4 flex items-center gap-3">
         {profile?.avatarUrl ? (
@@ -160,13 +160,13 @@ export default async function RoadTestPage({
             />
           </div>
         ) : (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-sm font-medium text-slate-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-sm font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
             {authorName.charAt(0).toUpperCase()}
           </div>
         )}
         <div className="text-sm">
-          <p className="font-medium text-slate-900">{t("byline", { author: authorName })}</p>
-          <p className="text-xs text-slate-500">
+          <p className="font-medium text-slate-900 dark:text-slate-100">{t("byline", { author: authorName })}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {article.publishedAt && t("publishedOn", { date: dateFormatter.format(article.publishedAt) })}
             {showUpdated && <> · {t("updatedOn", { date: dateFormatter.format(article.updatedAt) })}</>}
           </p>
@@ -174,18 +174,18 @@ export default async function RoadTestPage({
       </div>
 
       {article.coverImageUrl && (
-        <div className="relative mt-6 aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+        <div className="relative mt-6 aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
           <Image src={article.coverImageUrl} alt="" fill sizes="(min-width: 768px) 768px, 100vw" className="object-cover" loading="eager" fetchPriority="high" />
         </div>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
         <StarRating rating={rt.rating} size={26} label={t("ratingAria", { rating: ratingText })} />
-        <span className="text-lg font-semibold text-slate-900">{t("ratingLabel", { rating: ratingText })}</span>
+        <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("ratingLabel", { rating: ratingText })}</span>
       </div>
 
       {(rt.testedVersion || rt.testedAt) && (
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
           {rt.testedVersion && <span>{t("testedVersion", { version: rt.testedVersion })}</span>}
           {rt.testedVersion && rt.testedAt && " · "}
           {rt.testedAt && <span>{t("testedOn", { date: dateFormatter.format(rt.testedAt) })}</span>}
@@ -194,10 +194,10 @@ export default async function RoadTestPage({
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
         <section>
-          <h2 className="text-lg font-semibold text-slate-900">{t("prosTitle")}</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("prosTitle")}</h2>
           <ul className="mt-3 space-y-2">
             {pros.map((item, index) => (
-              <li key={index} className="flex gap-2 text-sm text-slate-700">
+              <li key={index} className="flex gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <BulletIcon kind="plus" />
                 <span>{item}</span>
               </li>
@@ -205,10 +205,10 @@ export default async function RoadTestPage({
           </ul>
         </section>
         <section>
-          <h2 className="text-lg font-semibold text-slate-900">{t("consTitle")}</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("consTitle")}</h2>
           <ul className="mt-3 space-y-2">
             {cons.map((item, index) => (
-              <li key={index} className="flex gap-2 text-sm text-slate-700">
+              <li key={index} className="flex gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <BulletIcon kind="minus" />
                 <span>{item}</span>
               </li>
@@ -217,9 +217,9 @@ export default async function RoadTestPage({
         </section>
       </div>
 
-      <section className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{t("verdictTitle")}</h2>
-        <p className="mt-1 text-slate-800">{verdict}</p>
+      <section className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("verdictTitle")}</h2>
+        <p className="mt-1 text-slate-800 dark:text-slate-200">{verdict}</p>
       </section>
 
       <ArticleBody content={content} />
@@ -227,7 +227,7 @@ export default async function RoadTestPage({
       {rt.brand && rt.model && (
         <Link
           href={`/voitures/${rt.brand.slug}/${rt.model.slug}`}
-          className="mt-8 inline-block text-sm text-slate-700 underline hover:text-slate-900"
+          className="mt-8 inline-block text-sm text-slate-700 underline hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
         >
           {t("seeModel", { brand: rt.brand.name, model: rt.model.name })}
         </Link>

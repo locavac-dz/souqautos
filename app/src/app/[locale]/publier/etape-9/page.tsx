@@ -66,7 +66,7 @@ export default function Step9Page() {
         </div>
       )}
 
-      <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
         <Row label={t("title")} value={data.title} />
         {data.category && <Row label={t("category")} value={t(CATEGORY_KEY[data.category])} />}
         <Row label={t("brand")} value={brandLabel} />
@@ -100,8 +100,8 @@ export default function Step9Page() {
 
       {data.description && (
         <div>
-          <h2 className="text-sm font-medium text-slate-700 mb-1">{t("description")}</h2>
-          <p className="text-sm text-slate-600 whitespace-pre-wrap">{data.description}</p>
+          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("description")}</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{data.description}</p>
         </div>
       )}
     </StepShell>
@@ -112,8 +112,8 @@ function Row({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
   return (
     <div className="px-4 py-2.5 flex justify-between gap-4">
-      <span className="text-slate-500">{label}</span>
-      <span className="text-slate-900 font-medium text-right">{value}</span>
+      <span className="text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-slate-900 dark:text-slate-100 font-medium text-right">{value}</span>
     </div>
   );
 }

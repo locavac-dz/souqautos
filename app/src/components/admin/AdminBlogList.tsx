@@ -34,21 +34,21 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 mb-2">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
             {isEssai ? tRt("title") : isGuide ? tG("title") : t("title")}
           </h1>
-          <p className="text-sm text-slate-500">{isEssai ? tRt("subtitle") : isGuide ? tG("subtitle") : t("subtitle")}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{isEssai ? tRt("subtitle") : isGuide ? tG("subtitle") : t("subtitle")}</p>
         </div>
         <Link
           href={`${base}/nouveau`}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
         >
           {isEssai ? tRt("newEssai") : isGuide ? tG("newGuide") : t("newArticle")}
         </Link>
       </div>
 
       {articles.length === 0 ? (
-        <p className="text-slate-500 text-sm">{isEssai ? tRt("empty") : isGuide ? tG("empty") : t("empty")}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{isEssai ? tRt("empty") : isGuide ? tG("empty") : t("empty")}</p>
       ) : (
         <div className="space-y-3">
           {articles.map((article) => {
@@ -56,11 +56,11 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
             return (
               <div
                 key={article.id}
-                className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-3"
+                className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 dark:border-slate-700 p-3"
               >
                 <div>
-                  <p className="font-medium text-slate-900">{article.titleFr}</p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="font-medium text-slate-900 dark:text-slate-100">{article.titleFr}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {status === "published" && article.publishedAt && (
                       <span className="text-emerald-700">
                         {t("publishedOn", { date: dateFormatter.format(article.publishedAt) })}
@@ -71,7 +71,7 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
                         {t("scheduledFor", { date: dateTimeFormatter.format(article.publishedAt) })}
                       </span>
                     )}
-                    {status === "draft" && <span className="text-slate-500">{t("draft")}</span>}
+                    {status === "draft" && <span className="text-slate-500 dark:text-slate-400">{t("draft")}</span>}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -79,7 +79,7 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
                     <Link
                       href={`${publicBase}/${article.slug}`}
                       target="_blank"
-                      className="text-xs text-slate-600 underline hover:text-slate-900"
+                      className="text-xs text-slate-600 dark:text-slate-400 underline hover:text-slate-900 dark:hover:text-slate-100"
                     >
                       {t("view")}
                     </Link>
@@ -89,14 +89,14 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
                     <Link
                       href={`${publicBase}/${article.slug}`}
                       target="_blank"
-                      className="text-xs text-slate-600 underline hover:text-slate-900"
+                      className="text-xs text-slate-600 dark:text-slate-400 underline hover:text-slate-900 dark:hover:text-slate-100"
                     >
                       {t("preview")}
                     </Link>
                   )}
                   <Link
                     href={`${base}/${article.id}/modifier`}
-                    className="text-xs text-slate-600 underline hover:text-slate-900"
+                    className="text-xs text-slate-600 dark:text-slate-400 underline hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     {t("edit")}
                   </Link>

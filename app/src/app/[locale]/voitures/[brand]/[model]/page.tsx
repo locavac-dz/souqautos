@@ -174,12 +174,12 @@ export default async function ModelPage({
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <h1 className="text-2xl font-semibold text-slate-900">
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
         {t("modelTitle", { brand: brand.name, model: model.name })}
       </h1>
 
       {stats.count === 0 ? (
-        <p className="mt-4 text-slate-500">{t("noStatsModel")}</p>
+        <p className="mt-4 text-slate-500 dark:text-slate-400">{t("noStatsModel")}</p>
       ) : (
         <div className="mt-4 flex flex-wrap gap-6 text-sm">
           <div>
@@ -188,13 +188,13 @@ export default async function ModelPage({
           {stats.avgPrice && (
             <div>
               <p className="text-xs text-slate-500">{t("avgPrice")}</p>
-              <p className="font-medium text-slate-900">{stats.avgPrice.toLocaleString()} DA</p>
+              <p className="font-medium text-slate-900 dark:text-slate-100">{stats.avgPrice.toLocaleString()} DA</p>
             </div>
           )}
           {stats.minPrice && stats.maxPrice && (
             <div>
               <p className="text-xs text-slate-500">{t("priceRange")}</p>
-              <p className="font-medium text-slate-900">
+              <p className="font-medium text-slate-900 dark:text-slate-100">
                 {stats.minPrice.toLocaleString()} – {stats.maxPrice.toLocaleString()} DA
               </p>
             </div>
@@ -210,14 +210,14 @@ export default async function ModelPage({
             label={t("priceHistoryLabel", { brand: brand.name, model: model.name })}
             locale={locale}
           />
-          <p className="mt-2 text-xs text-slate-500">{t("priceHistoryNote")}</p>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("priceHistoryNote")}</p>
         </section>
       )}
 
       <div className="mt-4 flex flex-wrap gap-3">
         <Link
           href={`/cote-souq-auto?brandId=${brand.id}&modelId=${model.id}`}
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:border-slate-400"
+          className="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500"
         >
           {t("estimateLink", { brand: brand.name, model: model.name })}
         </Link>
@@ -225,7 +225,7 @@ export default async function ModelPage({
 
       {guides.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold text-slate-900">{tGuide("modelSectionTitle")}</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{tGuide("modelSectionTitle")}</h2>
           <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {guides.map((article) => (
               <GuideCard key={article.id} article={article} locale={locale} />
@@ -236,7 +236,7 @@ export default async function ModelPage({
 
       {roadTests.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold text-slate-900">{tRoadTest("modelRoadTestsTitle")}</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{tRoadTest("modelRoadTestsTitle")}</h2>
           <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {roadTests.map((article) => (
               <RoadTestCard key={article.id} article={article} locale={locale} />
@@ -247,8 +247,8 @@ export default async function ModelPage({
 
       {pressReviews.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold text-slate-900">{tPress("modelSectionTitle")}</h2>
-          <p className="mt-1 text-xs text-slate-500">{tPress("disclaimer")}</p>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{tPress("modelSectionTitle")}</h2>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{tPress("disclaimer")}</p>
           <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pressReviews.map((item) => (
               <PressReviewCard key={item.id} item={item} locale={locale} />
@@ -285,7 +285,7 @@ export default async function ModelPage({
       {stats.count > 0 && (
         <Link
           href={`/recherche?brandId=${brand.id}&modelId=${model.id}`}
-          className="mt-8 inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          className="mt-8 inline-block rounded-md bg-slate-900 dark:bg-slate-100 px-4 py-2 text-sm font-medium text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-300"
         >
           {t("viewAllModelListings", { brand: brand.name, model: model.name })}
         </Link>

@@ -61,7 +61,7 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
               src={photo.path}
               alt={`${alt} — photo ${i + 1}`}
               fill
-              className="rounded-md object-cover border border-slate-200 hover:opacity-90 transition-opacity"
+              className="rounded-md object-cover border border-slate-200 dark:border-slate-600 hover:opacity-90 transition-opacity"
               sizes={i === 0 ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"}
               loading={i === 0 ? "eager" : undefined}
               fetchPriority={i === 0 ? "high" : undefined}

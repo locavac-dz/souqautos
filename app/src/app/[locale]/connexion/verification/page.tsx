@@ -23,7 +23,7 @@ export default async function TwoFactorVerificationPage() {
   const t = await getTranslations("TwoFactor");
   return (
     <div className="mx-auto max-w-md px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("verifyTitle")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("verifyTitle")}</h1>
       <TwoFactorVerifyForm />
     </div>
   );

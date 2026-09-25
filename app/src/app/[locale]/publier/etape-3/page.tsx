@@ -31,35 +31,35 @@ export default function Step3Page() {
     <StepShell step={3} title={t("step3Title")} nextLabel={t("next")} onNext={handleNext}>
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
-          <span className="block text-sm font-medium text-slate-700 mb-1">{t("year")}</span>
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("year")}</span>
           <input
             type="number"
             min={1970}
             max={currentYear + 1}
             value={data.year ?? ""}
             onChange={(e) => setData({ year: e.target.value ? Number(e.target.value) : undefined })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           />
         </label>
         <label className="block">
-          <span className="block text-sm font-medium text-slate-700 mb-1">{t("mileage")}</span>
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("mileage")}</span>
           <input
             type="number"
             min={0}
             value={data.mileage ?? ""}
             onChange={(e) => setData({ mileage: e.target.value ? Number(e.target.value) : undefined })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           />
         </label>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
-          <span className="block text-sm font-medium text-slate-700 mb-1">{t("fuelType")}</span>
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("fuelType")}</span>
           <select
             value={data.fuelType ?? ""}
             onChange={(e) => setData({ fuelType: e.target.value as FuelType })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
             <option value="" disabled>
               —
@@ -72,11 +72,11 @@ export default function Step3Page() {
           </select>
         </label>
         <label className="block">
-          <span className="block text-sm font-medium text-slate-700 mb-1">{t("gearbox")}</span>
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("gearbox")}</span>
           <select
             value={data.gearbox ?? ""}
             onChange={(e) => setData({ gearbox: e.target.value as Gearbox })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
             <option value="" disabled>
               —
@@ -89,13 +89,13 @@ export default function Step3Page() {
 
       {hasCarBodyFields(data.category) && (
         <label className="block">
-          <span className="block text-sm font-medium text-slate-700 mb-1">{t("transmission")}</span>
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("transmission")}</span>
           <select
             value={data.transmission ?? ""}
             onChange={(e) =>
               setData({ transmission: (e.target.value || undefined) as Transmission | undefined })
             }
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
             <option value="">{t("transmissionNone")}</option>
             <option value="QUATRE_X_DEUX">{t("transmission4x2")}</option>
@@ -107,63 +107,63 @@ export default function Step3Page() {
       {hasCarBodyFields(data.category) ? (
         <div className="grid grid-cols-3 gap-4">
           <label className="block">
-            <span className="block text-sm font-medium text-slate-700 mb-1">{t("color")}</span>
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("color")}</span>
             <input
               type="text"
               value={data.color ?? ""}
               onChange={(e) => setData({ color: e.target.value || undefined })}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             />
           </label>
           <label className="block">
-            <span className="block text-sm font-medium text-slate-700 mb-1">{t("doors")}</span>
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("doors")}</span>
             <input
               type="number"
               min={1}
               max={7}
               value={data.doors ?? ""}
               onChange={(e) => setData({ doors: e.target.value ? Number(e.target.value) : undefined })}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             />
           </label>
           <label className="block">
-            <span className="block text-sm font-medium text-slate-700 mb-1">{t("seats")}</span>
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("seats")}</span>
             <input
               type="number"
               min={1}
               max={9}
               value={data.seats ?? ""}
               onChange={(e) => setData({ seats: e.target.value ? Number(e.target.value) : undefined })}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
             />
           </label>
         </div>
       ) : (
         <label className="block">
-          <span className="block text-sm font-medium text-slate-700 mb-1">{t("color")}</span>
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("color")}</span>
           <input
             type="text"
             value={data.color ?? ""}
             onChange={(e) => setData({ color: e.target.value || undefined })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           />
         </label>
       )}
 
       <label className="block">
-        <span className="block text-sm font-medium text-slate-700 mb-1">{t("powerHp")}</span>
+        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("powerHp")}</span>
         <input
           type="number"
           min={1}
           max={2000}
           value={data.powerHp ?? ""}
           onChange={(e) => setData({ powerHp: e.target.value ? Number(e.target.value) : undefined })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         />
       </label>
 
       <label className="block">
-        <span className="block text-sm font-medium text-slate-700 mb-1">{t("fiscalPower")}</span>
+        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("fiscalPower")}</span>
         <p className="text-xs text-slate-500 mb-1">{t("fiscalPowerHint")}</p>
         <input
           type="number"
@@ -171,16 +171,16 @@ export default function Step3Page() {
           max={40}
           value={data.fiscalPower ?? ""}
           onChange={(e) => setData({ fiscalPower: e.target.value ? Number(e.target.value) : undefined })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         />
       </label>
 
       <label className="block">
-        <span className="block text-sm font-medium text-slate-700 mb-1">{t("bodyType")}</span>
+        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("bodyType")}</span>
         <select
           value={data.bodyType ?? ""}
           onChange={(e) => setData({ bodyType: (e.target.value || undefined) as BodyType | undefined })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         >
           <option value="">{t("bodyTypeNone")}</option>
           <option value="BERLINE">{t("bodyTypeBerline")}</option>

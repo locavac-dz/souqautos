@@ -22,15 +22,15 @@ export function RecentlyViewedSection({ excludeId }: { excludeId?: string }) {
 
   return (
     <section className="mt-10">
-      <h2 className="text-sm font-medium text-slate-700 mb-3">{t("title")}</h2>
+      <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{t("title")}</h2>
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
         {entries.map((entry) => (
           <Link
             key={entry.id}
             href={`/annonce/${entry.id}`}
-            className="snap-start shrink-0 w-40 rounded-lg border border-slate-200 overflow-hidden hover:border-slate-300 hover:shadow-sm transition"
+            className="snap-start shrink-0 w-40 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition"
           >
-            <div className="relative aspect-[4/3] bg-slate-100">
+            <div className="relative aspect-[4/3] bg-slate-100 dark:bg-slate-700">
               {entry.photo ? (
                 <Image
                   src={entry.photo}
@@ -46,11 +46,11 @@ export function RecentlyViewedSection({ excludeId }: { excludeId?: string }) {
               )}
             </div>
             <div className="p-2">
-              <p className="text-xs font-medium text-slate-800 line-clamp-1">{entry.title}</p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs font-medium text-slate-800 dark:text-slate-100 line-clamp-1">{entry.title}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {entry.year} · {locale === "ar" ? entry.wilayaNomAr : entry.wilayaNomFr}
               </p>
-              <p className="text-sm font-semibold text-slate-900 mt-1">
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-1">
                 {entry.price.toLocaleString()} DA
               </p>
             </div>

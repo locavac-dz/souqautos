@@ -46,19 +46,19 @@ export default async function DashboardPage() {
               alt=""
               fill
               sizes="48px"
-              className="rounded-full object-cover border border-slate-200"
+              className="rounded-full object-cover border border-slate-200 dark:border-slate-600"
             />
           </div>
         ) : (
-          <div className="h-12 w-12 shrink-0 rounded-full bg-slate-100 border border-slate-200" />
+          <div className="h-12 w-12 shrink-0 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600" />
         )}
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
           {t("welcome", { name: user.profile?.displayName ?? user.email })}
         </h1>
       </div>
 
-      <div className="rounded-lg border border-slate-200 divide-y divide-slate-100">
-        <h2 className="px-4 py-3 text-sm font-medium text-slate-500">{t("accountInfo")}</h2>
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700">
+        <h2 className="px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400">{t("accountInfo")}</h2>
         <Row label={t("email")} value={user.email} />
         <Row label={t("role")} value={roleLabel} />
         <Row label={t("wilaya")} value={wilayaLabel} />
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
         <Row label={t("phone")} value={user.phone ?? t("notProvided")} />
       </div>
 
-      <div className="mt-6 rounded-lg border border-slate-200 p-4 space-y-4">
+      <div className="mt-6 rounded-lg border border-slate-200 dark:border-slate-700 p-4 space-y-4">
         <EmailVerificationStatus verified={Boolean(user.emailVerifiedAt)} />
         <PhoneVerificationStatus verified={Boolean(user.phoneVerifiedAt)} hasPhone={Boolean(user.phone)} />
         {isPro && (
@@ -90,32 +90,32 @@ export default async function DashboardPage() {
       <div className="mt-6 flex items-center gap-4 flex-wrap">
         <Link
           href="/compte/mes-annonces"
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          className="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
           {tNav("myListings")}
         </Link>
         <Link
           href="/compte/activite"
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          className="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
           {t("activityLink")}
         </Link>
         <Link
           href="/compte/offres"
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          className="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
           {t("offresLink")}
         </Link>
-        <Link href="/compte/profil" className="text-sm text-slate-700 underline hover:text-slate-900">
+        <Link href="/compte/profil" className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
           {t("editProfileLink")}
         </Link>
         {user.professionalAccount ? (
-          <Link href="/pro/tableau-de-bord" className="text-sm text-slate-700 underline hover:text-slate-900">
+          <Link href="/pro/tableau-de-bord" className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
             {t("proDashboardLink")}
           </Link>
         ) : (
           user.role === "PARTICULIER" && (
-            <Link href="/devenir-professionnel" className="text-sm text-slate-700 underline hover:text-slate-900">
+            <Link href="/devenir-professionnel" className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
               {t("becomeProLink")}
             </Link>
           )
@@ -129,8 +129,8 @@ export default async function DashboardPage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-4 py-3 flex justify-between text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="text-slate-900 font-medium">{value}</span>
+      <span className="text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-slate-900 dark:text-slate-100 font-medium">{value}</span>
     </div>
   );
 }

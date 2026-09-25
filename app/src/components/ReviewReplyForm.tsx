@@ -65,9 +65,9 @@ export function ReviewReplyForm({
 
   if (!canReply && initialReply) {
     return (
-      <div className="mt-2 rounded-md bg-slate-50 px-3 py-2">
-        <p className="text-xs font-medium text-slate-500">{t("replyLabel")}</p>
-        <p className="text-sm text-slate-700 mt-0.5 whitespace-pre-wrap">{initialReply}</p>
+      <div className="mt-2 rounded-md bg-slate-50 dark:bg-slate-800 px-3 py-2">
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("replyLabel")}</p>
+        <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 whitespace-pre-wrap">{initialReply}</p>
       </div>
     );
   }
@@ -81,13 +81,13 @@ export function ReviewReplyForm({
           placeholder={t("replyPlaceholder")}
           maxLength={1000}
           rows={2}
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm text-slate-900"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm text-slate-900"
         />
         <div className="flex items-center gap-3">
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
           >
             {t("saveReplyAction")}
           </button>
@@ -98,7 +98,7 @@ export function ReviewReplyForm({
               setReply(initialReply ?? "");
               setError(null);
             }}
-            className="text-xs text-slate-500 hover:text-slate-600"
+            className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
             {t("cancelReplyAction")}
           </button>
@@ -111,11 +111,11 @@ export function ReviewReplyForm({
   return (
     <div className="mt-2">
       {initialReply ? (
-        <div className="rounded-md bg-slate-50 px-3 py-2">
-          <p className="text-xs font-medium text-slate-500">{t("replyLabel")}</p>
-          <p className="text-sm text-slate-700 mt-0.5 whitespace-pre-wrap">{initialReply}</p>
+        <div className="rounded-md bg-slate-50 dark:bg-slate-800 px-3 py-2">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("replyLabel")}</p>
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 whitespace-pre-wrap">{initialReply}</p>
           <div className="mt-1 flex items-center gap-3">
-            <button type="button" onClick={() => setEditing(true)} className="text-xs text-slate-500 underline hover:text-slate-700">
+            <button type="button" onClick={() => setEditing(true)} className="text-xs text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300">
               {t("editReplyAction")}
             </button>
             <button type="button" onClick={handleDelete} disabled={pending} className="text-xs text-red-600 hover:underline disabled:opacity-50">
@@ -124,7 +124,7 @@ export function ReviewReplyForm({
           </div>
         </div>
       ) : (
-        <button type="button" onClick={() => setEditing(true)} className="text-xs text-slate-500 underline hover:text-slate-700">
+        <button type="button" onClick={() => setEditing(true)} className="text-xs text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300">
           {t("replyAction")}
         </button>
       )}

@@ -96,7 +96,7 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
 
   const codeField = (id: string, label: string) => (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
         {label}
       </label>
       <input
@@ -109,7 +109,7 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
         maxLength={20}
         value={code}
         onChange={(event) => setCode(event.target.value)}
-        className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono tracking-widest"
+        className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 font-mono tracking-widest"
       />
     </div>
   );
@@ -118,25 +118,25 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
       {error}
     </p>
   );
-  const primary = "rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60";
+  const primary = "rounded-md bg-slate-900 dark:bg-slate-100 px-4 py-2 text-sm font-medium text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-300 disabled:opacity-60";
 
   // --- Codes de secours, montrés UNE SEULE FOIS -------------------------------------------------------------------------------
   if (recoveryCodes) {
     return (
       <section aria-labelledby="recovery-title" className="space-y-4">
-        <h2 id="recovery-title" className="text-lg font-medium text-slate-900">
+        <h2 id="recovery-title" className="text-lg font-medium text-slate-900 dark:text-slate-100">
           {t("recoveryTitle")}
         </h2>
-        <p className="text-sm text-slate-600">{t("recoveryIntro")}</p>
-        <ul data-testid="recovery-codes" dir="ltr" className="grid grid-cols-2 gap-2 rounded-md border border-slate-200 bg-slate-50 p-4 font-mono text-sm text-slate-900">
+        <p className="text-sm text-slate-600 dark:text-slate-300">{t("recoveryIntro")}</p>
+        <ul data-testid="recovery-codes" dir="ltr" className="grid grid-cols-2 gap-2 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 font-mono text-sm text-slate-900 dark:text-slate-100">
           {recoveryCodes.map((recoveryCode) => (
             <li key={recoveryCode}>{recoveryCode}</li>
           ))}
         </ul>
-        <button type="button" onClick={copyCodes} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+        <button type="button" onClick={copyCodes} className="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900">
           {copied ? t("recoveryCopied") : t("recoveryCopy")}
         </button>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input type="checkbox" checked={saved} onChange={(event) => setSaved(event.target.checked)} />
           <span>{t("recoverySaved")}</span>
         </label>
@@ -162,7 +162,7 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
     if (!setup) {
       return (
         <section className="space-y-3">
-          <p className="text-sm text-slate-600">{t("intro")}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">{t("intro")}</p>
           {errorLine}
           <button type="button" onClick={start} disabled={busy === "start"} className={primary}>
             {busy === "start" ? t("starting") : t("enable")}
@@ -172,18 +172,18 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
     }
     return (
       <form onSubmit={confirm} className="space-y-4">
-        <p className="text-sm text-slate-700">{t("setupStep1")}</p>
-        <svg viewBox={`0 0 ${setup.qr.size} ${setup.qr.size}`} role="img" aria-label={t("qrAlt")} className="h-48 w-48 rounded-md border border-slate-200 bg-white">
+        <p className="text-sm text-slate-700 dark:text-slate-300">{t("setupStep1")}</p>
+        <svg viewBox={`0 0 ${setup.qr.size} ${setup.qr.size}`} role="img" aria-label={t("qrAlt")} className="h-48 w-48 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <rect width={setup.qr.size} height={setup.qr.size} fill="#ffffff" />
           <path d={setup.qr.path} fill="#000000" shapeRendering="crispEdges" />
         </svg>
-        <div className="text-sm text-slate-600">
+        <div className="text-sm text-slate-600 dark:text-slate-300">
           <p>{t("setupNoScan")}</p>
-          <p data-testid="two-factor-secret" dir="ltr" className="mt-1 select-all font-mono text-base tracking-wider text-slate-900">
+          <p data-testid="two-factor-secret" dir="ltr" className="mt-1 select-all font-mono text-base tracking-wider text-slate-900 dark:text-slate-100">
             {setup.secret}
           </p>
         </div>
-        <p className="text-sm text-slate-700">{t("setupStep2")}</p>
+        <p className="text-sm text-slate-700 dark:text-slate-300">{t("setupStep2")}</p>
         {codeField("two-factor-enable-code", t("codeLabel"))}
         {errorLine}
         <div className="flex gap-3">
@@ -196,7 +196,7 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
               setSetup(null);
               setError(null);
             }}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900"
           >
             {t("cancel")}
           </button>
@@ -209,15 +209,15 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-slate-700 dark:text-slate-300">
           {t("recoveryRemaining", { count: status.recoveryCodesRemaining })}
           {status.recoveryCodesRemaining <= LOW_RECOVERY_CODES && <span className="block text-amber-700">{t("recoveryLow")}</span>}
         </p>
       </div>
 
       <form onSubmit={regenerate} className="space-y-3">
-        <h2 className="text-base font-medium text-slate-900">{t("regenerateTitle")}</h2>
-        <p className="text-sm text-slate-600">{t("regenerateHelp")}</p>
+        <h2 className="text-base font-medium text-slate-900 dark:text-slate-100">{t("regenerateTitle")}</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-300">{t("regenerateHelp")}</p>
         {codeField("two-factor-regenerate-code", t("codeLabel"))}
         {busy !== "disable" && errorLine}
         <button type="submit" disabled={busy === "regenerate"} className={primary}>
@@ -225,12 +225,12 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
         </button>
       </form>
 
-      <form onSubmit={disable} className="space-y-3 border-t border-slate-200 pt-6">
-        <h2 className="text-base font-medium text-slate-900">{t("disableTitle")}</h2>
-        <p className="text-sm text-slate-600">{t("disableHelp")}</p>
+      <form onSubmit={disable} className="space-y-3 border-t border-slate-200 dark:border-slate-700 pt-6">
+        <h2 className="text-base font-medium text-slate-900 dark:text-slate-100">{t("disableTitle")}</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-300">{t("disableHelp")}</p>
         {hasPassword && (
           <div>
-            <label htmlFor="two-factor-disable-password" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="two-factor-disable-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t("passwordLabel")}
             </label>
             <input
@@ -241,7 +241,7 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
               dir={locale === "ar" ? "ltr" : undefined}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2"
             />
           </div>
         )}

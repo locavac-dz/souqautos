@@ -48,7 +48,7 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
     <>
       <button
         onClick={() => { setOpen(true); setSuccess(false); setError(null); }}
-        className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        className="flex items-center gap-1.5 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
       >
         <span>📞</span>
         {t("buttonLabel")}
@@ -59,15 +59,15 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
         >
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">{t("modalTitle")}</h2>
+          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-900 p-6 shadow-xl">
+            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">{t("modalTitle")}</h2>
 
             {success ? (
               <div className="space-y-4">
-                <p className="text-sm text-slate-700">{t("success")}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300">{t("success")}</p>
                 <button
                   onClick={() => setOpen(false)}
-                  className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                  className="w-full rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 py-2 text-sm font-medium text-white hover:bg-slate-700"
                 >
                   {t("close")}
                 </button>
@@ -75,7 +75,7 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
             ) : (
               <form onSubmit={submit} className="space-y-3">
                 <div>
-                  <label htmlFor="callback-name" className="mb-1 block text-xs font-medium text-slate-600">{t("nameLabel")}</label>
+                  <label htmlFor="callback-name" className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">{t("nameLabel")}</label>
                   <input
                     id="callback-name"
                     required
@@ -84,12 +84,12 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t("namePlaceholder")}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="callback-phone" className="mb-1 block text-xs font-medium text-slate-600">{t("phoneLabel")}</label>
+                  <label htmlFor="callback-phone" className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">{t("phoneLabel")}</label>
                   <input
                     id="callback-phone"
                     required
@@ -97,16 +97,16 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder={t("phonePlaceholder")}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">{t("preferredTimeLabel")}</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">{t("preferredTimeLabel")}</label>
                   <select
                     value={preferred}
                     onChange={(e) => setPreferred(e.target.value as PreferredTime)}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
                   >
                     {TIMES.map((v) => (
                       <option key={v} value={v}>{t(`preferredTime${v}`)}</option>
@@ -120,14 +120,14 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    className="flex-1 rounded-md border border-slate-300 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                    className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                   >
                     {t("cancel")}
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 rounded-md bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+                    className="flex-1 rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
                   >
                     {loading ? t("sending") : t("submit")}
                   </button>

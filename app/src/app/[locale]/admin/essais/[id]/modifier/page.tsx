@@ -30,7 +30,7 @@ export default async function EditRoadTestPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("editEssai")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("editEssai")}</h1>
       <BlogArticleForm
         kind="ESSAI"
         article={article}

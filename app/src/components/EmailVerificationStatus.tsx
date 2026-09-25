@@ -42,15 +42,15 @@ export function EmailVerificationStatus({ verified }: { verified: boolean }) {
           type="button"
           onClick={handleRequest}
           disabled={pending}
-          className="mt-1 text-sm text-slate-700 underline hover:text-slate-900 disabled:opacity-50"
+          className="mt-1 text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50"
         >
           {t("sendVerificationEmail")}
         </button>
       ) : (
-        <div className="mt-1 text-sm text-slate-500">
+        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           <p>{t("emailSent")}</p>
           {previewUrl && (
-            <a href={previewUrl} target="_blank" rel="noreferrer" className="text-slate-700 underline">
+            <a href={previewUrl} target="_blank" rel="noreferrer" className="text-slate-700 dark:text-slate-300 underline">
               {t("previewDevEmail")}
             </a>
           )}

@@ -8,7 +8,7 @@ export default async function Step1Page() {
   return (
     <StepShell step={1} title={t("step1Title")} nextLabel={t("next")}>
       <DraftResumeNotice />
-      <p className="text-slate-600">{t("step1Body")}</p>
+      <p className="text-slate-600 dark:text-slate-300">{t("step1Body")}</p>
       <p className="text-sm text-slate-500">{t("step1ProNote")}</p>
     </StepShell>
   );

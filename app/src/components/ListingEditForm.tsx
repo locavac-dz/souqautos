@@ -221,7 +221,7 @@ export function ListingEditForm({
       </p>
 
       <div>
-        <label htmlFor="edit-category" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="edit-category" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {tWizard("category")}
         </label>
         <select
@@ -245,7 +245,7 @@ export function ListingEditForm({
               }
             }
           }}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -256,7 +256,7 @@ export function ListingEditForm({
       </div>
 
       <div>
-        <label htmlFor="edit-brand" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="edit-brand" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {tWizard("brand")}
         </label>
         <select
@@ -277,7 +277,7 @@ export function ListingEditForm({
             setModelId(undefined);
             setGenerationId(undefined);
           }}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         >
           <option value="" disabled>
             {tWizard("brandPlaceholder")}
@@ -293,7 +293,7 @@ export function ListingEditForm({
 
       {brandOther && (
         <div>
-          <label htmlFor="edit-brand-free" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-brand-free" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("brandFreeText")}
           </label>
           <input
@@ -301,14 +301,14 @@ export function ListingEditForm({
             type="text"
             value={brandFreeText}
             onChange={(e) => setBrandFreeText(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           />
         </div>
       )}
 
       {!brandOther && selectedBrand && (
         <div>
-          <label htmlFor="edit-model" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-model" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("model")}
           </label>
           <select
@@ -325,7 +325,7 @@ export function ListingEditForm({
               setModelId(Number(e.target.value));
               setGenerationId(undefined);
             }}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           >
             <option value="" disabled>
               {tWizard("modelPlaceholder")}
@@ -345,14 +345,14 @@ export function ListingEditForm({
         selectedModelForGeneration &&
         selectedModelForGeneration.generations.length > 0 && (
           <div>
-            <label htmlFor="edit-generation" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="edit-generation" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {tWizard("generation")}
             </label>
             <select
               id="edit-generation"
               value={generationId ?? ""}
               onChange={(e) => setGenerationId(e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
             >
               <option value="">{tWizard("generationPlaceholder")}</option>
               {selectedModelForGeneration.generations.map((g) => (
@@ -366,7 +366,7 @@ export function ListingEditForm({
 
       {(brandOther || modelOther) && (
         <div>
-          <label htmlFor="edit-model-free" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-model-free" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("modelFreeText")}
           </label>
           <input
@@ -374,13 +374,13 @@ export function ListingEditForm({
             type="text"
             value={modelFreeText}
             onChange={(e) => setModelFreeText(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           />
         </div>
       )}
 
       <div>
-        <label htmlFor="edit-title" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="edit-title" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {tWizard("title")}
         </label>
         <input
@@ -389,12 +389,12 @@ export function ListingEditForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={120}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         />
       </div>
 
       <div>
-        <label htmlFor="edit-description" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="edit-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {tWizard("description")}
         </label>
         <textarea
@@ -403,13 +403,13 @@ export function ListingEditForm({
           onChange={(e) => setDescription(e.target.value)}
           maxLength={5000}
           rows={6}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="edit-year" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-year" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("year")}
           </label>
           <input
@@ -417,11 +417,11 @@ export function ListingEditForm({
             type="number"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           />
         </div>
         <div>
-          <label htmlFor="edit-mileage" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-mileage" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("mileage")}
           </label>
           <input
@@ -430,21 +430,21 @@ export function ListingEditForm({
             min={0}
             value={mileage}
             onChange={(e) => setMileage(Number(e.target.value))}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="edit-fuel" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-fuel" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("fuelType")}
           </label>
           <select
             id="edit-fuel"
             value={fuelType}
             onChange={(e) => setFuelType(e.target.value as FuelType)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           >
             <option value="ESSENCE">{tWizard("fuelEssence")}</option>
             <option value="DIESEL">{tWizard("fuelDiesel")}</option>
@@ -454,14 +454,14 @@ export function ListingEditForm({
           </select>
         </div>
         <div>
-          <label htmlFor="edit-gearbox" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-gearbox" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("gearbox")}
           </label>
           <select
             id="edit-gearbox"
             value={gearbox}
             onChange={(e) => setGearbox(e.target.value as Gearbox)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           >
             <option value="MANUELLE">{tWizard("gearboxManuelle")}</option>
             <option value="AUTOMATIQUE">{tWizard("gearboxAutomatique")}</option>
@@ -471,14 +471,14 @@ export function ListingEditForm({
 
       {hasCarBodyFields(category) && (
         <div>
-          <label htmlFor="edit-transmission" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-transmission" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("transmission")}
           </label>
           <select
             id="edit-transmission"
             value={transmission}
             onChange={(e) => setTransmission(e.target.value as Transmission | "")}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           >
             <option value="">{tWizard("transmissionNone")}</option>
             <option value="QUATRE_X_DEUX">{tWizard("transmission4x2")}</option>
@@ -490,7 +490,7 @@ export function ListingEditForm({
       {hasCarBodyFields(category) ? (
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label htmlFor="edit-color" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="edit-color" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {tWizard("color")}
             </label>
             <input
@@ -498,11 +498,11 @@ export function ListingEditForm({
               type="text"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
             />
           </div>
           <div>
-            <label htmlFor="edit-doors" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="edit-doors" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {tWizard("doors")}
             </label>
             <input
@@ -512,11 +512,11 @@ export function ListingEditForm({
               max={7}
               value={doors}
               onChange={(e) => setDoors(e.target.value ? Number(e.target.value) : "")}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
             />
           </div>
           <div>
-            <label htmlFor="edit-seats" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="edit-seats" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {tWizard("seats")}
             </label>
             <input
@@ -526,13 +526,13 @@ export function ListingEditForm({
               max={9}
               value={seats}
               onChange={(e) => setSeats(e.target.value ? Number(e.target.value) : "")}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
             />
           </div>
         </div>
       ) : (
         <div>
-          <label htmlFor="edit-color" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-color" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("color")}
           </label>
           <input
@@ -540,13 +540,13 @@ export function ListingEditForm({
             type="text"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           />
         </div>
       )}
 
       <div>
-        <label htmlFor="edit-power" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="edit-power" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {tWizard("powerHp")}
         </label>
         <input
@@ -556,47 +556,47 @@ export function ListingEditForm({
           max={2000}
           value={powerHp}
           onChange={(e) => setPowerHp(e.target.value ? Number(e.target.value) : "")}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         />
       </div>
 
       <div>
-        <label htmlFor="edit-condition" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="edit-condition" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {tWizard("condition")}
         </label>
         <select
           id="edit-condition"
           value={condition}
           onChange={(e) => setCondition(e.target.value as ListingCondition)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         >
           <option value="NEUF">{tWizard("conditionNeuf")}</option>
           <option value="OCCASION">{tWizard("conditionOccasion")}</option>
         </select>
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
         <input type="checkbox" checked={firstHand} onChange={(e) => setFirstHand(e.target.checked)} />
         {tWizard("firstHand")}
       </label>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
         <input type="checkbox" checked={accidented} onChange={(e) => setAccidented(e.target.checked)} />
         {tWizard("accidented")}
       </label>
 
       <div>
-        <p className="block text-sm font-medium text-slate-700 mb-2">{tWizard("equipmentsTitle")}</p>
-        <p className="text-xs text-slate-500 mb-3">{tWizard("equipmentsHelp")}</p>
+        <p className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tWizard("equipmentsTitle")}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{tWizard("equipmentsHelp")}</p>
         <div className="space-y-4">
           {EQUIPMENT_CATEGORY_ORDER.filter((c) => equipmentsByCategory.has(c)).map((category) => (
             <div key={category}>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1.5">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1.5">
                 {tWizard(EQUIPMENT_CATEGORY_KEY[category])}
               </p>
               <div className="grid grid-cols-2 gap-1.5">
                 {equipmentsByCategory.get(category)!.map((eq) => (
-                  <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700">
+                  <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                     <input
                       type="checkbox"
                       checked={equipmentIds.includes(eq.id)}
@@ -612,7 +612,7 @@ export function ListingEditForm({
       </div>
 
       <div>
-        <label htmlFor="edit-wilaya" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="edit-wilaya" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {tWizard("wilaya")}
         </label>
         <select
@@ -622,7 +622,7 @@ export function ListingEditForm({
             setWilayaId(Number(e.target.value));
             setCommuneId(undefined);
           }}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         >
           {wilayas.map((w) => (
             <option key={w.id} value={w.id}>
@@ -634,14 +634,14 @@ export function ListingEditForm({
 
       {selectedWilaya && selectedWilaya.communes.length > 0 && (
         <div>
-          <label htmlFor="edit-commune" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="edit-commune" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {tWizard("commune")}
           </label>
           <select
             id="edit-commune"
             value={communeId ?? ""}
             onChange={(e) => setCommuneId(e.target.value ? Number(e.target.value) : undefined)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           >
             <option value="">{tWizard("communePlaceholder")}</option>
             {selectedWilaya.communes.map((c) => (
@@ -654,7 +654,7 @@ export function ListingEditForm({
       )}
 
       <div>
-        <span className="block text-sm font-medium text-slate-700 mb-1">{t("photosSectionTitle")}</span>
+        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("photosSectionTitle")}</span>
         <div className="grid grid-cols-3 gap-3">
           {existingPhotos.map((photo, i) => (
             <div key={photo.id} className="relative group">
@@ -662,7 +662,7 @@ export function ListingEditForm({
               <img
                 src={photo.path}
                 alt={t("photoNumber", { n: i + 1 })}
-                className="aspect-square w-full rounded-md object-cover border border-slate-200"
+                className="aspect-square w-full rounded-md object-cover border border-slate-200 dark:border-slate-700"
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 text-white text-xs">
                 <div className="flex gap-1">
@@ -695,7 +695,7 @@ export function ListingEditForm({
           {newPhotoPreviews.map((url, i) => (
             <div key={url} className="relative group">
               {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local d'un fichier non encore uploadé */}
-              <img src={url} alt="" className="aspect-square w-full rounded-md object-cover border border-slate-200" />
+              <img src={url} alt="" className="aspect-square w-full rounded-md object-cover border border-slate-200 dark:border-slate-700" />
               <button
                 type="button"
                 onClick={() => removeNewPhoto(i)}
@@ -707,7 +707,7 @@ export function ListingEditForm({
           ))}
 
           {totalPhotoCount < MAX_PHOTOS && (
-            <label className="aspect-square flex items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-slate-500 text-sm cursor-pointer hover:border-slate-400">
+            <label className="aspect-square flex items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-slate-500 text-sm cursor-pointer hover:border-slate-400 dark:border-slate-600 dark:text-slate-400 dark:hover:border-slate-500">
               {tWizard("photosAdd")}
               <input
                 type="file"
@@ -726,7 +726,7 @@ export function ListingEditForm({
       <button
         type="submit"
         disabled={pending || totalPhotoCount === 0}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
       >
         {t("submit")}
       </button>

@@ -5,11 +5,11 @@ export default async function LegalNoticePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("title")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("title")}</h1>
 
-      <div className="space-y-8 text-sm text-slate-700">
+      <div className="space-y-8 text-sm text-slate-700 dark:text-slate-300">
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("publisherTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("publisherTitle")}</h2>
           <p>{t("publisherName")}</p>
           <p>{t("publisherLegalForm")}</p>
           <p>{t("publisherAddress")}</p>
@@ -19,19 +19,19 @@ export default async function LegalNoticePage() {
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("brandTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("brandTitle")}</h2>
           <p>{t("brandBody")}</p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("hostingTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("hostingTitle")}</h2>
           <p>{t("hostingCountry")}</p>
-          <p className="text-slate-500">{t("hostingPending")}</p>
+          <p className="text-slate-500 dark:text-slate-400">{t("hostingPending")}</p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("contactTitle")}</h2>
-          <p className="text-slate-500">{t("contactPending")}</p>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("contactTitle")}</h2>
+          <p className="text-slate-500 dark:text-slate-400">{t("contactPending")}</p>
         </section>
       </div>
     </div>

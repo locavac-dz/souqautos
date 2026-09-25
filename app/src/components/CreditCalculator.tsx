@@ -25,14 +25,14 @@ export function CreditCalculator({ price }: { price: number }) {
 
   return (
     <div className="mt-6">
-      <h2 className="text-sm font-medium text-slate-700 mb-2">{t("title")}</h2>
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
+      <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t("title")}</h2>
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 space-y-4">
 
         {/* Apport */}
         <div>
           <div className="flex justify-between text-xs text-slate-500 mb-1">
             <span>{t("downPayment")}</span>
-            <span className="font-medium text-slate-700">{fmt(downPayment)} DA</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">{fmt(downPayment)} DA</span>
           </div>
           <input
             type="range"
@@ -54,7 +54,7 @@ export function CreditCalculator({ price }: { price: number }) {
         <div>
           <div className="flex justify-between text-xs text-slate-500 mb-1">
             <span>{t("annualRate")}</span>
-            <span className="font-medium text-slate-700">{annualRate.toFixed(1)} %</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">{annualRate.toFixed(1)} %</span>
           </div>
           <input
             type="range"
@@ -83,7 +83,7 @@ export function CreditCalculator({ price }: { price: number }) {
                 className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
                   months === m
                     ? "bg-emerald-700 border-emerald-700 text-white"
-                    : "border-slate-300 text-slate-600 hover:border-emerald-400"
+                    : "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-emerald-400"
                 }`}
               >
                 {t("months", { count: m })}
@@ -94,18 +94,18 @@ export function CreditCalculator({ price }: { price: number }) {
 
         {/* Résultat */}
         {result ? (
-          <div className="rounded-md bg-white border border-slate-200 p-3">
+          <div className="rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
             <div className="flex items-baseline justify-between">
               <span className="text-xs text-slate-500">{t("monthlyPayment")}</span>
               <span className="text-xl font-semibold text-emerald-700">
                 {fmt(result.monthly)} <span className="text-sm font-normal text-slate-500">{t("perMonth")}</span>
               </span>
             </div>
-            <div className="mt-2 pt-2 border-t border-slate-100 grid grid-cols-2 gap-x-4 text-xs text-slate-500">
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-x-4 text-xs text-slate-500 dark:text-slate-400">
               <span>{t("totalCost")}</span>
-              <span className="text-end font-medium text-slate-700">{fmt(result.total)} DA</span>
+              <span className="text-end font-medium text-slate-700 dark:text-slate-300">{fmt(result.total)} DA</span>
               <span>{t("totalInterest")}</span>
-              <span className="text-end font-medium text-slate-700">{fmt(result.interest)} DA</span>
+              <span className="text-end font-medium text-slate-700 dark:text-slate-300">{fmt(result.interest)} DA</span>
             </div>
           </div>
         ) : (

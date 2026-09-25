@@ -117,14 +117,14 @@ export default async function MyListingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("title")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("title")}</h1>
 
       {listings.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-slate-500 mb-4">{t("empty")}</p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">{t("empty")}</p>
           <Link
             href="/vendre"
-            className="inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            className="inline-block rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
           >
             {t("createFirst")}
           </Link>
@@ -140,7 +140,7 @@ export default async function MyListingsPage() {
             return (
               <div
                 key={listing.id}
-                className="flex flex-col gap-3 rounded-lg border border-slate-200 p-3 hover:border-slate-300"
+                className="flex flex-col gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:border-slate-300 dark:hover:border-slate-500"
               >
                 <Link href={`/annonce/${listing.id}`} className="flex gap-4">
                   {listing.photos[0] ? (
@@ -150,16 +150,16 @@ export default async function MyListingsPage() {
                         alt=""
                         fill
                         sizes="112px"
-                        className="rounded object-cover border border-slate-100"
+                        className="rounded object-cover border border-slate-100 dark:border-slate-700"
                       />
                     </div>
                   ) : (
-                    <div className="h-20 w-28 rounded bg-slate-100 shrink-0" />
+                    <div className="h-20 w-28 rounded bg-slate-100 dark:bg-slate-700 shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className="font-medium text-slate-900">{listing.title}</p>
-                    <p className="text-sm text-slate-500">{listing.price.toLocaleString()} DA</p>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{listing.title}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{listing.price.toLocaleString()} DA</p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <StatusBadge status={listing.status} />
                       {listing.formula !== "STANDARD" && (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800">
@@ -169,7 +169,7 @@ export default async function MyListingsPage() {
                       <span>{t("views", { count: listing.views })}</span>
                     </div>
                     {proAccount && (
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {t("proAccountLabel", { name: proAccount.name })}
                       </p>
                     )}
@@ -180,7 +180,7 @@ export default async function MyListingsPage() {
                         </p>
                       )}
                     {listing.expiresAt && (listing.status === "PUBLIEE" || listing.status === "EXPIREE") && (
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {tListing(listing.status === "EXPIREE" ? "expiredOnLabel" : "expiresOnLabel", {
                           date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
                             dateStyle: "long",
@@ -231,14 +231,14 @@ export default async function MyListingsPage() {
                     {checkListingContentEditable(listing.status).ok && (
                       <Link
                         href={`/compte/mes-annonces/${listing.id}/modifier`}
-                        className="text-xs text-slate-500 underline hover:text-slate-700"
+                        className="text-xs text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300"
                       >
                         {tListing("editListingAction")}
                       </Link>
                     )}
                     <Link
                       href={`/compte/mes-annonces/${listing.id}/statistiques`}
-                      className="text-xs text-slate-500 underline hover:text-slate-700"
+                      className="text-xs text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300"
                     >
                       {t("statsAction")}
                     </Link>
@@ -251,7 +251,7 @@ export default async function MyListingsPage() {
                 {canManage && checkListingRenewable(listing.status).ok && (
                   <div className="flex flex-wrap items-center gap-3">
                     {listing.paymentOrders.length > 0 ? (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {t("upgradePending", {
                           formula:
                             listing.paymentOrders[0].formula === "PREMIUM"

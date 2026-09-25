@@ -26,10 +26,10 @@ export async function RoadTestCard({ article, locale }: { article: RoadTestCardA
   return (
     <Link
       href={`/essais/${article.slug}`}
-      className="flex flex-col overflow-hidden rounded-lg border border-slate-200 hover:border-slate-300"
+      className="flex flex-col overflow-hidden rounded-lg border border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-500"
     >
       {article.coverImageUrl && (
-        <div className="relative aspect-video bg-slate-100">
+        <div className="relative aspect-video bg-slate-100 dark:bg-slate-800">
           <Image
             src={article.coverImageUrl}
             alt=""
@@ -40,8 +40,8 @@ export async function RoadTestCard({ article, locale }: { article: RoadTestCardA
         </div>
       )}
       <div className="flex flex-1 flex-col p-4">
-        {vehicle && <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{vehicle}</p>}
-        <h2 className="mt-1 text-lg font-medium text-slate-900">{isAr ? article.titleAr : article.titleFr}</h2>
+        {vehicle && <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{vehicle}</p>}
+        <h2 className="mt-1 text-lg font-medium text-slate-900 dark:text-slate-100">{isAr ? article.titleAr : article.titleFr}</h2>
         {article.roadTest && (
           <div className="mt-2 flex items-center gap-2">
             <StarRating
@@ -49,13 +49,13 @@ export async function RoadTestCard({ article, locale }: { article: RoadTestCardA
               size={16}
               label={t("ratingAria", { rating: formatRating(article.roadTest.rating, locale) })}
             />
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               {t("ratingLabel", { rating: formatRating(article.roadTest.rating, locale) })}
             </span>
           </div>
         )}
-        <p className="mt-2 text-sm text-slate-600">{isAr ? article.excerptAr : article.excerptFr}</p>
-        <p className="mt-auto pt-3 text-xs text-slate-500">
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{isAr ? article.excerptAr : article.excerptFr}</p>
+        <p className="mt-auto pt-3 text-xs text-slate-500 dark:text-slate-400">
           {article.publishedAt && dateFormatter.format(article.publishedAt)}
         </p>
       </div>

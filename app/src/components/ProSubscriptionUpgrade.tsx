@@ -63,7 +63,7 @@ export function ProSubscriptionUpgrade({
           e.preventDefault();
           setOpen(true);
         }}
-        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+        className="rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
       >
         {t("subscriptionUpgradeTo", { tier: tierLabel })} — {priceDzd.toLocaleString()} DA/{t("subscriptionPerMonth")}
       </button>
@@ -71,20 +71,20 @@ export function ProSubscriptionUpgrade({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md rounded-md border border-slate-200 bg-slate-50 p-3 space-y-2">
-      <p className="text-xs font-medium text-slate-700">
+    <form onSubmit={handleSubmit} className="w-full max-w-md rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-2">
+      <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
         {t("subscriptionUpgradeInstructions", { amount: priceDzd.toLocaleString() })}
       </p>
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-slate-600 dark:text-slate-300">
         {t("subscriptionUpgradeBankName")}: <strong>{bankDetails.bankName}</strong>
       </p>
-      <p className="text-xs text-slate-600 font-mono">
+      <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">
         {t("subscriptionUpgradeBankRib")}: <span dir="ltr">{bankDetails.bankRib}</span>
       </p>
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-slate-600 dark:text-slate-300">
         {t("subscriptionUpgradeBankHolder")}: {bankDetails.bankAccountHolder}
       </p>
-      <label className="flex items-center gap-2 text-xs text-slate-500">
+      <label className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
         {t("subscriptionUpgradeReferenceLabel")}
         <input
           type="text"
@@ -94,14 +94,14 @@ export function ProSubscriptionUpgrade({
           value={reference}
           onChange={(e) => setReference(e.target.value)}
           placeholder={t("subscriptionUpgradeReferencePlaceholder")}
-          className="flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
+          className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-sm text-slate-900"
         />
       </label>
       <div className="flex items-center gap-2">
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
         >
           {t("subscriptionUpgradeSubmit")}
         </button>
@@ -111,7 +111,7 @@ export function ProSubscriptionUpgrade({
             setOpen(false);
             setError(null);
           }}
-          className="text-xs text-slate-500 hover:text-slate-600"
+          className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
         >
           {t("subscriptionUpgradeCancel")}
         </button>

@@ -13,22 +13,22 @@ export default async function PrivacyPolicyPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("title")}</h1>
-      <p className="text-sm text-slate-600 mb-8">{t("intro")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("title")}</h1>
+      <p className="text-sm text-slate-600 dark:text-slate-300 mb-8">{t("intro")}</p>
 
-      <div className="space-y-8 text-sm text-slate-700">
+      <div className="space-y-8 text-sm text-slate-700 dark:text-slate-300">
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("controllerTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("controllerTitle")}</h2>
           <p>
             {t("controllerBody")}{" "}
-            <Link href="/mentions-legales" className="underline hover:text-slate-900">
+            <Link href="/mentions-legales" className="underline hover:text-slate-900 dark:hover:text-slate-100">
               {t("controllerLink")}
             </Link>
           </p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("dataTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("dataTitle")}</h2>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>{t("dataAccount")}</li>
             <li>{t("dataProfile")}</li>
@@ -41,17 +41,17 @@ export default async function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("cookiesTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("cookiesTitle")}</h2>
           <p>{t("cookiesBody")}</p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("audienceTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("audienceTitle")}</h2>
           <p>{t("audienceBody")}</p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("recipientsTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("recipientsTitle")}</h2>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>{t("recipientsHosting")}</li>
             <li>{t("recipientsEmail")}</li>
@@ -63,21 +63,21 @@ export default async function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("retentionTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("retentionTitle")}</h2>
           <p>{t("retentionBody")}</p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("securityTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("securityTitle")}</h2>
           <p>{t("securityBody")}</p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("rightsTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("rightsTitle")}</h2>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>
               {t("rightsAccess")}{" "}
-              <Link href="/compte/profil" className="underline hover:text-slate-900">
+              <Link href="/compte/profil" className="underline hover:text-slate-900 dark:hover:text-slate-100">
                 {t("rightsLink")}
               </Link>
             </li>
@@ -88,19 +88,19 @@ export default async function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("complaintTitle")}</h2>
-          <p className="text-slate-500">{t("complaintPending")}</p>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("complaintTitle")}</h2>
+          <p className="text-slate-500 dark:text-slate-400">{t("complaintPending")}</p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("contactTitle")}</h2>
-          <p className="text-slate-500">{t("contactPending")}</p>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("contactTitle")}</h2>
+          <p className="text-slate-500 dark:text-slate-400">{t("contactPending")}</p>
         </section>
 
         <section>
-          <h2 className="text-base font-medium text-slate-900 mb-2">{t("updatesTitle")}</h2>
+          <h2 className="text-base font-medium text-slate-900 dark:text-slate-100 mb-2">{t("updatesTitle")}</h2>
           <p>{t("updatesBody")}</p>
-          <p className="mt-1 text-slate-500">{t("lastUpdated")}</p>
+          <p className="mt-1 text-slate-500 dark:text-slate-400">{t("lastUpdated")}</p>
         </section>
       </div>
     </div>

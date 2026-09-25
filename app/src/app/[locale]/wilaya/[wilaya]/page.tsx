@@ -119,26 +119,26 @@ export default async function WilayaPage({
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <h1 className="text-2xl font-semibold text-slate-900">{t("wilayaTitle", { wilaya: wilayaLabel })}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("wilayaTitle", { wilaya: wilayaLabel })}</h1>
 
       {stats.count === 0 ? (
-        <p className="mt-4 text-slate-500">{t("noStatsWilaya")}</p>
+        <p className="mt-4 text-slate-500 dark:text-slate-400">{t("noStatsWilaya")}</p>
       ) : (
         <>
           <div className="mt-4 flex flex-wrap gap-6 text-sm">
             <div>
-              <p className="text-xs text-slate-500">{t("statsCount", { count: stats.count })}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t("statsCount", { count: stats.count })}</p>
             </div>
             {stats.avgPrice && (
               <div>
-                <p className="text-xs text-slate-500">{t("avgPrice")}</p>
-                <p className="font-medium text-slate-900">{stats.avgPrice.toLocaleString()} DA</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("avgPrice")}</p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">{stats.avgPrice.toLocaleString()} DA</p>
               </div>
             )}
             {stats.minPrice && stats.maxPrice && (
               <div>
-                <p className="text-xs text-slate-500">{t("priceRange")}</p>
-                <p className="font-medium text-slate-900">
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("priceRange")}</p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">
                   {stats.minPrice.toLocaleString()} – {stats.maxPrice.toLocaleString()} DA
                 </p>
               </div>
@@ -147,7 +147,7 @@ export default async function WilayaPage({
 
           {topBrands.length > 0 && (
             <div className="mt-8">
-              <h2 className="text-sm font-medium text-slate-700 mb-3">{t("topBrandsTitle")}</h2>
+              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{t("topBrandsTitle")}</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {topBrands.map((brand) => {
                   const brandStat = brandCounts.get(brand.id);
@@ -156,14 +156,14 @@ export default async function WilayaPage({
                     <Link
                       key={brand.id}
                       href={`/recherche?wilayaId=${wilaya.id}&brandId=${brand.id}`}
-                      className="rounded-lg border border-slate-200 p-3 hover:border-slate-300"
+                      className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:border-slate-300 dark:hover:border-slate-600"
                     >
-                      <p className="font-medium text-slate-900">{brand.name}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{brand.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         {t("statsCount", { count: brandStat.count })}
                       </p>
                       {brandStat.minPrice && (
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           {t("fromPrice", { price: brandStat.minPrice.toLocaleString() })}
                         </p>
                       )}
@@ -176,7 +176,7 @@ export default async function WilayaPage({
 
           {recentListings.length > 0 && (
             <div className="mt-8">
-              <h2 className="text-sm font-medium text-slate-700 mb-3">{t("recentListings")}</h2>
+              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{t("recentListings")}</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recentListings.map((listing, index) => (
                   <ListingCard
@@ -197,7 +197,7 @@ export default async function WilayaPage({
 
           <Link
             href={`/recherche?wilayaId=${wilaya.id}`}
-            className="mt-8 inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            className="mt-8 inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
           >
             {t("viewAllWilayaListings", { wilaya: wilayaLabel })}
           </Link>

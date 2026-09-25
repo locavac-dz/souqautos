@@ -76,7 +76,7 @@ export default async function AdminStatisticsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("statisticsTitle")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("statisticsTitle")}</h1>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
         <SummaryCard label={t("statSummaryConversations")} value={conversationCount} />
@@ -89,21 +89,21 @@ export default async function AdminStatisticsPage() {
       </div>
 
       <section className="mb-10">
-        <h2 className="text-sm font-medium text-slate-700 mb-3">
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
           {t("statNewUsersTitle", { weeks: WEEKS })}
         </h2>
         <WeekBars weeks={userWeeks} max={maxUserWeek} formatter={dateFormatter} />
       </section>
 
       <section className="mb-10">
-        <h2 className="text-sm font-medium text-slate-700 mb-3">
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
           {t("statNewListingsTitle", { weeks: WEEKS })}
         </h2>
         <WeekBars weeks={listingWeeks} max={maxListingWeek} formatter={dateFormatter} />
       </section>
 
       <section className="mb-10">
-        <h2 className="text-sm font-medium text-slate-700 mb-3">{t("statStatusBreakdownTitle")}</h2>
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{t("statStatusBreakdownTitle")}</h2>
         <div className="space-y-2">
           {STATUS_ORDER.map((status) => {
             const count = statusCounts.get(status) ?? 0;
@@ -122,9 +122,9 @@ export default async function AdminStatisticsPage() {
 
       <div className="grid sm:grid-cols-2 gap-10">
         <section>
-          <h2 className="text-sm font-medium text-slate-700 mb-3">{t("statTopBrandsTitle")}</h2>
+          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{t("statTopBrandsTitle")}</h2>
           {brandGroups.length === 0 ? (
-            <p className="text-sm text-slate-500">{t("statNoData")}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t("statNoData")}</p>
           ) : (
             <div className="space-y-2">
               {brandGroups.map((g) => (
@@ -141,9 +141,9 @@ export default async function AdminStatisticsPage() {
         </section>
 
         <section>
-          <h2 className="text-sm font-medium text-slate-700 mb-3">{t("statTopWilayasTitle")}</h2>
+          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{t("statTopWilayasTitle")}</h2>
           {wilayaGroups.length === 0 ? (
-            <p className="text-sm text-slate-500">{t("statNoData")}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t("statNoData")}</p>
           ) : (
             <div className="space-y-2">
               {wilayaGroups.map((g) => (
@@ -165,9 +165,9 @@ export default async function AdminStatisticsPage() {
 
 function SummaryCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-2xl font-semibold text-slate-900 mt-1">{value}</p>
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mt-1">{value}</p>
     </div>
   );
 }
@@ -186,11 +186,11 @@ function BarRow({
   const widthPct = Math.round((count / max) * 100);
   return (
     <div className="flex items-center gap-3 text-sm">
-      <span className="w-32 shrink-0 truncate text-slate-600">{label}</span>
-      <div className="flex-1 h-3 rounded-full bg-slate-100 overflow-hidden">
+      <span className="w-32 shrink-0 truncate text-slate-600 dark:text-slate-300">{label}</span>
+      <div className="flex-1 h-3 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
         <div className={`h-full rounded-full ${barClassName}`} style={{ width: `${widthPct}%` }} />
       </div>
-      <span className="w-8 shrink-0 text-right font-medium text-slate-900">{count}</span>
+      <span className="w-8 shrink-0 text-right font-medium text-slate-900 dark:text-slate-100">{count}</span>
     </div>
   );
 }
@@ -217,7 +217,7 @@ function WeekBars({
                 title={`${formatter.format(w.weekStart)} — ${w.count}`}
               />
             </div>
-            <span className="text-[10px] text-slate-500">{w.count}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">{w.count}</span>
           </div>
         );
       })}

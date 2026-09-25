@@ -62,7 +62,7 @@ export function PhoneVerificationStatus({ verified, hasPhone }: { verified: bool
   }
 
   if (!hasPhone) {
-    return <p className="text-sm text-slate-500">{t("noPhoneOnFile")}</p>;
+    return <p className="text-sm text-slate-500 dark:text-slate-400">{t("noPhoneOnFile")}</p>;
   }
 
   return (
@@ -73,7 +73,7 @@ export function PhoneVerificationStatus({ verified, hasPhone }: { verified: bool
           type="button"
           onClick={handleSendCode}
           disabled={pending}
-          className="mt-1 text-sm text-slate-700 underline hover:text-slate-900 disabled:opacity-50"
+          className="mt-1 text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50"
         >
           {t("sendVerificationCode")}
         </button>
@@ -85,12 +85,12 @@ export function PhoneVerificationStatus({ verified, hasPhone }: { verified: bool
             onChange={(e) => setCode(e.target.value)}
             maxLength={6}
             placeholder={t("codePlaceholder")}
-            className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="w-28 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm"
           />
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
           >
             {t("confirmCode")}
           </button>

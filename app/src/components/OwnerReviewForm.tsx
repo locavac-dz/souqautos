@@ -11,7 +11,7 @@ type Existing = {
   mileageKm: number | null;
 };
 
-const inputClass = "w-full rounded-md border border-slate-300 px-3 py-2 text-sm";
+const inputClass = "w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm";
 
 const ERROR_KEY: Record<string, string> = {
   rate_limited: "errorRateLimited",
@@ -88,13 +88,13 @@ export function OwnerReviewForm({
   const years = Array.from({ length: currentYear - 1990 + 1 }, (_, i) => currentYear - i);
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-lg border border-slate-200 p-4">
+    <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <label htmlFor="orRating" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="orRating" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("ratingLabel")}
           </label>
-          <select id="orRating" value={rating} onChange={(e) => setRating(e.target.value)} required className={`${inputClass} bg-white`}>
+          <select id="orRating" value={rating} onChange={(e) => setRating(e.target.value)} required className={`${inputClass} bg-white dark:bg-slate-800`}>
             <option value="" disabled>
               —
             </option>
@@ -106,10 +106,10 @@ export function OwnerReviewForm({
           </select>
         </div>
         <div>
-          <label htmlFor="orYear" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="orYear" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("purchaseYearLabel")}
           </label>
-          <select id="orYear" value={purchaseYear} onChange={(e) => setPurchaseYear(e.target.value)} className={`${inputClass} bg-white`}>
+          <select id="orYear" value={purchaseYear} onChange={(e) => setPurchaseYear(e.target.value)} className={`${inputClass} bg-white dark:bg-slate-800`}>
             <option value="">—</option>
             {years.map((y) => (
               <option key={y} value={y}>
@@ -119,7 +119,7 @@ export function OwnerReviewForm({
           </select>
         </div>
         <div>
-          <label htmlFor="orKm" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="orKm" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("mileageLabel")}
           </label>
           <input
@@ -136,7 +136,7 @@ export function OwnerReviewForm({
       </div>
 
       <div>
-        <label htmlFor="orComment" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="orComment" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("commentLabel")}
         </label>
         <textarea
@@ -150,7 +150,7 @@ export function OwnerReviewForm({
           required
           className={inputClass}
         />
-        <p className="mt-1 text-xs text-slate-500">{t("formHelp")}</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("formHelp")}</p>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -160,7 +160,7 @@ export function OwnerReviewForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
         >
           {pending ? t("saving") : existing ? t("update") : t("submit")}
         </button>

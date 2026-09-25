@@ -45,17 +45,17 @@ export function ReportOwnerReviewButton({ reviewId }: { reviewId: string }) {
     <div className="mt-2 text-xs">
       {message && <p className={message.kind === "ok" ? "text-emerald-700" : "text-red-600"}>{message.text}</p>}
       {!open && !(message?.kind === "ok") && (
-        <button type="button" onClick={() => setOpen(true)} className="text-slate-500 underline hover:text-slate-700">
+        <button type="button" onClick={() => setOpen(true)} className="text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300">
           {t("report")}
         </button>
       )}
       {open && (
-        <div className="mt-1 space-y-2 rounded-md border border-slate-200 p-2">
+        <div className="mt-1 space-y-2 rounded-md border border-slate-200 dark:border-slate-700 p-2">
           <select
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             aria-label={t("reportReasonLabel")}
-            className="w-full rounded border border-slate-300 bg-white px-2 py-1"
+            className="w-full rounded border border-slate-300 bg-white px-2 py-1 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           >
             {REASONS.map((r) => (
               <option key={r.value} value={r.value}>
@@ -70,13 +70,13 @@ export function ReportOwnerReviewButton({ reviewId }: { reviewId: string }) {
             maxLength={500}
             placeholder={t("reportCommentPlaceholder")}
             aria-label={t("reportCommentPlaceholder")}
-            className="w-full rounded border border-slate-300 px-2 py-1"
+            className="w-full rounded border border-slate-300 px-2 py-1 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           />
           <div className="flex gap-3">
-            <button type="button" onClick={send} disabled={pending} className="font-medium text-slate-800 underline disabled:opacity-50">
+            <button type="button" onClick={send} disabled={pending} className="font-medium text-slate-800 dark:text-slate-200 underline disabled:opacity-50">
               {t("reportSend")}
             </button>
-            <button type="button" onClick={() => setOpen(false)} className="text-slate-500 underline">
+            <button type="button" onClick={() => setOpen(false)} className="text-slate-500 dark:text-slate-400 underline">
               {t("reportCancel")}
             </button>
           </div>

@@ -72,7 +72,7 @@ export function SuspendUserButton({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder={t("suspensionReasonPlaceholder")}
-          className="w-48 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900"
+          className="w-48 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-xs text-slate-900"
         />
         <div className="flex items-center gap-2">
           <button
@@ -89,7 +89,7 @@ export function SuspendUserButton({
               setReason("");
               setError(null);
             }}
-            className="text-xs text-slate-500 hover:text-slate-600"
+            className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
             {t("cancelActionSuspend")}
           </button>

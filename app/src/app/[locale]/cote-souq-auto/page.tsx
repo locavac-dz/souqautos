@@ -51,8 +51,8 @@ export default async function EstimatePage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="text-2xl font-semibold text-slate-900">{t("title")}</h1>
-      <p className="mt-1 text-slate-500">{t("subtitle")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("title")}</h1>
+      <p className="mt-1 text-slate-500 dark:text-slate-400">{t("subtitle")}</p>
 
       <div className="mt-8 grid sm:grid-cols-[300px_1fr] gap-8">
         <EstimateForm
@@ -68,46 +68,46 @@ export default async function EstimatePage({
         />
 
         <div>
-          {!hasQuery && <p className="text-slate-500">{t("selectBrandModelPrompt")}</p>}
+          {!hasQuery && <p className="text-slate-500 dark:text-slate-400">{t("selectBrandModelPrompt")}</p>}
 
-          {hasQuery && !estimate && <p className="text-slate-500">{t("noData")}</p>}
+          {hasQuery && !estimate && <p className="text-slate-500 dark:text-slate-400">{t("noData")}</p>}
 
           {hasQuery && estimate && (
-            <div className="rounded-lg border border-slate-200 p-6">
-              <h2 className="text-sm font-medium text-slate-500 mb-1">{t("resultTitle")}</h2>
-              <p className="text-lg font-semibold text-slate-900">
+            <div className="rounded-lg border border-slate-200 p-6 dark:border-slate-700">
+              <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t("resultTitle")}</h2>
+              <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {brandName} {modelName}
               </p>
 
-              <div className="mt-4 rounded-md bg-slate-50 px-4 py-3 text-center">
-                <p className="text-xs text-slate-500">{t("rangeMid")}</p>
-                <p className="text-2xl font-semibold text-slate-900">
+              <div className="mt-4 rounded-md bg-slate-50 px-4 py-3 text-center dark:bg-slate-800">
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("rangeMid")}</p>
+                <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                   {estimate.mid.toLocaleString()} DA
                 </p>
               </div>
 
               <div className="mt-3 flex items-center justify-between text-sm">
                 <div>
-                  <p className="text-xs text-slate-500">{t("rangeLow")}</p>
-                  <p className="font-medium text-slate-700">{estimate.low.toLocaleString()} DA</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("rangeLow")}</p>
+                  <p className="font-medium text-slate-700 dark:text-slate-300">{estimate.low.toLocaleString()} DA</p>
                 </div>
                 <div className="text-right rtl:text-left">
-                  <p className="text-xs text-slate-500">{t("rangeHigh")}</p>
-                  <p className="font-medium text-slate-700">{estimate.high.toLocaleString()} DA</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("rangeHigh")}</p>
+                  <p className="font-medium text-slate-700 dark:text-slate-300">{estimate.high.toLocaleString()} DA</p>
                 </div>
               </div>
 
               {estimate.sampleSize === 1 && (
-                <p className="mt-4 text-sm text-amber-600">{t("singleSampleNote")}</p>
+                <p className="mt-4 text-sm text-amber-600 dark:text-amber-400">{t("singleSampleNote")}</p>
               )}
 
-              <p className="mt-4 text-sm text-slate-500">
+              <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
                 {t("sampleSize", { count: estimate.sampleSize })}
               </p>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {t("confidence")} :{" "}
-                <span className="font-medium text-slate-700">
+                <span className="font-medium text-slate-700 dark:text-slate-300">
                   {t(CONFIDENCE_KEY[estimate.confidenceLabel])}
                 </span>{" "}
                 ({estimate.confidencePct}%)
@@ -115,17 +115,17 @@ export default async function EstimatePage({
 
               <div className="mt-3 space-y-1">
                 {!estimate.appliedFilters.wilaya && params.wilayaId && (
-                  <p className="text-xs text-slate-500">{t("filterWilayaRelaxed")}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("filterWilayaRelaxed")}</p>
                 )}
                 {!estimate.appliedFilters.mileage && params.mileage && (
-                  <p className="text-xs text-slate-500">{t("filterMileageRelaxed")}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("filterMileageRelaxed")}</p>
                 )}
                 {!estimate.appliedFilters.year && params.year && (
-                  <p className="text-xs text-slate-500">{t("filterYearRelaxed")}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("filterYearRelaxed")}</p>
                 )}
               </div>
 
-              <p className="mt-4 text-xs text-slate-500 border-t border-slate-100 pt-3">
+              <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-700 pt-3">
                 {t("disclaimer")}
               </p>
             </div>

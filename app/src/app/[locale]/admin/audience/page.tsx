@@ -22,8 +22,8 @@ export default async function AdminAudiencePage({ searchParams }: { searchParams
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900">{t("title")}</h1>
-      <p className="mt-1 text-sm text-slate-500">{t("subtitle")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("title")}</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("subtitle")}</p>
 
       <nav aria-label={t("periodLabel")} className="mt-5 flex gap-2">
         {STATS_RANGES.map((range) => (
@@ -31,7 +31,7 @@ export default async function AdminAudiencePage({ searchParams }: { searchParams
             key={range}
             href={`/admin/audience?jours=${range}`}
             aria-current={range === days ? "true" : undefined}
-            className={`rounded-full border px-3 py-1 text-sm ${range === days ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 text-slate-700 hover:border-slate-500"}`}
+            className={`rounded-full border px-3 py-1 text-sm ${range === days ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900" : "border-slate-300 text-slate-700 hover:border-slate-500 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-400"}`}
           >
             {t("range", { days: range })}
           </Link>
@@ -39,7 +39,7 @@ export default async function AdminAudiencePage({ searchParams }: { searchParams
       </nav>
 
       {report.total === 0 ? (
-        <p className="mt-8 rounded-lg border border-slate-200 p-6 text-center text-sm text-slate-600">{t("empty")}</p>
+        <p className="mt-8 rounded-lg border border-slate-200 dark:border-slate-700 p-6 text-center text-sm text-slate-600 dark:text-slate-300">{t("empty")}</p>
       ) : (
         <>
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -50,33 +50,33 @@ export default async function AdminAudiencePage({ searchParams }: { searchParams
           </div>
 
           <section className="mt-8">
-            <h2 className="mb-2 text-sm font-medium text-slate-900">{t("chartTitle")}</h2>
+            <h2 className="mb-2 text-sm font-medium text-slate-900 dark:text-slate-100">{t("chartTitle")}</h2>
             <DailyBars points={report.perDay} locale={locale} barClass="bg-slate-700" label={t("chartLabel", { total: fmt(report.total) })} />
           </section>
 
           <div className="mt-10 grid gap-8 lg:grid-cols-2">
             <Table title={t("topPages")} rows={report.pages.slice(0, 12)} total={report.total} fmt={fmt} mono />
             <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-900">{t("topContent")}</h2>
+              <h2 className="mb-2 text-sm font-medium text-slate-900 dark:text-slate-100">{t("topContent")}</h2>
               {report.content.length === 0 ? (
-                <p className="text-sm text-slate-500">{t("topContentEmpty")}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t("topContentEmpty")}</p>
               ) : (
-                <div className="overflow-hidden rounded-lg border border-slate-200">
+                <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
                   <table className="w-full text-sm">
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                       {report.content.slice(0, 12).map((row) => {
                         const href = contentHref(row.page, row.detail);
                         return (
                           <tr key={`${row.page}|${row.detail}`}>
                             <th scope="row" className="px-3 py-2 text-start font-normal">
                               {href ? (
-                                <Link href={href} className="text-slate-900 hover:underline">
+                                <Link href={href} className="text-slate-900 dark:text-slate-100 hover:underline">
                                   {row.detail}
                                 </Link>
                               ) : (
                                 row.detail
                               )}
-                              <span className="ms-2 text-xs text-slate-500">{row.page.split("/")[1]}</span>
+                              <span className="ms-2 text-xs text-slate-500 dark:text-slate-400">{row.page.split("/")[1]}</span>
                             </th>
                             <td className="px-3 py-2 text-end tabular-nums">{fmt(row.count)}</td>
                           </tr>
@@ -97,7 +97,7 @@ export default async function AdminAudiencePage({ searchParams }: { searchParams
         </>
       )}
 
-      <div className="mt-10 space-y-1 text-xs text-slate-500">
+      <div className="mt-10 space-y-1 text-xs text-slate-500 dark:text-slate-400">
         <p>{t("noteWhat")}</p>
         <p>{t("noteNotVisitors")}</p>
         <p>{t("noteUndercount")}</p>
@@ -109,10 +109,10 @@ export default async function AdminAudiencePage({ searchParams }: { searchParams
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</p>
+      {hint && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{hint}</p>}
     </div>
   );
 }
@@ -120,17 +120,17 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 function Table({ title, rows, total, fmt, mono }: { title: string; rows: CountRow[]; total: number; fmt: (n: number) => string; mono?: boolean }) {
   return (
     <section>
-      <h2 className="mb-2 text-sm font-medium text-slate-900">{title}</h2>
-      <div className="overflow-hidden rounded-lg border border-slate-200">
+      <h2 className="mb-2 text-sm font-medium text-slate-900 dark:text-slate-100">{title}</h2>
+      <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
         <table className="w-full text-sm">
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {rows.map((row) => (
               <tr key={row.label}>
                 <th scope="row" className={`px-3 py-2 text-start font-normal ${mono ? "font-mono text-xs" : ""}`} dir={mono ? "ltr" : undefined}>
                   {row.label}
                 </th>
                 <td className="px-3 py-2 text-end tabular-nums">{fmt(row.count)}</td>
-                <td className="w-16 whitespace-nowrap px-3 py-2 text-end text-xs text-slate-500 tabular-nums">{sharePercent(row.count, total)} %</td>
+                <td className="w-16 whitespace-nowrap px-3 py-2 text-end text-xs text-slate-500 dark:text-slate-400 tabular-nums">{sharePercent(row.count, total)} %</td>
               </tr>
             ))}
           </tbody>

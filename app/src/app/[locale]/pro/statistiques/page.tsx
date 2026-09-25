@@ -24,8 +24,8 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
   if (!resolved) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="mb-4 text-slate-600">{tPro("noAccountYet")}</p>
-        <Link href="/devenir-professionnel" className="text-sm text-slate-900 underline">
+        <p className="mb-4 text-slate-600 dark:text-slate-300">{tPro("noAccountYet")}</p>
+        <Link href="/devenir-professionnel" className="text-sm text-slate-900 dark:text-slate-100 underline">
           {tPro("becomeProLink")}
         </Link>
       </div>
@@ -34,7 +34,7 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
   if (!canViewProDashboard(resolved.access)) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="text-slate-600">{tPro("forbidden")}</p>
+        <p className="text-slate-600 dark:text-slate-300">{tPro("forbidden")}</p>
       </div>
     );
   }
@@ -52,11 +52,11 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <Link href="/pro/tableau-de-bord" className="text-sm text-slate-500 hover:text-slate-900">
+      <Link href="/pro/tableau-de-bord" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
         {t("back")}
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold text-slate-900">{t("title")}</h1>
-      <p className="mt-1 text-sm text-slate-500">{account.nomCommercial}</p>
+      <h1 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("title")}</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{account.nomCommercial}</p>
 
       <nav aria-label={t("periodLabel")} className="mt-5 flex gap-2">
         {STATS_RANGES.map((range) => (
@@ -64,7 +64,7 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
             key={range}
             href={`/pro/statistiques?jours=${range}`}
             aria-current={range === days ? "true" : undefined}
-            className={`rounded-full border px-3 py-1 text-sm ${range === days ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 text-slate-700 hover:border-slate-500"}`}
+            className={`rounded-full border px-3 py-1 text-sm ${range === days ? "border-slate-900 bg-slate-900 dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900 text-white" : "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-500 dark:hover:border-slate-400"}`}
           >
             {t("range", { days: range })}
           </Link>
@@ -72,7 +72,7 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
       </nav>
 
       {report.listings.length === 0 ? (
-        <p className="mt-10 rounded-lg border border-slate-200 p-6 text-center text-sm text-slate-600">{t("empty")}</p>
+        <p className="mt-10 rounded-lg border border-slate-200 dark:border-slate-700 p-6 text-center text-sm text-slate-600 dark:text-slate-300">{t("empty")}</p>
       ) : (
         <>
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
@@ -89,21 +89,21 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
 
           <div className="mt-8 grid gap-8 sm:grid-cols-2">
             <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-900">{t("chartViews")}</h2>
+              <h2 className="mb-2 text-sm font-medium text-slate-900 dark:text-slate-100">{t("chartViews")}</h2>
               <DailyBars points={report.viewsSeries} locale={locale} barClass="bg-slate-700" label={t("chartLabel", { title: t("chartViews"), total: fmt(report.totals.views) })} />
             </section>
             <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-900">{t("chartContacts")}</h2>
+              <h2 className="mb-2 text-sm font-medium text-slate-900 dark:text-slate-100">{t("chartContacts")}</h2>
               <DailyBars points={report.contactsSeries} locale={locale} barClass="bg-emerald-600" label={t("chartLabel", { title: t("chartContacts"), total: fmt(contacts) })} />
             </section>
           </div>
 
           <section className="mt-10">
-            <h2 className="mb-3 text-sm font-medium text-slate-900">{t("perListingTitle")}</h2>
+            <h2 className="mb-3 text-sm font-medium text-slate-900 dark:text-slate-100">{t("perListingTitle")}</h2>
             {detailed ? (
-              <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
                 <table className="w-full min-w-[42rem] text-sm">
-                  <thead className="bg-slate-50 text-xs text-slate-500">
+                  <thead className="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400">
                     <tr>
                       <th scope="col" className="px-3 py-2 text-start font-medium">{t("colListing")}</th>
                       <th scope="col" className="px-3 py-2 text-end font-medium">{t("colViews")}</th>
@@ -114,14 +114,14 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
                       <th scope="col" className="px-3 py-2 text-end font-medium">{t("colRate")}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                     {report.listings.map((row) => (
                       <tr key={row.listingId}>
                         <th scope="row" className="px-3 py-2 text-start font-normal">
-                          <Link href={`/annonce/${row.listingId}`} className="text-slate-900 hover:underline">
+                          <Link href={`/annonce/${row.listingId}`} className="text-slate-900 dark:text-slate-100 hover:underline">
                             {row.title}
                           </Link>
-                          {row.status !== "PUBLIEE" && <span className="ms-2 text-xs text-slate-500">{t(`status${row.status}` as "statusVENDUE")}</span>}
+                          {row.status !== "PUBLIEE" && <span className="ms-2 text-xs text-slate-500 dark:text-slate-400">{t(`status${row.status}` as "statusVENDUE")}</span>}
                         </th>
                         <td className="px-3 py-2 text-end tabular-nums">{fmt(row.views)}</td>
                         <td className="px-3 py-2 text-end tabular-nums">{fmt(row.favorites)}</td>
@@ -135,16 +135,16 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
                 </table>
               </div>
             ) : (
-              <div className="rounded-lg border border-dashed border-slate-300 p-5 text-sm text-slate-600">
+              <div className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-5 text-sm text-slate-600 dark:text-slate-300">
                 <p>{t("detailLocked")}</p>
-                <Link href="/professionnels" className="mt-2 inline-block text-slate-900 underline">
+                <Link href="/professionnels" className="mt-2 inline-block text-slate-900 dark:text-slate-100 underline">
                   {t("detailLockedLink")}
                 </Link>
               </div>
             )}
           </section>
 
-          <div className="mt-10 space-y-1 text-xs text-slate-500">
+          <div className="mt-10 space-y-1 text-xs text-slate-500 dark:text-slate-400">
             <p>{t("noteContact")}</p>
             <p>{t("noteViews")}</p>
             <p>{t("noteHistory")}</p>
@@ -157,10 +157,10 @@ export default async function ProStatsPage({ searchParams }: { searchParams: Pro
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</p>
+      {hint && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{hint}</p>}
     </div>
   );
 }

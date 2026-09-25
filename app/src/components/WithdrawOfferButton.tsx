@@ -24,7 +24,7 @@ export function WithdrawOfferButton({ offerId }: { offerId: string }) {
     <button
       onClick={handleWithdraw}
       disabled={loading}
-      className="rounded-md border border-slate-300 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+      className="rounded-md border border-slate-300 dark:border-slate-600 px-3 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
     >
       {loading ? "…" : t("withdraw")}
     </button>

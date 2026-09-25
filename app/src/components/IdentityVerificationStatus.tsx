@@ -77,7 +77,7 @@ export function IdentityVerificationStatus({
         <button
           type="submit"
           disabled={submitting || !file}
-          className="block rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          className="block rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           {t("submitIdentityDoc")}
         </button>

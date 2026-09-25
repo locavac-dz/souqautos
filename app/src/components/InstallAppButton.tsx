@@ -53,7 +53,7 @@ export function InstallAppButton() {
   if (offer === "none") return null;
 
   if (offer === "ios-hint") {
-    return <span className="text-slate-500">{t("iosHint")}</span>;
+    return <span className="text-slate-500 dark:text-slate-400">{t("iosHint")}</span>;
   }
 
   async function install() {
@@ -64,7 +64,7 @@ export function InstallAppButton() {
   }
 
   return (
-    <button type="button" onClick={install} className="text-start hover:text-slate-700 hover:underline">
+    <button type="button" onClick={install} className="text-start hover:text-slate-700 dark:hover:text-slate-200 hover:underline">
       {t("install")}
     </button>
   );

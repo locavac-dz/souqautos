@@ -35,12 +35,12 @@ export function MobileMenuToggle({
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         aria-label={menuLabel}
-        className="rounded p-2 text-slate-700 hover:text-slate-900"
+        className="rounded p-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
       >
         <span aria-hidden="true">{open ? "✕" : "☰"}</span>
       </button>
       {open && (
-        <div id={panelId} className="absolute left-0 right-0 top-full z-40 flex flex-col gap-3 border-b border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+        <div id={panelId} className="absolute left-0 right-0 top-full z-40 flex flex-col gap-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm shadow-sm">
           {children}
         </div>
       )}

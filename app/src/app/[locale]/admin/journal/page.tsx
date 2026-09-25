@@ -44,16 +44,16 @@ export default async function AdminAuditLogPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("title")}</h1>
-      <p className="text-sm text-slate-500 mb-6">{t("subtitle")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("title")}</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("subtitle")}</p>
 
       {entries.length === 0 ? (
-        <p className="text-slate-500">{t("empty")}</p>
+        <p className="text-slate-500 dark:text-slate-400">{t("empty")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs font-medium text-slate-500">
+              <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                 <th className="py-2 pr-4">{t("colDate")}</th>
                 <th className="py-2 pr-4">{t("colAdmin")}</th>
                 <th className="py-2 pr-4">{t("colAction")}</th>
@@ -63,18 +63,18 @@ export default async function AdminAuditLogPage({
             </thead>
             <tbody>
               {entries.map((entry) => (
-                <tr key={entry.id} className="border-b border-slate-100 align-top">
-                  <td className="py-2 pr-4 whitespace-nowrap text-slate-500">
+                <tr key={entry.id} className="border-b border-slate-100 dark:border-slate-700 align-top">
+                  <td className="py-2 pr-4 whitespace-nowrap text-slate-500 dark:text-slate-400">
                     {dateFormatter.format(entry.createdAt)}
                   </td>
                   <td className="py-2 pr-4 whitespace-nowrap">{entry.admin.email}</td>
-                  <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-slate-700">
+                  <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-slate-700 dark:text-slate-300">
                     {entry.action}
                   </td>
-                  <td className="py-2 pr-4 whitespace-nowrap text-slate-600">
+                  <td className="py-2 pr-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
                     {entry.targetType} · {entry.targetId.slice(0, 10)}…
                   </td>
-                  <td className="py-2 text-slate-600">{formatAuditLogDetails(entry.details)}</td>
+                  <td className="py-2 text-slate-600 dark:text-slate-300">{formatAuditLogDetails(entry.details)}</td>
                 </tr>
               ))}
             </tbody>
@@ -85,19 +85,19 @@ export default async function AdminAuditLogPage({
       {totalPages > 1 && (
         <nav aria-label={t("paginationLabel")} className="mt-6 flex items-center justify-center gap-4">
           {page > 1 ? (
-            <Link href={hrefForPage(page - 1)} className="text-sm font-medium text-slate-900 hover:underline">
+            <Link href={hrefForPage(page - 1)} className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:underline">
               ← {t("previous")}
             </Link>
           ) : (
-            <span aria-disabled="true" className="text-sm text-slate-500">← {t("previous")}</span>
+            <span aria-disabled="true" className="text-sm text-slate-500 dark:text-slate-400">← {t("previous")}</span>
           )}
-          <span className="text-sm text-slate-500">{t("pageOf", { page, totalPages })}</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">{t("pageOf", { page, totalPages })}</span>
           {page < totalPages ? (
-            <Link href={hrefForPage(page + 1)} className="text-sm font-medium text-slate-900 hover:underline">
+            <Link href={hrefForPage(page + 1)} className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:underline">
               {t("next")} →
             </Link>
           ) : (
-            <span aria-disabled="true" className="text-sm text-slate-500">{t("next")} →</span>
+            <span aria-disabled="true" className="text-sm text-slate-500 dark:text-slate-400">{t("next")} →</span>
           )}
         </nav>
       )}

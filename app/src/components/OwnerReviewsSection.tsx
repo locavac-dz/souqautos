@@ -45,7 +45,7 @@ export async function OwnerReviewsSection({
 
   return (
     <section className="mt-10" aria-labelledby="owner-reviews-title">
-      <h2 id="owner-reviews-title" className="text-lg font-semibold text-slate-900">
+      <h2 id="owner-reviews-title" className="text-lg font-semibold text-slate-900 dark:text-slate-100">
         {t("sectionTitle")}
       </h2>
 
@@ -58,37 +58,37 @@ export async function OwnerReviewsSection({
                 size={22}
                 label={t("ratingAria", { rating: formatRating(summary.average, locale) })}
               />
-              <span className="text-lg font-semibold text-slate-900">
+              <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {t("averageLabel", { rating: formatRating(summary.average, locale) })}
               </span>
             </>
           )}
-          <span className="text-sm text-slate-500">{t("countLabel", { count: summary.count })}</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">{t("countLabel", { count: summary.count })}</span>
         </div>
       )}
       {summary.count > 0 && !summary.showAverage && (
-        <p className="mt-1 text-xs text-slate-500">{t("notEnoughForAverage", { min: MIN_REVIEWS_FOR_AVERAGE })}</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("notEnoughForAverage", { min: MIN_REVIEWS_FOR_AVERAGE })}</p>
       )}
-      <p className="mt-1 text-xs text-slate-500">{t("declaredNotice")}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("declaredNotice")}</p>
 
       {reviews.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">{t("noReviews")}</p>
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{t("noReviews")}</p>
       ) : (
         <ul className="mt-4 space-y-4">
           {reviews.map((review) => (
-            <li key={review.id} className="rounded-lg border border-slate-200 p-4">
+            <li key={review.id} className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <StarRating
                   rating={review.rating}
                   size={16}
                   label={t("ratingAria", { rating: formatRating(review.rating, locale) })}
                 />
-                <span className="text-sm font-medium text-slate-900">
+                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                   {review.user.profile?.displayName ?? t("anonymousOwner")}
                 </span>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{t("declaredOwner")}</span>
+                <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300">{t("declaredOwner")}</span>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {[
                   review.purchaseYear ? t("boughtIn", { year: review.purchaseYear }) : null,
                   review.mileageKm !== null ? `${review.mileageKm.toLocaleString(numberLocale)} km` : null,
@@ -97,7 +97,7 @@ export async function OwnerReviewsSection({
                   .filter(Boolean)
                   .join(" · ")}
               </p>
-              <p className="mt-2 whitespace-pre-line text-sm text-slate-700" dir="auto">
+              <p className="mt-2 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300" dir="auto">
                 {review.comment}
               </p>
               {viewer?.id !== review.userId && <ReportOwnerReviewButton reviewId={review.id} />}
@@ -107,17 +107,17 @@ export async function OwnerReviewsSection({
       )}
 
       <div className="mt-6">
-        <h3 className="text-base font-medium text-slate-900">{t("writeTitle")}</h3>
+        <h3 className="text-base font-medium text-slate-900 dark:text-slate-100">{t("writeTitle")}</h3>
         {!viewer ? (
-          <p className="mt-2 text-sm text-slate-600">
-            <Link href="/connexion" className="underline hover:text-slate-900">
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            <Link href="/connexion" className="underline hover:text-slate-900 dark:hover:text-slate-100">
               {t("loginPrompt")}
             </Link>
           </p>
         ) : !viewer.emailVerified ? (
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
             {t("verifyPrompt")}{" "}
-            <Link href="/compte/profil" className="underline hover:text-slate-900">
+            <Link href="/compte/profil" className="underline hover:text-slate-900 dark:hover:text-slate-100">
               {t("verifyLink")}
             </Link>
           </p>

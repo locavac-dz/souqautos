@@ -43,11 +43,11 @@ export function FavoriteButton({
       aria-pressed={favorited}
       aria-label={label}
       title={label}
-      className="flex items-center justify-center h-9 w-9 rounded-full bg-white/90 border border-slate-200 shadow-sm hover:bg-white disabled:opacity-60"
+      className="flex items-center justify-center h-9 w-9 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-600 shadow-sm hover:bg-white dark:hover:bg-slate-700 disabled:opacity-60"
     >
       <svg
         viewBox="0 0 24 24"
-        className={`h-5 w-5 ${favorited ? "fill-red-500 stroke-red-500" : "fill-none stroke-slate-500"}`}
+        className={`h-5 w-5 ${favorited ? "fill-red-500 stroke-red-500" : "fill-none stroke-slate-500 dark:stroke-slate-400"}`}
         strokeWidth={1.8}
       >
         <path d="M12 20.5s-7.5-4.8-10-9.4C.4 7.6 2 4 5.6 4c2 0 3.4 1 4.4 2.4C11 5 12.4 4 14.4 4 18 4 19.6 7.6 22 11.1c-2.5 4.6-10 9.4-10 9.4Z" />

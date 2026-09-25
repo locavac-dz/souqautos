@@ -21,8 +21,8 @@ export default async function BecomeProPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("becomeProTitle")}</h1>
-      <p className="text-sm text-slate-500 mb-6">{t("becomeProSubtitle")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("becomeProTitle")}</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("becomeProSubtitle")}</p>
       <BecomeProForm wilayas={wilayas} />
     </div>
   );

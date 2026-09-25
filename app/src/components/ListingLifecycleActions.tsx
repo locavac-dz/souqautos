@@ -48,7 +48,7 @@ export function ListingLifecycleActions({
             handle("renew");
           }}
           disabled={pending !== null}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className="rounded-md border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
         >
           {renewLabel}
         </button>
@@ -61,7 +61,7 @@ export function ListingLifecycleActions({
             handle("mark-sold");
           }}
           disabled={pending !== null}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className="rounded-md border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
         >
           {markSoldLabel}
         </button>

@@ -23,7 +23,7 @@ type ExistingReview = {
   publishedAt: Date | null;
 };
 
-const inputClass = "w-full rounded-md border border-slate-300 px-3 py-2";
+const inputClass = "w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2";
 
 const ERROR_KEY: Record<string, string> = {
   url_taken: "errorUrlTaken",
@@ -95,10 +95,10 @@ export function PressReviewForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
-      <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4">
-        <legend className="px-1 text-sm font-medium text-slate-900">{t("sectionSource")}</legend>
+      <fieldset className="space-y-4 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+        <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{t("sectionSource")}</legend>
         <div>
-          <label htmlFor="prUrl" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="prUrl" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("urlLabel")}
           </label>
           <input
@@ -111,11 +111,11 @@ export function PressReviewForm({
             placeholder="https://…"
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-slate-500">{t("urlHelp")}</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("urlHelp")}</p>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="prSource" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="prSource" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t("sourceNameLabel")}
             </label>
             <input
@@ -128,7 +128,7 @@ export function PressReviewForm({
             />
           </div>
           <div>
-            <label htmlFor="prDate" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="prDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t("sourceDateLabel")}
             </label>
             <input
@@ -141,7 +141,7 @@ export function PressReviewForm({
           </div>
         </div>
         <div>
-          <label htmlFor="prTitle" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="prTitle" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("titleLabel")}
           </label>
           <input
@@ -153,15 +153,15 @@ export function PressReviewForm({
             maxLength={200}
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-slate-500">{t("titleHelp")}</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("titleHelp")}</p>
         </div>
       </fieldset>
 
-      <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4">
-        <legend className="px-1 text-sm font-medium text-slate-900">{t("sectionVehicle")}</legend>
+      <fieldset className="space-y-4 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+        <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{t("sectionVehicle")}</legend>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="prBrand" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="prBrand" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t("brandLabel")}
             </label>
             <select
@@ -171,7 +171,7 @@ export function PressReviewForm({
                 setBrandId(e.target.value);
                 setModelId("");
               }}
-              className={`${inputClass} bg-white`}
+              className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200`}
             >
               <option value="">—</option>
               {brands.map((b) => (
@@ -182,7 +182,7 @@ export function PressReviewForm({
             </select>
           </div>
           <div>
-            <label htmlFor="prModel" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="prModel" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t("modelLabel")}
             </label>
             <select
@@ -190,7 +190,7 @@ export function PressReviewForm({
               value={modelId}
               disabled={!brandId}
               onChange={(e) => setModelId(e.target.value)}
-              className={`${inputClass} bg-white disabled:bg-slate-50`}
+              className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200 disabled:bg-slate-50 dark:disabled:bg-slate-700`}
             >
               <option value="">—</option>
               {models.map((m) => (
@@ -201,14 +201,14 @@ export function PressReviewForm({
             </select>
           </div>
         </div>
-        <p className="text-xs text-slate-500 -mt-2">{t("vehicleHelp")}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{t("vehicleHelp")}</p>
       </fieldset>
 
-      <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4">
-        <legend className="px-1 text-sm font-medium text-slate-900">{t("sectionNote")}</legend>
+      <fieldset className="space-y-4 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+        <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{t("sectionNote")}</legend>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="prNoteFr" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="prNoteFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t("noteFrLabel")}
             </label>
             <textarea
@@ -221,7 +221,7 @@ export function PressReviewForm({
             />
           </div>
           <div>
-            <label htmlFor="prNoteAr" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="prNoteAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t("noteArLabel")}
             </label>
             <textarea
@@ -235,10 +235,10 @@ export function PressReviewForm({
             />
           </div>
         </div>
-        <p className="text-xs text-slate-500 -mt-2">{t("noteHelp")}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{t("noteHelp")}</p>
       </fieldset>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
         <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
         {t("publishedLabel")}
       </label>
@@ -248,7 +248,7 @@ export function PressReviewForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+        className="rounded-md bg-slate-900 dark:bg-slate-100 px-4 py-2 text-sm font-medium text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-300 disabled:opacity-50"
       >
         {pending ? t("saving") : t("save")}
       </button>

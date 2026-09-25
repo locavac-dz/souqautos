@@ -125,8 +125,8 @@ export default async function BlogArticlePage({
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      {article.publishedAt && <p className="text-xs text-slate-500">{dateFormatter.format(article.publishedAt)}</p>}
-      <h1 className="mt-1 text-2xl font-semibold text-slate-900">{title}</h1>
+      {article.publishedAt && <p className="text-xs text-slate-500 dark:text-slate-400">{dateFormatter.format(article.publishedAt)}</p>}
+      <h1 className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{title}</h1>
 
       {article.coverImageUrl && (
         <div className="relative mt-6 aspect-video w-full overflow-hidden rounded-lg">
@@ -144,7 +144,7 @@ export default async function BlogArticlePage({
       <ArticleBody content={content} />
 
       {article.sourceName && (
-        <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">
+        <p className="mt-8 border-t border-slate-200 dark:border-slate-700 pt-4 text-xs text-slate-500 dark:text-slate-400">
           {article.sourceUrl ? (
             <>
               {t("sourceLabel")}{" "}

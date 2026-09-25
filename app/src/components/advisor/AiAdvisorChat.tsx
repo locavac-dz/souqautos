@@ -81,7 +81,7 @@ export function AiAdvisorChat() {
           <div key={index} className={`max-w-[85%] ${message.role === "user" ? "ms-auto" : "me-auto"}`}>
             <div
               className={`rounded-lg px-3 py-2 text-sm ${
-                message.role === "user" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-900"
+                message.role === "user" ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900" : "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100"
               }`}
             >
               {message.content}
@@ -95,11 +95,11 @@ export function AiAdvisorChat() {
             )}
           </div>
         ))}
-        {pending && <p className="text-sm text-slate-500">{t("pending")}</p>}
+        {pending && <p className="text-sm text-slate-500 dark:text-slate-400">{t("pending")}</p>}
       </div>
 
       {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-      {turnLimitReached && <p className="text-sm text-slate-500 mb-2">{t("turnLimitReached")}</p>}
+      {turnLimitReached && <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{t("turnLimitReached")}</p>}
 
       <form onSubmit={sendMessage} className="flex gap-2">
         <input
@@ -108,12 +108,12 @@ export function AiAdvisorChat() {
           onChange={(e) => setInput(e.target.value)}
           placeholder={t("inputPlaceholder")}
           disabled={pending || turnLimitReached}
-          className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm"
         />
         <button
           type="submit"
           disabled={pending || turnLimitReached || !input.trim()}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
         >
           {t("sendButton")}
         </button>
@@ -132,21 +132,21 @@ function AdvisorListingCard({ listing, locale }: { listing: AdvisorListing; loca
   return (
     <Link
       href={`/annonce/${listing.id}`}
-      className="flex gap-3 rounded-lg border border-slate-200 p-2 hover:border-slate-300"
+      className="flex gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-2 hover:border-slate-300 dark:hover:border-slate-600"
     >
       {listing.photos[0] ? (
         <div className="relative h-16 w-24 shrink-0">
           <Image src={listing.photos[0].path} alt="" fill sizes="96px" className="rounded object-cover" />
         </div>
       ) : (
-        <div className="h-16 w-24 rounded bg-slate-100 shrink-0" />
+        <div className="h-16 w-24 rounded bg-slate-100 dark:bg-slate-700 shrink-0" />
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-slate-900">{listing.title}</p>
-        <p className="text-xs text-slate-500">
+        <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{listing.title}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           {brandLabel} {modelLabel} · {wilayaLabel}
         </p>
-        <p className="mt-0.5 text-xs font-medium text-slate-900">{listing.price.toLocaleString()} DA</p>
+        <p className="mt-0.5 text-xs font-medium text-slate-900 dark:text-slate-100">{listing.price.toLocaleString()} DA</p>
       </div>
     </Link>
   );

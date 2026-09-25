@@ -74,7 +74,7 @@ export function EditProfileForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <label className="block">
-        <span className="text-sm text-slate-700">{t("displayNameLabel")}</span>
+        <span className="text-sm text-slate-700 dark:text-slate-300">{t("displayNameLabel")}</span>
         <input
           type="text"
           value={displayName}
@@ -82,15 +82,15 @@ export function EditProfileForm({
           required
           minLength={2}
           maxLength={80}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         />
       </label>
       <label className="block">
-        <span className="text-sm text-slate-700">{t("wilayaLabel")}</span>
+        <span className="text-sm text-slate-700 dark:text-slate-300">{t("wilayaLabel")}</span>
         <select
           value={wilayaId}
           onChange={(e) => setWilayaId(e.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         >
           <option value="">{t("wilayaPlaceholder")}</option>
           {wilayas.map((w) => (
@@ -101,13 +101,13 @@ export function EditProfileForm({
         </select>
       </label>
       <label className="block">
-        <span className="text-sm text-slate-700">{t("phoneLabel")}</span>
+        <span className="text-sm text-slate-700 dark:text-slate-300">{t("phoneLabel")}</span>
         <input
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder={t("phonePlaceholder")}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         />
         {phoneVerified && !phoneChanged && (
           <span className="mt-1 block text-xs text-emerald-700">{t("phoneCurrentlyVerified")}</span>
@@ -124,25 +124,25 @@ export function EditProfileForm({
           onChange={(e) => setWhatsappEnabled(e.target.checked)}
           className="mt-1"
         />
-        <span className="text-sm text-slate-700">
+        <span className="text-sm text-slate-700 dark:text-slate-300">
           {t("whatsappLabel")}
-          <span className="block text-xs text-slate-500">{t("whatsappHelp")}</span>
+          <span className="block text-xs text-slate-500 dark:text-slate-400">{t("whatsappHelp")}</span>
         </span>
       </label>
       <label className="block">
-        <span className="text-sm text-slate-700">{t("bioLabel")}</span>
+        <span className="text-sm text-slate-700 dark:text-slate-300">{t("bioLabel")}</span>
         <textarea
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           maxLength={500}
           rows={4}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         />
       </label>
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
       >
         {t("submit")}
       </button>

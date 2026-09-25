@@ -120,19 +120,19 @@ export default async function GuidePage({ params, searchParams }: { params: Prom
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {t("kicker")}
         {vehicle && <> · {vehicle}</>}
         {g.generation && <> · {g.generation.name}</>}
       </p>
-      <h1 className="mt-1 text-2xl font-semibold text-slate-900">{title}</h1>
-      <p className="mt-2 text-slate-600">{excerpt}</p>
+      <h1 className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{title}</h1>
+      <p className="mt-2 text-slate-600 dark:text-slate-300">{excerpt}</p>
 
-      <p className="mt-4 text-sm text-slate-600">
-        <span className="font-medium text-slate-900">{t("byline", { author: authorName })}</span>
+      <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+        <span className="font-medium text-slate-900 dark:text-slate-100">{t("byline", { author: authorName })}</span>
         {/* Un aperçu n'a pas de date de parution : rien à afficher, et pas de séparateur qui pendrait dans le vide. */}
         {article.publishedAt && (
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {" · "}
             {t("publishedOn", { date: dateFormatter.format(article.publishedAt) })}
             {showUpdated && <> · {t("updatedOn", { date: dateFormatter.format(article.updatedAt) })}</>}
@@ -141,16 +141,16 @@ export default async function GuidePage({ params, searchParams }: { params: Prom
       </p>
 
       {article.coverImageUrl && (
-        <div className="relative mt-6 aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+        <div className="relative mt-6 aspect-video overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700">
           <Image src={article.coverImageUrl} alt="" fill sizes="(min-width: 768px) 768px, 100vw" className="object-cover" loading="eager" fetchPriority="high" />
         </div>
       )}
 
-      <section className="mt-6 rounded-lg border border-slate-200 p-4">
-        <h2 className="text-lg font-semibold text-slate-900">{t("checklistTitle")}</h2>
+      <section className="mt-6 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("checklistTitle")}</h2>
         <ul className="mt-3 space-y-2">
           {checklist.map((item, index) => (
-            <li key={index} className="flex gap-2 text-sm text-slate-700">
+            <li key={index} className="flex gap-2 text-sm text-slate-700 dark:text-slate-300">
               <CheckIcon />
               <span>{item}</span>
             </li>
@@ -158,9 +158,9 @@ export default async function GuidePage({ params, searchParams }: { params: Prom
         </ul>
       </section>
 
-      <section className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{t("adviceTitle")}</h2>
-        <p className="mt-1 text-slate-800">{advice}</p>
+      <section className="mt-6 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("adviceTitle")}</h2>
+        <p className="mt-1 text-slate-800 dark:text-slate-100">{advice}</p>
       </section>
 
       <ArticleBody content={content} />
@@ -168,15 +168,15 @@ export default async function GuidePage({ params, searchParams }: { params: Prom
       <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm">
         {vehicle && g.brand && g.model ? (
           <>
-            <Link href={`/recherche?brandId=${g.brandId}&modelId=${g.modelId}`} className="text-slate-900 underline hover:text-slate-700">
+            <Link href={`/recherche?brandId=${g.brandId}&modelId=${g.modelId}`} className="text-slate-900 dark:text-slate-100 underline hover:text-slate-700 dark:hover:text-slate-300">
               {t("seeListings", { vehicle })}
             </Link>
-            <Link href={`/voitures/${g.brand.slug}/${g.model.slug}`} className="text-slate-700 underline hover:text-slate-900">
+            <Link href={`/voitures/${g.brand.slug}/${g.model.slug}`} className="text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
               {t("seeModel", { vehicle })}
             </Link>
           </>
         ) : (
-          <Link href="/recherche" className="text-slate-900 underline hover:text-slate-700">
+          <Link href="/recherche" className="text-slate-900 dark:text-slate-100 underline hover:text-slate-700 dark:hover:text-slate-300">
             {t("seeAllListings")}
           </Link>
         )}

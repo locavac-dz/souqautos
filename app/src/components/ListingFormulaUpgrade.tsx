@@ -64,7 +64,7 @@ export function ListingFormulaUpgrade({
           e.preventDefault();
           setOpen(true);
         }}
-        className="text-xs text-slate-500 underline hover:text-slate-700"
+        className="text-xs text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-200"
       >
         {label} — {price.toLocaleString()} DA
       </button>
@@ -74,21 +74,21 @@ export function ListingFormulaUpgrade({
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full rounded-md border border-slate-200 bg-slate-50 p-3 space-y-2"
+      className="w-full rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-2"
     >
-      <p className="text-xs font-medium text-slate-700">
+      <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
         {t("upgradeInstructions", { amount: price.toLocaleString() })}
       </p>
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-slate-600 dark:text-slate-300">
         {t("upgradeBankName")}: <strong>{bankDetails.bankName}</strong>
       </p>
-      <p className="text-xs text-slate-600 font-mono">
+      <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">
         {t("upgradeBankRib")}: <span dir="ltr">{bankDetails.bankRib}</span>
       </p>
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-slate-600 dark:text-slate-300">
         {t("upgradeBankHolder")}: {bankDetails.bankAccountHolder}
       </p>
-      <label className="flex items-center gap-2 text-xs text-slate-500">
+      <label className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
         {t("upgradeReferenceLabel")}
         <input
           type="text"
@@ -98,14 +98,14 @@ export function ListingFormulaUpgrade({
           value={reference}
           onChange={(e) => setReference(e.target.value)}
           placeholder={t("upgradeReferencePlaceholder")}
-          className="flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
+          className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-sm text-slate-900"
         />
       </label>
       <div className="flex items-center gap-2">
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
         >
           {t("upgradeSubmit")}
         </button>
@@ -115,7 +115,7 @@ export function ListingFormulaUpgrade({
             setOpen(false);
             setError(null);
           }}
-          className="text-xs text-slate-500 hover:text-slate-600"
+          className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
         >
           {t("upgradeCancel")}
         </button>

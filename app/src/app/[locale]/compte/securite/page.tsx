@@ -27,10 +27,10 @@ export default async function AccountSecurityPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("pageTitle")}</h1>
-      <p className="text-sm font-medium text-slate-700 mb-6">
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("pageTitle")}</h1>
+      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-6">
         {status.enabled ? t("statusOn") : t("statusOff")}
-        {status.enabledAt && <span className="text-slate-500"> — {t("enabledSince", { date: format.dateTime(status.enabledAt, { dateStyle: "long" }) })}</span>}
+        {status.enabledAt && <span className="text-slate-500 dark:text-slate-400"> — {t("enabledSince", { date: format.dateTime(status.enabledAt, { dateStyle: "long" }) })}</span>}
       </p>
       {staffMustEnable && (
         <p role="status" className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">

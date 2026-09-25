@@ -18,7 +18,7 @@ export default async function NewPressReviewPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("newReview")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("newReview")}</h1>
       <PressReviewForm brands={brands} />
     </div>
   );

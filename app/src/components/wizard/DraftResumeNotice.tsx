@@ -21,12 +21,12 @@ export function DraftResumeNotice() {
     : "";
 
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600 flex items-start justify-between gap-3">
+    <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-sm text-slate-600 dark:text-slate-300 flex items-start justify-between gap-3">
       <p>{formatted ? t("draftResumedWithDate", { date: formatted }) : t("draftResumed")}</p>
       <button
         type="button"
         onClick={() => reset()}
-        className="shrink-0 text-xs text-slate-500 underline hover:text-slate-700"
+        className="shrink-0 text-xs text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-200"
       >
         {t("draftDiscard")}
       </button>

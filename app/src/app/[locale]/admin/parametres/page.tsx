@@ -21,28 +21,28 @@ export default async function AdminSettingsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("title")}</h1>
-        <p className="text-sm text-slate-500 mb-6">{t("subtitle")}</p>
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("title")}</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("subtitle")}</p>
         <ModerationSettingsForm settings={settings} canEdit={canEdit} />
       </div>
 
-      <div className="border-t border-slate-200 pt-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-2">{tPayment("title")}</h2>
-        <p className="text-sm text-slate-500 mb-6">{tPayment("subtitle")}</p>
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-8">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{tPayment("title")}</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{tPayment("subtitle")}</p>
         {canEdit ? (
           <PaymentSettingsForm settings={paymentSettings} canEdit={canEdit} />
         ) : (
-          <p className="text-sm text-slate-500">{tPayment("restrictedNotice")}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{tPayment("restrictedNotice")}</p>
         )}
       </div>
 
-      <div className="border-t border-slate-200 pt-8">
-        <h2 className="text-xl font-semibold text-slate-900 mb-2">{tProSubscription("title")}</h2>
-        <p className="text-sm text-slate-500 mb-6">{tProSubscription("subtitle")}</p>
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-8">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{tProSubscription("title")}</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{tProSubscription("subtitle")}</p>
         {canEdit ? (
           <ProSubscriptionSettingsForm settings={proSubscriptionSettings} canEdit={canEdit} />
         ) : (
-          <p className="text-sm text-slate-500">{tProSubscription("restrictedNotice")}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{tProSubscription("restrictedNotice")}</p>
         )}
       </div>
     </div>

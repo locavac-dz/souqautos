@@ -65,14 +65,14 @@ export function CallbackEditor({
 
   return (
     <div className="space-y-2 mt-2">
-      <label className="block text-xs text-slate-500">
+      <label className="block text-xs text-slate-500 dark:text-slate-400">
         {t("statusLabel")}
         <select
           value={status}
           disabled={pending}
           onChange={(e) => changeStatus(e.target.value as CallbackStatusValue)}
           aria-label={t("statusLabel")}
-          className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 disabled:opacity-60"
+          className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm text-slate-900 disabled:opacity-60"
         >
           {STATUSES.map((s) => (
             <option key={s} value={s}>
@@ -82,7 +82,7 @@ export function CallbackEditor({
         </select>
       </label>
 
-      <label className="block text-xs text-slate-500">
+      <label className="block text-xs text-slate-500 dark:text-slate-400">
         {t("noteLabel")}
         <textarea
           value={note}
@@ -90,7 +90,7 @@ export function CallbackEditor({
           maxLength={500}
           rows={2}
           placeholder={t("notePlaceholder")}
-          className="mt-1 block w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm text-slate-900"
+          className="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm text-slate-900"
         />
       </label>
 
@@ -99,7 +99,7 @@ export function CallbackEditor({
           type="button"
           onClick={saveNote}
           disabled={pending || !noteChanged}
-          className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-40"
+          className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-40"
         >
           {t("saveNote")}
         </button>

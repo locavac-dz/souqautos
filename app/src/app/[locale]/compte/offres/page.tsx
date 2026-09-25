@@ -47,7 +47,7 @@ export default async function OffresPage() {
     PENDING:   "bg-amber-100 text-amber-800",
     ACCEPTED:  "bg-green-100 text-green-800",
     DECLINED:  "bg-red-100 text-red-800",
-    WITHDRAWN: "bg-slate-100 text-slate-600",
+    WITHDRAWN: "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300",
     COUNTERED: "bg-blue-100 text-blue-800",
   };
 
@@ -75,7 +75,7 @@ export default async function OffresPage() {
                     <p className="text-base font-bold text-slate-900 dark:text-white">
                       {offer.amount.toLocaleString()} DA
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {offer.buyer.profile?.displayName ?? t("unknownBuyer")}
                     </p>
                     {offer.message && (

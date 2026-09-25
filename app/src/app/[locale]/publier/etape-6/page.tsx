@@ -51,7 +51,7 @@ export default function Step6Page() {
             <img
               src={url}
               alt=""
-              className="aspect-square w-full rounded-md object-cover border border-slate-200"
+              className="aspect-square w-full rounded-md object-cover border border-slate-200 dark:border-slate-700"
             />
             <button
               type="button"
@@ -64,7 +64,7 @@ export default function Step6Page() {
         ))}
 
         {photos.length < MAX_PHOTOS && (
-          <label className="aspect-square flex items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-slate-500 text-sm cursor-pointer hover:border-slate-400">
+          <label className="aspect-square flex items-center justify-center rounded-md border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 text-sm cursor-pointer hover:border-slate-400 dark:hover:border-slate-500">
             {t("photosAdd")}
             <input
               type="file"

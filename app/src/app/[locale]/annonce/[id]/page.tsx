@@ -370,7 +370,7 @@ export default async function ListingDetailPage({
               {checkListingContentEditable(listing.status).ok && (
                 <Link
                   href={`/compte/mes-annonces/${listing.id}/modifier`}
-                  className="text-xs text-slate-500 underline hover:text-slate-700"
+                  className="text-xs text-slate-500 dark:text-slate-400 underline hover:text-slate-700 dark:hover:text-slate-300"
                 >
                   {tListing("editListingAction")}
                 </Link>
@@ -428,8 +428,8 @@ export default async function ListingDetailPage({
 
       <div className="grid sm:grid-cols-3 gap-8">
         <div className="sm:col-span-2">
-          <h1 className="text-2xl font-semibold text-slate-900 text-balance">{listing.title}</h1>
-          <p className="mt-1 text-slate-500">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 text-balance">{listing.title}</h1>
+          <p className="mt-1 text-slate-500 dark:text-slate-400">
             {brandLabel} {modelLabel} · {tListing("yearLabel", { value: listing.year })} ·{" "}
             {tListing("mileageUnit", { value: listing.mileage.toLocaleString() })}
           </p>
@@ -437,7 +437,7 @@ export default async function ListingDetailPage({
           {modelGuide && (
             <Link
               href={`/guides/${modelGuide.slug}`}
-              className="mt-4 block rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 hover:border-emerald-300"
+              className="mt-4 block rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 p-3 text-sm text-emerald-900 dark:text-emerald-200 hover:border-emerald-300 dark:hover:border-emerald-700"
             >
               <span className="font-medium">{tListing("buyingGuideLabel")}</span>{" "}
               <span className="underline">{locale === "ar" ? modelGuide.titleAr : modelGuide.titleFr}</span>
@@ -445,13 +445,13 @@ export default async function ListingDetailPage({
           )}
 
           <div className="mt-6">
-            <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("descriptionTitle")}</h2>
-            <p className="text-slate-700 whitespace-pre-wrap">{listing.description}</p>
+            <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tListing("descriptionTitle")}</h2>
+            <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{listing.description}</p>
           </div>
 
           <div className="mt-6">
-            <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("detailsTitle")}</h2>
-            <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+            <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tListing("detailsTitle")}</h2>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
               {listing.generation && (
                 <DetailRow
                   label={tWizard("generation")}
@@ -488,12 +488,12 @@ export default async function ListingDetailPage({
 
           {listing.equipments.length > 0 && (
             <div className="mt-6">
-              <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("equipmentsTitle")}</h2>
+              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tListing("equipmentsTitle")}</h2>
               <div className="flex flex-wrap gap-2">
                 {listing.equipments.map(({ equipment }) => (
                   <span
                     key={equipment.id}
-                    className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700"
+                    className="rounded-full bg-slate-100 dark:bg-slate-700 px-3 py-1 text-xs text-slate-700 dark:text-slate-300"
                   >
                     {locale === "ar" ? equipment.nameAr : equipment.nameFr}
                   </span>
@@ -504,8 +504,8 @@ export default async function ListingDetailPage({
 
           {estimate && (
             <div className="mt-6">
-              <h2 className="text-sm font-medium text-slate-700 mb-2">{tPriceBadge("estimationTitle")}</h2>
-              <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tPriceBadge("estimationTitle")}</h2>
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
                 <DetailRow label={tPriceBadge("priceRequested")} value={`${listing.price.toLocaleString()} DA`} />
                 <DetailRow label={tPriceBadge("priceMarket")} value={`${estimate.mid.toLocaleString()} DA`} />
                 {priceBadge && (
@@ -519,7 +519,7 @@ export default async function ListingDetailPage({
                   />
                 )}
               </div>
-              <p className="mt-2 text-xs text-slate-500">{tEstimate("disclaimer")}</p>
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{tEstimate("disclaimer")}</p>
             </div>
           )}
 
@@ -528,8 +528,8 @@ export default async function ListingDetailPage({
 
           {listing.priceHistory.length > 1 && (
             <div className="mt-6">
-              <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("priceHistoryTitle")}</h2>
-              <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tListing("priceHistoryTitle")}</h2>
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
                 {listing.priceHistory.map((entry) => (
                   <DetailRow
                     key={entry.id}
@@ -545,8 +545,8 @@ export default async function ListingDetailPage({
 
           {listing.renewals.length > 0 && (
             <div className="mt-6">
-              <h2 className="text-sm font-medium text-slate-700 mb-2">{tListing("renewalHistoryTitle")}</h2>
-              <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
+              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tListing("renewalHistoryTitle")}</h2>
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
                 {listing.renewals.map((entry) => (
                   <DetailRow
                     key={entry.id}
@@ -566,9 +566,9 @@ export default async function ListingDetailPage({
         </div>
 
         <div className="sm:col-span-1">
-          <div className="rounded-lg border border-slate-200 p-4">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
             <div className="flex items-start justify-between gap-2">
-              <p className="text-2xl font-semibold text-slate-900">
+              <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 {listing.price.toLocaleString()} DA
               </p>
               <div className="flex gap-2 shrink-0">
@@ -583,7 +583,7 @@ export default async function ListingDetailPage({
                 <CompareToggle listingId={listing.id} label={tCompare("addToCompare")} />
               </div>
             </div>
-            <p className="text-sm text-slate-500 mt-1">{locationLabel}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{locationLabel}</p>
 
             {priceBadge && (
               <div className={`mt-4 rounded-md border px-3 py-2 ${BADGE_STYLE[priceBadge.badge]}`}>
@@ -610,9 +610,9 @@ export default async function ListingDetailPage({
               />
             )}
 
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <p className="text-xs text-slate-500 mb-1">{tListing("seller")}</p>
-              <Link href={`/vendeur/${listing.sellerId}`} className="font-medium text-slate-900 hover:underline">
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{tListing("seller")}</p>
+              <Link href={`/vendeur/${listing.sellerId}`} className="font-medium text-slate-900 dark:text-slate-100 hover:underline">
                 {listing.seller.profile?.displayName ?? listing.seller.email}
               </Link>
               {sellerRating.count > 0 && (
@@ -625,7 +625,7 @@ export default async function ListingDetailPage({
               {currentUser && !isOwner && (
                 <Link
                   href={`/vendeur/${listing.sellerId}#donner-avis`}
-                  className="mt-1 inline-block text-xs text-slate-400 hover:text-slate-700 hover:underline"
+                  className="mt-1 inline-block text-xs text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:underline"
                 >
                   {tReview("leaveReview")} →
                 </Link>
@@ -637,9 +637,9 @@ export default async function ListingDetailPage({
                 className="mt-1.5"
               />
               {proAccount && (
-                <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+                <div className="mt-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-slate-900">{proAccount.nomCommercial}</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{proAccount.nomCommercial}</span>
                     {proAccount.badgeVerifie && (
                       <span className="text-xs font-medium text-emerald-700">✓</span>
                     )}
@@ -656,7 +656,7 @@ export default async function ListingDetailPage({
                   )}
                   <Link
                     href={`/pro/${proAccount.id}`}
-                    className="mt-2 inline-block text-xs text-slate-700 hover:underline"
+                    className="mt-2 inline-block text-xs text-slate-700 dark:text-slate-300 hover:underline"
                   >
                     {tPro("proEncartViewAll", { count: proActiveListingCount })}
                   </Link>
@@ -686,7 +686,7 @@ export default async function ListingDetailPage({
             )}
 
             {/* Partager l'annonce via WhatsApp — disponible pour tous (acheteur et vendeur) */}
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-slate-100 dark:border-slate-700 pt-4">
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(`${listing.title} — ${new Intl.NumberFormat("fr-DZ").format(listing.price)} DA\n${SITE_URL}/${locale}/annonce/${listing.id}`)}`}
                 target="_blank"
@@ -723,7 +723,7 @@ export default async function ListingDetailPage({
       {/* Lot 152 — annonces similaires (même modèle puis même marque/fourchette) */}
       {similarListings.length > 0 && (
         <section className="mt-10">
-          <h2 className="text-sm font-medium text-slate-700 mb-3">{tListing("similarTitle")}</h2>
+          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{tListing("similarTitle")}</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
             {similarListings.map((similar, index) => (
               <div key={similar.id} className="snap-start shrink-0 w-56">
@@ -745,8 +745,8 @@ export default async function ListingDetailPage({
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-4 py-2.5 flex justify-between gap-4">
-      <span className="text-slate-500">{label}</span>
-      <span className="text-slate-900 font-medium text-right">{value}</span>
+      <span className="text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-slate-900 dark:text-slate-100 font-medium text-right">{value}</span>
     </div>
   );
 }

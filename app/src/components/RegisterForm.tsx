@@ -55,7 +55,7 @@ export function RegisterForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="register-name" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="register-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("displayName")}
         </label>
         <input
@@ -65,12 +65,12 @@ export function RegisterForm({
           minLength={2}
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2"
         />
       </div>
 
       <div>
-        <label htmlFor="register-email" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="register-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("email")}
         </label>
         <input
@@ -79,12 +79,12 @@ export function RegisterForm({
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2"
         />
       </div>
 
       <div>
-        <label htmlFor="register-password" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="register-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("password")}
         </label>
         <input
@@ -94,20 +94,20 @@ export function RegisterForm({
           minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2"
         />
-        <p className="mt-1 text-xs text-slate-500">{t("passwordHint")}</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("passwordHint")}</p>
       </div>
 
       <div>
-        <label htmlFor="register-wilaya" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="register-wilaya" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("wilayaOptional")}
         </label>
         <select
           id="register-wilaya"
           value={wilayaId}
           onChange={(e) => setWilayaId(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 px-3 py-2 bg-white dark:bg-slate-800 dark:text-slate-200"
         >
           <option value="">—</option>
           {wilayas.map((w) => (
@@ -123,7 +123,7 @@ export function RegisterForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-slate-900 px-4 py-2.5 font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+        className="w-full rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2.5 font-medium text-white hover:bg-slate-700 disabled:opacity-60"
       >
         {t("submitRegister")}
       </button>

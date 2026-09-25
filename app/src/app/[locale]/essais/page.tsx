@@ -107,17 +107,17 @@ export default async function RoadTestsIndexPage({ searchParams }: { searchParam
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <h1 className="text-2xl font-semibold text-slate-900">{t("indexTitle")}</h1>
-      <p className="mt-1 text-sm text-slate-500">{t("indexSubtitle")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("indexTitle")}</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("indexSubtitle")}</p>
       <p className="mt-1 text-xs">
         {/* Lien natif : un flux XML n'est pas une page de l'application (pas de préfixe de langue à ajouter). */}
-        <a href={`/${locale}/essais/feed.xml`} className="text-slate-500 underline hover:text-slate-900">
+        <a href={`/${locale}/essais/feed.xml`} className="text-slate-500 underline hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200">
           {t("rssLink")}
         </a>
       </p>
 
       {articles.length === 0 ? (
-        <p className="mt-8 py-12 text-center text-slate-500">{t("empty")}</p>
+        <p className="mt-8 py-12 text-center text-slate-500 dark:text-slate-400">{t("empty")}</p>
       ) : (
         <>
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -132,14 +132,14 @@ export default async function RoadTestsIndexPage({ searchParams }: { searchParam
       {pressItems.length > 0 && (
         <section className="mt-12">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-xl font-semibold text-slate-900">{tPress("sectionTitle")}</h2>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{tPress("sectionTitle")}</h2>
             {pressCount > pressItems.length && (
-              <Link href="/essais/revue-de-presse" className="text-sm text-slate-600 underline hover:text-slate-900">
+              <Link href="/essais/revue-de-presse" className="text-sm text-slate-600 underline hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200">
                 {tPress("seeAll", { count: pressCount })}
               </Link>
             )}
           </div>
-          <p className="mt-1 text-xs text-slate-500">{tPress("disclaimer")}</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{tPress("disclaimer")}</p>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pressItems.map((item) => (
               <PressReviewCard key={item.id} item={item} locale={locale} />

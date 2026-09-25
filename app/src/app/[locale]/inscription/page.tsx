@@ -24,12 +24,12 @@ export default async function RegisterPage({
 
   return (
     <div className="mx-auto max-w-md px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("registerTitle")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("registerTitle")}</h1>
       {isGoogleLoginEnabled(process.env, SITE_URL) && <GoogleSignInButton locale={pickLoginLocale(locale)} />}
       <RegisterForm wilayas={wilayas} locale={locale} />
-      <p className="mt-6 text-sm text-slate-500">
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
         {t("hasAccount")}{" "}
-        <Link href="/connexion" className="text-slate-900 underline">
+        <Link href="/connexion" className="text-slate-900 dark:text-slate-100 underline">
           {t("goToLogin")}
         </Link>
       </p>

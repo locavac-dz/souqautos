@@ -35,16 +35,16 @@ export default async function BulkImportPage() {
   if (!account || !canManageProListings({ isOwner, permissions })) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="text-slate-600">{tPro("forbidden")}</p>
+        <p className="text-slate-600 dark:text-slate-300">{tPro("forbidden")}</p>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("title")}</h1>
-      <p className="text-sm text-slate-600 mb-4">{t("subtitle")}</p>
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-3 mb-6 text-xs text-slate-500">
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("title")}</h1>
+      <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{t("subtitle")}</p>
+      <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 mb-6 text-xs text-slate-500 dark:text-slate-400">
         <p className="font-medium mb-1">{t("columnsTitle")}</p>
         <p className="font-mono break-words">{t("columnsList")}</p>
       </div>

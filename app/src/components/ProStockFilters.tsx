@@ -62,15 +62,15 @@ export function ProStockFilters({
   return (
     <form
       onSubmit={submit}
-      className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3"
+      className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3"
     >
       {brands.length > 0 && (
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-slate-500">{t("brand")}</label>
+          <label className="text-xs text-slate-500 dark:text-slate-400">{t("brand")}</label>
           <select
             value={values.brandId ?? ""}
             onChange={(e) => set("brandId", e.target.value)}
-            className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm"
           >
             <option value="">{t("any")}</option>
             {brands.map((b) => (
@@ -83,12 +83,12 @@ export function ProStockFilters({
       )}
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-500">{t("yearRange")}</label>
+        <label className="text-xs text-slate-500 dark:text-slate-400">{t("yearRange")}</label>
         <div className="flex items-center gap-1">
           <select
             value={normalizeFilterValue(values.yearMin)}
             onChange={(e) => set("yearMin", e.target.value)}
-            className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm"
           >
             <option value="">{t("min")}</option>
             {optionsWithCurrent(YEAR_STEPS, values.yearMin, "desc").map((n) => (
@@ -97,11 +97,11 @@ export function ProStockFilters({
               </option>
             ))}
           </select>
-          <span className="text-xs text-slate-400">–</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">–</span>
           <select
             value={normalizeFilterValue(values.yearMax)}
             onChange={(e) => set("yearMax", e.target.value)}
-            className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm"
           >
             <option value="">{t("max")}</option>
             {optionsWithCurrent(YEAR_STEPS, values.yearMax, "desc").map((n) => (
@@ -114,12 +114,12 @@ export function ProStockFilters({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-500">{t("priceRange")}</label>
+        <label className="text-xs text-slate-500 dark:text-slate-400">{t("priceRange")}</label>
         <div className="flex items-center gap-1">
           <select
             value={normalizeFilterValue(values.priceMin)}
             onChange={(e) => set("priceMin", e.target.value)}
-            className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm"
           >
             <option value="">{t("min")}</option>
             {optionsWithCurrent(PRICE_STEPS_DZD, values.priceMin, "asc").map((n) => (
@@ -128,11 +128,11 @@ export function ProStockFilters({
               </option>
             ))}
           </select>
-          <span className="text-xs text-slate-400">–</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">–</span>
           <select
             value={normalizeFilterValue(values.priceMax)}
             onChange={(e) => set("priceMax", e.target.value)}
-            className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-200 px-2 py-1.5 text-sm"
           >
             <option value="">{t("max")}</option>
             {optionsWithCurrent(PRICE_STEPS_DZD, values.priceMax, "asc").map((n) => (
@@ -147,7 +147,7 @@ export function ProStockFilters({
       <div className="flex items-end gap-2">
         <button
           type="submit"
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+          className="rounded bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
         >
           {t("submit")}
         </button>
@@ -155,7 +155,7 @@ export function ProStockFilters({
           <button
             type="button"
             onClick={reset}
-            className="text-sm text-slate-500 hover:text-slate-900"
+            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
           >
             {tPro("stockFilterReset")}
           </button>

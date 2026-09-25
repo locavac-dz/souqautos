@@ -26,14 +26,14 @@ export default async function FavoritesPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("title")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("title")}</h1>
 
       {favorites.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-slate-500 mb-4">{t("empty")}</p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">{t("empty")}</p>
           <Link
             href="/recherche"
-            className="inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            className="inline-block rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
           >
             {t("browseListings")}
           </Link>
@@ -48,7 +48,7 @@ export default async function FavoritesPage() {
               <Link
                 key={listing.id}
                 href={`/annonce/${listing.id}`}
-                className="flex gap-4 rounded-lg border border-slate-200 p-3 hover:border-slate-300"
+                className="flex gap-4 rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:border-slate-300 dark:hover:border-slate-500"
               >
                 {listing.photos[0] ? (
                   <div className="relative h-20 w-28 shrink-0">
@@ -57,18 +57,18 @@ export default async function FavoritesPage() {
                       alt=""
                       fill
                       sizes="112px"
-                      className="rounded object-cover border border-slate-100"
+                      className="rounded object-cover border border-slate-100 dark:border-slate-700"
                     />
                   </div>
                 ) : (
-                  <div className="h-20 w-28 rounded bg-slate-100 shrink-0" />
+                  <div className="h-20 w-28 rounded bg-slate-100 dark:bg-slate-700 shrink-0" />
                 )}
                 <div className="flex-1">
-                  <p className="font-medium text-slate-900">{listing.title}</p>
-                  <p className="text-sm text-slate-500">
+                  <p className="font-medium text-slate-900 dark:text-slate-100">{listing.title}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     {brandLabel} {modelLabel} · {wilayaLabel}
                   </p>
-                  <p className="text-sm font-medium text-slate-900 mt-1">
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100 mt-1">
                     {listing.price.toLocaleString()} DA
                   </p>
                 </div>

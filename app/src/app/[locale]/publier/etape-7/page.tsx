@@ -90,7 +90,7 @@ export default function Step7Page() {
       </div>
 
       <div>
-        <label htmlFor="wizard-title" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="wizard-title" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("title")}
         </label>
         <input
@@ -100,12 +100,12 @@ export default function Step7Page() {
           value={data.title ?? ""}
           onChange={(e) => setData({ title: e.target.value })}
           maxLength={120}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         />
       </div>
 
       <div>
-        <label htmlFor="wizard-description" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="wizard-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("description")}
         </label>
         <textarea
@@ -115,7 +115,7 @@ export default function Step7Page() {
           onChange={(e) => setData({ description: e.target.value })}
           maxLength={5000}
           rows={6}
-          className="w-full rounded-md border border-slate-300 px-3 py-2"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         />
       </div>
 

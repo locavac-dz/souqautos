@@ -18,15 +18,15 @@ export default async function ResetPasswordPage({ params }: { params: Promise<{ 
     <div className="mx-auto max-w-md px-4 py-12">
       {usable ? (
         <>
-          <h1 className="mb-6 text-2xl font-semibold text-slate-900">{t("resetTitle")}</h1>
+          <h1 className="mb-6 text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("resetTitle")}</h1>
           <ResetPasswordForm token={token} />
         </>
       ) : (
         <div className="space-y-3">
-          <h1 className="text-2xl font-semibold text-slate-900">{t("invalidLinkTitle")}</h1>
-          <p className="text-sm text-slate-600">{t("invalidLinkBody")}</p>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("invalidLinkTitle")}</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-300">{t("invalidLinkBody")}</p>
           <p className="text-sm">
-            <Link href="/mot-de-passe-oublie" className="text-slate-900 underline">
+            <Link href="/mot-de-passe-oublie" className="text-slate-900 dark:text-slate-100 underline">
               {t("requestAnother")}
             </Link>
           </p>

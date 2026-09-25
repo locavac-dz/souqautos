@@ -72,25 +72,25 @@ export function ReportListingButton({
   }
 
   if (done) {
-    return <p className="text-xs text-slate-500">{t("alreadyReported")}</p>;
+    return <p className="text-xs text-slate-500 dark:text-slate-400">{t("alreadyReported")}</p>;
   }
 
   if (!open) {
     return (
-      <button type="button" onClick={handleOpen} className="text-xs text-slate-500 hover:text-red-600">
+      <button type="button" onClick={handleOpen} className="text-xs text-slate-500 dark:text-slate-400 hover:text-red-600">
         {t("reportListing")}
       </button>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-slate-200 p-3 space-y-2">
+    <form onSubmit={handleSubmit} className="rounded-md border border-slate-200 dark:border-slate-700 p-3 space-y-2">
       <label className="block">
-        <span className="text-xs text-slate-500">{t("reasonLabel")}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">{t("reasonLabel")}</span>
         <select
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         >
           {LISTING_REPORT_REASONS.map((r) => (
             <option key={r} value={r}>
@@ -100,24 +100,24 @@ export function ReportListingButton({
         </select>
       </label>
       <label className="block">
-        <span className="text-xs text-slate-500">{t("commentLabel")}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">{t("commentLabel")}</span>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           maxLength={500}
           rows={2}
-          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
         />
       </label>
       <div className="flex items-center gap-3">
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           {t("submit")}
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs text-slate-500 hover:text-slate-600">
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
           {t("cancel")}
         </button>
       </div>

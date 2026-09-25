@@ -28,7 +28,7 @@ export async function Pagination({
   return (
     <nav aria-label={t("paginationLabel")} className="mt-8 flex items-center justify-center gap-4">
       {page > 1 ? (
-        <Link href={hrefForPage(page - 1)} className="text-sm font-medium text-slate-900 hover:underline">
+        <Link href={hrefForPage(page - 1)} className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:underline">
           ← {t("previous")}
         </Link>
       ) : (
@@ -38,7 +38,7 @@ export async function Pagination({
       <span className="text-sm text-slate-500">{t("pageOf", { page, totalPages })}</span>
 
       {page < totalPages ? (
-        <Link href={hrefForPage(page + 1)} className="text-sm font-medium text-slate-900 hover:underline">
+        <Link href={hrefForPage(page + 1)} className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:underline">
           {t("next")} →
         </Link>
       ) : (

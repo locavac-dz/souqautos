@@ -132,18 +132,18 @@ export function PushToggle() {
   if (state === "loading") return null;
 
   return (
-    <section className="mb-6 rounded-lg border border-slate-200 p-4" aria-labelledby="push-title">
-      <h2 id="push-title" className="text-sm font-medium text-slate-900">
+    <section className="mb-6 rounded-lg border border-slate-200 dark:border-slate-700 p-4" aria-labelledby="push-title">
+      <h2 id="push-title" className="text-sm font-medium text-slate-900 dark:text-slate-100">
         {t("title")}
       </h2>
-      <p className="mt-1 text-xs text-slate-500">{t("help")}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("help")}</p>
 
       {state === "off" && (
         <button
           type="button"
           onClick={enable}
           disabled={pending}
-          className="mt-3 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          className="mt-3 rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
         >
           {t("enable")}
         </button>
@@ -152,7 +152,7 @@ export function PushToggle() {
       {state === "on" && (
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <span className="text-sm text-emerald-700">{t("statusOn")}</span>
-          <button type="button" onClick={sendTest} disabled={pending} className="text-sm text-slate-700 underline hover:text-slate-900 disabled:opacity-50">
+          <button type="button" onClick={sendTest} disabled={pending} className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50">
             {t("test")}
           </button>
           <button type="button" onClick={disable} disabled={pending} className="text-sm text-red-600 hover:underline disabled:opacity-50">
@@ -162,9 +162,9 @@ export function PushToggle() {
       )}
 
       {state === "denied" && <p className="mt-3 text-sm text-amber-700">{t("denied")}</p>}
-      {state === "unsupported" && <p className="mt-3 text-sm text-slate-600">{t("unsupported")}</p>}
-      {state === "unavailable" && <p className="mt-3 text-sm text-slate-600">{t("unavailable")}</p>}
-      {state === "no-worker" && <p className="mt-3 text-sm text-slate-600">{t("noWorker")}</p>}
+      {state === "unsupported" && <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{t("unsupported")}</p>}
+      {state === "unavailable" && <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{t("unavailable")}</p>}
+      {state === "no-worker" && <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{t("noWorker")}</p>}
 
       {message && (
         <p role="status" className={`mt-2 text-sm ${message.kind === "ok" ? "text-emerald-700" : "text-red-600"}`}>

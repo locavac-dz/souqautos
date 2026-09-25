@@ -30,18 +30,18 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("navUsers")}</h1>
-      <div className="rounded-lg border border-slate-200 divide-y divide-slate-100">
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("navUsers")}</h1>
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700">
         {users.map((user) => {
           const locked = isAccountLocked(user.lockedUntil, now);
           return (
             <div key={user.id} className="flex items-center justify-between px-4 py-3 text-sm">
               <div>
-                <p className="font-medium text-slate-900">{user.profile?.displayName ?? user.email}</p>
-                <p className="text-slate-500 text-xs">{user.email}</p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">{user.profile?.displayName ?? user.email}</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">{user.email}</p>
                 {user.totpEnabledAt && <p className="mt-0.5 text-xs text-emerald-700">{tTwoFactor("adminColumn")} : {tTwoFactor("adminEnabled")}</p>}
                 {user.deletedAt ? (
-                  <p className="mt-0.5 text-xs text-slate-500">{t("deletedLabel")}</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{t("deletedLabel")}</p>
                 ) : (
                   <>
                     {user.suspendedAt && (
@@ -56,7 +56,7 @@ export default async function AdminUsersPage() {
               </div>
               <div className="flex items-center gap-3">
                 {user.deletedAt ? (
-                  <span className="text-slate-500">{t(ROLE_KEY[user.role])}</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t(ROLE_KEY[user.role])}</span>
                 ) : (
                   <>
                     {canChangeRoles ? (
@@ -67,7 +67,7 @@ export default async function AdminUsersPage() {
                         label={t("roleSelectLabel", { name: user.profile?.displayName ?? user.email })}
                       />
                     ) : (
-                      <span className="text-slate-600">{t(ROLE_KEY[user.role])}</span>
+                      <span className="text-slate-600 dark:text-slate-300">{t(ROLE_KEY[user.role])}</span>
                     )}
                     {canSuspend && locked && <UnlockUserButton userId={user.id} />}
                     {canChangeRoles && user.totpEnabledAt && user.id !== currentUser?.id && <ResetTwoFactorButton userId={user.id} />}

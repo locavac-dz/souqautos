@@ -293,20 +293,20 @@ export default async function ProShowcasePage({
               alt=""
               fill
               sizes="56px"
-              className="rounded-full object-cover border border-slate-200"
+              className="rounded-full object-cover border border-slate-200 dark:border-slate-700"
             />
           </div>
         )}
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-semibold text-slate-900">{account.nomCommercial}</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{account.nomCommercial}</h1>
           {account.badgeVerifie && <span className="text-emerald-700 text-sm">{t("verifiedBadge")}</span>}
         </div>
       </div>
-      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
         {account.categoryPro && <span>{t(`categoryPro_${account.categoryPro}`)}</span>}
         {wilayaLabel && <span>{wilayaLabel}</span>}
         {openNow !== null && (
-          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${openNow ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${openNow ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
             {openNow ? t("openNow") : t("closedNow")}
           </span>
         )}
@@ -320,7 +320,7 @@ export default async function ProShowcasePage({
           />
         )}
         {followerCount > 0 && (
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {t("followersCount", { count: followerCount })}
           </span>
         )}
@@ -330,9 +330,9 @@ export default async function ProShowcasePage({
         {account.phone && (
           <a
             href={`tel:${account.phone}`}
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-3 py-1 text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 text-slate-400 dark:text-slate-500">
               <path fillRule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z" clipRule="evenodd" />
             </svg>
             {account.phone}
@@ -343,9 +343,9 @@ export default async function ProShowcasePage({
             href={account.website}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-3 py-1 text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 text-slate-400 dark:text-slate-500">
               <path d="M10 1a9 9 0 1 0 0 18A9 9 0 0 0 10 1Zm-.75 13.89a7.5 7.5 0 0 1-5.678-9.825C4.08 7.47 5.636 9 7.5 9h.25v.75A1.75 1.75 0 0 0 9.5 11.5h.25v2.89a.75.75 0 0 1-.5.5Zm5.474-2.4A7.48 7.48 0 0 1 12.5 14v-.5A1.5 1.5 0 0 0 11 12h-.5v-1a.75.75 0 0 0-.75-.75H8a.75.75 0 0 0 0 1.5h.75V13H8a.25.25 0 0 1-.25-.25V9A.75.75 0 0 0 7 8.25H5.37A7.5 7.5 0 0 1 14.724 12.49Z" />
             </svg>
             {t("websiteLink")}
@@ -354,7 +354,7 @@ export default async function ProShowcasePage({
       </div>
       {schedule && (
         <div className="mt-4">
-          <p className="text-sm font-medium text-slate-700 mb-1.5">{t("horairesSemaineTitle")}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{t("horairesSemaineTitle")}</p>
           <div className="space-y-0.5">
             {DAYS.map((day) => {
               const entry = schedule[day];
@@ -362,15 +362,15 @@ export default async function ProShowcasePage({
               return (
                 <div
                   key={day}
-                  className={`flex items-center gap-3 text-sm rounded px-1.5 py-0.5 ${isToday ? "bg-slate-50 font-medium" : ""}`}
+                  className={`flex items-center gap-3 text-sm rounded px-1.5 py-0.5 ${isToday ? "bg-slate-50 dark:bg-slate-800 font-medium" : ""}`}
                 >
-                  <span className={`w-20 shrink-0 ${isToday ? "text-slate-900" : "text-slate-600"}`}>{t(`day_${day}`)}</span>
+                  <span className={`w-20 shrink-0 ${isToday ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}`}>{t(`day_${day}`)}</span>
                   {entry.open ? (
-                    <span className={isToday ? "text-slate-900" : "text-slate-600"}>
+                    <span className={isToday ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-300"}>
                       {entry.debut} – {entry.fin}
                     </span>
                   ) : (
-                    <span className="text-slate-400">{t("dayClosed")}</span>
+                    <span className="text-slate-400 dark:text-slate-500">{t("dayClosed")}</span>
                   )}
                 </div>
               );
@@ -379,9 +379,9 @@ export default async function ProShowcasePage({
         </div>
       )}
       {!schedule && account.horaires && (
-        <p className="text-sm text-slate-600 mt-2">{account.horaires}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">{account.horaires}</p>
       )}
-      {account.presentation && <p className="text-sm text-slate-700 mt-4 whitespace-pre-wrap">{account.presentation}</p>}
+      {account.presentation && <p className="text-sm text-slate-700 dark:text-slate-300 mt-4 whitespace-pre-wrap">{account.presentation}</p>}
 
       <p className="mt-4 text-sm">
         {count > 0 ? (
@@ -389,27 +389,27 @@ export default async function ProShowcasePage({
             {"★".repeat(Math.round(average))} {tReview("averageRating", { average, count })}
           </span>
         ) : (
-          <span className="text-slate-500">{tReview("noReviews")}</span>
+          <span className="text-slate-500 dark:text-slate-400">{tReview("noReviews")}</span>
         )}
       </p>
 
       <Link
         href={`/vendeur/${account.userId}`}
-        className="inline-block mt-2 text-sm text-slate-500 hover:underline"
+        className="inline-block mt-2 text-sm text-slate-500 dark:text-slate-400 hover:underline"
       >
         {t("viewIndividualReputation")}
       </Link>
 
       <div className="grid sm:grid-cols-3 gap-8 mt-8">
         <div className="sm:col-span-2">
-          <h2 className="text-lg font-medium text-slate-900 mb-3">{t("listingsTitle")}</h2>
+          <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-3">{t("listingsTitle")}</h2>
           <ProStockFilters
             accountId={id}
             brands={stockBrands.filter((r) => r.brand).map((r) => ({ id: r.brandId!, name: r.brand!.name }))}
             initialValues={stockFilterValues}
           />
           {listings.length === 0 ? (
-            <p className="text-slate-500 text-sm">{t("noListings")}</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">{t("noListings")}</p>
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               {listings.map((listing, index) => (
@@ -428,13 +428,13 @@ export default async function ProShowcasePage({
 
           {soldListings.length > 0 && (
             <div className="mt-8">
-              <h2 className="text-lg font-medium text-slate-900 mb-3">{t("soldListingsTitle")}</h2>
+              <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-3">{t("soldListingsTitle")}</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {soldListings.map((listing) => {
                   const brandName = listing.brand?.name ?? listing.brandFreeText ?? "";
                   const modelName = listing.model?.name ?? listing.modelFreeText ?? "";
                   return (
-                    <div key={listing.id} className="rounded-lg border border-slate-200 overflow-hidden">
+                    <div key={listing.id} className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                       {listing.photos[0] ? (
                         <div className="relative h-24">
                           <Image
@@ -449,15 +449,15 @@ export default async function ProShowcasePage({
                           </span>
                         </div>
                       ) : (
-                        <div className="flex h-24 items-center justify-center bg-slate-100 text-xs text-slate-400">
+                        <div className="flex h-24 items-center justify-center bg-slate-100 dark:bg-slate-700 text-xs text-slate-400 dark:text-slate-500">
                           <span className="rounded bg-emerald-700 px-1.5 py-0.5 text-[10px] font-medium text-white">{t("soldBadge")}</span>
                         </div>
                       )}
                       <div className="p-2">
-                        <p className="truncate text-xs font-medium text-slate-700">
+                        <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-300">
                           {brandName} {modelName} {listing.year}
                         </p>
-                        <p className="text-xs text-slate-500">{listing.price.toLocaleString()} DA</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{listing.price.toLocaleString()} DA</p>
                       </div>
                     </div>
                   );
@@ -469,16 +469,16 @@ export default async function ProShowcasePage({
 
         <div className="sm:col-span-1 space-y-4">
           {canReview && <ReviewForm endpoint={`/api/pro/accounts/${id}/reviews`} />}
-          {alreadyReviewed && <p className="text-sm text-slate-500">{tReview("alreadyReviewed")}</p>}
+          {alreadyReviewed && <p className="text-sm text-slate-500 dark:text-slate-400">{tReview("alreadyReviewed")}</p>}
 
           <div>
-            <h2 className="text-lg font-medium text-slate-900 mb-3">{t("companyReviewsTitle")}</h2>
+            <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-3">{t("companyReviewsTitle")}</h2>
             {reviews.length === 0 ? (
-              <p className="text-slate-500 text-sm">{tReview("noReviews")}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{tReview("noReviews")}</p>
             ) : (
               <div className="space-y-3">
                 {reviews.map((review) => (
-                  <div key={review.id} className="rounded-md border border-slate-200 p-3">
+                  <div key={review.id} className="rounded-md border border-slate-200 dark:border-slate-700 p-3">
                     <div className="flex items-center justify-between">
                       <p className="text-amber-600 text-sm">
                         {"★".repeat(review.rating)}
@@ -486,8 +486,8 @@ export default async function ProShowcasePage({
                       </p>
                       {currentUser && isStaff(currentUser.role) && <DeleteReviewButton reviewId={review.id} />}
                     </div>
-                    {review.comment && <p className="text-sm text-slate-700 mt-1">{review.comment}</p>}
-                    <p className="text-xs text-slate-500 mt-1">
+                    {review.comment && <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{review.comment}</p>}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       {tReview("byAuthor", {
                         name: review.author.profile?.displayName ?? review.author.email,
                       })}{" "}

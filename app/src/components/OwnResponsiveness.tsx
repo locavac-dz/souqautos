@@ -19,12 +19,12 @@ export async function OwnResponsiveness({ responsiveness }: { responsiveness: Re
   };
 
   return (
-    <section aria-labelledby="own-responsiveness-title" className="mt-6 rounded-lg border border-slate-200 p-4">
-      <h2 id="own-responsiveness-title" className="text-base font-medium text-slate-900">
+    <section aria-labelledby="own-responsiveness-title" className="mt-6 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+      <h2 id="own-responsiveness-title" className="text-base font-medium text-slate-900 dark:text-slate-100">
         {t("ownTitle")}
       </h2>
-      <p className="mt-1 text-sm text-slate-600">{t("ownIntro")}</p>
-      <p className="mt-3 text-sm text-slate-900">
+      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t("ownIntro")}</p>
+      <p className="mt-3 text-sm text-slate-900 dark:text-slate-100">
         {responsiveness.eligibleConversations === 0 || responsiveness.medianReplyMinutes === null
           ? t("ownNone")
           : t("ownStats", {
@@ -36,7 +36,7 @@ export async function OwnResponsiveness({ responsiveness }: { responsiveness: Re
       {badge ? (
         <p className="mt-2 text-sm font-medium text-emerald-800">{t("ownBadgeEarned", { badge: t(BADGE_KEY[badge]) })}</p>
       ) : (
-        gap && <p className="mt-2 text-sm text-slate-700">{t(GAP_KEY[gap])}</p>
+        gap && <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{t(GAP_KEY[gap])}</p>
       )}
     </section>
   );

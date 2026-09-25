@@ -25,8 +25,8 @@ export async function PressReviewCard({ item, locale }: { item: PressReviewCardI
   const vehicle = [item.brand?.name, item.model?.name].filter(Boolean).join(" ");
 
   return (
-    <article className="flex flex-col rounded-lg border border-slate-200 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+    <article className="flex flex-col rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {item.sourceName}
         {item.sourcePublishedAt && (
           <span className="font-normal normal-case tracking-normal">
@@ -35,26 +35,26 @@ export async function PressReviewCard({ item, locale }: { item: PressReviewCardI
           </span>
         )}
       </p>
-      <h3 className="mt-1 text-base font-medium text-slate-900" dir="auto">
+      <h3 className="mt-1 text-base font-medium text-slate-900 dark:text-slate-100" dir="auto">
         <a
           href={item.url}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          className="underline decoration-slate-300 underline-offset-2 hover:decoration-slate-700"
+          className="underline decoration-slate-300 underline-offset-2 hover:decoration-slate-700 dark:decoration-slate-600 dark:hover:decoration-slate-400"
         >
           {item.title}
         </a>
         <span className="sr-only"> {t("opensInNewTab")}</span>
       </h3>
-      <p className="mt-2 text-sm text-slate-600">{isAr ? item.noteAr : item.noteFr}</p>
-      <p className="mt-auto pt-3 text-xs text-slate-500">
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{isAr ? item.noteAr : item.noteFr}</p>
+      <p className="mt-auto pt-3 text-xs text-slate-500 dark:text-slate-400">
         {t("readOn", { source: hostLabel(item.url) })}
         {vehicle && item.brand && item.model && (
           <>
             {" · "}
             <Link
               href={`/voitures/${item.brand.slug}/${item.model.slug}`}
-              className="underline hover:text-slate-700"
+              className="underline hover:text-slate-700 dark:hover:text-slate-200"
             >
               {vehicle}
             </Link>

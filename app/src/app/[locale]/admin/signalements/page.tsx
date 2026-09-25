@@ -34,19 +34,19 @@ export default async function AdminReportsPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-medium text-slate-900 mb-4">
+      <h1 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
         {t("openReports")} ({reports.length})
       </h1>
       {reports.length === 0 ? (
-        <p className="text-slate-500 text-sm">{t("noOpenReports")}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{t("noOpenReports")}</p>
       ) : (
         <div className="space-y-3">
           {reports.map((report) => (
-            <div key={report.id} className="flex gap-4 rounded-lg border border-slate-200 p-3">
+            <div key={report.id} className="flex gap-4 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
               {report.listing ? (
                 <Thumbnail path={report.listing.photos[0]?.path} title={report.listing.title} />
               ) : (
-                <div className="h-20 w-28 rounded bg-slate-100 shrink-0 flex items-center justify-center text-xs text-slate-500">
+                <div className="h-20 w-28 rounded bg-slate-100 dark:bg-slate-700 shrink-0 flex items-center justify-center text-xs text-slate-500 dark:text-slate-400">
                   {report.ownerReview ? t("ownerReviewReportBadge") : t("userReportBadge")}
                 </div>
               )}
@@ -54,7 +54,7 @@ export default async function AdminReportsPage() {
                 {report.listing ? (
                   <Link
                     href={`/annonce/${report.listing.id}`}
-                    className="font-medium text-slate-900 hover:underline"
+                    className="font-medium text-slate-900 dark:text-slate-100 hover:underline"
                   >
                     {report.listing.title}
                   </Link>
@@ -62,11 +62,11 @@ export default async function AdminReportsPage() {
                   <>
                     <Link
                       href={`/voitures/${report.ownerReview.model.brand.slug}/${report.ownerReview.model.slug}`}
-                      className="font-medium text-slate-900 hover:underline"
+                      className="font-medium text-slate-900 dark:text-slate-100 hover:underline"
                     >
                       {report.ownerReview.model.brand.name} {report.ownerReview.model.name}
                     </Link>
-                    <p className="mt-1 whitespace-pre-line rounded bg-slate-50 p-2 text-sm text-slate-600" dir="auto">
+                    <p className="mt-1 whitespace-pre-line rounded bg-slate-50 dark:bg-slate-800 p-2 text-sm text-slate-600 dark:text-slate-300" dir="auto">
                       {report.ownerReview.comment}
                     </p>
                   </>
@@ -74,15 +74,15 @@ export default async function AdminReportsPage() {
                   report.reportedUser && (
                     <Link
                       href={`/vendeur/${report.reportedUser.id}`}
-                      className="font-medium text-slate-900 hover:underline"
+                      className="font-medium text-slate-900 dark:text-slate-100 hover:underline"
                     >
                       {report.reportedUser.profile?.displayName ?? report.reportedUser.email}
                     </Link>
                   )
                 )}
-                <p className="text-sm text-slate-700 mt-1">{tReport(REASON_KEY[report.reason])}</p>
-                {report.comment && <p className="text-sm text-slate-500 mt-0.5">{report.comment}</p>}
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{tReport(REASON_KEY[report.reason])}</p>
+                {report.comment && <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{report.comment}</p>}
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t("reportedBy")}: {report.author.profile?.displayName ?? report.author.email} ·{" "}
                   {t("reportedOn", {
                     date: new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
@@ -103,10 +103,10 @@ export default async function AdminReportsPage() {
 }
 
 function Thumbnail({ path, title }: { path?: string; title: string }) {
-  if (!path) return <div className="h-20 w-28 rounded bg-slate-100 shrink-0" />;
+  if (!path) return <div className="h-20 w-28 rounded bg-slate-100 dark:bg-slate-700 shrink-0" />;
   return (
     <div className="relative h-20 w-28 shrink-0">
-      <Image src={path} alt={title} fill sizes="112px" className="rounded object-cover border border-slate-100" />
+      <Image src={path} alt={title} fill sizes="112px" className="rounded object-cover border border-slate-100 dark:border-slate-700" />
     </div>
   );
 }

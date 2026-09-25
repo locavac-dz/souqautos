@@ -67,7 +67,7 @@ export function ContactSellerButton({
         <button
           type="button"
           onClick={handleOpen}
-          className="w-full rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
           {t("contactSeller")}
         </button>
@@ -76,8 +76,8 @@ export function ContactSellerButton({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-3">
-      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{t("templatePanelTitle")}</p>
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t("templatePanelTitle")}</p>
 
       {/* Quick-select chips */}
       <div className="flex flex-wrap gap-2">
@@ -89,7 +89,7 @@ export function ContactSellerButton({
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
               selected === key
                 ? "border-emerald-700 bg-emerald-700 text-white"
-                : "border-slate-300 bg-white text-slate-600 hover:border-emerald-400 hover:text-emerald-700"
+                : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400 hover:text-emerald-700"
             }`}
           >
             {t(`template_${key}_label`)}
@@ -103,7 +103,7 @@ export function ContactSellerButton({
         onChange={(e) => setText(e.target.value)}
         maxLength={500}
         rows={3}
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-slate-200 px-3 py-2 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
       />
 
       {error && <p className="text-xs text-red-600">{error}</p>}
@@ -112,7 +112,7 @@ export function ContactSellerButton({
         <button
           type="button"
           onClick={() => { setOpen(false); setError(null); }}
-          className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200"
+          className="rounded-md px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
         >
           {t("cancelMessage")}
         </button>

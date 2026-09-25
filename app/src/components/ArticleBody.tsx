@@ -14,11 +14,11 @@ import Markdown, { type Components } from "react-markdown";
 //  - Un `#` (titre de niveau 1) est ramené au niveau 2 : la page a déjà son
 //    unique <h1>, le titre de l'essai.
 function Heading2({ children }: { children?: React.ReactNode }) {
-  return <h2 className="mt-8 text-xl font-semibold text-slate-900">{children}</h2>;
+  return <h2 className="mt-8 text-xl font-semibold text-slate-900 dark:text-slate-100">{children}</h2>;
 }
 
 function Heading3({ children }: { children?: React.ReactNode }) {
-  return <h3 className="mt-6 text-lg font-semibold text-slate-900">{children}</h3>;
+  return <h3 className="mt-6 text-lg font-semibold text-slate-900 dark:text-slate-100">{children}</h3>;
 }
 
 const components: Components = {
@@ -33,9 +33,9 @@ const components: Components = {
   ul: ({ children }) => <ul className="list-disc space-y-1 ps-6">{children}</ul>,
   ol: ({ children }) => <ol className="list-decimal space-y-1 ps-6">{children}</ol>,
   blockquote: ({ children }) => (
-    <blockquote className="border-s-4 border-slate-300 ps-4 text-slate-600">{children}</blockquote>
+    <blockquote className="border-s-4 border-slate-300 dark:border-slate-600 ps-4 text-slate-600 dark:text-slate-300">{children}</blockquote>
   ),
-  hr: () => <hr className="border-slate-200" />,
+  hr: () => <hr className="border-slate-200 dark:border-slate-700" />,
   a: ({ href, children }) => {
     // Adresse écartée par le filtre (`javascript:`…) : le texte reste, sans lien.
     if (!href) return <>{children}</>;
@@ -54,7 +54,7 @@ const components: Components = {
 
 export function ArticleBody({ content }: { content: string }) {
   return (
-    <div className="mt-8 space-y-4 text-sm leading-relaxed text-slate-700">
+    <div className="mt-8 space-y-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
       <Markdown skipHtml disallowedElements={["img"]} components={components}>
         {content}
       </Markdown>

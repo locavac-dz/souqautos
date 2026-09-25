@@ -99,7 +99,7 @@ export default function ComparePage() {
     {
       label: t("seller"),
       render: (l) => (
-        <Link href={`/vendeur/${l.sellerId}`} className="text-slate-900 hover:underline">
+        <Link href={`/vendeur/${l.sellerId}`} className="text-slate-900 dark:text-slate-100 hover:underline">
           {l.seller.profile?.displayName ?? l.seller.email}
         </Link>
       ),
@@ -135,9 +135,9 @@ export default function ComparePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 pb-24">
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("title")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("title")}</h1>
 
-      {ids.length === 0 && <p className="text-slate-500">{t("empty")}</p>}
+      {ids.length === 0 && <p className="text-slate-500 dark:text-slate-400">{t("empty")}</p>}
 
       {listings.length > 0 && (
         <div className="overflow-x-auto">
@@ -150,7 +150,7 @@ export default function ComparePage() {
                   const modelLabel = l.model?.name ?? l.modelFreeText ?? "";
                   return (
                     <th key={l.id} className="p-2 align-bottom">
-                      <div className="relative aspect-[4/3] rounded-md bg-slate-100 overflow-hidden mb-2">
+                      <div className="relative aspect-[4/3] rounded-md bg-slate-100 dark:bg-slate-700 overflow-hidden mb-2">
                         {l.photos[0] && (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={l.photos[0].path} alt="" className="h-full w-full object-cover" />
@@ -158,11 +158,11 @@ export default function ComparePage() {
                       </div>
                       <Link
                         href={`/annonce/${l.id}`}
-                        className="block font-medium text-slate-900 text-sm text-left rtl:text-right line-clamp-2"
+                        className="block font-medium text-slate-900 dark:text-slate-100 text-sm text-left rtl:text-right line-clamp-2"
                       >
                         {l.title}
                       </Link>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         {brandLabel} {modelLabel}
                       </p>
                       <button
@@ -179,10 +179,10 @@ export default function ComparePage() {
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.label} className="border-t border-slate-100">
-                  <td className="py-2 pr-4 text-sm text-slate-500">{row.label}</td>
+                <tr key={row.label} className="border-t border-slate-100 dark:border-slate-700">
+                  <td className="py-2 pr-4 text-sm text-slate-500 dark:text-slate-400">{row.label}</td>
                   {listings.map((l) => (
-                    <td key={l.id} className="py-2 px-2 text-sm text-slate-900 text-center">
+                    <td key={l.id} className="py-2 px-2 text-sm text-slate-900 dark:text-slate-100 text-center">
                       {row.render(l)}
                     </td>
                   ))}
@@ -194,22 +194,22 @@ export default function ComparePage() {
       )}
 
       {listings.length >= 2 && (
-        <div className="mt-8 rounded-lg border border-slate-200 p-4 max-w-2xl">
+        <div className="mt-8 rounded-lg border border-slate-200 dark:border-slate-700 p-4 max-w-2xl">
           {!currentSummary && !summaryPending && (
             <button
               type="button"
               onClick={requestSummary}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
             >
               {t("summaryButton")}
             </button>
           )}
-          {summaryPending && <p className="text-sm text-slate-500">{t("summaryPending")}</p>}
+          {summaryPending && <p className="text-sm text-slate-500 dark:text-slate-400">{t("summaryPending")}</p>}
           {summaryError && <p className="text-sm text-red-600">{summaryError}</p>}
           {currentSummary && (
             <div>
-              <h2 className="text-sm font-medium text-slate-900 mb-2">{t("summaryTitle")}</h2>
-              <ul className="space-y-1 text-sm text-slate-700 list-disc pl-4 rtl:pl-0 rtl:pr-4">
+              <h2 className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">{t("summaryTitle")}</h2>
+              <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-300 list-disc pl-4 rtl:pl-0 rtl:pr-4">
                 {currentSummary.highlights.cheapestId && (
                   <li>
                     {t("summaryCheapest", { title: titleForId(currentSummary.highlights.cheapestId) })}
@@ -235,11 +235,11 @@ export default function ComparePage() {
                 )}
               </ul>
               {currentSummary.narrative && (
-                <p className="mt-3 text-sm text-slate-600 border-t border-slate-100 pt-3">
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-700 pt-3">
                   {currentSummary.narrative}
                 </p>
               )}
-              <p className="mt-3 text-xs text-slate-500">{t("summaryDisclaimer")}</p>
+              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{t("summaryDisclaimer")}</p>
             </div>
           )}
         </div>

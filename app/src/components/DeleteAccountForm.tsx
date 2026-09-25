@@ -48,7 +48,7 @@ export function DeleteAccountForm({ hasPassword = true }: { hasPassword?: boolea
 
   if (done) {
     return (
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+      <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm text-slate-700 dark:text-slate-300">
         {t("deleteAccountDone")}
       </div>
     );

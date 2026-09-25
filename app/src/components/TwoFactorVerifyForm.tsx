@@ -46,9 +46,9 @@ export function TwoFactorVerifyForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-slate-600">{recovery ? t("verifyRecoveryIntro") : t("verifyIntro")}</p>
+      <p className="text-sm text-slate-600 dark:text-slate-300">{recovery ? t("verifyRecoveryIntro") : t("verifyIntro")}</p>
       <div>
-        <label htmlFor="two-factor-code" className="block text-sm font-medium text-slate-700 mb-1">
+        <label htmlFor="two-factor-code" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {recovery ? t("recoveryLabel") : t("codeLabel")}
         </label>
         <input
@@ -64,7 +64,7 @@ export function TwoFactorVerifyForm() {
           dir="ltr"
           value={code}
           onChange={(event) => setCode(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono tracking-widest"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 font-mono tracking-widest"
         />
       </div>
 
@@ -75,11 +75,11 @@ export function TwoFactorVerifyForm() {
       )}
 
       {expired ? (
-        <Link href="/connexion" className="block w-full rounded-md bg-slate-900 px-4 py-2.5 text-center font-medium text-white hover:bg-slate-700">
+        <Link href="/connexion" className="block w-full rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2.5 text-center font-medium text-white hover:bg-slate-700">
           {t("backToLogin")}
         </Link>
       ) : (
-        <button type="submit" disabled={pending} className="w-full rounded-md bg-slate-900 px-4 py-2.5 font-medium text-white hover:bg-slate-700 disabled:opacity-60">
+        <button type="submit" disabled={pending} className="w-full rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2.5 font-medium text-white hover:bg-slate-700 disabled:opacity-60">
           {pending ? t("verifying") : t("verifyButton")}
         </button>
       )}
@@ -92,11 +92,11 @@ export function TwoFactorVerifyForm() {
             setCode("");
             setError(null);
           }}
-          className="text-slate-600 underline hover:text-slate-900"
+          className="text-slate-600 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100"
         >
           {recovery ? t("useApp") : t("useRecovery")}
         </button>
-        <Link href="/connexion" className="text-slate-600 underline hover:text-slate-900">
+        <Link href="/connexion" className="text-slate-600 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
           {t("backToLogin")}
         </Link>
       </div>

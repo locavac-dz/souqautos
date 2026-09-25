@@ -57,16 +57,16 @@ export default async function ConversationPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <Link href="/compte/messages" className="text-sm text-slate-500 hover:text-slate-700">
+      <Link href="/compte/messages" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300">
         ← {t("backToInbox")}
       </Link>
 
-      <h1 className="text-2xl font-semibold text-slate-900 mt-2">
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mt-2">
         {t("withUser", { name: otherUser.profile?.displayName ?? otherUser.email })}
       </h1>
       <Link
         href={`/annonce/${conversation.listingId}`}
-        className="text-sm text-slate-500 hover:underline"
+        className="text-sm text-slate-500 dark:text-slate-400 hover:underline"
       >
         {t("aboutListing", { title: conversation.listing.title })}
       </Link>

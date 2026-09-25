@@ -73,7 +73,7 @@ function toDatetimeLocal(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-const inputClass = "w-full rounded-md border border-slate-300 px-3 py-2";
+const inputClass = "w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2";
 
 export function BlogArticleForm({
   kind = "ARTICLE",
@@ -255,7 +255,7 @@ export function BlogArticleForm({
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="titleFr" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="titleFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("titleFrLabel")}
           </label>
           <input
@@ -268,7 +268,7 @@ export function BlogArticleForm({
           />
         </div>
         <div>
-          <label htmlFor="titleAr" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="titleAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("titleArLabel")}
           </label>
           <input
@@ -285,7 +285,7 @@ export function BlogArticleForm({
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="excerptFr" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="excerptFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("excerptFrLabel")}
           </label>
           <textarea
@@ -298,7 +298,7 @@ export function BlogArticleForm({
           />
         </div>
         <div>
-          <label htmlFor="excerptAr" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="excerptAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("excerptArLabel")}
           </label>
           <textarea
@@ -314,18 +314,18 @@ export function BlogArticleForm({
       </div>
 
       {(isEssai || isGuide || kind === "ARTICLE") && (
-        <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
-          <legend className="px-1 text-sm font-medium text-slate-900">{tRt("coverTitle")}</legend>
+        <fieldset className="space-y-2 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{tRt("coverTitle")}</legend>
           <div className="flex items-center gap-4">
             {coverUrl ? (
               <div className="relative aspect-video w-40 shrink-0">
-                <Image src={coverUrl} alt="" fill sizes="160px" className="rounded-md border border-slate-200 object-cover" />
+                <Image src={coverUrl} alt="" fill sizes="160px" className="rounded-md border border-slate-200 dark:border-slate-700 object-cover" />
               </div>
             ) : (
-              <div className="aspect-video w-40 shrink-0 rounded-md border border-slate-200 bg-slate-100" />
+              <div className="aspect-video w-40 shrink-0 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700" />
             )}
             <div className="flex flex-col items-start gap-1">
-              <label className="cursor-pointer text-sm text-slate-700 underline hover:text-slate-900">
+              <label className="cursor-pointer text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100">
                 {coverPending ? tRt("coverUploading") : coverUrl ? tRt("coverReplace") : tRt("coverChange")}
                 <input
                   type="file"
@@ -347,17 +347,17 @@ export function BlogArticleForm({
               )}
             </div>
           </div>
-          <p className="text-xs text-slate-500">{tRt("coverHelp")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{tRt("coverHelp")}</p>
           {coverError && <p className="text-sm text-red-600">{coverError}</p>}
         </fieldset>
       )}
 
       {isGuide && (
-        <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4">
-          <legend className="px-1 text-sm font-medium text-slate-900">{tG("sectionModel")}</legend>
+        <fieldset className="space-y-4 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{tG("sectionModel")}</legend>
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="gBrand" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="gBrand" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tG("brandLabel")}
               </label>
               <select
@@ -368,7 +368,7 @@ export function BlogArticleForm({
                   setModelId("");
                   setGenerationId("");
                 }}
-                className={`${inputClass} bg-white`}
+                className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200`}
               >
                 <option value="">{tG("chooseOption")}</option>
                 {brands.map((b) => (
@@ -379,7 +379,7 @@ export function BlogArticleForm({
               </select>
             </div>
             <div>
-              <label htmlFor="gModel" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="gModel" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tG("modelLabel")}
               </label>
               <select
@@ -390,7 +390,7 @@ export function BlogArticleForm({
                   setModelId(e.target.value);
                   setGenerationId("");
                 }}
-                className={`${inputClass} bg-white disabled:bg-slate-50`}
+                className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200 disabled:bg-slate-50 dark:disabled:bg-slate-700`}
               >
                 <option value="">{tG("generalOption")}</option>
                 {models.map((m) => (
@@ -401,7 +401,7 @@ export function BlogArticleForm({
               </select>
             </div>
             <div>
-              <label htmlFor="gGeneration" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="gGeneration" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tG("generationLabel")}
               </label>
               <select
@@ -409,7 +409,7 @@ export function BlogArticleForm({
                 value={generationId}
                 disabled={!modelId || generations.length === 0}
                 onChange={(e) => setGenerationId(e.target.value)}
-                className={`${inputClass} bg-white disabled:bg-slate-50`}
+                className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200 disabled:bg-slate-50 dark:disabled:bg-slate-700`}
               >
                 <option value="">{tG("noneOption")}</option>
                 {generations.map((g) => (
@@ -420,48 +420,48 @@ export function BlogArticleForm({
               </select>
             </div>
           </div>
-          <p className="text-xs text-slate-500 -mt-2">{tG("modelHelp")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{tG("modelHelp")}</p>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="gChecklistFr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="gChecklistFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tG("checklistFrLabel")}
               </label>
               <textarea id="gChecklistFr" value={checklistFr} onChange={(e) => setChecklistFr(e.target.value)} rows={6} className={inputClass} />
             </div>
             <div>
-              <label htmlFor="gChecklistAr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="gChecklistAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tG("checklistArLabel")}
               </label>
               <textarea id="gChecklistAr" dir="rtl" value={checklistAr} onChange={(e) => setChecklistAr(e.target.value)} rows={6} className={inputClass} />
             </div>
           </div>
-          <p className="text-xs text-slate-500 -mt-2">{tG("checklistHelp")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{tG("checklistHelp")}</p>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="gAdviceFr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="gAdviceFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tG("adviceFrLabel")}
               </label>
               <textarea id="gAdviceFr" value={adviceFr} onChange={(e) => setAdviceFr(e.target.value)} maxLength={400} rows={3} className={inputClass} />
             </div>
             <div>
-              <label htmlFor="gAdviceAr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="gAdviceAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tG("adviceArLabel")}
               </label>
               <textarea id="gAdviceAr" dir="rtl" value={adviceAr} onChange={(e) => setAdviceAr(e.target.value)} maxLength={400} rows={3} className={inputClass} />
             </div>
           </div>
-          <p className="text-xs text-slate-500 -mt-2">{tG("adviceHelp")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{tG("adviceHelp")}</p>
         </fieldset>
       )}
 
       {isEssai && (
-        <fieldset className="space-y-4 rounded-lg border border-slate-200 p-4">
-          <legend className="px-1 text-sm font-medium text-slate-900">{tRt("sectionVehicle")}</legend>
+        <fieldset className="space-y-4 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{tRt("sectionVehicle")}</legend>
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="rtBrand" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtBrand" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("brandLabel")}
               </label>
               <select
@@ -472,7 +472,7 @@ export function BlogArticleForm({
                   setModelId("");
                   setGenerationId("");
                 }}
-                className={`${inputClass} bg-white`}
+                className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200`}
               >
                 <option value="">{tRt("noneOption")}</option>
                 {brands.map((b) => (
@@ -483,7 +483,7 @@ export function BlogArticleForm({
               </select>
             </div>
             <div>
-              <label htmlFor="rtModel" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtModel" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("modelLabel")}
               </label>
               <select
@@ -494,7 +494,7 @@ export function BlogArticleForm({
                   setModelId(e.target.value);
                   setGenerationId("");
                 }}
-                className={`${inputClass} bg-white disabled:bg-slate-50`}
+                className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200 disabled:bg-slate-50 dark:disabled:bg-slate-700`}
               >
                 <option value="">{tRt("noneOption")}</option>
                 {models.map((m) => (
@@ -505,7 +505,7 @@ export function BlogArticleForm({
               </select>
             </div>
             <div>
-              <label htmlFor="rtGeneration" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtGeneration" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("generationLabel")}
               </label>
               <select
@@ -513,7 +513,7 @@ export function BlogArticleForm({
                 value={generationId}
                 disabled={!modelId || generations.length === 0}
                 onChange={(e) => setGenerationId(e.target.value)}
-                className={`${inputClass} bg-white disabled:bg-slate-50`}
+                className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200 disabled:bg-slate-50 dark:disabled:bg-slate-700`}
               >
                 <option value="">{tRt("noneOption")}</option>
                 {generations.map((g) => (
@@ -524,18 +524,18 @@ export function BlogArticleForm({
               </select>
             </div>
           </div>
-          <p className="text-xs text-slate-500 -mt-2">{tRt("vehicleHelp")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{tRt("vehicleHelp")}</p>
 
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="rtRating" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtRating" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("ratingLabel")}
               </label>
               <select
                 id="rtRating"
                 value={rating}
                 onChange={(e) => setRating(e.target.value)}
-                className={`${inputClass} bg-white`}
+                className={`${inputClass} bg-white dark:bg-slate-800 dark:text-slate-200`}
               >
                 <option value="" disabled>
                   —
@@ -548,7 +548,7 @@ export function BlogArticleForm({
               </select>
             </div>
             <div>
-              <label htmlFor="rtVersion" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtVersion" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("testedVersionLabel")}
               </label>
               <input
@@ -561,7 +561,7 @@ export function BlogArticleForm({
               />
             </div>
             <div>
-              <label htmlFor="rtDate" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("testedAtLabel")}
               </label>
               <input
@@ -576,35 +576,35 @@ export function BlogArticleForm({
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="rtProsFr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtProsFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("prosFrLabel")}
               </label>
               <textarea id="rtProsFr" value={prosFr} onChange={(e) => setProsFr(e.target.value)} rows={4} className={inputClass} />
             </div>
             <div>
-              <label htmlFor="rtProsAr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtProsAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("prosArLabel")}
               </label>
               <textarea id="rtProsAr" dir="rtl" value={prosAr} onChange={(e) => setProsAr(e.target.value)} rows={4} className={inputClass} />
             </div>
             <div>
-              <label htmlFor="rtConsFr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtConsFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("consFrLabel")}
               </label>
               <textarea id="rtConsFr" value={consFr} onChange={(e) => setConsFr(e.target.value)} rows={4} className={inputClass} />
             </div>
             <div>
-              <label htmlFor="rtConsAr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtConsAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("consArLabel")}
               </label>
               <textarea id="rtConsAr" dir="rtl" value={consAr} onChange={(e) => setConsAr(e.target.value)} rows={4} className={inputClass} />
             </div>
           </div>
-          <p className="text-xs text-slate-500 -mt-2">{tRt("listHelp")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{tRt("listHelp")}</p>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="rtVerdictFr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtVerdictFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("verdictFrLabel")}
               </label>
               <textarea
@@ -617,7 +617,7 @@ export function BlogArticleForm({
               />
             </div>
             <div>
-              <label htmlFor="rtVerdictAr" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="rtVerdictAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {tRt("verdictArLabel")}
               </label>
               <textarea
@@ -636,7 +636,7 @@ export function BlogArticleForm({
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="contentFr" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="contentFr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("contentFrLabel")}
           </label>
           <textarea
@@ -649,7 +649,7 @@ export function BlogArticleForm({
           />
         </div>
         <div>
-          <label htmlFor="contentAr" className="block text-sm font-medium text-slate-700 mb-1">
+          <label htmlFor="contentAr" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("contentArLabel")}
           </label>
           <textarea
@@ -663,14 +663,14 @@ export function BlogArticleForm({
           />
         </div>
       </div>
-      <p className="text-xs text-slate-500 -mt-4">{tRt("markdownHelp")}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 -mt-4">{tRt("markdownHelp")}</p>
 
       {kind === "ARTICLE" && (
-        <fieldset className="space-y-3 rounded-lg border border-slate-200 p-4">
-          <legend className="px-1 text-sm font-medium text-slate-900">{t("sourceSection")}</legend>
+        <fieldset className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{t("sourceSection")}</legend>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="sourceName" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="sourceName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t("sourceNameLabel")}
               </label>
               <input
@@ -683,7 +683,7 @@ export function BlogArticleForm({
               />
             </div>
             <div>
-              <label htmlFor="sourceUrl" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="sourceUrl" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t("sourceUrlLabel")}
               </label>
               <input
@@ -698,21 +698,21 @@ export function BlogArticleForm({
               />
             </div>
           </div>
-          <p className="text-xs text-slate-500">{t("sourceHelp")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t("sourceHelp")}</p>
         </fieldset>
       )}
 
-      <fieldset className="space-y-2 rounded-lg border border-slate-200 p-4">
-        <legend className="px-1 text-sm font-medium text-slate-900">{t("publicationLabel")}</legend>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+      <fieldset className="space-y-2 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+        <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{t("publicationLabel")}</legend>
+        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input type="radio" name="publication" checked={mode === "draft"} onChange={() => setMode("draft")} />
           {t("publicationDraft")}
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input type="radio" name="publication" checked={mode === "now"} onChange={() => setMode("now")} />
           {initialMode === "now" ? t("publicationPublished") : t("publicationNow")}
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input type="radio" name="publication" checked={mode === "scheduled"} onChange={() => setMode("scheduled")} />
           {t("publicationScheduled")}
           <input
@@ -721,10 +721,10 @@ export function BlogArticleForm({
             disabled={mode !== "scheduled"}
             onChange={(e) => setScheduledAt(e.target.value)}
             aria-label={t("publicationScheduled")}
-            className="rounded-md border border-slate-300 px-2 py-1 text-sm disabled:bg-slate-50 disabled:text-slate-500"
+            className="rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-2 py-1 text-sm disabled:bg-slate-50 dark:disabled:bg-slate-700 disabled:text-slate-500"
           />
         </label>
-        <p className="text-xs text-slate-500">{t("publicationHelp")}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{t("publicationHelp")}</p>
       </fieldset>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -732,7 +732,7 @@ export function BlogArticleForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+        className="rounded-md bg-slate-900 dark:bg-slate-100 px-4 py-2 text-sm font-medium text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-300 disabled:opacity-50"
       >
         {pending ? t("saving") : t("save")}
       </button>

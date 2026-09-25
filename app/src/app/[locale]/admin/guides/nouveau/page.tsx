@@ -24,7 +24,7 @@ export default async function NewGuidePage({ searchParams }: { searchParams: Pro
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{t("newGuide")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("newGuide")}</h1>
       <BlogArticleForm kind="GUIDE" brands={brands} defaultModel={requestedModel ? { brandId: requestedModel.brandId, modelId: requestedModel.id } : undefined} />
     </div>
   );

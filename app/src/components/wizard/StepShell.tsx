@@ -43,9 +43,9 @@ export function StepShell({
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <div className="mb-8">
-        <div className="h-1.5 w-full rounded-full bg-slate-100">
+        <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-700">
           <div
-            className="h-1.5 rounded-full bg-slate-900 transition-all"
+            className="h-1.5 rounded-full bg-slate-900 dark:bg-slate-100 transition-all"
             style={{ width: `${(step / total) * 100}%` }}
           />
         </div>
@@ -54,7 +54,7 @@ export function StepShell({
         </p>
       </div>
 
-      <h1 className="text-2xl font-semibold text-slate-900 mb-6">{title}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{title}</h1>
 
       <div className="space-y-4">{children}</div>
 
@@ -63,7 +63,7 @@ export function StepShell({
           <button
             type="button"
             onClick={() => router.push(`/publier/${prevPath}`)}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             ← {t("previous")}
           </button>

@@ -18,7 +18,7 @@ export type PreviewLinkRow = {
 };
 
 const DAYS = [1, 3, 7, 14, 30] as const;
-const STATE_STYLE = { active: "bg-emerald-100 text-emerald-900", expired: "bg-slate-100 text-slate-700", revoked: "bg-red-100 text-red-900" } as const;
+const STATE_STYLE = { active: "bg-emerald-100 text-emerald-900", expired: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300", revoked: "bg-red-100 text-red-900" } as const;
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -35,11 +35,11 @@ function CopyableLink({ label, url }: { label: string; url: string }) {
   const id = useId(); // le libellé est RELIÉ à son champ : un lecteur d'écran annonce « Version française », pas un champ sans nom
   return (
     <div>
-      <label htmlFor={id} className="block text-xs font-medium text-slate-700 mb-1">
+      <label htmlFor={id} className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
         {label}
       </label>
       <div className="flex gap-2">
-        <input id={id} readOnly value={url} dir="ltr" onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs text-slate-800" />
+        <input id={id} readOnly value={url} dir="ltr" onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 rounded-md border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200" />
         <button
           type="button"
           onClick={async () => {
@@ -48,7 +48,7 @@ function CopyableLink({ label, url }: { label: string; url: string }) {
               setTimeout(() => setCopied(false), 2000);
             }
           }}
-          className="shrink-0 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          className="shrink-0 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
           {copied ? t("copied") : t("copy")}
         </button>
@@ -92,18 +92,18 @@ export function PreviewLinksManager({ articleId, links }: { articleId: string; l
   }
 
   return (
-    <section className="mt-10 rounded-lg border border-slate-200 p-4" aria-labelledby="preview-links-title">
-      <h2 id="preview-links-title" className="text-base font-semibold text-slate-900">
+    <section className="mt-10 rounded-lg border border-slate-200 dark:border-slate-700 p-4" aria-labelledby="preview-links-title">
+      <h2 id="preview-links-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
         {t("title")}
       </h2>
-      <p className="mt-1 text-sm text-slate-600">{t("intro")}</p>
+      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t("intro")}</p>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
         <div>
-          <label htmlFor="preview-link-days" className="block text-xs font-medium text-slate-700 mb-1">
+          <label htmlFor="preview-link-days" className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
             {t("durationLabel")}
           </label>
-          <select id="preview-link-days" value={days} onChange={(e) => setDays(Number(e.target.value))} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
+          <select id="preview-link-days" value={days} onChange={(e) => setDays(Number(e.target.value))} className="rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm">
             {DAYS.map((d) => (
               <option key={d} value={d}>
                 {t(`days${d}` as "days1")}
@@ -111,7 +111,7 @@ export function PreviewLinksManager({ articleId, links }: { articleId: string; l
             ))}
           </select>
         </div>
-        <button type="button" onClick={handleCreate} disabled={pending} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50">
+        <button type="button" onClick={handleCreate} disabled={pending} className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50">
           {pending ? t("creating") : t("create")}
         </button>
       </div>
@@ -133,18 +133,18 @@ export function PreviewLinksManager({ articleId, links }: { articleId: string; l
         </div>
       )}
 
-      <h3 className="mt-6 text-sm font-semibold text-slate-900">{t("listTitle")}</h3>
+      <h3 className="mt-6 text-sm font-semibold text-slate-900 dark:text-slate-100">{t("listTitle")}</h3>
       {links.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">{t("none")}</p>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("none")}</p>
       ) : (
         <ul className="mt-2 space-y-2">
           {links.map((link) => (
-            <li key={link.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-700">
+            <li key={link.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs text-slate-700 dark:text-slate-300">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className={`rounded px-2 py-0.5 font-medium ${STATE_STYLE[link.state]}`}>{t(link.state === "active" ? "stateActive" : link.state === "expired" ? "stateExpired" : "stateRevoked")}</span>
                 <span>{t("expiresOn", { date: dateTime.format(new Date(link.expiresAt)) })}</span>
                 <span>{link.lastUsedAt ? t("usedOn", { date: dateTime.format(new Date(link.lastUsedAt)) }) : t("neverUsed")}</span>
-                <span className="text-slate-500">{t("createdBy", { email: link.createdBy })}</span>
+                <span className="text-slate-500 dark:text-slate-400">{t("createdBy", { email: link.createdBy })}</span>
               </div>
               {link.state === "active" && (
                 <button type="button" onClick={() => handleRevoke(link.id)} className="text-red-700 underline hover:text-red-900">

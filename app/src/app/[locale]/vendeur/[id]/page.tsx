@@ -116,17 +116,17 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
               alt=""
               fill
               sizes="56px"
-              className="rounded-full object-cover border border-slate-200"
+              className="rounded-full object-cover border border-slate-200 dark:border-slate-700"
             />
           </div>
         ) : (
-          <div className="h-14 w-14 shrink-0 rounded-full bg-slate-100 border border-slate-200" />
+          <div className="h-14 w-14 shrink-0 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700" />
         )}
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
           {seller.profile?.displayName ?? seller.email}
         </h1>
       </div>
-      <p className="text-sm text-slate-500 mt-1">
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
         {t("memberSince", { date: dateFormatter.format(seller.createdAt) })}
       </p>
       {(seller.emailVerifiedAt || seller.phoneVerifiedAt || seller.identityVerifiedAt) && (
@@ -144,7 +144,7 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
             {"★".repeat(Math.round(average))} {t("averageRating", { average, count })}
           </span>
         ) : (
-          <span className="text-slate-500">{t("noReviews")}</span>
+          <span className="text-slate-500 dark:text-slate-400">{t("noReviews")}</span>
         )}
       </p>
 
@@ -160,9 +160,9 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
 
       <div className="grid sm:grid-cols-3 gap-8 mt-8">
         <div className="sm:col-span-2">
-          <h2 className="text-lg font-medium text-slate-900 mb-3">{t("listingsTitle")}</h2>
+          <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-3">{t("listingsTitle")}</h2>
           {listings.length === 0 ? (
-            <p className="text-slate-500 text-sm">{t("noListings")}</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">{t("noListings")}</p>
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               {listings.map((listing, index) => (
@@ -189,17 +189,17 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
           />
           <div id="donner-avis">
             {canReview && <ReviewForm endpoint={`/api/users/${id}/reviews`} />}
-            {alreadyReviewed && <p className="text-sm text-slate-500">{t("alreadyReviewed")}</p>}
+            {alreadyReviewed && <p className="text-sm text-slate-500 dark:text-slate-400">{t("alreadyReviewed")}</p>}
           </div>
 
           <div>
-            <h2 className="text-lg font-medium text-slate-900 mb-3">{t("reviewsTitle")}</h2>
+            <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-3">{t("reviewsTitle")}</h2>
             {reviews.length === 0 ? (
-              <p className="text-slate-500 text-sm">{t("noReviews")}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{t("noReviews")}</p>
             ) : (
               <div className="space-y-3">
                 {reviews.map((review) => (
-                  <div key={review.id} className="rounded-md border border-slate-200 p-3">
+                  <div key={review.id} className="rounded-md border border-slate-200 dark:border-slate-700 p-3">
                     <div className="flex items-center justify-between">
                       <p className="text-amber-600 text-sm">
                         {"★".repeat(review.rating)}
@@ -207,8 +207,8 @@ export default async function SellerPage({ params, searchParams }: { params: Pro
                       </p>
                       {currentUser && isStaff(currentUser.role) && <DeleteReviewButton reviewId={review.id} />}
                     </div>
-                    {review.comment && <p className="text-sm text-slate-700 mt-1">{review.comment}</p>}
-                    <p className="text-xs text-slate-500 mt-1">
+                    {review.comment && <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{review.comment}</p>}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       {t("byAuthor", { name: review.author.profile?.displayName ?? review.author.email })} ·{" "}
                       {dateFormatter.format(review.createdAt)}
                     </p>

@@ -96,16 +96,16 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <h1 className="text-2xl font-semibold text-slate-900">{t("title")}</h1>
-      <p className="mt-1 text-sm text-slate-500">{t("subtitle")}</p>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("title")}</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("subtitle")}</p>
 
       <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
         <label className="block">
-          <span className="block text-sm text-slate-700">{t("wilayaFilterLabel")}</span>
+          <span className="block text-sm text-slate-700 dark:text-slate-300">{t("wilayaFilterLabel")}</span>
           <select
             name="wilaya"
             defaultValue={selectedWilaya?.slug ?? ""}
-            className="mt-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="mt-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-100 px-3 py-2 text-sm"
           >
             <option value="">{t("allWilayas")}</option>
             {wilayas
@@ -118,11 +118,11 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
           </select>
         </label>
         <label className="block">
-          <span className="block text-sm text-slate-700">{t("categoryFilterLabel")}</span>
+          <span className="block text-sm text-slate-700 dark:text-slate-300">{t("categoryFilterLabel")}</span>
           <select
             name="category"
             defaultValue={selectedCategory ?? ""}
-            className="mt-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="mt-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-slate-100 px-3 py-2 text-sm"
           >
             <option value="">{t("allCategories")}</option>
             {PRO_CATEGORIES.map((c) => (
@@ -132,19 +132,19 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
         </label>
         <button
           type="submit"
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
         >
           {t("filterSubmit")}
         </button>
       </form>
 
       {pageData.totalCount === 0 ? (
-        <p className="mt-8 py-12 text-center text-slate-500">
+        <p className="mt-8 py-12 text-center text-slate-500 dark:text-slate-400">
           {selectedWilaya ? t("emptyFiltered") : t("empty")}
         </p>
       ) : (
         <>
-          <p className="mt-6 text-sm text-slate-500">{t("resultsCount", { count: pageData.totalCount })}</p>
+          <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">{t("resultsCount", { count: pageData.totalCount })}</p>
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pageData.items.map((entry) => {
               const wilaya = entry.wilayaId ? wilayaById.get(entry.wilayaId) : undefined;
@@ -152,7 +152,7 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
                 <Link
                   key={entry.id}
                   href={`/pro/${entry.id}`}
-                  className="flex gap-3 rounded-lg border border-slate-200 p-4 hover:border-slate-300"
+                  className="flex gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 hover:border-slate-300 dark:hover:border-slate-600"
                 >
                   {entry.logoUrl ? (
                     <div className="relative h-12 w-12 shrink-0">
@@ -161,16 +161,16 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
                         alt=""
                         fill
                         sizes="48px"
-                        className="rounded-full object-cover border border-slate-200"
+                        className="rounded-full object-cover border border-slate-200 dark:border-slate-700"
                       />
                     </div>
                   ) : (
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-lg font-medium text-slate-500">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 text-lg font-medium text-slate-500 dark:text-slate-400">
                       {entry.nomCommercial.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-900">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">
                       {entry.nomCommercial}
                       {entry.badgeVerifie && (
                         <span className="ms-2 text-xs font-normal text-emerald-700">
@@ -178,11 +178,11 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
                         </span>
                       )}
                     </p>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                       {entry.categoryPro && <span>{tPro(`categoryPro_${entry.categoryPro}`)}{wilaya ? " · " : ""}</span>}
                       {wilaya && wilayaLabel(wilaya)}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       {tCatalogue("statsCount", { count: entry.listingCount })}
                     </p>
                     <p className="mt-0.5 text-xs">
@@ -191,7 +191,7 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
                           ★ {tReview("averageRating", { average: entry.ratingAverage, count: entry.ratingCount })}
                         </span>
                       ) : (
-                        <span className="text-slate-500">{tReview("noReviews")}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{tReview("noReviews")}</span>
                       )}
                     </p>
                   </div>

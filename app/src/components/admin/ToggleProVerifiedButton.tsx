@@ -29,7 +29,7 @@ export function ToggleProVerifiedButton({ accountId, verified }: { accountId: st
       disabled={pending}
       className={`rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${
         verified
-          ? "border-slate-300 text-slate-700 hover:bg-slate-50"
+          ? "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           : "bg-emerald-700 text-white hover:bg-emerald-800 border-emerald-700"
       }`}
     >

@@ -43,7 +43,7 @@ export function ListingAutoRenewToggle({
 
   return (
     <div>
-      <label className="flex items-center gap-2 text-xs text-slate-600">
+      <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
         <input type="checkbox" checked={autoRenew} disabled={pending} onChange={toggle} className="rounded" />
         {t("autoRenewLabel")}
       </label>

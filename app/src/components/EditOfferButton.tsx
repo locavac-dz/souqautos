@@ -39,7 +39,7 @@ export function EditOfferButton({ offerId, currentAmount }: Props) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-md border border-slate-300 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50"
+        className="rounded-md border border-slate-300 dark:border-slate-600 px-3 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
       >
         {t("editOffer")}
       </button>
@@ -79,7 +79,7 @@ export function EditOfferButton({ offerId, currentAmount }: Props) {
         <button
           type="button"
           onClick={() => { setOpen(false); setAmount(String(currentAmount)); setError(null); }}
-          className="rounded-md border border-slate-300 px-3 py-1 text-xs text-slate-600 hover:bg-slate-50"
+          className="rounded-md border border-slate-300 dark:border-slate-600 px-3 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
           {t("cancel")}
         </button>

@@ -118,7 +118,7 @@ export function MessageThread({
       </div>
 
       {!canSend ? (
-        <p className="text-sm text-slate-500 border border-slate-200 rounded-md px-3 py-2 bg-slate-50">
+        <p className="text-sm text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 bg-slate-50 dark:bg-slate-800">
           {blocked ? t("blockedNotice") : t("blockedByOtherNotice")}
         </p>
       ) : (
@@ -126,7 +126,7 @@ export function MessageThread({
           {attachmentPreview && (
             <div className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={attachmentPreview} alt="" className="h-16 w-16 rounded object-cover border border-slate-200" />
+              <img src={attachmentPreview} alt="" className="h-16 w-16 rounded object-cover border border-slate-200 dark:border-slate-700" />
               <button
                 type="button"
                 onClick={removeAttachment}
@@ -144,7 +144,7 @@ export function MessageThread({
               placeholder={t("typePlaceholder")}
               aria-label={t("typePlaceholder")}
               maxLength={2000}
-              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm"
             />
             <input
               ref={fileInputRef}
@@ -156,7 +156,7 @@ export function MessageThread({
             />
             <label
               htmlFor="message-attachment-input"
-              className="flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-500 hover:bg-slate-50 cursor-pointer"
+              className="flex items-center rounded-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
               title={t("addAttachment")}
             >
               📎
@@ -165,7 +165,7 @@ export function MessageThread({
             <button
               type="submit"
               disabled={pending || (!content.trim() && !attachment)}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+              className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
             >
               {t("send")}
             </button>
