@@ -92,7 +92,7 @@ export async function SiteHeader({
   return (
     <header className="border-b border-slate-200 dark:border-slate-700 dark:bg-slate-900">
       <div className="relative mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2" aria-label={tBrand("name")}>
+        <Link href="/" className="flex items-center gap-2">
           <SiteLogoMark className="h-7 w-7 shrink-0" />
           <SiteWordMark className="text-lg" />
         </Link>

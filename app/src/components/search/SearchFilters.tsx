@@ -218,7 +218,7 @@ export function SearchFilters({
       {compact ? (
         <button
           type="submit"
-          className="rounded-md bg-emerald-600 px-5 py-2.5 font-medium text-white hover:bg-emerald-700"
+          className="rounded-md bg-emerald-700 px-5 py-2.5 font-medium text-white hover:bg-emerald-800"
         >
           {t("submit")}
         </button>
@@ -486,7 +486,7 @@ export function SearchFilters({
 
           <button
             type="submit"
-            className="w-full rounded-md bg-emerald-600 px-4 py-2.5 font-medium text-white hover:bg-emerald-700"
+            className="w-full rounded-md bg-emerald-700 px-4 py-2.5 font-medium text-white hover:bg-emerald-800"
           >
             {t("submit")}
           </button>

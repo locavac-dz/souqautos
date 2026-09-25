@@ -34,14 +34,14 @@ export async function Pagination({
           {t("previous")}
         </Link>
       ) : (
-        <span aria-disabled="true" className="text-sm text-slate-500">
+        <span aria-disabled="true" className="text-sm text-slate-500 dark:text-slate-400">
           <span aria-hidden="true" className="rtl:hidden">← </span>
           <span aria-hidden="true" className="ltr:hidden">→ </span>
           {t("previous")}
         </span>
       )}
 
-      <span className="text-sm text-slate-500">{t("pageOf", { page, totalPages })}</span>
+      <span className="text-sm text-slate-500 dark:text-slate-400">{t("pageOf", { page, totalPages })}</span>
 
       {page < totalPages ? (
         <Link href={hrefForPage(page + 1)} className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:underline">
@@ -50,7 +50,7 @@ export async function Pagination({
           <span aria-hidden="true" className="ltr:hidden"> ←</span>
         </Link>
       ) : (
-        <span aria-disabled="true" className="text-sm text-slate-500">
+        <span aria-disabled="true" className="text-sm text-slate-500 dark:text-slate-400">
           {t("next")}
           <span aria-hidden="true" className="rtl:hidden"> →</span>
           <span aria-hidden="true" className="ltr:hidden"> ←</span>
