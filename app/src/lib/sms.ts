@@ -1,19 +1,42 @@
-// Aucun fournisseur SMS réel configuré (Twilio, AWS SNS, ou une passerelle DZ) —
-// contrairement à l'email, il n'existe pas d'équivalent gratuit et testable
-// (type Ethereal) pour le SMS sans compte payant. Le message est donc
-// seulement journalisé côté serveur en développement. À remplacer par un vrai
-// fournisseur avant toute mise en production ; interface volontairement
-// minimale pour rester substituable (même esprit que PaymentProvider, §11).
+// Envoi SMS via Twilio REST API (aucun SDK — un seul fetch).
+// Variables d'environnement requises en production :
+//   TWILIO_ACCOUNT_SID  — Account SID (commence par "AC")
+//   TWILIO_AUTH_TOKEN   — Auth Token
+//   TWILIO_FROM_NUMBER  — numéro expéditeur au format E.164, ex. "+12015551234"
 //
-// Le message peut contenir un code de vérification en clair (Lot 98,
-// audit sécurité) : jamais journalisé tel quel hors développement — en
-// production sans fournisseur réel configuré, le SMS n'est simplement pas
-// délivré (limitation honnête, même discipline que l'IA/le paiement sans
-// identifiants), plutôt que de fuiter le code dans les journaux serveur.
+// En développement (NODE_ENV != "production"), le message est uniquement loggué.
+// Si les variables manquent en production, l'envoi échoue et une erreur est loggée
+// sans fuiter le contenu du message (code OTP) dans les journaux.
 export async function sendSms({ to, message }: { to: string; message: string }): Promise<void> {
   if (process.env.NODE_ENV !== "production") {
     console.log(`[DEV SMS] À ${to} : ${message}`);
     return;
   }
-  console.error(`[SMS] Aucun fournisseur configuré, message non délivré à ${to}`);
+
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_FROM_NUMBER;
+
+  if (!sid || !token || !from) {
+    console.error("[SMS] Variables TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_FROM_NUMBER manquantes — message non délivré");
+    return;
+  }
+
+  const body = new URLSearchParams({ From: from, To: to, Body: message });
+  const res = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: body.toString(),
+    }
+  );
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    console.error(`[SMS] Twilio erreur ${res.status} — message non délivré à ${to} : ${detail}`);
+  }
 }
