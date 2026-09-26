@@ -592,7 +592,7 @@ export function ListingEditForm({
 
       <div>
         <p className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tWizard("equipmentsTitle")}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{tWizard("equipmentsHelp")}</p>
+        <p id="equipment-hint" className="text-xs text-slate-500 dark:text-slate-400 mb-3">{tWizard("equipmentsHelp")}</p>
         <div className="space-y-4">
           {EQUIPMENT_CATEGORY_ORDER.filter((c) => equipmentsByCategory.has(c)).map((category) => (
             <div key={category}>
@@ -604,6 +604,7 @@ export function ListingEditForm({
                   <label key={eq.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                     <input
                       type="checkbox"
+                      aria-describedby="equipment-hint"
                       checked={equipmentIds.includes(eq.id)}
                       onChange={() => toggleEquipment(eq.id)}
                     />

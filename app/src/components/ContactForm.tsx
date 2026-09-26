@@ -91,6 +91,7 @@ export function ContactForm() {
         <label htmlFor="contact-subject" className={labelClass}>{t("subjectLabel")}</label>
         <select
           id="contact-subject"
+          required
           value={subject}
           onChange={(e) => setSubject(e.target.value as typeof CONTACT_SUBJECTS[number])}
           className={fieldClass}

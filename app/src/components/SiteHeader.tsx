@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { LogoutButton } from "./LogoutButton";
 import { MobileMenuToggle } from "./MobileMenuToggle";
+import { NavLink } from "./NavLink";
 import { SiteLogoMark } from "./SiteLogoMark";
 import { SiteWordMark } from "./SiteWordMark";
 import { ThemeToggle } from "./ThemeToggle";
@@ -21,67 +22,44 @@ export async function SiteHeader({
   const tAdmin = await getTranslations("Admin");
   const tMessages = await getTranslations("Messages");
 
+  const navLinkClass = "text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100";
+
   const navContent = (
     <>
-      <Link href="/recherche" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-        {tNav("search")}
-      </Link>
-      <Link href="/cote-souq-auto" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-        {tNav("estimate")}
-      </Link>
-      <Link href="/essais" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-        {tNav("roadTests")}
-      </Link>
+      <NavLink href="/recherche" className={navLinkClass}>{tNav("search")}</NavLink>
+      <NavLink href="/cote-souq-auto" className={navLinkClass}>{tNav("estimate")}</NavLink>
+      <NavLink href="/essais" className={navLinkClass}>{tNav("roadTests")}</NavLink>
       {user ? (
         <>
-          <Link href="/vendre" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-            {tNav("sell")}
-          </Link>
-          <Link href="/compte/mes-annonces" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-            {tNav("myListings")}
-          </Link>
-          <Link
-            href="/compte/messages"
-            className="relative text-slate-700 hover:text-slate-900"
-          >
+          <NavLink href="/vendre" className={navLinkClass}>{tNav("sell")}</NavLink>
+          <NavLink href="/compte/mes-annonces" className={navLinkClass}>{tNav("myListings")}</NavLink>
+          <NavLink href="/compte/messages" className={`relative ${navLinkClass}`}>
             {tMessages("navLabel")}
             {unreadMessagesCount > 0 && (
               <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">
                 {unreadMessagesCount}
               </span>
             )}
-          </Link>
-          <Link href="/compte/favoris" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-            {tNav("favorites")}
-          </Link>
-          <Link href="/compte/alertes" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-            {tNav("alerts")}
-          </Link>
-          <Link href="/compte/assistant-achat" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-            {tNav("aiAdvisor")}
-          </Link>
-          <Link href="/compte/tableau-de-bord" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-            {tNav("dashboard")}
-          </Link>
+          </NavLink>
+          <NavLink href="/compte/favoris" className={navLinkClass}>{tNav("favorites")}</NavLink>
+          <NavLink href="/compte/alertes" className={navLinkClass}>{tNav("alerts")}</NavLink>
+          <NavLink href="/compte/assistant-achat" className={navLinkClass}>{tNav("aiAdvisor")}</NavLink>
+          <NavLink href="/compte/tableau-de-bord" className={navLinkClass}>{tNav("dashboard")}</NavLink>
           {isStaff(user.role) && (
-            <Link href="/admin" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-              {tAdmin("navLabel")}
-            </Link>
+            <NavLink href="/admin" className={navLinkClass}>{tAdmin("navLabel")}</NavLink>
           )}
           <span className="text-slate-600 dark:text-slate-400">{user.displayName ?? user.email}</span>
           <LogoutButton label={tNav("logout")} />
         </>
       ) : (
         <>
-          <Link href="/connexion" className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-            {tNav("login")}
-          </Link>
-          <Link
+          <NavLink href="/connexion" className={navLinkClass}>{tNav("login")}</NavLink>
+          <NavLink
             href="/inscription"
             className="rounded-md bg-slate-900 px-3 py-1.5 text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
             {tNav("register")}
-          </Link>
+          </NavLink>
         </>
       )}
       <ThemeToggle />

@@ -79,6 +79,7 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
                     <Link
                       href={`${publicBase}/${article.slug}`}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="text-xs text-slate-600 dark:text-slate-400 underline hover:text-slate-900 dark:hover:text-slate-100"
                     >
                       {t("view")}
@@ -89,6 +90,7 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
                     <Link
                       href={`${publicBase}/${article.slug}`}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="text-xs text-slate-600 dark:text-slate-400 underline hover:text-slate-900 dark:hover:text-slate-100"
                     >
                       {t("preview")}
