@@ -1,12 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isUniqueViolation } from "@/lib/prisma-errors";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  }
+
+  if (!(await checkRateLimit(`user:block:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const { id: blockedId } = await params;
@@ -33,7 +38,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   return NextResponse.json({ blocked: true }, { status: 201 });
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });

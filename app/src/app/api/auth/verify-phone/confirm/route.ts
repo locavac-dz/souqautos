@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkPhoneCode } from "@/lib/verification";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const bodySchema = z.object({ code: z.string().trim().length(6) });
 
@@ -10,6 +11,10 @@ export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  }
+
+  if (!(await checkRateLimit(`verify-phone:confirm:${user.id}`, { limit: 10, windowMs: 15 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const body = await request.json().catch(() => null);

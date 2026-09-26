@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { subscribeToConversation, type ConversationEvent } from "@/lib/realtime";
 import { canAccessConversation } from "@/lib/listing-access";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const HEARTBEAT_MS = 25000;
 
@@ -10,6 +11,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const user = await getCurrentUser();
   if (!user) {
     return new Response("unauthenticated", { status: 401 });
+  }
+
+  if (!(await checkRateLimit(`conversations:stream:${user.id}`, { limit: 30, windowMs: 60 * 1000 }))) {
+    return new Response("rate_limited", { status: 429 });
   }
 
   const { id } = await params;

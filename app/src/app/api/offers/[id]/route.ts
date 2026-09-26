@@ -8,6 +8,7 @@ import { respondOfferSchema, updateOfferSchema } from "@/lib/validation/offer";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { sendPushToUser } from "@/lib/push-send";
 import { SITE_URL } from "@/lib/site";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // PATCH — vendeur : accepte / refuse / contre-offre ; acheteur : retire / répond à une contre-offre
 export async function PATCH(
@@ -16,6 +17,10 @@ export async function PATCH(
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+
+  if (!(await checkRateLimit(`offer:action:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   const { id } = await params;
   const offer = await prisma.offer.findUnique({
@@ -161,6 +166,10 @@ export async function PUT(
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+
+  if (!(await checkRateLimit(`offer:action:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   const { id } = await params;
   const offer = await prisma.offer.findUnique({ where: { id }, select: { buyerId: true, status: true } });
