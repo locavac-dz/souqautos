@@ -104,6 +104,7 @@ export function EditProfileForm({
         <span className="text-sm text-slate-700 dark:text-slate-300">{t("phoneLabel")}</span>
         <input
           type="tel"
+          autoComplete="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder={t("phonePlaceholder")}

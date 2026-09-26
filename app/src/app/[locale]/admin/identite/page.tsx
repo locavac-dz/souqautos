@@ -38,7 +38,7 @@ export default async function AdminIdentityRequestsPage() {
                 <a
                   href={`/api/admin/identity-requests/${req.id}/document`}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100 mt-1 inline-block"
                 >
                   {t("viewIdentityDocument")}

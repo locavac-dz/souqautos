@@ -132,6 +132,7 @@ export function ProProfileForm({
         <span className="text-sm text-slate-700 dark:text-slate-300">{t("phoneLabel")}</span>
         <input
           type="tel"
+          autoComplete="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           maxLength={20}

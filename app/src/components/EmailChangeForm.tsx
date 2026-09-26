@@ -50,6 +50,7 @@ export function EmailChangeForm({ currentEmail }: { currentEmail: string }) {
           <input
             type="email"
             required
+            autoComplete="email"
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm"

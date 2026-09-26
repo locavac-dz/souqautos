@@ -85,6 +85,7 @@ export default async function AdminPaymentOrdersPage() {
                 <Link
                   href={`/annonce/${order.listingId}`}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100 mt-1 inline-block"
                 >
                   {order.listing.title}
@@ -127,6 +128,7 @@ export default async function AdminPaymentOrdersPage() {
                 <Link
                   href={`/pro/${order.professionalAccount.id}`}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-slate-700 dark:text-slate-300 underline hover:text-slate-900 dark:hover:text-slate-100 mt-1 inline-block"
                 >
                   {order.professionalAccount.nomCommercial}

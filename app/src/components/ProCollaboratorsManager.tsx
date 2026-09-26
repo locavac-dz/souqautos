@@ -188,6 +188,7 @@ export function ProCollaboratorsManager({
           <span className="text-xs text-slate-500 dark:text-slate-400">{t("collaboratorEmailLabel")}</span>
           <input
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

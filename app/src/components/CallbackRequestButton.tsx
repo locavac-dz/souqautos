@@ -94,6 +94,7 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
                     id="callback-phone"
                     required
                     type="tel"
+                    autoComplete="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder={t("phonePlaceholder")}
