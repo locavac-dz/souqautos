@@ -52,7 +52,7 @@ export default async function OffresPage() {
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="mb-8 text-2xl font-bold text-slate-900 dark:text-white">{t("pageTitle")}</h1>
 
       {/* Offres reçues */}
@@ -147,6 +147,6 @@ export default async function OffresPage() {
           </ul>
         )}
       </section>
-    </main>
+    </div>
   );
 }
