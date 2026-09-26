@@ -600,6 +600,12 @@
     "priceHistoryLabel": "Prix moyen des {brand} {model} sur 12 mois",
     "priceHistoryNote": "Prix calculé sur les annonces publiées chaque mois. Survolez les barres pour le détail."
   },
+  "ErrorPage": {
+    "title": "Une erreur est survenue",
+    "message": "Une erreur inattendue s'est produite. Si le problème persiste, contactez-nous.",
+    "retry": "Réessayer",
+    "home": "Retour à l'accueil"
+  },
   "NotFound": {
     "title": "Page introuvable",
     "message": "Cette page n'existe pas ou n'est plus disponible.",

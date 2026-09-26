@@ -78,8 +78,13 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendin
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="make-offer-title"
+        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900"
+      >
+        <h2 id="make-offer-title" className="text-lg font-semibold text-slate-900 dark:text-white">
           {t("modalTitle")}
         </h2>
 
@@ -106,6 +111,8 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendin
               <div className="flex items-center rounded-md border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800">
                 <input
                   type="number"
+                  autoFocus
+                  inputMode="numeric"
                   min={1}
                   max={1_000_000_000}
                   value={amount}

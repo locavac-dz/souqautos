@@ -2,7 +2,7 @@
 
 // Lot 154 — galerie photos avec lightbox, navigation clavier/swipe
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
@@ -12,6 +12,12 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
   const t = useTranslations("PhotoGallery");
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Move focus to close button when lightbox opens (WCAG 2.4.3)
+  useEffect(() => {
+    if (open) closeButtonRef.current?.focus();
+  }, [open]);
 
   // Touch swipe tracking
   const touchStartX = useRef<number | null>(null);
@@ -83,6 +89,7 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
         >
           {/* Close */}
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={close}
             aria-label={t("close")}

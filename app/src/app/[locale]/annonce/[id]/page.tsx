@@ -724,8 +724,8 @@ export default async function ListingDetailPage({
 
       {/* Lot 152 — annonces similaires (même modèle puis même marque/fourchette) */}
       {similarListings.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{tListing("similarTitle")}</h2>
+        <section className="mt-10" aria-labelledby="similar-listings-heading">
+          <h2 id="similar-listings-heading" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{tListing("similarTitle")}</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
             {similarListings.map((similar, index) => (
               <div key={similar.id} className="snap-start shrink-0 w-56">
