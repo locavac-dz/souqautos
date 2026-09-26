@@ -1,7 +1,27 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { SITE_URL } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string; locale: string }>;
+}): Promise<Metadata> {
+  const { id, locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Review" });
+  const seller = await prisma.user.findUnique({ where: { id }, select: { profile: { select: { displayName: true } }, email: true } });
+  const name = seller?.profile?.displayName ?? seller?.email ?? id;
+  const canonical = `${SITE_URL}/${locale}/vendeur/${id}`;
+  return {
+    title: t("sellerMetaTitle", { name }),
+    description: t("sellerMetaDescription", { name }),
+    alternates: { canonical },
+    openGraph: { title: t("sellerMetaTitle", { name }), url: canonical, type: "profile" },
+  };
+}
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { getSellerTrustSummary } from "@/lib/seller-trust";
 import { getSellerResponsiveness } from "@/lib/seller-responsiveness-service";

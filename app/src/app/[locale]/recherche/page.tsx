@@ -1,5 +1,31 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { SITE_URL } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const raw = await searchParams;
+  const t = await getTranslations({ locale, namespace: "Search" });
+  const canonical = `${SITE_URL}/${locale}/recherche`;
+
+  let title = `${t("pageTitle")} — Souq Auto`;
+  const q = typeof raw.q === "string" ? raw.q.trim() : undefined;
+  if (q) title = `${q} — ${t("pageTitle")}`;
+
+  return {
+    title,
+    description: t("metaDescription"),
+    alternates: { canonical },
+    openGraph: { title, url: canonical, type: "website" },
+  };
+}
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";

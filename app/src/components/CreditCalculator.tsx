@@ -30,7 +30,7 @@ export function CreditCalculator({ price }: { price: number }) {
 
         {/* Apport */}
         <div>
-          <div className="flex justify-between text-xs text-slate-500 mb-1">
+          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
             <span>{t("downPayment")}</span>
             <span className="font-medium text-slate-700 dark:text-slate-300">{fmt(downPayment)} DA</span>
           </div>
@@ -44,7 +44,7 @@ export function CreditCalculator({ price }: { price: number }) {
             className="w-full accent-emerald-600"
             aria-label={t("downPayment")}
           />
-          <div className="flex justify-between text-xs text-slate-500 mt-0.5">
+          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             <span>0</span>
             <span>{fmt(maxDown)} DA</span>
           </div>
@@ -52,7 +52,7 @@ export function CreditCalculator({ price }: { price: number }) {
 
         {/* Taux */}
         <div>
-          <div className="flex justify-between text-xs text-slate-500 mb-1">
+          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
             <span>{t("annualRate")}</span>
             <span className="font-medium text-slate-700 dark:text-slate-300">{annualRate.toFixed(1)} %</span>
           </div>
@@ -66,7 +66,7 @@ export function CreditCalculator({ price }: { price: number }) {
             className="w-full accent-emerald-600"
             aria-label={t("annualRate")}
           />
-          <div className="flex justify-between text-xs text-slate-500 mt-0.5">
+          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             <span>1 %</span>
             <span>20 %</span>
           </div>
@@ -74,13 +74,13 @@ export function CreditCalculator({ price }: { price: number }) {
 
         {/* Durée */}
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-500 shrink-0">{t("duration")}</span>
-          <div className="flex flex-wrap gap-1.5">
+          <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">{t("duration")}</span>
+          <div className="flex flex-wrap gap-3">
             {CREDIT_DURATION_OPTIONS.map((m) => (
               <button
                 key={m}
                 onClick={() => setMonths(m)}
-                className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
+                className={`px-2.5 py-1.5 rounded-full text-xs border transition-colors ${
                   months === m
                     ? "bg-emerald-700 border-emerald-700 text-white"
                     : "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-emerald-400"
@@ -96,9 +96,9 @@ export function CreditCalculator({ price }: { price: number }) {
         {result ? (
           <div className="rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-xs text-slate-500">{t("monthlyPayment")}</span>
-              <span className="text-xl font-semibold text-emerald-700">
-                {fmt(result.monthly)} <span className="text-sm font-normal text-slate-500">{t("perMonth")}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{t("monthlyPayment")}</span>
+              <span className="text-xl font-semibold text-emerald-700 dark:text-emerald-400">
+                {fmt(result.monthly)} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">{t("perMonth")}</span>
               </span>
             </div>
             <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-x-4 text-xs text-slate-500 dark:text-slate-400">
@@ -109,10 +109,10 @@ export function CreditCalculator({ price }: { price: number }) {
             </div>
           </div>
         ) : (
-          <p className="text-xs text-slate-500 text-center">{t("noLoan")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center">{t("noLoan")}</p>
         )}
 
-        <p className="text-xs text-slate-500">{t("disclaimer")}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{t("disclaimer")}</p>
       </div>
     </div>
   );

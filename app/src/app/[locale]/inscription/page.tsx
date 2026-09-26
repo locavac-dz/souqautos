@@ -1,10 +1,22 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { SITE_URL } from "@/lib/site";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Auth" });
+  const canonical = `${SITE_URL}/${locale}/inscription`;
+  return {
+    title: `${t("registerTitle")} — Souq Auto`,
+    alternates: { canonical },
+    robots: { index: false },
+  };
+}
 import { RegisterForm } from "@/components/RegisterForm";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { isGoogleLoginEnabled, pickLoginLocale } from "@/lib/google-oauth";
-import { SITE_URL } from "@/lib/site";
 
 // Lot 132 — la présence du bouton « Continuer avec Google » dépend de la configuration lue à chaque requête, jamais figée
 // à la compilation.

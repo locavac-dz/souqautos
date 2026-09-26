@@ -27,6 +27,8 @@
   "Home": {
     "heroTitle": "Que recherchez-vous ?",
     "heroSubtitle": "Le premier moteur de recherche automobile pensé pour l'Algérie.",
+    "metaTitle": "Souq Auto — Le moteur de recherche auto en Algérie",
+    "metaDescription": "Achetez ou vendez votre véhicule en Algérie. Des milliers d'annonces de particuliers et professionnels, avec filtres par marque, modèle, wilaya et budget.",
     "sellButton": "Vendre mon véhicule",
     "estimateButton": "Estimer mon véhicule",
     "browseBrandsButton": "Parcourir les marques",
@@ -420,7 +422,8 @@
     "previous": "Précédent",
     "next": "Suivant",
     "pageOf": "Page {page} / {totalPages}",
-    "pageTitle": "Rechercher une annonce"
+    "pageTitle": "Rechercher une annonce",
+    "metaDescription": "Trouvez votre prochain véhicule parmi les annonces de particuliers et professionnels en Algérie. Filtrez par marque, modèle, wilaya et budget."
   },
   "Estimate": {
     "title": "Cote Souq Auto",
@@ -762,6 +765,8 @@
     "cancelMessage": "Annuler"
   },
   "Review": {
+    "sellerMetaTitle": "{name} sur Souq Auto",
+    "sellerMetaDescription": "Consultez les annonces et les avis de {name} sur Souq Auto.",
     "notFound": "Ce profil est introuvable.",
     "memberSince": "Membre depuis {date}",
     "averageRating": "{average} / 5 ({count} avis)",

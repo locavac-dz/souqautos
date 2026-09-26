@@ -25,7 +25,7 @@ export async function SellerTrustBadges({
   if (!identityVerified && !proVerified && !badge) return null;
 
   return (
-    <ul className={`flex flex-col gap-1 text-xs text-emerald-800 ${className ?? ""}`}>
+    <ul className={`flex flex-col gap-1 text-xs text-emerald-800 dark:text-emerald-400 ${className ?? ""}`}>
       {identityVerified && (
         <li className="flex items-center gap-1.5">
           <CheckMark />

@@ -1,5 +1,18 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { SITE_URL } from "@/lib/site";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Terms" });
+  const canonical = `${SITE_URL}/${locale}/conditions-generales`;
+  return {
+    title: `${t("title")} — Souq Auto`,
+    alternates: { canonical },
+    openGraph: { title: t("title"), url: canonical, type: "website" },
+  };
+}
 
 // Conditions générales d'utilisation et de vente — dernier chantier de
 // conformité identifié au Lot 66 (mentions légales Lot 52, politique de

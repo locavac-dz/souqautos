@@ -1,5 +1,18 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { SITE_URL } from "@/lib/site";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Privacy" });
+  const canonical = `${SITE_URL}/${locale}/politique-confidentialite`;
+  return {
+    title: `${t("title")} — Souq Auto`,
+    alternates: { canonical },
+    openGraph: { title: t("title"), url: canonical, type: "website" },
+  };
+}
 
 // Politique de confidentialité — ne décrit QUE ce qui existe réellement dans
 // le code (cookies, sous-traitants, conservation, sécurité), jamais une

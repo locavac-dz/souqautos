@@ -77,7 +77,7 @@ export function ReportListingButton({
 
   if (!open) {
     return (
-      <button type="button" onClick={handleOpen} className="text-xs text-slate-500 dark:text-slate-400 hover:text-red-600">
+      <button type="button" onClick={handleOpen} className="py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-red-600">
         {t("reportListing")}
       </button>
     );

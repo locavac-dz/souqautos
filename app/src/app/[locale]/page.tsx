@@ -1,7 +1,25 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { SITE_URL } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Home" });
+  const canonical = `${SITE_URL}/${locale}`;
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    alternates: { canonical },
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: canonical, type: "website" },
+  };
+}
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { ListingCard } from "@/components/search/ListingCard";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";

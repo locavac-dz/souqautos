@@ -1,6 +1,18 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { LoginForm } from "@/components/LoginForm";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Auth" });
+  const canonical = `${SITE_URL}/${locale}/connexion`;
+  return {
+    title: `${t("loginTitle")} — Souq Auto`,
+    alternates: { canonical },
+    robots: { index: false },
+  };
+}
 import { GoogleErrorNotice, GoogleSignInButton, parseGoogleError } from "@/components/GoogleSignInButton";
 import { isGoogleLoginEnabled, pickLoginLocale } from "@/lib/google-oauth";
 import { SITE_URL } from "@/lib/site";

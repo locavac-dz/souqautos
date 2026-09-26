@@ -1,5 +1,19 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { SITE_URL } from "@/lib/site";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Estimate" });
+  const canonical = `${SITE_URL}/${locale}/cote-souq-auto`;
+  return {
+    title: `${t("title")} — Souq Auto`,
+    description: t("subtitle"),
+    alternates: { canonical },
+    openGraph: { title: t("title"), description: t("subtitle"), url: canonical, type: "website" },
+  };
+}
 import { estimateParamsSchema } from "@/lib/validation/estimate";
 import { estimatePrice } from "@/lib/price-estimation";
 import { EstimateForm } from "@/components/estimate/EstimateForm";
