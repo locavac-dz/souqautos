@@ -59,8 +59,13 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
         >
-          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-900 p-6 shadow-xl">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">{t("modalTitle")}</h2>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="callback-modal-title"
+            className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-900 p-6 shadow-xl"
+          >
+            <h2 id="callback-modal-title" className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">{t("modalTitle")}</h2>
 
             {success ? (
               <div className="space-y-4">
@@ -79,6 +84,7 @@ export function CallbackRequestButton({ listingId }: { listingId: string }) {
                   <input
                     id="callback-name"
                     required
+                    autoFocus
                     minLength={2}
                     maxLength={100}
                     value={name}

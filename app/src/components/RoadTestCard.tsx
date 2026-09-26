@@ -24,6 +24,7 @@ export async function RoadTestCard({ article, locale }: { article: RoadTestCardA
   const vehicle = [article.roadTest?.brand?.name, article.roadTest?.model?.name].filter(Boolean).join(" ");
 
   return (
+    <article>
     <Link
       href={`/essais/${article.slug}`}
       className="flex flex-col overflow-hidden rounded-lg border border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-500"
@@ -64,5 +65,6 @@ export async function RoadTestCard({ article, locale }: { article: RoadTestCardA
         </p>
       </div>
     </Link>
+    </article>
   );
 }

@@ -199,6 +199,7 @@
   "Wizard": {
     "next": "التالي",
     "previous": "السابق",
+    "progressLabel": "الخطوة {step} من {total}",
     "publish": "نشر الإعلان",
     "publishing": "جارٍ النشر…",
     "step1Title": "نوع البائع",

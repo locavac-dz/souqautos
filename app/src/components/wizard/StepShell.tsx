@@ -43,13 +43,20 @@ export function StepShell({
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <div className="mb-8">
-        <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-700">
+        <div
+          role="progressbar"
+          aria-valuenow={step}
+          aria-valuemin={1}
+          aria-valuemax={total}
+          aria-label={t("progressLabel", { step, total })}
+          className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-700"
+        >
           <div
             className="h-1.5 rounded-full bg-slate-900 dark:bg-slate-100 transition-all"
             style={{ width: `${(step / total) * 100}%` }}
           />
         </div>
-        <p className="mt-2 text-xs font-medium text-slate-500">
+        <p role="status" className="mt-2 text-xs font-medium text-slate-500">
           {step} / {total}
         </p>
       </div>

@@ -220,7 +220,7 @@ export default async function SearchPage({
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("resultsCount", { count: totalCount })}</p>
+          <p role="status" aria-live="polite" className="text-sm text-slate-500 dark:text-slate-400">{t("resultsCount", { count: totalCount })}</p>
           <SortSelect current={params.sort ?? "recent"} />
         </div>
 

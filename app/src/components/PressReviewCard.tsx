@@ -29,10 +29,10 @@ export async function PressReviewCard({ item, locale }: { item: PressReviewCardI
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {item.sourceName}
         {item.sourcePublishedAt && (
-          <span className="font-normal normal-case tracking-normal">
+          <time dateTime={item.sourcePublishedAt.toISOString()} className="font-normal normal-case tracking-normal">
             {" · "}
             {dateFormatter.format(item.sourcePublishedAt)}
-          </span>
+          </time>
         )}
       </p>
       <h3 className="mt-1 text-base font-medium text-slate-900 dark:text-slate-100" dir="auto">
