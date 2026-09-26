@@ -59,7 +59,7 @@ export function SuspendUserButton({
         >
           {t("unsuspendAction")}
         </button>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
       </div>
     );
   }
@@ -94,7 +94,7 @@ export function SuspendUserButton({
             {t("cancelActionSuspend")}
           </button>
         </div>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
       </form>
     );
   }

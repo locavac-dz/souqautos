@@ -153,8 +153,8 @@ export function OwnerReviewForm({
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("formHelp")}</p>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {saved && <p className="text-sm text-emerald-700">{t("saved")}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {saved && <p role="status" className="text-sm text-emerald-700">{t("saved")}</p>}
 
       <div className="flex flex-wrap items-center gap-3">
         <button

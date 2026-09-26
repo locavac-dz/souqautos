@@ -47,7 +47,7 @@ export function ListingAutoRenewToggle({
         <input type="checkbox" checked={autoRenew} disabled={pending} onChange={toggle} className="rounded" />
         {t("autoRenewLabel")}
       </label>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }

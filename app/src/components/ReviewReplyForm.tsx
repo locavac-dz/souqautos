@@ -103,7 +103,7 @@ export function ReviewReplyForm({
             {t("cancelReplyAction")}
           </button>
         </div>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
       </form>
     );
   }
@@ -128,7 +128,7 @@ export function ReviewReplyForm({
           {t("replyAction")}
         </button>
       )}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p role="alert" className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }

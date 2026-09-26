@@ -89,7 +89,7 @@ export function BulkImportForm({ accountId }: { accountId: string }) {
         </button>
       </form>
 
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
 
       {result && (
         <div className="mt-6 rounded-md border border-slate-200 dark:border-slate-700 p-4">

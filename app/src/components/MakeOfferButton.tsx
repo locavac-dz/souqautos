@@ -133,7 +133,7 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendin
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>
             )}
 
             <div className="flex gap-3">

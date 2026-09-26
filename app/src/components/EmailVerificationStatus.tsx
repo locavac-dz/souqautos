@@ -56,7 +56,7 @@ export function EmailVerificationStatus({ verified }: { verified: boolean }) {
           )}
         </div>
       )}
-      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      {error && <p role="alert" className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

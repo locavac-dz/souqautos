@@ -56,7 +56,7 @@ export function RespondOfferButtons({ offerId }: { offerId: string }) {
           />
           <span className="pr-2 text-xs text-slate-400">DA</span>
         </div>
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p role="alert" className="text-xs text-red-500">{error}</p>}
         <div className="flex gap-2">
           <button
             type="submit"

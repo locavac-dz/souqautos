@@ -83,7 +83,7 @@ export function ReviewForm({ endpoint }: { endpoint: string }) {
       >
         {t("submit")}
       </button>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
     </form>
   );
 }

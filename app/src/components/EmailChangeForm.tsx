@@ -63,8 +63,8 @@ export function EmailChangeForm({ currentEmail }: { currentEmail: string }) {
           {t("changeEmailAction")}
         </button>
       </form>
-      {sent && <p className="mt-2 text-sm text-emerald-700">{t("emailChangeRequestSent")}</p>}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {sent && <p role="status" className="mt-2 text-sm text-emerald-700">{t("emailChangeRequestSent")}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );
 }

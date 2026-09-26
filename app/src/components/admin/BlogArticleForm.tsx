@@ -727,7 +727,7 @@ export function BlogArticleForm({
         <p className="text-xs text-slate-500 dark:text-slate-400">{t("publicationHelp")}</p>
       </fieldset>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       <button
         type="submit"

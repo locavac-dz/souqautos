@@ -96,7 +96,7 @@ export function PhoneVerificationStatus({ verified, hasPhone }: { verified: bool
           </button>
         </form>
       )}
-      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      {error && <p role="alert" className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

@@ -67,7 +67,7 @@ export function EditOfferButton({ offerId, currentAmount }: Props) {
         placeholder={t("messagePlaceholder")}
         className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none dark:border-slate-600 dark:bg-slate-800"
       />
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p role="alert" className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
         <button
           type="submit"

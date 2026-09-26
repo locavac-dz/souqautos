@@ -100,7 +100,7 @@ export function DeleteAccountForm({ hasPassword = true }: { hasPassword?: boolea
               {t("cancel")}
             </button>
           </div>
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
         </form>
       )}
     </div>

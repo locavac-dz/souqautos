@@ -146,8 +146,8 @@ export function EditProfileForm({
       >
         {t("submit")}
       </button>
-      {saved && <p className="text-sm text-emerald-700">{t("saved")}</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {saved && <p role="status" className="text-sm text-emerald-700">{t("saved")}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     </form>
   );
 }

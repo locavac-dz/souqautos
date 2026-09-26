@@ -99,7 +99,7 @@ export function BecomeProForm({ wilayas }: { wilayas: { id: number; nomFr: strin
       >
         {t("submit")}
       </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     </form>
   );
 }

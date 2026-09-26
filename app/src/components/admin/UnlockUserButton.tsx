@@ -35,7 +35,7 @@ export function UnlockUserButton({ userId }: { userId: string }) {
       >
         {t("unlockAction")}
       </button>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }

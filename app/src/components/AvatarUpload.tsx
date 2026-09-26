@@ -94,7 +94,7 @@ export function AvatarUpload({ initialAvatarUrl }: { initialAvatarUrl: string | 
           )}
         </div>
       </div>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );
 }

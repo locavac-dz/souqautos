@@ -100,7 +100,7 @@ export function ListingPriceEditor({
       >
         {cancelLabel}
       </button>
-      {error && <p className="w-full text-xs text-red-600">{error}</p>}
+      {error && <p role="alert" className="w-full text-xs text-red-600">{error}</p>}
     </form>
   );
 }

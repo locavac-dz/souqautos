@@ -249,7 +249,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
           </div>
         )}
       </div>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p role="alert" className="mt-1 text-xs text-red-600">{error}</p>}
 
       <div className="mt-3 pl-4 border-l border-slate-100 dark:border-slate-700 space-y-2">
         {brand.models.map((model) => (
@@ -395,7 +395,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
           </button>
         </div>
       )}
-      {error && <p className="w-full text-xs text-red-600">{error}</p>}
+      {error && <p role="alert" className="w-full text-xs text-red-600">{error}</p>}
     </div>
   );
 }

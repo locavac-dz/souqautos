@@ -98,7 +98,7 @@ export function AiAdvisorChat() {
         {pending && <p className="text-sm text-slate-500 dark:text-slate-400">{t("pending")}</p>}
       </div>
 
-      {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 mb-2">{error}</p>}
       {turnLimitReached && <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{t("turnLimitReached")}</p>}
 
       <form onSubmit={sendMessage} className="flex gap-2">
