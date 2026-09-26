@@ -68,7 +68,7 @@ export default async function ModelPage({
   const tGuide = await getTranslations("Guide");
   const tPress = await getTranslations("PressReview");
 
-  const [stats, priceHistory, listings, currentUser, roadTests, guides, pressReviews] = await Promise.all([
+  const [stats, priceHistory, listings, currentUser, roadTests, guides, pressReviews, pressTotal] = await Promise.all([
     getListingStats({ brandId: brand.id, modelId: model.id }),
     getModelPriceHistory({ brandId: brand.id, modelId: model.id }),
     prisma.listing.findMany({
@@ -110,7 +110,7 @@ export default async function ModelPage({
       select: guideCardSelect,
     }),
     // Lot 114 — ce qu'en dit la presse : liens vers des essais publiés ailleurs
-    // (les 3 derniers de ce modèle).
+    // (les 3 derniers de ce modèle + le total pour afficher le lien « voir tout »).
     prisma.pressReview.findMany({
       where: { ...publishedNow(new Date()), modelId: model.id },
       orderBy: { publishedAt: "desc" },
@@ -120,6 +120,7 @@ export default async function ModelPage({
         model: { select: { name: true, slug: true } },
       },
     }),
+    prisma.pressReview.count({ where: { ...publishedNow(new Date()), modelId: model.id } }),
   ]);
 
   const favoriteIds = currentUser
@@ -247,7 +248,14 @@ export default async function ModelPage({
 
       {pressReviews.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{tPress("modelSectionTitle")}</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{tPress("modelSectionTitle")}</h2>
+            {pressTotal > pressReviews.length && (
+              <Link href="/essais/revue-de-presse" className="text-sm text-slate-600 underline hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200">
+                {tPress("seeAll", { count: pressTotal })}
+              </Link>
+            )}
+          </div>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{tPress("disclaimer")}</p>
           <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pressReviews.map((item) => (
