@@ -73,6 +73,7 @@ export function ListingPriceEditor({
         {newPriceLabel}
         <input
           type="number"
+          inputMode="numeric"
           min={1}
           step={1}
           value={price}

@@ -94,6 +94,7 @@ export function EstimateForm({
       <Field label={tWizard("year")}>
         <input
           type="number"
+          inputMode="numeric"
           min={1970}
           value={values.year ?? ""}
           onChange={(e) => set("year", e.target.value)}
@@ -104,6 +105,7 @@ export function EstimateForm({
       <Field label={tWizard("mileage")}>
         <input
           type="number"
+          inputMode="numeric"
           min={0}
           value={values.mileage ?? ""}
           onChange={(e) => set("mileage", e.target.value)}

@@ -51,6 +51,7 @@ export function EditOfferButton({ offerId, currentAmount }: Props) {
       <div className="flex items-center rounded-md border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800">
         <input
           type="number"
+          inputMode="numeric"
           min={1}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}

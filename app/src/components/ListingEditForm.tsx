@@ -415,6 +415,7 @@ export function ListingEditForm({
           <input
             id="edit-year"
             type="number"
+          inputMode="numeric"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
             className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
@@ -427,6 +428,7 @@ export function ListingEditForm({
           <input
             id="edit-mileage"
             type="number"
+          inputMode="numeric"
             min={0}
             value={mileage}
             onChange={(e) => setMileage(Number(e.target.value))}
@@ -508,6 +510,7 @@ export function ListingEditForm({
             <input
               id="edit-doors"
               type="number"
+          inputMode="numeric"
               min={1}
               max={7}
               value={doors}
@@ -522,6 +525,7 @@ export function ListingEditForm({
             <input
               id="edit-seats"
               type="number"
+          inputMode="numeric"
               min={1}
               max={9}
               value={seats}
@@ -552,6 +556,7 @@ export function ListingEditForm({
         <input
           id="edit-power"
           type="number"
+          inputMode="numeric"
           min={1}
           max={2000}
           value={powerHp}
