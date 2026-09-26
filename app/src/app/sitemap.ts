@@ -52,6 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry("/vendre"),
     localizedEntry("/devenir-professionnel"),
     localizedEntry("/comparateur"),
+    localizedEntry("/contact"),
   ];
 
   // Lot 137 — au plus 50 000 adresses au total (limite du protocole) : les annonces les plus récentes d'abord.

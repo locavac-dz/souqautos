@@ -27,6 +27,7 @@ export async function SiteFooter() {
           <div className="flex flex-col gap-2">
             <Link href="/professionnels" className="hover:text-slate-700 dark:hover:text-slate-200">{t("professionals")}</Link>
             <Link href="/concessionnaires" className="hover:text-slate-700 dark:hover:text-slate-200">{t("professionalsDirectory")}</Link>
+            <Link href="/contact" className="hover:text-slate-700 dark:hover:text-slate-200">{t("contact")}</Link>
             <Link href="/mentions-legales" className="hover:text-slate-700 dark:hover:text-slate-200">{t("legalNotice")}</Link>
             <Link href="/politique-confidentialite" className="hover:text-slate-700 dark:hover:text-slate-200">{t("privacyPolicy")}</Link>
             <Link href="/conditions-generales" className="hover:text-slate-700 dark:hover:text-slate-200">{t("terms")}</Link>
