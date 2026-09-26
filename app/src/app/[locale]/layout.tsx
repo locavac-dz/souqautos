@@ -40,6 +40,7 @@ export async function generateMetadata({
     // Lot 120 — application installable (le manifeste est servi par src/app/manifest.ts).
     applicationName: t("name"),
     appleWebApp: { capable: true, title: t("name"), statusBarStyle: "default" },
+    icons: { apple: "/icons/icon-192.png" },
     // Lot 124 — preuve de propriété du site pour Google Search Console et Bing Webmaster Tools
     // (variables GOOGLE_SITE_VERIFICATION / BING_SITE_VERIFICATION ; rien n'est émis si elles sont absentes).
     ...buildSearchEngineVerification(process.env),
@@ -54,6 +55,9 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const s3Origin = (() => {
+    try { return process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL).origin : null; } catch { return null; }
+  })();
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
@@ -80,6 +84,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={direction} className={bebasNeue.variable}>
       <body className="min-h-screen flex flex-col antialiased">
+        {s3Origin && <link rel="preconnect" href={s3Origin} />}
         <NextIntlClientProvider messages={messages}>
           <CompareProvider>
             {/* Premier élément atteint au clavier : invisible tant qu'il n'a pas le focus, il évite de retraverser toute la navigation à chaque page. */}

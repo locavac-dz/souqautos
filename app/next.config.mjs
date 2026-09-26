@@ -64,6 +64,7 @@ const nextConfig = {
   },
   images: {
     minimumCacheTTL: 31_536_000,
+    formats: ["image/avif", "image/webp"],
     ...(s3PublicUrl
       ? {
           remotePatterns: [
