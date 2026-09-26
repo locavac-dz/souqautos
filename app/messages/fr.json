@@ -108,7 +108,8 @@
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
     "legalNotice": "Mentions légales",
     "privacyPolicy": "Politique de confidentialité",
-    "terms": "Conditions générales"
+    "terms": "Conditions générales",
+    "navLabel": "Liens du pied de page"
   },
   "Legal": {
     "title": "Mentions légales",
@@ -219,7 +220,9 @@
     "doors": "Nombre de portes (optionnel)",
     "seats": "Nombre de places (optionnel)",
     "powerHp": "Puissance en ch (optionnel)",
+    "powerHpUnit": "ch",
     "fiscalPower": "Puissance fiscale",
+    "fiscalPowerUnit": "CV",
     "fiscalPowerHint": "CV fiscaux — utilisés pour le calcul des primes d'assurance",
     "bodyType": "Carrosserie (optionnel)",
     "bodyTypeNone": "—",

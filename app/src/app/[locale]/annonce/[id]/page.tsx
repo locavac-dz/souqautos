@@ -467,8 +467,8 @@ export default async function ListingDetailPage({
               {listing.firstHand && <DetailRow label={tListing("firstHand")} value="✓" />}
               {listing.accidented && <DetailRow label={tListing("accidented")} value="✓" />}
               {listing.color && <DetailRow label={tWizard("color")} value={listing.color} />}
-              {listing.powerHp && <DetailRow label={tWizard("powerHp")} value={`${listing.powerHp} ch`} />}
-              {listing.fiscalPower && <DetailRow label={tWizard("fiscalPower")} value={`${listing.fiscalPower} CV`} />}
+              {listing.powerHp && <DetailRow label={tWizard("powerHp")} value={`${listing.powerHp} ${tWizard("powerHpUnit")}`} />}
+              {listing.fiscalPower && <DetailRow label={tWizard("fiscalPower")} value={`${listing.fiscalPower} ${tWizard("fiscalPowerUnit")}`} />}
               {listing.bodyType && <DetailRow label={tWizard("bodyType")} value={tWizard(BODY_TYPE_KEY[listing.bodyType])} />}
               {listing.negotiable && <DetailRow label={tWizard("negotiable")} value="✓" />}
               {listing.controltechniqueExpiry && (

@@ -40,9 +40,9 @@ export function MobileMenuToggle({
         <span aria-hidden="true">{open ? "✕" : "☰"}</span>
       </button>
       {open && (
-        <div id={panelId} className="absolute left-0 right-0 top-full z-40 flex flex-col gap-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm shadow-sm">
+        <nav id={panelId} aria-label={menuLabel} className="absolute left-0 right-0 top-full z-40 flex flex-col gap-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm shadow-sm">
           {children}
-        </div>
+        </nav>
       )}
     </div>
   );

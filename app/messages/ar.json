@@ -108,7 +108,8 @@
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
     "legalNotice": "الإشعار القانوني",
     "privacyPolicy": "سياسة الخصوصية",
-    "terms": "الشروط العامة"
+    "terms": "الشروط العامة",
+    "navLabel": "روابط تذييل الصفحة"
   },
   "Legal": {
     "title": "الإشعار القانوني",
@@ -219,7 +220,9 @@
     "doors": "عدد الأبواب (اختياري)",
     "seats": "عدد المقاعد (اختياري)",
     "powerHp": "القوة بالحصان (اختياري)",
+    "powerHpUnit": "حصان",
     "fiscalPower": "القوة الجبائية",
+    "fiscalPowerUnit": "ح.ج",
     "fiscalPowerHint": "حصان جبائي — يُستخدم لحساب أقساط التأمين",
     "bodyType": "نوع الهيكل (اختياري)",
     "bodyTypeNone": "—",

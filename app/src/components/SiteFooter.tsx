@@ -16,7 +16,7 @@ export async function SiteFooter() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-xs text-slate-500 dark:text-slate-400">
+        <nav aria-label={t("navLabel")} className="grid grid-cols-2 gap-4 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex flex-col gap-2">
             <Link href="/voitures" className="hover:text-slate-700 dark:hover:text-slate-200">{t("browseBrands")}</Link>
             <Link href="/wilaya" className="hover:text-slate-700 dark:hover:text-slate-200">{t("browseWilayas")}</Link>
@@ -31,7 +31,7 @@ export async function SiteFooter() {
             <Link href="/politique-confidentialite" className="hover:text-slate-700 dark:hover:text-slate-200">{t("privacyPolicy")}</Link>
             <Link href="/conditions-generales" className="hover:text-slate-700 dark:hover:text-slate-200">{t("terms")}</Link>
           </div>
-        </div>
+        </nav>
       </div>
     </footer>
   );
