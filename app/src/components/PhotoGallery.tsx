@@ -4,10 +4,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 type Photo = { id: string; path: string };
 
 export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) {
+  const t = useTranslations("PhotoGallery");
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
 
@@ -75,7 +77,7 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`${alt} — photo ${index + 1} sur ${photos.length}`}
+          aria-label={`${alt} — ${t("photoOf", { current: index + 1, total: photos.length })}`}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
           onClick={close}
         >
@@ -83,7 +85,7 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
           <button
             type="button"
             onClick={close}
-            aria-label="Fermer"
+            aria-label={t("close")}
             className="absolute top-3 right-3 rounded-full bg-white/10 p-2 text-white hover:bg-white/25"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
@@ -123,7 +125,7 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); prev(); }}
-                aria-label="Photo précédente"
+                aria-label={t("prevPhoto")}
                 className="absolute left-2 rounded-full bg-white/10 p-3 text-white hover:bg-white/25"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5">
@@ -133,7 +135,7 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); next(); }}
-                aria-label="Photo suivante"
+                aria-label={t("nextPhoto")}
                 className="absolute right-2 rounded-full bg-white/10 p-3 text-white hover:bg-white/25"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5">

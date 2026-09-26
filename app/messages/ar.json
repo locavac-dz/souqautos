@@ -19,7 +19,15 @@
     "menu": "القائمة",
     "main": "التنقل الرئيسي",
     "skipToContent": "انتقل إلى المحتوى الرئيسي",
-    "breadcrumb": "مسار التنقل"
+    "breadcrumb": "مسار التنقل",
+    "toggleLight": "التبديل إلى الوضع الفاتح",
+    "toggleDark": "التبديل إلى الوضع الداكن"
+  },
+  "PhotoGallery": {
+    "close": "إغلاق",
+    "prevPhoto": "الصورة السابقة",
+    "nextPhoto": "الصورة التالية",
+    "photoOf": "صورة {current} من {total}"
   },
   "RecentlyViewed": {
     "title": "شوهدت مؤخرًا"

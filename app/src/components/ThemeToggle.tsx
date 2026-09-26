@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 export function ThemeToggle() {
+  const t = useTranslations("Nav");
   const [isDark, setIsDark] = useState(
     () => typeof window !== "undefined" && document.documentElement.classList.contains("dark")
   );
@@ -24,7 +26,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
+      aria-label={isDark ? t("toggleLight") : t("toggleDark")}
       className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
     >
       {isDark ? (

@@ -19,7 +19,15 @@
     "menu": "Menu",
     "main": "Navigation principale",
     "skipToContent": "Aller au contenu principal",
-    "breadcrumb": "Fil d'Ariane"
+    "breadcrumb": "Fil d'Ariane",
+    "toggleLight": "Passer en mode clair",
+    "toggleDark": "Passer en mode sombre"
+  },
+  "PhotoGallery": {
+    "close": "Fermer",
+    "prevPhoto": "Photo précédente",
+    "nextPhoto": "Photo suivante",
+    "photoOf": "photo {current} sur {total}"
   },
   "RecentlyViewed": {
     "title": "Récemment consultés"
