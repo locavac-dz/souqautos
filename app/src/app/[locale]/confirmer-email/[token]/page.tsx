@@ -3,6 +3,17 @@ import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { isExpired } from "@/lib/verification";
 import { isUniqueViolation } from "@/lib/prisma-errors";
+import { sendEmail } from "@/lib/mailer";
+import { emailChangedNoticeEmail, normalizeNoticeLocale } from "@/lib/email-change-emails";
+
+// Lot 229 — l'ancienne adresse est prévenue ; l'échec du courriel ne défait pas le changement (le courriel est un filet, pas la règle).
+async function notifyPreviousAddress(owner: { email: string; locale: string }, newEmail: string) {
+  try {
+    await sendEmail({ to: owner.email, ...emailChangedNoticeEmail(normalizeNoticeLocale(owner.locale), { previousEmail: owner.email, newEmail }) });
+  } catch (error) {
+    console.error(`[EMAIL changement d'adresse] avertissement à l'ancienne adresse non envoyé : ${(error as Error).message}`);
+  }
+}
 
 export default async function ConfirmEmailChangePage({
   params,
@@ -29,12 +40,14 @@ export default async function ConfirmEmailChangePage({
       } else {
         // Cliquer ce lien prouve la possession de la nouvelle adresse — elle
         // est donc considérée vérifiée dès l'activation, sans étape séparée.
+        const owner = await prisma.user.findUnique({ where: { id: record.userId }, select: { email: true, locale: true } });
         try {
           await prisma.user.update({
             where: { id: record.userId },
             data: { email: record.newEmail.toLowerCase(), emailVerifiedAt: new Date() },
           });
           status = "success";
+          if (owner) await notifyPreviousAddress(owner, record.newEmail.toLowerCase());
         } catch (error) {
           // L'adresse a été prise entre la vérification ci-dessus et l'écriture.
           if (!isUniqueViolation(error)) throw error;

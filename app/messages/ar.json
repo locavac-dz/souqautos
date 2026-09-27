@@ -1104,6 +1104,8 @@
   },
   "ProfileEdit": {
     "title": "تعديل ملفي الشخصي",
+    "emailChangePasswordLabel": "كلمة المرور الحالية",
+    "emailChangeInvalidPassword": "كلمة المرور غير صحيحة.",
     "subtitle": "تُستخدم هذه المعلومات في إعلاناتك وفي صفحتك كبائع.",
     "displayNameLabel": "الاسم المعروض",
     "wilayaLabel": "الولاية",

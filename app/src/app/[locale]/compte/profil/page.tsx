@@ -28,7 +28,7 @@ export default async function EditProfilePage() {
         <AvatarUpload initialAvatarUrl={user.profile?.avatarUrl ?? null} />
       </div>
       <div className="mb-6">
-        <EmailChangeForm currentEmail={user.email} />
+        <EmailChangeForm currentEmail={user.email} hasPassword={Boolean(user.passwordHash)} />
       </div>
       {/* Lot 138 — double authentification. */}
       <p className="mb-6 text-sm">

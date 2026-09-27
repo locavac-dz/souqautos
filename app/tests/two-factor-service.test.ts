@@ -96,7 +96,7 @@ beforeEach(() => {
 
 // Active la fonction pour u1 et renvoie les codes de secours.
 async function enable(): Promise<string[]> {
-  const begun = await beginEnrolment("u1");
+  const begun = await beginEnrolment("u1", PASSWORD);
   if (!begun.ok) throw new Error("begin");
   const confirmed = await confirmEnrolment("u1", totpCode(begun.secret, NOW.getTime()), NOW);
   if (!confirmed.ok) throw new Error("confirm");
@@ -105,9 +105,24 @@ async function enable(): Promise<string[]> {
   return confirmed.recoveryCodes;
 }
 
+describe("activation — le mot de passe est exigé pour commencer (Lot 229)", () => {
+  it("refuse sans mot de passe ou avec un mauvais mot de passe, et ne tire aucun secret", async () => {
+    expect(await beginEnrolment("u1")).toEqual({ ok: false, error: "invalid_password" });
+    expect(await beginEnrolment("u1", "mauvais")).toEqual({ ok: false, error: "invalid_password" });
+    expect(user().totpPendingSecretEnc).toBeNull();
+  });
+
+  it("un compte créé avec Google (sans mot de passe) commence avec sa seule session", async () => {
+    user().passwordHash = null;
+    const result = await beginEnrolment("u1");
+    expect(result.ok).toBe(true);
+    expect(user().totpPendingSecretEnc).not.toBeNull();
+  });
+});
+
 describe("activation", () => {
   it("begin : garde le secret CHIFFRÉ comme « en attente », rend le QR et la clé, et n'active rien", async () => {
-    const result = await beginEnrolment("u1");
+    const result = await beginEnrolment("u1", PASSWORD);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.uri).toContain(`secret=${result.secret}`);
@@ -123,8 +138,8 @@ describe("activation", () => {
   });
 
   it("recommencer remplace le secret en attente (l'ancien code QR ne sert plus)", async () => {
-    const first = await beginEnrolment("u1");
-    const second = await beginEnrolment("u1");
+    const first = await beginEnrolment("u1", PASSWORD);
+    const second = await beginEnrolment("u1", PASSWORD);
     if (!first.ok || !second.ok) throw new Error("begin");
     expect(second.secret).not.toBe(first.secret);
     expect(secretOf()).toBe(second.secret);
@@ -132,7 +147,7 @@ describe("activation", () => {
   });
 
   it("confirm avec un mauvais code : refusé, rien n'est activé", async () => {
-    await beginEnrolment("u1");
+    await beginEnrolment("u1", PASSWORD);
     const result = await confirmEnrolment("u1", "000000", NOW);
     expect(result).toEqual({ ok: false, error: "invalid_code" });
     expect(user().totpEnabledAt).toBeNull();
@@ -145,7 +160,7 @@ describe("activation", () => {
   });
 
   it("confirm avec le bon code : active, mémorise le pas, révoque les autres sessions, crée dix codes de secours (empreintes seulement)", async () => {
-    const begun = await beginEnrolment("u1");
+    const begun = await beginEnrolment("u1", PASSWORD);
     if (!begun.ok) throw new Error("begin");
     const result = await confirmEnrolment("u1", totpCode(begun.secret, NOW.getTime()), NOW);
     expect(result.ok).toBe(true);
@@ -172,12 +187,12 @@ describe("activation", () => {
 
   it("une fois activée : begin et confirm refusent (« déjà activée »)", async () => {
     await enable();
-    expect(await beginEnrolment("u1")).toEqual({ ok: false, error: "already_enabled" });
+    expect(await beginEnrolment("u1", PASSWORD)).toEqual({ ok: false, error: "already_enabled" });
     expect(await confirmEnrolment("u1", "123456", NOW)).toEqual({ ok: false, error: "already_enabled" });
   });
 
   it("deux confirmations SIMULTANÉES : une seule aboutit, et il n'y a qu'un jeu de codes de secours", async () => {
-    const begun = await beginEnrolment("u1");
+    const begun = await beginEnrolment("u1", PASSWORD);
     if (!begun.ok) throw new Error("begin");
     const code = totpCode(begun.secret, NOW.getTime());
     const results = await Promise.all([confirmEnrolment("u1", code, NOW), confirmEnrolment("u1", code, NOW)]);
@@ -193,7 +208,7 @@ describe("activation", () => {
 
   it("un courriel qui ne part pas ne défait pas l'activation", async () => {
     sendEmail.mockRejectedValue(new Error("SMTP indisponible"));
-    const begun = await beginEnrolment("u1");
+    const begun = await beginEnrolment("u1", PASSWORD);
     if (!begun.ok) throw new Error("begin");
     expect((await confirmEnrolment("u1", totpCode(begun.secret, NOW.getTime()), NOW)).ok).toBe(true);
     expect(user().totpEnabledAt).toEqual(NOW);
@@ -349,7 +364,7 @@ describe("réinitialisation par l'équipe", () => {
   });
 
   it("réinitialise aussi une activation commencée mais jamais confirmée", async () => {
-    await beginEnrolment("u1");
+    await beginEnrolment("u1", PASSWORD);
     expect(await resetTwoFactor("u1", "admin")).toEqual({ ok: true });
     expect(user().totpPendingSecretEnc).toBeNull();
   });

@@ -42,26 +42,42 @@ beforeEach(() => {
 describe("POST /api/account/two-factor/setup", () => {
   it("rejects unauthenticated requests", async () => {
     getCurrentUser.mockResolvedValue(null);
-    const res = await setupPost();
+    const res = await setupPost(request({ password: "secret" }));
     expect(res.status).toBe(401);
   });
 
   it("returns 429 when rate limit exceeded", async () => {
     checkRateLimit.mockResolvedValue(false);
-    const res = await setupPost();
+    const res = await setupPost(request({ password: "secret" }));
     expect(res.status).toBe(429);
     expect(beginEnrolment).not.toHaveBeenCalled();
   });
 
   it("returns 409 when 2FA is already enabled", async () => {
     beginEnrolment.mockResolvedValue({ ok: false, error: "already_enabled" });
-    const res = await setupPost();
+    const res = await setupPost(request({ password: "secret" }));
     expect(res.status).toBe(409);
+  });
+
+  // Lot 229 — le mot de passe est transmis au service, qui le vérifie ; refusé → 400, sans rien montrer.
+  it("forwards the password and returns 400 when the service refuses it", async () => {
+    beginEnrolment.mockResolvedValue({ ok: false, error: "invalid_password" });
+    const res = await setupPost(request({ password: "mauvais" }));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: "invalid_password" });
+    expect(beginEnrolment).toHaveBeenCalledWith("user1", "mauvais");
+  });
+
+  it("accepts a request without body (account without password: the service decides)", async () => {
+    beginEnrolment.mockResolvedValue({ ok: true, secretDisplay: "X", uri: "x", qr: "x" });
+    const res = await setupPost({ json: async () => { throw new Error("no body"); } } as unknown as NextRequest);
+    expect(res.status).toBe(200);
+    expect(beginEnrolment).toHaveBeenCalledWith("user1", undefined);
   });
 
   it("returns secret, uri and qr on success", async () => {
     beginEnrolment.mockResolvedValue({ ok: true, secretDisplay: "ABCD EFGH", uri: "otpauth://...", qr: "data:image/png;base64,..." });
-    const res = await setupPost();
+    const res = await setupPost(request({ password: "secret" }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toMatchObject({ secret: "ABCD EFGH", uri: "otpauth://...", qr: expect.any(String) });
@@ -69,7 +85,7 @@ describe("POST /api/account/two-factor/setup", () => {
 
   it("response has Cache-Control: no-store", async () => {
     beginEnrolment.mockResolvedValue({ ok: true, secretDisplay: "X", uri: "x", qr: "x" });
-    const res = await setupPost();
+    const res = await setupPost(request({ password: "secret" }));
     expect(res.headers.get("Cache-Control")).toBe("no-store");
   });
 });

@@ -4,12 +4,13 @@ import { z } from "zod";
 import { emailSchema } from "@/lib/validation/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { verifyPassword } from "@/lib/auth-server/password";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/mailer";
 import { generateExpiry } from "@/lib/verification";
 import { SITE_URL } from "@/lib/site";
 
-const bodySchema = z.object({ newEmail: emailSchema });
+const bodySchema = z.object({ newEmail: emailSchema, password: z.string().max(200).optional() });
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -25,6 +26,12 @@ export async function POST(request: NextRequest) {
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "validation" }, { status: 400 });
+  }
+
+  // Lot 229 — changer l'adresse de connexion, c'est pouvoir ensuite réinitialiser le mot de passe : une session volée ne doit pas
+  // suffire. Le mot de passe est exigé, sauf pour un compte créé avec Google qui n'en a pas (il n'a que sa session).
+  if (user.passwordHash && !(typeof parsed.data.password === "string" && (await verifyPassword(parsed.data.password, user.passwordHash)))) {
+    return NextResponse.json({ error: "invalid_password" }, { status: 400 });
   }
 
   const newEmail = parsed.data.newEmail;

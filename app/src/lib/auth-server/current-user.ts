@@ -1,10 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionFromCookies } from "./session";
+import { isSessionRevoked } from "./session-revocation";
 import { effectiveRole, staffTwoFactorRequired } from "@/lib/staff-two-factor";
 
 export async function getCurrentUser() {
   const session = await getSessionFromCookies();
   if (!session) return null;
+
+  // Lot 229 — session révoquée par une déconnexion : refusée même si le jeton est encore valable.
+  if (session.jti && (await isSessionRevoked(session.jti))) return null;
 
   const user = await prisma.user.findUnique({
     where: { id: session.sub },

@@ -1104,6 +1104,8 @@
   },
   "ProfileEdit": {
     "title": "Modifier mon profil",
+    "emailChangePasswordLabel": "Mot de passe actuel",
+    "emailChangeInvalidPassword": "Mot de passe incorrect.",
     "subtitle": "Ces informations sont utilisées sur vos annonces et votre page vendeur.",
     "displayNameLabel": "Nom affiché",
     "wilayaLabel": "Wilaya",

@@ -2,18 +2,40 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSession = vi.fn();
 const userFindUnique = vi.fn();
+const revoked = vi.fn();
 
 vi.mock("@/lib/auth-server/session", () => ({ getSessionFromCookies: () => getSession() }));
+vi.mock("@/lib/auth-server/session-revocation", () => ({ isSessionRevoked: (jti: string) => revoked(jti) }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: (...a: unknown[]) => userFindUnique(...a) } } }));
 
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 
 const RESET = new Date("2026-09-20T10:00:00.500Z");
-const session = (issuedAtMs: number) => ({ sub: "user-1", role: "PARTICULIER", issuedAtMs });
+const session = (issuedAtMs: number, jti: string | null = null) => ({ sub: "user-1", role: "PARTICULIER", issuedAtMs, jti, expiresAtMs: issuedAtMs + 7 * 24 * 3600 * 1000 });
 const user = (overrides: Record<string, unknown> = {}) => ({ id: "user-1", suspendedAt: null, deletedAt: null, sessionsValidAfter: null, ...overrides });
 
 beforeEach(() => {
   vi.resetAllMocks();
+  revoked.mockResolvedValue(false);
+});
+
+describe("getCurrentUser — session revoked by a logout (Lot 229)", () => {
+  it("refuses a session whose token id is on the revocation list, without even reading the account", async () => {
+    getSession.mockResolvedValue(session(Date.now(), "jti-1"));
+    revoked.mockResolvedValue(true);
+    expect(await getCurrentUser()).toBeNull();
+    expect(revoked).toHaveBeenCalledWith("jti-1");
+    expect(userFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("accepts a session that is not revoked, and never consults the list for a token without id (issued before the feature)", async () => {
+    userFindUnique.mockResolvedValue(user());
+    getSession.mockResolvedValue(session(Date.now(), "jti-2"));
+    expect(await getCurrentUser()).toMatchObject({ id: "user-1" });
+    getSession.mockResolvedValue(session(Date.now(), null));
+    expect(await getCurrentUser()).toMatchObject({ id: "user-1" });
+    expect(revoked).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("getCurrentUser — sessions revoked by a password reset (Lot 133)", () => {

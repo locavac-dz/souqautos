@@ -40,14 +40,16 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
     return { ok: Boolean(response?.ok), data };
   }
 
-  async function start() {
+  async function start(event: React.FormEvent) {
+    event.preventDefault();
     setError(null);
     setBusy("start");
-    const { ok, data } = await call("/api/account/two-factor/setup");
+    const { ok, data } = await call("/api/account/two-factor/setup", hasPassword ? { password } : {});
     setBusy(null);
     if (!ok || !data) return setError(message(data?.error as string | undefined));
     setSetup({ secret: data.secret as string, qr: data.qr as Qr });
     setCode("");
+    setPassword("");
   }
 
   async function confirm(event: React.FormEvent) {
@@ -161,13 +163,30 @@ export function TwoFactorPanel({ status, hasPassword }: { status: Status; hasPas
   if (!status.enabled) {
     if (!setup) {
       return (
-        <section className="space-y-3">
+        <form onSubmit={start} className="space-y-3">
           <p className="text-sm text-slate-600 dark:text-slate-300">{t("intro")}</p>
+          {hasPassword && (
+            <div>
+              <label htmlFor="two-factor-setup-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t("passwordLabel")}
+              </label>
+              <input
+                id="two-factor-setup-password"
+                type="password"
+                required
+                autoComplete="current-password"
+                dir={locale === "ar" ? "ltr" : undefined}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full max-w-sm rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2"
+              />
+            </div>
+          )}
           {errorLine}
-          <button type="button" onClick={start} disabled={busy === "start"} className={primary}>
+          <button type="submit" disabled={busy === "start"} className={primary}>
             {busy === "start" ? t("starting") : t("enable")}
           </button>
-        </section>
+        </form>
       );
     }
     return (

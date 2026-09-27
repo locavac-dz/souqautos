@@ -29,8 +29,8 @@ async function inbox(request: APIRequestContext, email: string): Promise<{ subje
 }
 
 // Active la fonction par l'API (pour les tests dont ce n'est pas le sujet). Le compte doit être connecté sur `page`.
-async function enableViaApi(page: Page): Promise<{ secret: string; recoveryCodes: string[] }> {
-  const setup = await (await page.request.post("/api/account/two-factor/setup")).json();
+async function enableViaApi(page: Page, account: NewAccount): Promise<{ secret: string; recoveryCodes: string[] }> {
+  const setup = await (await page.request.post("/api/account/two-factor/setup", { data: { password: account.password } })).json();
   const secret = String(setup.secret).replace(/\s/g, "");
   const enabled = await page.request.post("/api/account/two-factor/enable", { data: { code: codeNow(secret) } });
   expect(enabled.status()).toBe(200);
@@ -65,6 +65,13 @@ test.describe("activation", () => {
     await page.goto("/fr/compte/securite");
     await expect(page.getByText(T.statusOff)).toBeVisible();
 
+    // Lot 229 — l'activation commence par le mot de passe (une session volée ne suffit pas) ; sans lui, rien n'est montré.
+    await page.getByRole("button", { name: T.enable }).click();
+    await expect(page.getByRole("img", { name: T.qrAlt })).toHaveCount(0);
+    await page.locator("#two-factor-setup-password").fill("mauvais mot de passe");
+    await page.getByRole("button", { name: T.enable }).click();
+    await expect(page.locator('p[role="alert"]')).toHaveText(T.errorInvalidPassword);
+    await page.locator("#two-factor-setup-password").fill(account.password);
     await page.getByRole("button", { name: T.enable }).click();
     await expect(page.getByRole("img", { name: T.qrAlt })).toBeVisible();
     const secret = (await page.getByTestId("two-factor-secret").innerText()).replace(/\s/g, "");
@@ -105,6 +112,7 @@ test.describe("activation", () => {
     const account = uniqueAccount("2fa-bad");
     await registerAndLogin(page, "fr", account);
     await page.goto("/fr/compte/securite");
+    await page.locator("#two-factor-setup-password").fill(account.password);
     await page.getByRole("button", { name: T.enable }).click();
     await page.locator("#two-factor-enable-code").fill("000000");
     await page.getByRole("button", { name: T.confirm }).click();
@@ -119,6 +127,7 @@ test.describe("activation", () => {
     await page.goto("/ar/compte/securite");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByText(ar.TwoFactor.statusOff)).toBeVisible();
+    await page.locator("#two-factor-setup-password").fill(account.password);
     await page.getByRole("button", { name: ar.TwoFactor.enable }).click();
     await expect(page.getByRole("img", { name: ar.TwoFactor.qrAlt })).toBeVisible();
     const secret = (await page.getByTestId("two-factor-secret").innerText()).replace(/\s/g, "");
@@ -140,6 +149,7 @@ test.describe("activation", () => {
         for (const violation of await audit(page)) found.push(`${locale} ${state} : ${violation.id} — ${violation.nodes[0]?.html.slice(0, 90)}`);
       };
       await check("départ");
+      await page.locator("#two-factor-setup-password").fill(account.password);
       await page.getByRole("button", { name: t.enable }).click();
       await expect(page.getByRole("img", { name: t.qrAlt })).toBeVisible();
       await check("activation");
@@ -162,7 +172,7 @@ test.describe("connexion", () => {
   test("après le mot de passe, AUCUNE session : la page du code s'affiche, et tout accès protégé reste refusé", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-login");
     await registerAndLogin(page, "fr", account);
-    await enableViaApi(page);
+    await enableViaApi(page, account);
 
     const context = await browser.newContext();
     const other = await context.newPage();
@@ -182,7 +192,7 @@ test.describe("connexion", () => {
   test("un code faux est refusé ; le bon ouvre la session et mène au tableau de bord", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-ok");
     await registerAndLogin(page, "fr", account);
-    const { secret } = await enableViaApi(page);
+    const { secret } = await enableViaApi(page, account);
 
     const context = await browser.newContext();
     const other = await context.newPage();
@@ -206,7 +216,7 @@ test.describe("connexion", () => {
   test("un code DÉJÀ UTILISÉ est refusé (pas de rejeu), même s'il est encore dans sa minute de validité", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-replay");
     await registerAndLogin(page, "fr", account);
-    const { secret } = await enableViaApi(page);
+    const { secret } = await enableViaApi(page, account);
     const code = codeNow(secret, 1);
 
     const first = await browser.newContext();
@@ -226,7 +236,7 @@ test.describe("connexion", () => {
   test("deux vérifications SIMULTANÉES avec le même code : une seule ouvre une session", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-race");
     await registerAndLogin(page, "fr", account);
-    const { secret } = await enableViaApi(page);
+    const { secret } = await enableViaApi(page, account);
     const code = codeNow(secret, 1);
 
     const contexts = await Promise.all([browser.newContext(), browser.newContext(), browser.newContext()]);
@@ -239,7 +249,7 @@ test.describe("connexion", () => {
   test("un code de secours ouvre la session UNE fois, prévient la personne par courriel, et il en reste neuf", async ({ page, browser, request }) => {
     const account = uniqueAccount("2fa-recovery");
     await registerAndLogin(page, "fr", account);
-    const { recoveryCodes } = await enableViaApi(page);
+    const { recoveryCodes } = await enableViaApi(page, account);
 
     const first = await browser.newContext();
     await passwordLogin(first.request, account, randomIp());
@@ -261,7 +271,7 @@ test.describe("connexion", () => {
   test("cinq codes faux verrouillent le compte : même le bon code est refusé ensuite (423), et le mot de passe seul ne remet rien à zéro", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-lock");
     await registerAndLogin(page, "fr", account);
-    const { secret } = await enableViaApi(page);
+    const { secret } = await enableViaApi(page, account);
 
     const attacker = await browser.newContext();
     const ip = randomIp();
@@ -288,7 +298,7 @@ test.describe("connexion", () => {
   test("le jeton d'attente n'est PAS une session : le recopier dans le cookie de session n'ouvre rien", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-forge");
     await registerAndLogin(page, "fr", account);
-    await enableViaApi(page);
+    await enableViaApi(page, account);
 
     const context = await browser.newContext();
     await passwordLogin(context.request, account, randomIp());
@@ -314,7 +324,7 @@ test.describe("connexion", () => {
     const account = uniqueAccount("2fa-google");
     await registerAndLogin(page, "fr", account);
     await e2eDb().user.update({ where: { email: account.email }, data: { emailVerifiedAt: new Date() } }); // Google rattache une adresse VÉRIFIÉE
-    const { secret } = await enableViaApi(page);
+    const { secret } = await enableViaApi(page, account);
 
     expect((await request.post(`${MOCK_GOOGLE}/__control`, { data: { reset: true, identity: { sub: `sub-${Date.now()}`, email: account.email, email_verified: true, name: "Amina" } } })).status()).toBe(204);
     const context = await browser.newContext();
@@ -337,7 +347,7 @@ test.describe("connexion", () => {
   test("la page du code, en français et en arabe, respecte l'accessibilité (axe)", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-verify-a11y");
     await registerAndLogin(page, "fr", account);
-    await enableViaApi(page);
+    await enableViaApi(page, account);
     const context = await browser.newContext();
     await passwordLogin(context.request, account, randomIp());
     const other = await context.newPage();
@@ -356,7 +366,7 @@ test.describe("gestion du compte", () => {
   test("de nouveaux codes de secours exigent un code, et les anciens cessent de fonctionner", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-regen");
     await registerAndLogin(page, "fr", account);
-    const { secret, recoveryCodes } = await enableViaApi(page);
+    const { secret, recoveryCodes } = await enableViaApi(page, account);
 
     expect((await page.request.post("/api/account/two-factor/recovery-codes", { data: { code: "000000" } })).status()).toBe(400);
     const regenerated = await page.request.post("/api/account/two-factor/recovery-codes", { data: { code: codeNow(secret, 1) } });
@@ -375,7 +385,7 @@ test.describe("gestion du compte", () => {
   test("désactiver exige le mot de passe ET un code ; ensuite la connexion ne demande plus de code", async ({ page, browser }) => {
     const account = uniqueAccount("2fa-off");
     await registerAndLogin(page, "fr", account);
-    const { secret } = await enableViaApi(page);
+    const { secret } = await enableViaApi(page, account);
     await forgetLastStep(account.email);
 
     const noPassword = await page.request.post("/api/account/two-factor/disable", { data: { code: codeNow(secret) } });
@@ -400,7 +410,7 @@ test.describe("gestion du compte", () => {
   test("par l'interface : désactivation avec mot de passe et code, puis l'état repasse à « désactivée »", async ({ page }) => {
     const account = uniqueAccount("2fa-off-ui");
     await registerAndLogin(page, "fr", account);
-    const { secret } = await enableViaApi(page);
+    const { secret } = await enableViaApi(page, account);
     await forgetLastStep(account.email);
     await page.goto("/fr/compte/securite");
     await expect(page.getByText(T.statusOn)).toBeVisible();
@@ -416,7 +426,7 @@ test.describe("gestion du compte", () => {
     }
     const account = uniqueAccount("2fa-twice");
     await registerAndLogin(page, "fr", account);
-    await enableViaApi(page);
+    await enableViaApi(page, account);
     expect((await page.request.post("/api/account/two-factor/setup")).status()).toBe(409);
   });
 });
@@ -427,7 +437,7 @@ test.describe("administration", () => {
     const victimContext = await browser.newContext();
     const victim = await victimContext.newPage();
     await registerAndLogin(victim, "fr", target);
-    await enableViaApi(victim);
+    await enableViaApi(victim, target);
     expect(await me(victim)).toBe(200);
 
     const admin = uniqueAccount("2fa-admin");
@@ -454,7 +464,7 @@ test.describe("administration", () => {
     const admin = uniqueAccount("2fa-admin2");
     await registerAndLogin(page, "fr", admin);
     await makeAdmin(admin.email);
-    const { secret } = await enableViaApi(page);
+    const { secret } = await enableViaApi(page, admin);
     expect(secret).toBeTruthy();
     expect((await page.request.post(`/api/admin/users/${await userIdOf(admin.email)}/two-factor/reset`)).status(), "sur soi-même").toBe(400);
     expect((await page.request.post("/api/admin/users/inexistant/two-factor/reset")).status()).toBe(404);
@@ -477,7 +487,7 @@ test.describe("administration", () => {
     const victimContext = await browser.newContext();
     const victim = await victimContext.newPage();
     await registerAndLogin(victim, "fr", target);
-    await enableViaApi(victim);
+    await enableViaApi(victim, target);
 
     const admin = uniqueAccount("2fa-admin3");
     await registerAndLogin(page, "fr", admin);

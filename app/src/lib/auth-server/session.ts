@@ -20,9 +20,11 @@ export type SessionPayload = {
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
   // Lot 133 — `ims` : date d'émission en MILLISECONDES (le champ standard `iat` n'a que la seconde), pour que la
   // révocation des sessions (User.sessionsValidAfter) soit exacte même dans la seconde du changement de mot de passe.
+  // Lot 229 — `jti` : identifiant unique de la session, pour la révoquer seule à la déconnexion (src/lib/auth-server/session-revocation.ts).
   return new SignJWT({ ...payload, ims: Date.now() })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
+    .setJti(crypto.randomUUID())
     .setExpirationTime(`${SESSION_DURATION_SECONDS}s`)
     .sign(getSecretKey());
 }
@@ -30,7 +32,8 @@ export async function createSessionToken(payload: SessionPayload): Promise<strin
 // Lot 133 — date d'émission de la session (millisecondes), comparée à User.sessionsValidAfter pour révoquer les
 // sessions ouvertes avant une réinitialisation de mot de passe. Une session émise avant ce lot n'a pas `ims` : on
 // prend le DÉBUT de sa seconde (`iat`), donc elle est révoquée dès qu'une révocation la précède, jamais l'inverse.
-export type VerifiedSession = SessionPayload & { issuedAtMs: number };
+// `jti` est absent des sessions émises avant le lot 229 : elles ne peuvent pas être révoquées une à une (elles expirent).
+export type VerifiedSession = SessionPayload & { issuedAtMs: number; jti: string | null; expiresAtMs: number };
 
 export async function verifySessionToken(
   token: string
@@ -44,7 +47,9 @@ export async function verifySessionToken(
     // même clé : il ne doit JAMAIS être pris pour une session, même si quelqu'un le recopiait dans le cookie de session.
     if (payload.purpose !== undefined) return null;
     const issuedAtMs = typeof payload.ims === "number" ? payload.ims : (typeof payload.iat === "number" ? payload.iat : 0) * 1000;
-    return { sub: payload.sub, role: payload.role, issuedAtMs };
+    const jti = typeof payload.jti === "string" ? payload.jti : null;
+    const expiresAtMs = typeof payload.exp === "number" ? payload.exp * 1000 : 0;
+    return { sub: payload.sub, role: payload.role, issuedAtMs, jti, expiresAtMs };
   } catch {
     return null;
   }

@@ -41,14 +41,19 @@ export async function getTwoFactorStatus(userId: string): Promise<{ enabled: boo
 
 // --- Activation -----------------------------------------------------------------------------------------------------------------
 
-export type BeginResult = { ok: true; secret: string; secretDisplay: string; uri: string; qr: QrDrawing } | { ok: false; error: "already_enabled" | "not_found" };
+export type BeginResult =
+  | { ok: true; secret: string; secretDisplay: string; uri: string; qr: QrDrawing }
+  | { ok: false; error: "already_enabled" | "not_found" | "invalid_password" };
 
 // Étape 1 : un secret est tiré et MONTRÉ (code QR + clé à recopier). Il est gardé chiffré comme « en attente » : il ne protège
 // rien tant que la personne n'a pas prouvé, à l'étape 2, qu'elle le lit dans son application. Recommencer remplace le secret en attente.
-export async function beginEnrolment(userId: string): Promise<BeginResult> {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, totpEnabledAt: true } });
+// Lot 229 — le mot de passe est exigé : une session volée ne doit pas pouvoir enrôler le téléphone de l'attaquant et verrouiller le
+// titulaire dehors. Un compte créé avec Google, sans mot de passe, n'a que sa session (même règle que la désactivation).
+export async function beginEnrolment(userId: string, password?: string): Promise<BeginResult> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, totpEnabledAt: true, passwordHash: true } });
   if (!user) return { ok: false, error: "not_found" };
   if (user.totpEnabledAt) return { ok: false, error: "already_enabled" };
+  if (user.passwordHash && !(typeof password === "string" && (await verifyPassword(password, user.passwordHash)))) return { ok: false, error: "invalid_password" };
 
   const secret = generateTotpSecret();
   await prisma.user.update({ where: { id: userId }, data: { totpPendingSecretEnc: sealSecret(secret) } });

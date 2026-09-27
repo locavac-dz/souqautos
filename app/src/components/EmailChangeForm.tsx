@@ -1,17 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const ERROR_KEY: Record<string, string> = {
   same_email: "emailChangeSameEmail",
   email_taken: "emailChangeTakenError",
+  invalid_password: "emailChangeInvalidPassword",
   validation: "emailChangeErrorGeneric",
 };
 
-export function EmailChangeForm({ currentEmail }: { currentEmail: string }) {
+export function EmailChangeForm({ currentEmail, hasPassword }: { currentEmail: string; hasPassword: boolean }) {
   const t = useTranslations("ProfileEdit");
+  const locale = useLocale();
   const [newEmail, setNewEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -25,7 +28,7 @@ export function EmailChangeForm({ currentEmail }: { currentEmail: string }) {
     const res = await fetch("/api/profile/email-change/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ newEmail: newEmail.trim() }),
+      body: JSON.stringify({ newEmail: newEmail.trim(), ...(hasPassword ? { password } : {}) }),
     });
 
     setPending(false);
@@ -33,12 +36,15 @@ export function EmailChangeForm({ currentEmail }: { currentEmail: string }) {
     if (res.ok) {
       setSent(true);
       setNewEmail("");
+      setPassword("");
       return;
     }
 
     const data = await res.json().catch(() => null);
     setError(t(ERROR_KEY[data?.error] ?? "emailChangeErrorGeneric"));
   }
+
+  const inputClass = "mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm";
 
   return (
     <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
@@ -53,12 +59,27 @@ export function EmailChangeForm({ currentEmail }: { currentEmail: string }) {
             autoComplete="email"
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 px-3 py-2 text-sm"
+            className={inputClass}
           />
         </label>
+        {hasPassword && (
+          <label className="flex-1 min-w-[200px]">
+            <span className="text-sm text-slate-700 dark:text-slate-300">{t("emailChangePasswordLabel")}</span>
+            <input
+              id="email-change-password"
+              type="password"
+              required
+              autoComplete="current-password"
+              dir={locale === "ar" ? "ltr" : undefined}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={inputClass}
+            />
+          </label>
+        )}
         <button
           type="submit"
-          disabled={pending || !newEmail.trim()}
+          disabled={pending || !newEmail.trim() || (hasPassword && !password)}
           className="rounded-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
         >
           {t("changeEmailAction")}
