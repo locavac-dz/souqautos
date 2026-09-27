@@ -1089,6 +1089,7 @@
     "errorFileRequired": "Veuillez sélectionner un fichier CSV.",
     "errorEmptyFile": "Le fichier ne contient aucune ligne de données.",
     "errorTooManyRows": "Le fichier contient trop de lignes (500 maximum par import).",
+    "errorFileTooLarge": "Le fichier est trop volumineux (4 Mo maximum).",
     "error_invalid_category": "Catégorie invalide",
     "error_wrong_category": "Marque ou modèle indisponible dans cette catégorie",
     "error_invalid_fuel_type": "Type de carburant invalide",

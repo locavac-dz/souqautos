@@ -61,10 +61,24 @@ export function csvRowsToRecords(rows: string[][]): Record<string, string>[] {
   return dataRows.map((row) => {
     const record: Record<string, string> = {};
     header.forEach((key, i) => {
-      record[key.trim()] = (row[i] ?? "").trim();
+      record[key.trim()] = unguardFormula((row[i] ?? "").trim());
     });
     return record;
   });
+}
+
+// Lot 232 — injection de formule : ouvert dans un tableur, un champ qui commence par =, +, -, @ (ou une tabulation, un retour
+// chariot) est ÉVALUÉ comme une formule — un vendeur pouvait ainsi, via le titre ou la description d'une annonce, faire exécuter
+// une commande (=cmd|…) ou exfiltrer des données à quiconque ouvre l'export. Le préfixe apostrophe (recommandation OWASP) force
+// le texte ; il est retiré à l'import pour qu'un fichier exporté se réimporte à l'identique.
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+function guardFormula(value: string): string {
+  return FORMULA_START.test(value) ? `'${value}` : value;
+}
+
+function unguardFormula(value: string): string {
+  return value.startsWith("'") && FORMULA_START.test(value.slice(1)) ? value.slice(1) : value;
 }
 
 // Lot 81 — export de stock (inverse de parseCsv) : un champ n'est mis entre
@@ -72,10 +86,11 @@ export function csvRowsToRecords(rows: string[][]): Record<string, string>[] {
 // ligne (RFC4180), pour rester lisible tel quel dans la majorité des cas —
 // même discipline "format maison, pas de bibliothèque" que le parseur.
 function escapeCsvField(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  const guarded = guardFormula(value);
+  if (guarded !== value || /[",\n\r]/.test(guarded)) {
+    return `"${guarded.replace(/"/g, '""')}"`;
   }
-  return value;
+  return guarded;
 }
 
 export function stringifyCsv(rows: string[][]): string {

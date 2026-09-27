@@ -1089,6 +1089,7 @@
     "errorFileRequired": "يرجى اختيار ملف CSV.",
     "errorEmptyFile": "الملف لا يحتوي على أي سطر بيانات.",
     "errorTooManyRows": "الملف يحتوي على عدد كبير جدًا من الأسطر (500 كحد أقصى لكل استيراد).",
+    "errorFileTooLarge": "الملف كبير جدًا (4 ميغابايت كحد أقصى).",
     "error_invalid_category": "فئة غير صالحة",
     "error_wrong_category": "الماركة أو الموديل غير متوفر في هذه الفئة",
     "error_invalid_fuel_type": "نوع وقود غير صالح",

@@ -93,3 +93,25 @@ describe("stringifyCsv", () => {
     expect(parseCsv(csv)).toEqual(original);
   });
 });
+
+describe("injection de formule dans un tableur (Lot 232)", () => {
+  it("neutralise un champ commençant par =, +, -, @, tabulation ou retour chariot avec une apostrophe, entre guillemets", () => {
+    expect(stringifyCsv([["=cmd|' /C calc'!A0"]])).toBe("\"'=cmd|' /C calc'!A0\"");
+    expect(stringifyCsv([["+213 555 00 00"]])).toBe("\"'+213 555 00 00\"");
+    expect(stringifyCsv([["- Toit ouvrant"]])).toBe("\"'- Toit ouvrant\"");
+    expect(stringifyCsv([["@SUM(A1)"]])).toBe("\"'@SUM(A1)\"");
+    expect(stringifyCsv([["\t=1+1"]])).toBe("\"'\t=1+1\"");
+  });
+
+  it("laisse intacts un nombre, un texte ordinaire et un champ contenant un = ailleurs qu'en tête", () => {
+    expect(stringifyCsv([["2200000", "Renault Clio", "a=b"]])).toBe("2200000,Renault Clio,a=b");
+  });
+
+  it("à l'import, retire l'apostrophe de garde pour qu'un export se réimporte à l'identique", () => {
+    const original = [["titre", "description", "prix"], ["- Toit ouvrant", "=SUM(A1)", "2200000"]];
+    const records = csvRowsToRecords(parseCsv(stringifyCsv(original)));
+    expect(records).toEqual([{ titre: "- Toit ouvrant", description: "=SUM(A1)", prix: "2200000" }]);
+    // Une apostrophe qui ne garde rien (texte ordinaire) est conservée.
+    expect(csvRowsToRecords([["titre"], ["'Occasion' garantie"]])).toEqual([{ titre: "'Occasion' garantie" }]);
+  });
+});

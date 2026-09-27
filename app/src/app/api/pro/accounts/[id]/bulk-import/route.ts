@@ -11,6 +11,9 @@ import { getSubscriptionStatus } from "@/lib/pro-subscription";
 import { computeListingContentHash } from "@/lib/fraud-signals";
 
 const MAX_ROWS = 500;
+// Lot 232 — 500 lignes au maximum de leur taille validée (titre 120, description 5 000 caractères, quelques champs courts) tiennent
+// dans 3 Mo : au-delà, le fichier est refusé AVANT d'être lu en mémoire (l'ancien plafond ne comptait les lignes qu'après avoir tout chargé).
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -20,6 +23,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (!(await checkRateLimit(`bulk-import:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
+  // Content-Length est déclaré par le navigateur : suffisant pour refuser d'emblée un envoi hors gabarit, avant toute lecture en
+  // base et sans le charger. La taille du fichier est revérifiée après l'analyse du formulaire, l'en-tête pouvant manquer.
+  const declaredLength = Number(request.headers.get("content-length") ?? "0");
+  if (declaredLength > MAX_FILE_BYTES) {
+    return NextResponse.json({ error: "file_too_large" }, { status: 413 });
   }
 
   const { id } = await params;
@@ -51,6 +61,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const file = formData?.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: "file_required" }, { status: 400 });
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    return NextResponse.json({ error: "file_too_large" }, { status: 413 });
   }
 
   const text = await file.text();

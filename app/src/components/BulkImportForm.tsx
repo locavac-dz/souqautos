@@ -65,6 +65,7 @@ export function BulkImportForm({ accountId }: { accountId: string }) {
     else if (code === "file_required") setError(t("errorFileRequired"));
     else if (code === "empty_file") setError(t("errorEmptyFile"));
     else if (code === "too_many_rows") setError(t("errorTooManyRows"));
+    else if (code === "file_too_large") setError(t("errorFileTooLarge"));
     else setError(t("errorGeneric"));
   }
 
