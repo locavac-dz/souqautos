@@ -25,6 +25,8 @@ async function parsePage(searchParams: RawSearchParams) {
   return paramsSchema.parse({ page: Array.isArray(value) ? value[0] : value }).page;
 }
 
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
   searchParams,

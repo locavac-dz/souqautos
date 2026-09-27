@@ -9,6 +9,30 @@ export function safeJsonLdStringify(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
+export function buildWebSiteJsonLd({ siteUrl, siteName, searchUrlTemplate }: { siteUrl: string; siteName: string; searchUrlTemplate: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    url: siteUrl,
+    name: siteName,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: searchUrlTemplate },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+export function buildOrganizationJsonLd({ siteUrl, siteName, logoUrl }: { siteUrl: string; siteName: string; logoUrl: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    url: siteUrl,
+    name: siteName,
+    logo: logoUrl,
+  };
+}
+
 export function buildBreadcrumbJsonLd(items: { name: string; url: string }[]) {
   return {
     "@context": "https://schema.org",

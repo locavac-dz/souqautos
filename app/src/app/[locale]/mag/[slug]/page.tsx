@@ -23,6 +23,8 @@ async function findArticle(slug: string, publishedOnly: boolean) {
 const getArticleForViewer = (slug: string, previewToken: string | null) =>
   resolveArticleForViewer(() => findArticle(slug, true), () => findArticle(slug, false), { previewToken });
 
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
   searchParams,

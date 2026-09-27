@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { SITE_URL } from "@/lib/site";
+import { buildWebSiteJsonLd, buildOrganizationJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 
 export async function generateMetadata({
   params,
@@ -60,8 +61,21 @@ export default async function HomePage() {
       )
     : new Set<string>();
 
+  const webSiteJsonLd = buildWebSiteJsonLd({
+    siteUrl: SITE_URL,
+    siteName: "Souq Auto",
+    searchUrlTemplate: `${SITE_URL}/fr/recherche?q={search_term_string}`,
+  });
+  const orgJsonLd = buildOrganizationJsonLd({
+    siteUrl: SITE_URL,
+    siteName: "Souq Auto",
+    logoUrl: `${SITE_URL}/icons/icon-512.png`,
+  });
+
   return (
     <div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(webSiteJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(orgJsonLd) }} />
       {/* Hero — bande colorée pleine largeur */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center">

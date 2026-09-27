@@ -83,6 +83,6 @@ export async function sendEmail({
     subject,
     html,
   });
-  const previewUrl = nodemailer.getTestMessageUrl(info);
+  const previewUrl = process.env.NODE_ENV !== "production" ? nodemailer.getTestMessageUrl(info) : false;
   return { previewUrl: previewUrl || undefined };
 }

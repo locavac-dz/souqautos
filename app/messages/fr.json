@@ -558,7 +558,9 @@
     "summaryMostTrusted": "{title} a le score de confiance vendeur le plus élevé.",
     "summaryDisclaimer": "Synthèse indicative basée sur les données affichées, ne remplace pas votre propre vérification.",
     "summaryLoginRequired": "Connectez-vous pour voir une synthèse de la comparaison.",
-    "summaryErrorGeneric": "Impossible de générer la synthèse pour le moment."
+    "summaryErrorGeneric": "Impossible de générer la synthèse pour le moment.",
+    "metaTitle": "Comparateur de voitures — Souq Auto",
+    "metaDescription": "Comparez côte à côte les annonces de voitures sélectionnées : prix, kilométrage, motorisation et avis vendeur."
   },
   "AiAdvisor": {
     "pageTitle": "Conseiller IA",
