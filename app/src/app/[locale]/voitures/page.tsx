@@ -86,7 +86,7 @@ export default async function BrandsIndexPage({
               href={`/voitures/${brand.slug}`}
               className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:border-slate-300 dark:hover:border-slate-600"
             >
-              <p className="font-medium text-slate-900 dark:text-slate-100">{brand.name}</p>
+              <p className="font-medium text-slate-900 dark:text-slate-100" lang="fr">{brand.name}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {brandCategories(allBrands.find((b) => b.id === brand.id)!.models).map((c) => t(`category${c}`)).join(" · ")}
               </p>

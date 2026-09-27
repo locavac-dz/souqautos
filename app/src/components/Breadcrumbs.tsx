@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
-export function Breadcrumbs({ items }: { items: { name: string; href?: string }[] }) {
+export function Breadcrumbs({ items }: { items: { name: string; href?: string; lang?: string }[] }) {
   const t = useTranslations("Nav");
   return (
     <nav aria-label={t("breadcrumb")} className="mb-4 text-sm text-slate-500 dark:text-slate-400">
@@ -14,11 +14,11 @@ export function Breadcrumbs({ items }: { items: { name: string; href?: string }[
               </span>
             )}
             {item.href ? (
-              <Link href={item.href} className="hover:text-slate-700 dark:hover:text-slate-200">
+              <Link href={item.href} className="hover:text-slate-700 dark:hover:text-slate-200" lang={item.lang}>
                 {item.name}
               </Link>
             ) : (
-              <span aria-current="page" className="text-slate-700 dark:text-slate-200">
+              <span aria-current="page" className="text-slate-700 dark:text-slate-200" lang={item.lang}>
                 {item.name}
               </span>
             )}

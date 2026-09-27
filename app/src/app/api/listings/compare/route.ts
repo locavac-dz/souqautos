@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MAX_COMPARE } from "@/lib/compare";
 import { getSellerTrustSummary } from "@/lib/seller-trust";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/http";
+
+const NO_STORE = { "Cache-Control": "no-store" };
 
 export async function GET(request: NextRequest) {
+  if (!(await checkRateLimit(`compare-ip:${getClientIp(request)}`, { limit: 60, windowMs: 60 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: NO_STORE });
+  }
+
   const idsParam = request.nextUrl.searchParams.get("ids") ?? "";
   const ids = idsParam
     .split(",")
@@ -26,7 +34,7 @@ export async function GET(request: NextRequest) {
       // publique et non authentifiée — un include complet exposerait
       // passwordHash/phone/suspendedAt/etc. dans le JSON. Seuls les champs
       // réellement affichés (Lot 24, page comparateur) sont sélectionnés.
-      seller: { select: { id: true, email: true, profile: { select: { displayName: true } } } },
+      seller: { select: { id: true, profile: { select: { displayName: true } } } },
     },
   });
 

@@ -231,7 +231,7 @@ export default async function BuyerActivityPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{proAccount.nomCommercial}</p>
                     {proAccount.badgeVerifie && (
-                      <span className="text-xs text-emerald-600">✓ Vérifié</span>
+                      <span className="text-xs text-emerald-600">{t("verifiedBadge")}</span>
                     )}
                   </div>
                 </Link>

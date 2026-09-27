@@ -25,7 +25,7 @@ type CompareListing = {
   wilaya: { nomFr: string; nomAr: string };
   photos: { path: string }[];
   sellerId: string;
-  seller: { email: string; profile: { displayName: string | null } | null };
+  seller: { id: string; profile: { displayName: string | null } | null };
   sellerTrust: { trustBreakdown: { score: number }; averageRating: number; reviewCount: number } | null;
 };
 
@@ -101,7 +101,7 @@ export default function ComparePage() {
       label: t("seller"),
       render: (l) => (
         <Link href={`/vendeur/${l.sellerId}`} className="text-slate-900 dark:text-slate-100 hover:underline">
-          {l.seller.profile?.displayName ?? l.seller.email}
+          {l.seller.profile?.displayName ?? "—"}
         </Link>
       ),
     },

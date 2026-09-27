@@ -105,11 +105,12 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendin
             </p>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label htmlFor="offer-amount" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t("amountLabel")}
               </label>
               <div className="flex items-center rounded-md border border-slate-300 bg-white focus-within:ring-2 focus-within:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800">
                 <input
+                  id="offer-amount"
                   type="number"
                   autoFocus
                   inputMode="numeric"
@@ -126,10 +127,11 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendin
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label htmlFor="offer-message" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t("messageLabel")}
               </label>
               <textarea
+                id="offer-message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 maxLength={500}

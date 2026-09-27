@@ -229,7 +229,7 @@ export default async function RoadTestPage({
           href={`/voitures/${rt.brand.slug}/${rt.model.slug}`}
           className="mt-8 inline-block text-sm text-slate-700 underline hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
         >
-          {t("seeModel", { brand: rt.brand.name, model: rt.model.name })}
+          {t("seeModelLabel")} <span lang="fr">{rt.brand.name} {rt.model.name}</span>
         </Link>
       )}
     </div>

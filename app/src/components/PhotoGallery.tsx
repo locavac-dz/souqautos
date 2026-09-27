@@ -61,13 +61,14 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
             key={photo.id}
             type="button"
             onClick={() => openAt(i)}
+            aria-label={t("openPhoto", { index: i + 1, total: photos.length })}
             className={`relative aspect-[16/10] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-md ${
               i === 0 ? "col-span-2 sm:col-span-2 sm:row-span-2" : ""
             }`}
           >
             <Image
               src={photo.path}
-              alt={`${alt} — photo ${i + 1}`}
+              alt=""
               fill
               className="rounded-md object-cover border border-slate-200 dark:border-slate-600 hover:opacity-90 transition-opacity"
               sizes={i === 0 ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 50vw, 33vw"}

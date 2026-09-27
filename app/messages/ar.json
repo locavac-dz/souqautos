@@ -57,7 +57,8 @@
     "close": "إغلاق",
     "prevPhoto": "الصورة السابقة",
     "nextPhoto": "الصورة التالية",
-    "photoOf": "صورة {current} من {total}"
+    "photoOf": "صورة {current} من {total}",
+    "openPhoto": "فتح الصورة {index} من {total}"
   },
   "RecentlyViewed": {
     "title": "شوهدت مؤخرًا"
@@ -577,6 +578,7 @@
     "indexTitle": "جميع الماركات",
     "indexSubtitle": "تصفح الإعلانات المنشورة حسب ماركة السيارة في الجزائر.",
     "brandTitle": "{brand} في الجزائر",
+    "brandTitleSuffix": "في الجزائر",
     "statsCount": "{count} إعلان متوفر",
     "avgPrice": "متوسط السعر",
     "priceRange": "نطاق السعر",
@@ -1464,6 +1466,7 @@
     "publishedOn": "نُشر في {date}",
     "updatedOn": "حُدِّث في {date}",
     "seeModel": "عرض إعلانات {brand} {model}",
+    "seeModelLabel": "عرض إعلانات",
     "modelRoadTestsTitle": "تجارب هذا الطراز",
     "readTest": "قراءة التجربة",
     "rssLink": "تابعوا التجارب عبر خلاصة RSS"
@@ -2014,6 +2017,7 @@
     "followedProsTitle": "الوكلاء المتابَعون",
     "followedProsEmpty": "لا تتابع أي وكالة",
     "unfollowConfirm": "إلغاء المتابعة",
-    "navLabel": "نشاطي"
+    "navLabel": "نشاطي",
+    "verifiedBadge": "✓ موثّق"
   }
 }

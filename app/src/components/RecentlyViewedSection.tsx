@@ -35,7 +35,7 @@ export function RecentlyViewedSection({ excludeId }: { excludeId?: string }) {
               {entry.photo ? (
                 <Image
                   src={entry.photo}
-                  alt={entry.title}
+                  alt=""
                   fill
                   className="object-cover"
                   sizes="160px"

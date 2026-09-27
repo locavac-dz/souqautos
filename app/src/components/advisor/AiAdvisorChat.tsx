@@ -144,7 +144,7 @@ function AdvisorListingCard({ listing, locale }: { listing: AdvisorListing; loca
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{listing.title}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          {brandLabel} {modelLabel} · {wilayaLabel}
+          <span lang="fr">{brandLabel} {modelLabel}</span> · {wilayaLabel}
         </p>
         <p className="mt-0.5 text-xs font-medium text-slate-900 dark:text-slate-100">{listing.price.toLocaleString()} DA</p>
       </div>

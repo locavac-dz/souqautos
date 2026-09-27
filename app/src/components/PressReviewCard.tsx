@@ -56,7 +56,7 @@ export async function PressReviewCard({ item, locale }: { item: PressReviewCardI
               href={`/voitures/${item.brand.slug}/${item.model.slug}`}
               className="underline hover:text-slate-700 dark:hover:text-slate-200"
             >
-              {vehicle}
+              <span lang="fr">{vehicle}</span>
             </Link>
           </>
         )}

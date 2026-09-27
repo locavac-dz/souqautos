@@ -105,7 +105,7 @@ export default async function BrandPage({
 
   const breadcrumbItems = [
     { name: t("breadcrumbHome"), href: "/" },
-    { name: brand.name },
+    { name: brand.name, lang: "fr" },
   ];
   const jsonLd = buildBreadcrumbJsonLd([
     { name: t("breadcrumbHome"), url: `${SITE_URL}/${locale}` },
@@ -118,7 +118,9 @@ export default async function BrandPage({
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("brandTitle", { brand: brand.name })}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+        <span lang="fr">{brand.name}</span>{" "}{t("brandTitleSuffix")}
+      </h1>
 
       {stats.count === 0 ? (
         <p className="mt-4 text-slate-500 dark:text-slate-400">{t("noStatsBrand")}</p>

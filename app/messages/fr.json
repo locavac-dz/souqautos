@@ -57,7 +57,8 @@
     "close": "Fermer",
     "prevPhoto": "Photo précédente",
     "nextPhoto": "Photo suivante",
-    "photoOf": "photo {current} sur {total}"
+    "photoOf": "photo {current} sur {total}",
+    "openPhoto": "Ouvrir la photo {index} sur {total}"
   },
   "RecentlyViewed": {
     "title": "Récemment consultés"
@@ -577,6 +578,7 @@
     "indexTitle": "Toutes les marques",
     "indexSubtitle": "Parcourez les annonces publiées par marque automobile en Algérie.",
     "brandTitle": "{brand} en Algérie",
+    "brandTitleSuffix": "en Algérie",
     "statsCount": "{count} annonces disponibles",
     "avgPrice": "Prix moyen",
     "priceRange": "Fourchette de prix",
@@ -1464,6 +1466,7 @@
     "publishedOn": "Publié le {date}",
     "updatedOn": "Mis à jour le {date}",
     "seeModel": "Voir les annonces {brand} {model}",
+    "seeModelLabel": "Voir les annonces",
     "modelRoadTestsTitle": "Essais de ce modèle",
     "readTest": "Lire l'essai",
     "rssLink": "Suivre les essais par flux RSS"
@@ -2014,6 +2017,7 @@
     "followedProsTitle": "Concessionnaires suivis",
     "followedProsEmpty": "Vous ne suivez aucun concessionnaire",
     "unfollowConfirm": "Se désabonner",
-    "navLabel": "Mon activité"
+    "navLabel": "Mon activité",
+    "verifiedBadge": "✓ Vérifié"
   }
 }

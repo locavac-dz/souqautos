@@ -93,7 +93,7 @@ export async function ListingCard({
         {listing.photos[0] ? (
           <Image
             src={listing.photos[0].path}
-            alt={listing.title}
+            alt=""
             fill
             loading={eager ? "eager" : undefined}
             fetchPriority={eager ? "high" : undefined}

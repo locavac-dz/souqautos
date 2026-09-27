@@ -263,9 +263,9 @@ export default async function ListingDetailPage({
 
   const breadcrumbItems = [
     { name: tCatalogue("breadcrumbHome"), href: "/" },
-    ...(listing.brand ? [{ name: listing.brand.name, href: `/voitures/${listing.brand.slug}` }] : []),
+    ...(listing.brand ? [{ name: listing.brand.name, href: `/voitures/${listing.brand.slug}`, lang: "fr" }] : []),
     ...(listing.brand && listing.model
-      ? [{ name: listing.model.name, href: `/voitures/${listing.brand.slug}/${listing.model.slug}` }]
+      ? [{ name: listing.model.name, href: `/voitures/${listing.brand.slug}/${listing.model.slug}`, lang: "fr" }]
       : []),
     { name: listing.title },
   ];

@@ -160,8 +160,8 @@ export default async function ModelPage({
 
   const breadcrumbItems = [
     { name: t("breadcrumbHome"), href: "/" },
-    { name: brand.name, href: `/voitures/${brand.slug}` },
-    { name: model.name },
+    { name: brand.name, href: `/voitures/${brand.slug}`, lang: "fr" },
+    { name: model.name, lang: "fr" },
   ];
   const jsonLd = buildBreadcrumbJsonLd([
     { name: t("breadcrumbHome"), url: `${SITE_URL}/${locale}` },
@@ -176,7 +176,7 @@ export default async function ModelPage({
       <Breadcrumbs items={breadcrumbItems} />
 
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-        {t("modelTitle", { brand: brand.name, model: model.name })}
+        <span lang="fr">{brand.name} {model.name}</span>
       </h1>
 
       {stats.count === 0 ? (
