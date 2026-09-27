@@ -58,6 +58,7 @@ services:
       - "5184:5184"      # exposer uniquement vers Nginx/Caddy, jamais directement vers Internet
     volumes:
       - uploads:/app/public/uploads       # photos envoyées : persistantes entre les déploiements
+      - private-uploads:/app/private-uploads   # pièces d'identité chiffrées (jamais servies par le web)
     restart: unless-stopped
 
   # Outils d'exploitation (npm run launch:check, npm run db:seed, npm run db:backup…). Non lancé en
@@ -70,3 +71,4 @@ services:
 
 volumes:
   uploads:    # Photos des annonces, avatars, etc. À sauvegarder avec `npm run db:backup -- --with-uploads`.
+  private-uploads:    # Pièces d'identité chiffrées avec ENCRYPTION_KEY. Archivées par la même commande.

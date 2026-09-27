@@ -77,6 +77,10 @@ COPY --from=build --chown=souq:souq /app/.next/static ./.next/static
 COPY --from=build --chown=souq:souq /app/public ./public
 RUN mkdir -p public/uploads && chown -R souq:souq public/uploads
 VOLUME ["/app/public/uploads"]
+# Lot 230 — pièces d'identité chiffrées (src/lib/identity-uploads.ts) : hors de public/, dans leur propre VOLUME. Sans lui, le
+# dossier appartenait à root (EACCES à la première pièce envoyée) et, une fois créé, disparaissait à chaque remplacement du conteneur.
+RUN mkdir -p private-uploads/identity && chown -R souq:souq private-uploads
+VOLUME ["/app/private-uploads"]
 
 USER souq
 EXPOSE 5184

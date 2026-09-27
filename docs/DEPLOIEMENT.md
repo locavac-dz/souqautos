@@ -135,7 +135,7 @@ Depuis le conteneur `tools` :
 docker compose run --rm tools npm run db:backup -- --with-uploads --out /sauvegardes
 ```
 
-Les photos sont dans le volume `uploads` (`/app/public/uploads` dans le conteneur). `--with-uploads` archive ce volume **et** `private-uploads` (pièces d'identité chiffrées). Copier ces archives **hors du serveur** (autre machine, autre site) : une sauvegarde sur le même disque disparaît avec lui.
+Les photos sont dans le volume `uploads` (`/app/public/uploads` dans le conteneur) et les pièces d'identité chiffrées dans le volume `private-uploads` (`/app/private-uploads`). `--with-uploads` archive ces deux volumes. Copier ces archives **hors du serveur** (autre machine, autre site) : une sauvegarde sur le même disque disparaît avec lui.
 
 Voir `docs/EXPLOITATION.md`, section 2 pour la planification et les tests de restauration.
 

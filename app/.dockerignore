@@ -7,6 +7,8 @@
 
 # Les photos envoyées : elles vivent dans un volume, jamais dans l'image (et un dossier de développement en contient des centaines de Mo).
 public/uploads
+# Les pièces d'identité chiffrées du poste de développement : même règle, et surtout des données personnelles (Lot 230).
+private-uploads
 
 # Données et sauvegardes : elles contiennent des données personnelles.
 backups

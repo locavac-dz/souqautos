@@ -52,6 +52,14 @@ describe("Dockerfile", () => {
     expect(content).toContain('VOLUME ["/app/public/uploads"]');
   });
 
+  it("déclare un VOLUME pour les pièces d'identité, créé et remis à l'utilisateur souq AVANT USER souq (Lot 230)", () => {
+    const content = read(path.join(APP, "Dockerfile"));
+    expect(content).toContain('VOLUME ["/app/private-uploads"]');
+    const prepared = content.indexOf("mkdir -p private-uploads/identity && chown -R souq:souq private-uploads");
+    expect(prepared).toBeGreaterThan(-1);
+    expect(prepared).toBeLessThan(content.indexOf("USER souq"));
+  });
+
   it("expose le port de l'application (5184)", () => {
     const content = read(path.join(APP, "Dockerfile"));
     expect(content).toContain("EXPOSE 5184");
@@ -85,6 +93,12 @@ describe(".dockerignore", () => {
     const content = read(path.join(APP, ".dockerignore"));
     expect(content).toContain("node_modules");
     expect(content).toContain(".next");
+  });
+
+  it("exclut les fichiers envoyés du poste de développement : photos ET pièces d'identité (données personnelles)", () => {
+    const content = read(path.join(APP, ".dockerignore"));
+    expect(content).toMatch(/^public\/uploads$/m);
+    expect(content).toMatch(/^private-uploads$/m);
   });
 
   it("NE PAS exclure tests/ ni e2e/ (playwright.config.ts les importe : tsc échouerait)", () => {
@@ -146,6 +160,12 @@ describe("docker-compose.example.yml", () => {
   it("monte un volume pour les photos (pas dans l'image)", () => {
     const content = read(path.join(APP, "docker-compose.example.yml"));
     expect(content).toContain("uploads");
+  });
+
+  it("monte un volume distinct pour les pièces d'identité, au chemin qu'écrit src/lib/identity-uploads.ts", () => {
+    const content = read(path.join(APP, "docker-compose.example.yml"));
+    expect(content).toContain("private-uploads:/app/private-uploads");
+    expect(content).toMatch(/^\s+private-uploads:/m);
   });
 });
 
