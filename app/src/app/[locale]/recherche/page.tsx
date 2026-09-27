@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 
 export async function generateMetadata({
   params,
@@ -22,7 +23,7 @@ export async function generateMetadata({
   return {
     title,
     description: t("metaDescription"),
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: { title, url: canonical, type: "website" },
   };
 }

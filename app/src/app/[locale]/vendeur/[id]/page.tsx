@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 
 export async function generateMetadata({
   params,
@@ -18,7 +19,7 @@ export async function generateMetadata({
   return {
     title: t("sellerMetaTitle", { name }),
     description: t("sellerMetaDescription", { name }),
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: { title: t("sellerMetaTitle", { name }), url: canonical, type: "profile" },
   };
 }

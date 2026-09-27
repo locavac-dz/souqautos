@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -10,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const canonical = `${SITE_URL}/${locale}/inscription`;
   return {
     title: `${t("registerTitle")} — Souq Auto`,
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     robots: { index: false },
   };
 }

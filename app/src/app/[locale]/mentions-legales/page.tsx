@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -8,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const canonical = `${SITE_URL}/${locale}/mentions-legales`;
   return {
     title: `${t("title")} — Souq Auto`,
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: { title: t("title"), url: canonical, type: "website" },
   };
 }

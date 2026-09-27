@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 import { getListingCountsPerWilaya } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -19,7 +20,7 @@ export async function generateMetadata({
   return {
     title: `${t("wilayaIndexTitle")} — Souq Auto`,
     description: t("wilayaIndexSubtitle"),
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: { title: t("wilayaIndexTitle"), url: canonical, type: "website" },
   };
 }

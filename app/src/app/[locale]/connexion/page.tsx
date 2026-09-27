@@ -9,13 +9,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const canonical = `${SITE_URL}/${locale}/connexion`;
   return {
     title: `${t("loginTitle")} — Souq Auto`,
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     robots: { index: false },
   };
 }
 import { GoogleErrorNotice, GoogleSignInButton, parseGoogleError } from "@/components/GoogleSignInButton";
 import { isGoogleLoginEnabled, pickLoginLocale } from "@/lib/google-oauth";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 
 export default async function LoginPage({
   params,

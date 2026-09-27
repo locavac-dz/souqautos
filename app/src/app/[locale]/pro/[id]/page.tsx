@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildAutoDealerJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { buildShowcaseDescription, isShowcaseIndexable } from "@/lib/pro-showcase-seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -55,7 +56,7 @@ export async function generateMetadata({
   return {
     title: `${title} — Souq Auto`,
     description,
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     ...(isShowcaseIndexable(publishedCount) ? {} : { robots: { index: false, follow: true } }),
     openGraph: {
       title,

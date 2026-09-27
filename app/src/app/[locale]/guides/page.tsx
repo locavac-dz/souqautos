@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Pagination } from "@/components/search/Pagination";
@@ -32,7 +33,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
     title: `${t("indexTitle")} — Souq Auto`,
     description: t("indexSubtitle"),
     alternates: {
-      canonical,
+      ...localizedAlternates(canonical),
       types: { "application/rss+xml": `${SITE_URL}/${locale}/guides/feed.xml` },
     },
     openGraph: { title: t("indexTitle"), url: canonical, type: "website" },

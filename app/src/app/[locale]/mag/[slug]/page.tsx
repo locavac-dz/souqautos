@@ -9,6 +9,7 @@ import { publishedNow } from "@/lib/blog-publication";
 import { previewTokenFrom, resolveArticleForViewer } from "@/lib/article-preview";
 import { ArticlePreviewBanner } from "@/components/ArticlePreviewBanner";
 import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildBreadcrumbJsonLd, buildArticleJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ArticleBody } from "@/components/ArticleBody";
@@ -45,7 +46,7 @@ export async function generateMetadata({
   return {
     title: `${title} — Souq Auto`,
     description: excerpt,
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: {
       title,
       description: excerpt,

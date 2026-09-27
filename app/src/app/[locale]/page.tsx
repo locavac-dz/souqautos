@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildWebSiteJsonLd, buildOrganizationJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { getSearchBrands, getSearchWilayas } from "@/lib/reference-data";
 
@@ -18,7 +19,7 @@ export async function generateMetadata({
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: canonical, type: "website" },
   };
 }

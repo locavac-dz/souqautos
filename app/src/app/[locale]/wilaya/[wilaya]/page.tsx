@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 import { getListingStats, getBrandCountsForWilaya } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, buildPlaceJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -38,7 +39,7 @@ export async function generateMetadata({
   return {
     title: `${title} — Souq Auto`,
     description,
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: { title, description, url: canonical, type: "website" },
   };
 }

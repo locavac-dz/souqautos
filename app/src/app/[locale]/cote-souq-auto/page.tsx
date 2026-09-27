@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -10,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: `${t("title")} — Souq Auto`,
     description: t("subtitle"),
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: { title: t("title"), description: t("subtitle"), url: canonical, type: "website" },
   };
 }

@@ -35,6 +35,7 @@ import { ContactSellerButton } from "@/components/ContactSellerButton";
 import { ReportListingButton } from "@/components/ReportListingButton";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildVehicleJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { CreditCalculator } from "@/components/CreditCalculator";
 import { RecentlyViewedTracker } from "@/components/RecentlyViewedTracker";
@@ -92,7 +93,7 @@ export async function generateMetadata({
   return {
     title: `${title} — Souq Auto`,
     description: listing.description.slice(0, 160),
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     // Lot 142 — PAS d'`images` ici : elle l'emporterait sur le fichier `opengraph-image.tsx` voisin (la carte de partage avec prix
     // et caractéristiques) et on partagerait de nouveau la photo brute du vendeur, sans dimensions déclarées.
     openGraph: {

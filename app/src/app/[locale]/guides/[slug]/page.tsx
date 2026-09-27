@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
+import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildArticleJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ArticleBody } from "@/components/ArticleBody";
@@ -46,7 +47,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   return {
     title: `${title} — Souq Auto`,
     description: excerpt,
-    alternates: { canonical },
+    alternates: localizedAlternates(canonical),
     openGraph: {
       title,
       description: excerpt,
