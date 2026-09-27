@@ -72,7 +72,15 @@
     "estimateButton": "Estimer mon véhicule",
     "browseBrandsButton": "Parcourir les marques",
     "featuredTitle": "Annonces en vedette",
-    "seeAllListings": "Voir toutes les annonces"
+    "seeAllListings": "Voir toutes les annonces",
+    "recentListingsTitle": "Dernières annonces",
+    "carrosserieTitle": "Parcourir par carrosserie",
+    "carrosserieSuv": "SUV / 4x4",
+    "carrosserieBerline": "Berline",
+    "carrosserieCitadine": "Citadine",
+    "carrosserieBreak": "Break",
+    "carrosseriePickup": "Pick-up",
+    "carrosserieMonospace": "Monospace"
   },
   "Auth": {
     "registerTitle": "Créer un compte particulier",
@@ -597,6 +605,7 @@
     "wilayaIndexTitle": "Toutes les wilayas",
     "wilayaIndexSubtitle": "Parcourez les annonces publiées par wilaya en Algérie.",
     "wilayaTitle": "Voitures d'occasion à {wilaya}",
+    "wilayaMetaDescription": "Annonces de voitures d'occasion à {wilaya}, Algérie. Comparez les prix, les marques et les modèles disponibles près de chez vous.",
     "noStatsWilaya": "Pas encore d'annonce publiée dans cette wilaya.",
     "topBrandsTitle": "Marques les plus proposées",
     "viewAllWilayaListings": "Voir toutes les annonces à {wilaya}",

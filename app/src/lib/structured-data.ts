@@ -33,6 +33,18 @@ export function buildOrganizationJsonLd({ siteUrl, siteName, logoUrl }: { siteUr
   };
 }
 
+// Lot 214 — JSON-LD Place pour les pages de wilaya (aide les moteurs à comprendre
+// qu'il s'agit d'une zone géographique algérienne avec des annonces associées).
+export function buildPlaceJsonLd({ name, url, containedInPlaceUrl }: { name: string; url: string; containedInPlaceUrl: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    name,
+    url,
+    containedInPlace: { "@type": "Country", url: containedInPlaceUrl, name: "Algérie" },
+  };
+}
+
 export function buildBreadcrumbJsonLd(items: { name: string; url: string }[]) {
   return {
     "@context": "https://schema.org",

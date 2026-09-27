@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { getListingStats, getBrandCountsForWilaya } from "@/lib/catalogue-stats";
-import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
+import { buildBreadcrumbJsonLd, buildPlaceJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -15,6 +15,19 @@ import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
 import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
 import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
+
+// Lot 214 — ISR 1 h sur les pages wilaya (ne contient pas de getCurrentUser dans le
+// chemin critique du cache ; la section favoris est chargée séparément).
+export const revalidate = 3600;
+
+// Lot 214 — pré-rend toutes les wilayas au build pour un TTFB minimal.
+export async function generateStaticParams() {
+  const wilayas = await prisma.wilaya.findMany({ select: { slug: true } });
+  return wilayas.flatMap(({ slug }) => [
+    { locale: "fr", wilaya: slug },
+    { locale: "ar", wilaya: slug },
+  ]);
+}
 
 async function getWilaya(slug: string) {
   return prisma.wilaya.findUnique({ where: { slug } });
@@ -32,13 +45,14 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Catalogue" });
   const wilayaLabel = locale === "ar" ? wilaya.nomAr : wilaya.nomFr;
   const title = t("wilayaTitle", { wilaya: wilayaLabel });
+  const description = t("wilayaMetaDescription", { wilaya: wilayaLabel });
   const canonical = `${SITE_URL}/${locale}/wilaya/${wilaya.slug}`;
 
   return {
     title: `${title} — Souq Auto`,
-    description: title,
+    description,
     alternates: { canonical },
-    openGraph: { title, url: canonical, type: "website" },
+    openGraph: { title, description, url: canonical, type: "website" },
   };
 }
 
@@ -107,15 +121,22 @@ export default async function WilayaPage({
     recentListings.map((l) => l.sellerId)
   );
 
+  const wilayaUrl = `${SITE_URL}/${locale}/wilaya/${wilaya.slug}`;
   const breadcrumbItems = [{ name: t("breadcrumbHome"), href: "/" }, { name: wilayaLabel }];
-  const jsonLd = buildBreadcrumbJsonLd([
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: t("breadcrumbHome"), url: `${SITE_URL}/${locale}` },
-    { name: wilayaLabel, url: `${SITE_URL}/${locale}/wilaya/${wilaya.slug}` },
+    { name: wilayaLabel, url: wilayaUrl },
   ]);
+  const placeJsonLd = buildPlaceJsonLd({
+    name: wilayaLabel,
+    url: wilayaUrl,
+    containedInPlaceUrl: `${SITE_URL}/${locale}`,
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(placeJsonLd) }} />
 
       <Breadcrumbs items={breadcrumbItems} />
 

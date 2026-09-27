@@ -72,7 +72,15 @@
     "estimateButton": "تقييم سيارتي",
     "browseBrandsButton": "تصفح الماركات",
     "featuredTitle": "إعلانات مميزة",
-    "seeAllListings": "عرض جميع الإعلانات"
+    "seeAllListings": "عرض جميع الإعلانات",
+    "recentListingsTitle": "أحدث الإعلانات",
+    "carrosserieTitle": "تصفح حسب نوع الهيكل",
+    "carrosserieSuv": "SUV / 4x4",
+    "carrosserieBerline": "سيدان",
+    "carrosserieCitadine": "سيارة صغيرة",
+    "carrosserieBreak": "ستيشن واغن",
+    "carrosseriePickup": "بيك أب",
+    "carrosserieMonospace": "مونوسباس"
   },
   "Auth": {
     "registerTitle": "إنشاء حساب فردي",
@@ -597,6 +605,7 @@
     "wilayaIndexTitle": "جميع الولايات",
     "wilayaIndexSubtitle": "تصفح الإعلانات المنشورة حسب الولاية في الجزائر.",
     "wilayaTitle": "سيارات مستعملة في {wilaya}",
+    "wilayaMetaDescription": "إعلانات سيارات مستعملة في {wilaya}، الجزائر. قارن الأسعار والماركات والطرازات المتاحة بالقرب منك.",
     "noStatsWilaya": "لا يوجد إعلان منشور بعد في هذه الولاية.",
     "topBrandsTitle": "الماركات الأكثر عرضًا",
     "viewAllWilayaListings": "عرض جميع الإعلانات في {wilaya}",

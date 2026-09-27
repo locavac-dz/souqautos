@@ -14,6 +14,7 @@ import { isLikelyBot, recordListingView } from "@/lib/view-tracking";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
+import { throttledSweep } from "@/lib/sweeper-throttle";
 import {
   checkListingRenewable,
   checkListingCanBeMarkedSold,
@@ -117,9 +118,12 @@ export default async function ListingDetailPage({
   const tWizard = await getTranslations("Wizard");
   const tEstimate = await getTranslations("Estimate");
 
-  await sweepAutoRenewals();
-  await sweepExpiredListings();
-  await sweepExpiringListingsForReminders();
+  // Lot 213 — throttle 30 s : évite de relancer les sweepers à chaque vue
+  await Promise.all([
+    throttledSweep("auto-renewals", sweepAutoRenewals),
+    throttledSweep("expired-listings", sweepExpiredListings),
+    throttledSweep("expiry-reminders", sweepExpiringListingsForReminders),
+  ]);
 
   const [listing, currentUser] = await Promise.all([
     prisma.listing.findUnique({
