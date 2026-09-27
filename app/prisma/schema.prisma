@@ -417,12 +417,7 @@ model Listing {
   @@index([status, createdAt(sort: Desc)])
   @@index([status, publishedAt(sort: Desc)])
   @@index([status, brandId, modelId])
-  // Lot 139 — recherche par mot : « contient » (ILIKE '%mot%') n'est indexable que par des trigrammes (extension pg_trgm, créée
-  // par la migration). Sans eux, chaque recherche lit toute la table, et le comptage de la pagination aussi : 66 à 158 ms à
-  // 100 000 annonces, proportionnel au volume ; avec eux, 0,03 à 15 ms pour un mot précis.
-  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "Listing_title_trgm_idx")
-  @@index([brandFreeText(ops: raw("gin_trgm_ops"))], type: Gin, map: "Listing_brandFreeText_trgm_idx")
-  @@index([modelFreeText(ops: raw("gin_trgm_ops"))], type: Gin, map: "Listing_modelFreeText_trgm_idx")
+
   @@index([sellerId])
   @@index([status, expiresAt])
   @@index([contentHash])
