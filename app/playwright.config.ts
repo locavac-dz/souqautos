@@ -85,6 +85,9 @@ export default defineConfig({
       // conversations puis regardent tout de suite le résultat. Sa version active est prouvée sur le serveur de production
       // (e2e-pwa/seller-trust-cache.spec.ts).
       RESPONSIVENESS_CACHE_TTL_MS: "0",
+      // Lot 227 — même raison pour les agrégats du catalogue (1 h par défaut) : les tests publient une annonce puis lisent
+      // les compteurs des pages marque/modèle/wilaya.
+      CATALOGUE_STATS_CACHE_TTL_MS: "0",
     },
     },
   ],

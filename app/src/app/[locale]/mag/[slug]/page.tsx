@@ -23,19 +23,6 @@ async function findArticle(slug: string, publishedOnly: boolean) {
 const getArticleForViewer = (slug: string, previewToken: string | null) =>
   resolveArticleForViewer(() => findArticle(slug, true), () => findArticle(slug, false), { previewToken });
 
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  const articles = await prisma.blogArticle.findMany({
-    where: { kind: "ARTICLE", ...publishedNow(new Date()) },
-    select: { slug: true },
-  });
-  return articles.flatMap((a) => [
-    { locale: "fr", slug: a.slug },
-    { locale: "ar", slug: a.slug },
-  ]);
-}
-
 export async function generateMetadata({
   params,
   searchParams,

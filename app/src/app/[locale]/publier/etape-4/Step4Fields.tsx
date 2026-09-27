@@ -96,7 +96,7 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
 
       <label className="block">
         <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("controltechniqueExpiry")}</span>
-        <span className="block text-xs text-slate-400 mb-1.5">{t("controltechniqueExpiryHint")}</span>
+        <span className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">{t("controltechniqueExpiryHint")}</span>
         <input
           type="date"
           value={data.controltechniqueExpiry ?? ""}
@@ -107,7 +107,7 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
 
       <label className="block">
         <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("assuranceExpiry")}</span>
-        <span className="block text-xs text-slate-400 mb-1.5">{t("assuranceExpiryHint")}</span>
+        <span className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">{t("assuranceExpiryHint")}</span>
         <input
           type="date"
           value={data.assuranceExpiry ?? ""}

@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-
-export const revalidate = 3600;
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { getListingStats, getModelPriceHistory } from "@/lib/catalogue-stats";
@@ -23,16 +21,6 @@ import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
 import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
 import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
-
-export async function generateStaticParams() {
-  const models = await prisma.model.findMany({
-    select: { slug: true, brand: { select: { slug: true } } },
-  });
-  return models.flatMap((m) => [
-    { locale: "fr", brand: m.brand.slug, model: m.slug },
-    { locale: "ar", brand: m.brand.slug, model: m.slug },
-  ]);
-}
 
 async function getBrandAndModel(brandSlug: string, modelSlug: string) {
   const brand = await prisma.brand.findUnique({ where: { slug: brandSlug } });

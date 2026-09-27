@@ -31,8 +31,6 @@ async function findGuide(slug: string, publishedOnly: boolean) {
 const getGuideForViewer = (slug: string, previewToken: string | null) =>
   resolveArticleForViewer(() => findGuide(slug, true), () => findGuide(slug, false), { previewToken });
 
-export const revalidate = 3600;
-
 export async function generateMetadata({ params, searchParams }: { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ apercu?: string | string[] }> }): Promise<Metadata> {
   const { locale, slug } = await params;
   const resolved = await getGuideForViewer(slug, previewTokenFrom((await searchParams).apercu));

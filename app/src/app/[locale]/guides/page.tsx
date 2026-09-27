@@ -23,8 +23,6 @@ async function parsePage(searchParams: RawSearchParams) {
   return paramsSchema.parse({ page: Array.isArray(value) ? value[0] : value }).page;
 }
 
-export const revalidate = 3600;
-
 export async function generateMetadata({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: RawSearchParams }): Promise<Metadata> {
   const { locale } = await params;
   const page = await parsePage(searchParams);

@@ -16,19 +16,6 @@ import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-servi
 import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
 
-// Lot 214 — ISR 1 h sur les pages wilaya (ne contient pas de getCurrentUser dans le
-// chemin critique du cache ; la section favoris est chargée séparément).
-export const revalidate = 3600;
-
-// Lot 214 — pré-rend toutes les wilayas au build pour un TTFB minimal.
-export async function generateStaticParams() {
-  const wilayas = await prisma.wilaya.findMany({ select: { slug: true } });
-  return wilayas.flatMap(({ slug }) => [
-    { locale: "fr", wilaya: slug },
-    { locale: "ar", wilaya: slug },
-  ]);
-}
-
 async function getWilaya(slug: string) {
   return prisma.wilaya.findUnique({ where: { slug } });
 }
