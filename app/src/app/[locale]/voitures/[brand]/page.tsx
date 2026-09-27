@@ -157,7 +157,7 @@ export default async function BrandPage({
                       href={`/voitures/${brand.slug}/${model.slug}`}
                       className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:border-slate-300 dark:hover:border-slate-600"
                     >
-                      <p className="font-medium text-slate-900 dark:text-slate-100">{model.name}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100" lang="fr">{model.name}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         {t("statsCount", { count: modelStat.count })}
                       </p>

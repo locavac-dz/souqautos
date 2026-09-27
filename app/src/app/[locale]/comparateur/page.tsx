@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useCompare } from "@/components/compare/CompareContext";
@@ -152,8 +153,7 @@ export default function ComparePage() {
                     <th key={l.id} className="p-2 align-bottom">
                       <div className="relative aspect-[4/3] rounded-md bg-slate-100 dark:bg-slate-700 overflow-hidden mb-2">
                         {l.photos[0] && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={l.photos[0].path} alt="" className="h-full w-full object-cover" />
+                          <Image src={l.photos[0].path} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
                         )}
                       </div>
                       <Link
@@ -163,7 +163,7 @@ export default function ComparePage() {
                         {l.title}
                       </Link>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        {brandLabel} {modelLabel}
+                        <span lang="fr">{brandLabel} {modelLabel}</span>
                       </p>
                       <button
                         type="button"

@@ -128,7 +128,7 @@ export async function ListingCard({
       <div className="p-3">
         <p className="font-medium text-slate-900 line-clamp-2 min-h-[2.5rem] dark:text-slate-100">{listing.title}</p>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {brandLabel} {modelLabel} · {listing.year} · {listing.mileage.toLocaleString()} km
+          <span lang="fr">{brandLabel} {modelLabel}</span> · {listing.year} · {listing.mileage.toLocaleString()} km
         </p>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {tWizard(FUEL_KEY[listing.fuelType])} · {tWizard(GEARBOX_KEY[listing.gearbox])}

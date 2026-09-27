@@ -430,7 +430,7 @@ export default async function ListingDetailPage({
         <div className="sm:col-span-2">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 text-balance">{listing.title}</h1>
           <p className="mt-1 text-slate-500 dark:text-slate-400">
-            {brandLabel} {modelLabel} · {tListing("yearLabel", { value: listing.year })} ·{" "}
+            <span lang="fr">{brandLabel} {modelLabel}</span> · {tListing("yearLabel", { value: listing.year })} ·{" "}
             {tListing("mileageUnit", { value: listing.mileage.toLocaleString() })}
           </p>
 

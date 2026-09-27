@@ -41,7 +41,7 @@ export async function RoadTestCard({ article, locale }: { article: RoadTestCardA
         </div>
       )}
       <div className="flex flex-1 flex-col p-4">
-        {vehicle && <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{vehicle}</p>}
+        {vehicle && <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400" lang="fr">{vehicle}</p>}
         <h2 className="mt-1 text-lg font-medium text-slate-900 dark:text-slate-100">{isAr ? article.titleAr : article.titleFr}</h2>
         {article.roadTest && (
           <div className="mt-2 flex items-center gap-2">
