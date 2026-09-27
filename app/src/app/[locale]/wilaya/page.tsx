@@ -7,6 +7,8 @@ import { getListingCountsPerWilaya } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
 }: {

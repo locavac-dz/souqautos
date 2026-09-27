@@ -8,6 +8,8 @@ import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-dat
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { brandCategories, CATALOGUE_CATEGORIES, categoryFromSlug, categorySlug, filterCatalogueByCategory } from "@/lib/vehicle-catalogue";
 
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
 }: {

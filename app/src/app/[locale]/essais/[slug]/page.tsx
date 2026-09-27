@@ -34,6 +34,17 @@ const getRoadTestForViewer = (slug: string, previewToken: string | null) =>
 
 export const revalidate = 3600;
 
+export async function generateStaticParams() {
+  const essais = await prisma.blogArticle.findMany({
+    where: { kind: "ESSAI", ...publishedNow(new Date()) },
+    select: { slug: true },
+  });
+  return essais.flatMap((e) => [
+    { locale: "fr", slug: e.slug },
+    { locale: "ar", slug: e.slug },
+  ]);
+}
+
 export async function generateMetadata({
   params,
   searchParams,

@@ -25,6 +25,17 @@ const getArticleForViewer = (slug: string, previewToken: string | null) =>
 
 export const revalidate = 3600;
 
+export async function generateStaticParams() {
+  const articles = await prisma.blogArticle.findMany({
+    where: { kind: "ARTICLE", ...publishedNow(new Date()) },
+    select: { slug: true },
+  });
+  return articles.flatMap((a) => [
+    { locale: "fr", slug: a.slug },
+    { locale: "ar", slug: a.slug },
+  ]);
+}
+
 export async function generateMetadata({
   params,
   searchParams,

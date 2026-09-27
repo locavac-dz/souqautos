@@ -2,10 +2,60 @@ import { describe, expect, it } from "vitest";
 import {
   buildAutoDealerJsonLd,
   buildBreadcrumbJsonLd,
+  buildItemListJsonLd,
+  buildPlaceJsonLd,
   buildReviewJsonLd,
   buildVehicleJsonLd,
   safeJsonLdStringify,
 } from "@/lib/structured-data";
+
+// Lot 221 — fonctions JSON-LD ajoutées aux Lots 216 et 214.
+describe("buildItemListJsonLd", () => {
+  it("sets the ItemList type and numbers items from 1", () => {
+    const result = buildItemListJsonLd([
+      { name: "Renault Clio", url: "https://example.com/voitures/renault/clio" },
+      { name: "Renault Megane", url: "https://example.com/voitures/renault/megane" },
+    ]);
+    expect(result["@type"]).toBe("ItemList");
+    expect(result.itemListElement).toHaveLength(2);
+    expect(result.itemListElement[0]).toMatchObject({ "@type": "ListItem", position: 1, name: "Renault Clio" });
+    expect(result.itemListElement[1]).toMatchObject({ position: 2, name: "Renault Megane" });
+  });
+
+  it("returns an empty itemListElement for an empty input", () => {
+    expect(buildItemListJsonLd([]).itemListElement).toEqual([]);
+  });
+
+  it("includes the url on each list item", () => {
+    const url = "https://example.com/voitures/renault/clio";
+    const result = buildItemListJsonLd([{ name: "Renault Clio", url }]);
+    expect(result.itemListElement[0].url).toBe(url);
+  });
+});
+
+describe("buildPlaceJsonLd", () => {
+  const base = {
+    name: "Alger",
+    url: "https://example.com/fr/wilaya/alger",
+    containedInPlaceUrl: "https://example.com/fr",
+  };
+
+  it("sets the Place type with the correct name and url", () => {
+    const result = buildPlaceJsonLd(base);
+    expect(result["@type"]).toBe("Place");
+    expect(result.name).toBe("Alger");
+    expect(result.url).toBe(base.url);
+  });
+
+  it("embeds Algeria as the parent country", () => {
+    const result = buildPlaceJsonLd(base);
+    expect(result.containedInPlace).toMatchObject({
+      "@type": "Country",
+      name: "Algérie",
+      url: base.containedInPlaceUrl,
+    });
+  });
+});
 
 describe("buildBreadcrumbJsonLd", () => {
   it("numbers items starting at 1 in order", () => {
