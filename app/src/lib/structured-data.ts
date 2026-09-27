@@ -33,6 +33,20 @@ export function buildOrganizationJsonLd({ siteUrl, siteName, logoUrl }: { siteUr
   };
 }
 
+// Lot 216 — JSON-LD ItemList pour les pages de marque (liste des modèles disponibles).
+export function buildItemListJsonLd(items: { name: string; url: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: item.url,
+    })),
+  };
+}
+
 // Lot 214 — JSON-LD Place pour les pages de wilaya (aide les moteurs à comprendre
 // qu'il s'agit d'une zone géographique algérienne avec des annonces associées).
 export function buildPlaceJsonLd({ name, url, containedInPlaceUrl }: { name: string; url: string; containedInPlaceUrl: string }) {

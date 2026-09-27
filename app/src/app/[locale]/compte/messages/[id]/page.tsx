@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canAccessConversation } from "@/lib/listing-access";
 import { ConversationView } from "@/components/messages/ConversationView";

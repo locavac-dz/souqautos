@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
@@ -5,6 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { getManageableSellerIds } from "@/lib/listing-access";
 import { DeleteConversationButton } from "@/components/messages/DeleteConversationButton";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function InboxPage() {
   const locale = await getLocale();
@@ -37,13 +42,17 @@ export default async function InboxPage() {
     },
   });
 
-  const unreadCounts = await Promise.all(
-    conversations.map((c) =>
-      prisma.message.count({
-        where: { conversationId: c.id, senderId: { not: user.id }, readAt: null },
-      })
-    )
-  );
+  // Lot 219 — un seul groupBy pour tous les compteurs au lieu d'un COUNT par conversation (N+1).
+  const unreadGroups = await prisma.message.groupBy({
+    by: ["conversationId"],
+    where: {
+      conversationId: { in: conversations.map((c) => c.id) },
+      senderId: { not: user.id },
+      readAt: null,
+    },
+    _count: { id: true },
+  });
+  const unreadByConversation = new Map(unreadGroups.map((g) => [g.conversationId, g._count.id]));
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
@@ -53,10 +62,10 @@ export default async function InboxPage() {
         <p className="text-slate-500 dark:text-slate-400 text-center py-12">{t("inboxEmpty")}</p>
       ) : (
         <div className="space-y-2">
-          {conversations.map((conversation, i) => {
+          {conversations.map((conversation) => {
             const otherUser = conversation.buyerId === user.id ? conversation.seller : conversation.buyer;
             const lastMessage = conversation.messages[0];
-            const unread = unreadCounts[i];
+            const unread = unreadByConversation.get(conversation.id) ?? 0;
             return (
               <div
                 key={conversation.id}

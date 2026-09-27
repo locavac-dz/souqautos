@@ -30,6 +30,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
 import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
+import { throttledSweep } from "@/lib/sweeper-throttle";
 import { searchParamsSchema, PAGE_SIZE } from "@/lib/validation/search";
 import {
   buildListingOrderBy,
@@ -68,9 +69,12 @@ export default async function SearchPage({
   const params = searchParamsSchema.parse(flatParams);
   const t = await getTranslations("Search");
 
-  await sweepAutoRenewals();
-  await sweepExpiredListings();
-  await sweepExpiringListingsForReminders();
+  // Lot 215 — throttle 30 s pour ne pas relancer les sweepers à chaque recherche
+  await Promise.all([
+    throttledSweep("auto-renewals", sweepAutoRenewals),
+    throttledSweep("expired-listings", sweepExpiredListings),
+    throttledSweep("expiry-reminders", sweepExpiringListingsForReminders),
+  ]);
 
   const where = await resolveListingWhere(params); // Lot 139 : mot cherché d'abord dans le catalogue (en cache), puis requête sans jointure
   const orderBy = buildListingOrderBy(params.sort);

@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+
+export const revalidate = 3600;
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { getListingStats, getModelCountsForBrand } from "@/lib/catalogue-stats";
-import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
+import { buildBreadcrumbJsonLd, buildItemListJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -15,6 +17,14 @@ import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
 import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
 import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
+
+export async function generateStaticParams() {
+  const brands = await prisma.brand.findMany({ select: { slug: true } });
+  return brands.flatMap((b) => [
+    { locale: "fr", brand: b.slug },
+    { locale: "ar", brand: b.slug },
+  ]);
+}
 
 async function getBrand(slug: string) {
   return prisma.brand.findUnique({
@@ -36,11 +46,12 @@ export async function generateMetadata({
   const title = t("brandTitle", { brand: brand.name });
   const canonical = `${SITE_URL}/${locale}/voitures/${brand.slug}`;
 
+  const description = t("brandMetaDescription", { brand: brand.name });
   return {
     title: `${title} — Souq Auto`,
-    description: title,
+    description,
     alternates: { canonical },
-    openGraph: { title, url: canonical, type: "website" },
+    openGraph: { title, description, url: canonical, type: "website" },
   };
 }
 
@@ -107,14 +118,25 @@ export default async function BrandPage({
     { name: t("breadcrumbHome"), href: "/" },
     { name: brand.name, lang: "fr" },
   ];
-  const jsonLd = buildBreadcrumbJsonLd([
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: t("breadcrumbHome"), url: `${SITE_URL}/${locale}` },
     { name: brand.name, url: `${SITE_URL}/${locale}/voitures/${brand.slug}` },
   ]);
 
+  const modelsWithListings = brand.models.filter((m) => modelCounts.has(m.id));
+  const itemListJsonLd = buildItemListJsonLd(
+    modelsWithListings.map((m) => ({
+      name: `${brand.name} ${m.name}`,
+      url: `${SITE_URL}/${locale}/voitures/${brand.slug}/${m.slug}`,
+    }))
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }} />
+      {modelsWithListings.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(itemListJsonLd) }} />
+      )}
 
       <Breadcrumbs items={breadcrumbItems} />
 
