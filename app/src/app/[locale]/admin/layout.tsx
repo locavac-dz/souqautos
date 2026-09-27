@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff, isAdmin } from "@/lib/auth-server/roles";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();

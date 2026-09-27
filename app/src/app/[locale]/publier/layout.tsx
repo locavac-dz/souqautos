@@ -1,7 +1,10 @@
-import { getLocale } from "next-intl/server";
+import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { WizardProvider } from "@/components/wizard/WizardContext";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function PublierLayout({
   children,
@@ -14,12 +17,13 @@ export default async function PublierLayout({
     redirect({ href: "/connexion", locale });
     return null;
   }
+  const t = await getTranslations("Wizard");
 
   return (
     <WizardProvider>
       <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
         <div className="mx-auto max-w-2xl px-4 py-2 text-xs text-slate-500 dark:text-slate-400">
-          Publier une annonce
+          {t("headerTitle")}
         </div>
       </div>
       {children}

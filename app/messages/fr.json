@@ -212,6 +212,7 @@
     "lastUpdated": "Dernière mise à jour : 5 septembre 2026."
   },
   "Wizard": {
+    "headerTitle": "Publier une annonce",
     "next": "Suivant",
     "previous": "Précédent",
     "progressLabel": "Étape {step} sur {total}",
