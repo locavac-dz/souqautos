@@ -25,7 +25,7 @@ export function ModerateReviewButton({ reviewId, action }: { reviewId: string; a
       type="button"
       onClick={handle}
       disabled={pending}
-      className={`text-xs hover:underline disabled:opacity-50 ${action === "APPROVED" ? "text-emerald-600" : "text-red-600"}`}
+      className={`text-xs hover:underline disabled:opacity-50 ${action === "APPROVED" ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
     >
       {action === "APPROVED" ? t("approveReview") : t("rejectReview")}
     </button>

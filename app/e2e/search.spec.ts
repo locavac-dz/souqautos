@@ -14,9 +14,15 @@ async function shownCount(page: Page): Promise<number> {
   return Number(text.replace(/\D/g, ""));
 }
 
-// Prix des annonces de la liste principale, dans l'ordre d'affichage (la liste « en avant » est à part, la dernière grille est la liste principale).
+// Liste principale des résultats : la dernière grille qui contient des cartes d'annonce (la liste « en avant » la précède ;
+// le pied de page, lui aussi en grille, n'en contient aucune).
+function mainList(page: Page) {
+  return page.locator("div.grid").filter({ has: page.locator("a[href*='/annonce/']") }).last();
+}
+
+// Prix des annonces de la liste principale, dans l'ordre d'affichage.
 async function listedPrices(page: Page): Promise<number[]> {
-  const texts = await page.locator("div.grid").last().locator("a[href*='/annonce/']").locator("p.text-lg").allInnerTexts();
+  const texts = await mainList(page).locator("a[href*='/annonce/']").locator("p.text-lg").allInnerTexts();
   return texts.map((t) => Number(t.replace(/\D/g, "")));
 }
 
@@ -84,7 +90,7 @@ test("la pagination affiche 20 annonces par page, sans répéter une annonce d'u
   // Liste principale seulement : les annonces « en avant » (Premium) sont répétées en tête de chaque page, volontairement.
   const idsOn = async (n: number) => {
     await page.goto(`/fr/recherche?page=${n}&sort=price_asc`);
-    return page.locator("div.grid").last().locator("a[href*='/annonce/']").evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).getAttribute("href")));
+    return mainList(page).locator("a[href*='/annonce/']").evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).getAttribute("href")));
   };
   const first = await idsOn(1);
   await expect(page.getByText(new RegExp(`Page 1 / ${Math.ceil(total / 20)}`))).toBeVisible();
@@ -121,7 +127,7 @@ test("on filtre par catégorie et par marque depuis le panneau : l'adresse et le
 
   await expect(page).toHaveURL(/category=VOITURE/);
   await expect(page).toHaveURL(/brandId=\d+/);
-  const cards = page.locator("div.grid").last().locator("a[href*='/annonce/']");
+  const cards = mainList(page).locator("a[href*='/annonce/']");
   expect(await cards.count()).toBeGreaterThan(0);
   for (const text of await cards.allInnerTexts()) expect(text).toContain("Renault");
 

@@ -163,7 +163,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t("featuredTitle")}</h2>
-            <Link href="/recherche" className="text-sm text-emerald-600 hover:underline">
+            <Link href="/recherche" className="text-sm text-emerald-700 dark:text-emerald-400 hover:underline">
               {t("seeAllListings")}
             </Link>
           </div>
@@ -186,7 +186,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t("recentListingsTitle")}</h2>
-            <Link href="/recherche?sort=newest" className="text-sm text-emerald-600 hover:underline">
+            <Link href="/recherche?sort=newest" className="text-sm text-emerald-700 dark:text-emerald-400 hover:underline">
               {t("seeAllListings")}
             </Link>
           </div>

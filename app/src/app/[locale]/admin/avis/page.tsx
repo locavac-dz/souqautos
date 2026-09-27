@@ -34,9 +34,9 @@ export default async function AdminReviewsPage() {
 
   function ReviewRow({ review, showModerate }: { review: typeof pending[0]; showModerate: boolean }) {
     const statusBadge = review.status === "APPROVED"
-      ? <span className="text-xs text-emerald-600">{t("statusApproved")}</span>
+      ? <span className="text-xs text-emerald-700 dark:text-emerald-400">{t("statusApproved")}</span>
       : review.status === "REJECTED"
-      ? <span className="text-xs text-red-500">{t("statusRejected")}</span>
+      ? <span className="text-xs text-red-600 dark:text-red-400">{t("statusRejected")}</span>
       : null;
 
     return (
