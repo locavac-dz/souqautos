@@ -164,8 +164,8 @@ describe("buildListingWhere", () => {
 
 describe("buildListingOrderBy", () => {
   it("defaults to most recent first", () => {
-    expect(buildListingOrderBy(undefined)).toEqual({ createdAt: "desc" });
-    expect(buildListingOrderBy("recent")).toEqual({ createdAt: "desc" });
+    expect(buildListingOrderBy(undefined)).toEqual({ publishedAt: { sort: "desc", nulls: "last" } });
+    expect(buildListingOrderBy("recent")).toEqual({ publishedAt: { sort: "desc", nulls: "last" } });
   });
 
   it("orders by price ascending or descending", () => {

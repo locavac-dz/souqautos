@@ -105,6 +105,9 @@ export const blogArticleSchema = z
     if (value.kind !== "GUIDE" && value.guide) {
       ctx.addIssue({ code: "custom", path: ["guide"], message: "Seul un guide d'achat porte une fiche de guide." });
     }
+    if (value.kind === "ARTICLE" && value.coverImageUrl) {
+      ctx.addIssue({ code: "custom", path: ["coverImageUrl"], message: "Un article de magazine ne peut pas avoir de photo de couverture." });
+    }
   });
 
 export type BlogArticleInput = z.infer<typeof blogArticleSchema>;

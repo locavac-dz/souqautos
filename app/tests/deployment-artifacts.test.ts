@@ -98,7 +98,7 @@ describe(".dockerignore", () => {
 
 describe("next.config.ts — sortie autonome", () => {
   it("exporte la configuration avec la sortie autonome activable via BUILD_STANDALONE", () => {
-    const content = read(path.join(APP, "next.config.ts"));
+    const content = read(path.join(APP, "next.config.mjs"));
     expect(content).toContain("BUILD_STANDALONE");
     expect(content).toContain("standalone");
   });

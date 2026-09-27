@@ -43,9 +43,15 @@
     "sending": "Envoi en cours…",
     "successTitle": "Message envoyé",
     "successBody": "Nous avons bien reçu votre message et vous répondrons dans les meilleurs délais.",
-    "errorGeneric": "L'envoi a échoué. Veuillez réessayer.",
+    "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
     "errorRateLimit": "Trop de messages envoyés. Réessayez dans une heure.",
-    "errorValidation": "Veuillez corriger les erreurs du formulaire."
+    "errorValidation": "Veuillez corriger les erreurs du formulaire.",
+    "showPhone": "Afficher le numéro",
+    "call": "Appeler {phone}",
+    "whatsapp": "Écrire sur WhatsApp",
+    "loading": "Chargement…",
+    "errorRateLimited": "Trop de demandes de numéro pour le moment. Réessayez plus tard ou utilisez la messagerie.",
+    "errorUnavailable": "Le contact par téléphone n'est pas disponible pour cette annonce."
   },
   "PhotoGallery": {
     "close": "Fermer",
@@ -1752,15 +1758,6 @@
   "Pwa": {
     "install": "Installer l'application",
     "iosHint": "Pour installer : touchez Partager, puis « Sur l'écran d'accueil »."
-  },
-  "Contact": {
-    "showPhone": "Afficher le numéro",
-    "call": "Appeler {phone}",
-    "whatsapp": "Écrire sur WhatsApp",
-    "loading": "Chargement…",
-    "errorRateLimited": "Trop de demandes de numéro pour le moment. Réessayez plus tard ou utilisez la messagerie.",
-    "errorUnavailable": "Le contact par téléphone n'est pas disponible pour cette annonce.",
-    "errorGeneric": "Une erreur est survenue. Réessayez."
   },
   "PressReview": {
     "sectionTitle": "Revue de presse",
