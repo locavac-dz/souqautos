@@ -32,6 +32,7 @@ const goodEnv = {
   GOOGLE_CLIENT_ID: "123456789-abcdef.apps.googleusercontent.com",
   GOOGLE_CLIENT_SECRET: "secret-de-test",
   OPS_ALERT_EMAILS: "technique@souqauto.example",
+  CRON_SECRET: "un-secret-de-cron-suffisamment-long",
 };
 
 const level = (results: ReturnType<typeof evaluateLaunchReadiness>, id: string) => results.filter((r) => r.id === id).map((r) => r.level);
@@ -256,5 +257,31 @@ describe("evaluateLaunchReadiness — Search Console (Lot 124)", () => {
       const results = evaluateLaunchReadiness({ env: { ...goodEnv, GOOGLE_OAUTH_TEST_BASE_URL: "http://localhost:5187" }, facts: goodFacts });
       expect(level(results, "google-login")).toEqual(["ok"]);
     });
+  });
+});
+
+describe("evaluateLaunchReadiness — cron de balayage (Lot 236)", () => {
+  const withoutCron = () => {
+    const { CRON_SECRET, ...rest } = goodEnv;
+    void CRON_SECRET;
+    return rest;
+  };
+
+  it("is fine when CRON_SECRET is set", () => {
+    expect(level(evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts }), "cron-sweep")).toEqual(["ok"]);
+  });
+
+  it("warns, without blocking, when CRON_SECRET is absent (sweepers would not run on schedule)", () => {
+    const results = evaluateLaunchReadiness({ env: withoutCron(), facts: goodFacts });
+    expect(level(results, "cron-sweep")).toEqual(["warning"]);
+    const check = results.find((r) => r.id === "cron-sweep")!;
+    expect(check.fix).toContain("CRON_SECRET");
+    expect(check.fix).toContain("cron:sweep");
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+  });
+
+  it("warns when CRON_SECRET is still the placeholder", () => {
+    const results = evaluateLaunchReadiness({ env: { ...goodEnv, CRON_SECRET: "change-me-in-production" }, facts: goodFacts });
+    expect(level(results, "cron-sweep")).toEqual(["warning"]);
   });
 });

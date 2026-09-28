@@ -184,6 +184,20 @@ function checkSecurityPolicy(env: Env): CheckResult {
   return { id: "csp", level: "ok", message: "Politique de sécurité des contenus appliquée (bloque les scripts non autorisés)." };
 }
 
+// Lot 236 — sans CRON_SECRET, le point de terminaison /api/cron/sweep répond 500 et la tâche cron planifiée échoue.
+// Non bloquant : le site fonctionne, mais les annonces ne sont plus expirées, rappelées ou renouvelées automatiquement.
+function checkCronSweep(env: Env): CheckResult {
+  if (!isPlaceholder(env.CRON_SECRET)) {
+    return { id: "cron-sweep", level: "ok", message: "CRON_SECRET configuré (balayage nocturne des annonces)." };
+  }
+  return {
+    id: "cron-sweep",
+    level: "warning",
+    message: "CRON_SECRET absent ou resté à sa valeur d'exemple : la tâche cron de balayage des annonces (expiration, rappels, renouvellement auto) ne fonctionnerait pas.",
+    fix: "Générer : node -e \"console.log(require('crypto').randomBytes(32).toString('base64url'))\" puis définir CRON_SECRET, et planifier npm run cron:sweep (ops/crontab.example).",
+  };
+}
+
 // Lot 136 — sans destinataire, les alertes techniques (sauvegarde en retard ou en échec, erreurs du serveur) ne partent nulle
 // part : les problèmes ne sont alors vus que si quelqu'un lit les journaux. Non bloquant, mais c'est ce qui transforme
 // « on l'a découvert au jour du sinistre » en « on a été prévenu la nuit même ».
@@ -284,6 +298,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkSearchConsole(env),
     checkSecurityPolicy(env),
     checkAlertRecipients(env),
+    checkCronSweep(env),
     ...checkStaffTwoFactor(env, facts),
     ...checkInfrastructure(env),
     ...checkFacts(facts),
