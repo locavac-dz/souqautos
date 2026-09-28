@@ -28,7 +28,7 @@ export default function Step3Page() {
   }
 
   return (
-    <StepShell step={3} title={t("step3Title")} nextLabel={t("next")} onNext={handleNext}>
+    <StepShell step={3} title={t("step3Title")} nextLabel={t("next")} onNext={handleNext} errorMessage={error}>
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
           <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("year")}</span>
@@ -36,6 +36,7 @@ export default function Step3Page() {
             type="number"
             min={1970}
             max={currentYear + 1}
+            aria-invalid={error ? "true" : undefined}
             value={data.year ?? ""}
             onChange={(e) => setData({ year: e.target.value ? Number(e.target.value) : undefined })}
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
@@ -46,6 +47,7 @@ export default function Step3Page() {
           <input
             type="number"
             min={0}
+            aria-invalid={error ? "true" : undefined}
             value={data.mileage ?? ""}
             onChange={(e) => setData({ mileage: e.target.value ? Number(e.target.value) : undefined })}
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
@@ -57,6 +59,7 @@ export default function Step3Page() {
         <label className="block">
           <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("fuelType")}</span>
           <select
+            aria-invalid={error ? "true" : undefined}
             value={data.fuelType ?? ""}
             onChange={(e) => setData({ fuelType: e.target.value as FuelType })}
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
@@ -74,6 +77,7 @@ export default function Step3Page() {
         <label className="block">
           <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("gearbox")}</span>
           <select
+            aria-invalid={error ? "true" : undefined}
             value={data.gearbox ?? ""}
             onChange={(e) => setData({ gearbox: e.target.value as Gearbox })}
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
@@ -195,7 +199,6 @@ export default function Step3Page() {
         </select>
       </label>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>
   );
 }

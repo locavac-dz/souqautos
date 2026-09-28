@@ -66,7 +66,7 @@ export function EditOfferButton({ offerId, currentAmount }: Props) {
         maxLength={500}
         rows={2}
         placeholder={t("messagePlaceholder")}
-        className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none dark:border-slate-600 dark:bg-slate-800"
+        className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800"
       />
       {error && <p role="alert" className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">

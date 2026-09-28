@@ -17,7 +17,6 @@ export async function SiteHeader({
   user: { email: string; displayName: string | null; role: Role } | null;
   unreadMessagesCount?: number;
 }) {
-  const tBrand = await getTranslations("Brand");
   const tNav = await getTranslations("Nav");
   const tAdmin = await getTranslations("Admin");
   const tMessages = await getTranslations("Messages");

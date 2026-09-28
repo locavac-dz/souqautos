@@ -57,10 +57,11 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
   }
 
   return (
-    <StepShell step={2} title={t("step2Title")} nextLabel={t("next")} onNext={handleNext}>
+    <StepShell step={2} title={t("step2Title")} nextLabel={t("next")} onNext={handleNext} errorMessage={error}>
       <label className="block">
         <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("category")}</span>
         <select
+          aria-invalid={error ? "true" : undefined}
           value={data.category ?? ""}
           onChange={(e) => {
             const category = e.target.value as ListingCategory;
@@ -96,6 +97,7 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
       <label className="block">
         <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("brand")}</span>
         <select
+          aria-invalid={error ? "true" : undefined}
           value={brandOther ? "__other__" : (data.brandId ?? "")}
           onChange={(e) => {
             if (e.target.value === "__other__") {
@@ -220,7 +222,6 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
         </label>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>
   );
 }

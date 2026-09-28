@@ -2,7 +2,7 @@
 
 // Lot 154 — galerie photos avec lightbox, navigation clavier/swipe
 
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 

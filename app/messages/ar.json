@@ -1294,6 +1294,7 @@
     "counterOfferProposal": "يقترح البائع {amount} د.ج",
     "acceptCounter": "قبول",
     "declineCounter": "رفض",
+    "counterAmountPlaceholder": "المبلغ د.ج",
     "editOffer": "تعديل",
     "editSubmit": "تحديث"
   },

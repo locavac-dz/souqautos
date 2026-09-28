@@ -80,13 +80,13 @@ export default function Step11Page() {
       title={t("step11Title")}
       nextLabel={pending ? t("publishing") : t("publish")}
       nextPending={pending}
+      errorMessage={error}
       onNext={() => {
         handlePublish();
         return false; // navigation gérée manuellement après succès
       }}
     >
       <p className="text-slate-600 dark:text-slate-300">{t("step11Body")}</p>
-      {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>
   );
 }

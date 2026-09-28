@@ -51,10 +51,11 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
   }
 
   return (
-    <StepShell step={4} title={t("step4Title")} nextLabel={t("next")} onNext={handleNext}>
+    <StepShell step={4} title={t("step4Title")} nextLabel={t("next")} onNext={handleNext} errorMessage={error}>
       <label className="block">
         <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("condition")}</span>
         <select
+          aria-invalid={error ? "true" : undefined}
           value={data.condition ?? ""}
           onChange={(e) => setData({ condition: e.target.value as ListingCondition })}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
@@ -142,7 +143,6 @@ export function Step4Fields({ equipments }: { equipments: EquipmentOption[] }) {
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>
   );
 }

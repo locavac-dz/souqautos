@@ -14,6 +14,7 @@ export function StepShell({
   nextDisabled,
   nextPending,
   hideNext,
+  errorMessage,
 }: {
   step: number; // 1-indexed
   title: string;
@@ -23,6 +24,7 @@ export function StepShell({
   nextDisabled?: boolean;
   nextPending?: boolean;
   hideNext?: boolean;
+  errorMessage?: string | null;
 }) {
   const t = useTranslations("Wizard");
   const router = useRouter();
@@ -64,6 +66,12 @@ export function StepShell({
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{title}</h1>
 
       <div className="space-y-4">{children}</div>
+
+      {errorMessage && (
+        <p role="alert" aria-live="assertive" className="mt-4 text-sm text-red-600 dark:text-red-400">
+          {errorMessage}
+        </p>
+      )}
 
       <div className="mt-8 flex justify-between">
         {prevPath ? (

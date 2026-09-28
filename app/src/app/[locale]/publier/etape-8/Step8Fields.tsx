@@ -41,7 +41,7 @@ export function Step8Fields({
   }
 
   return (
-    <StepShell step={8} title={t("step8Title")} nextLabel={t("next")} onNext={handleNext}>
+    <StepShell step={8} title={t("step8Title")} nextLabel={t("next")} onNext={handleNext} errorMessage={error}>
       <div>
         <label htmlFor="wizard-wilaya" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           {t("wilaya")}
@@ -58,6 +58,7 @@ export function Step8Fields({
               communeName: undefined,
             });
           }}
+          aria-invalid={error ? "true" : undefined}
           className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
         >
           <option value="" disabled>
@@ -128,7 +129,6 @@ export function Step8Fields({
         )}
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>
   );
 }

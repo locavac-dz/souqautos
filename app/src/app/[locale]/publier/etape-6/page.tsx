@@ -41,7 +41,7 @@ export default function Step6Page() {
   }
 
   return (
-    <StepShell step={6} title={t("step6Title")} nextLabel={t("next")} onNext={handleNext}>
+    <StepShell step={6} title={t("step6Title")} nextLabel={t("next")} onNext={handleNext} errorMessage={error}>
       <p className="text-sm text-slate-500">{t("photosHelp")}</p>
 
       <div className="grid grid-cols-3 gap-3">
@@ -77,7 +77,6 @@ export default function Step6Page() {
         )}
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>
   );
 }

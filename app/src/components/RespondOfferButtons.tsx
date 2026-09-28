@@ -50,7 +50,7 @@ export function RespondOfferButtons({ offerId }: { offerId: string }) {
             min={1}
             value={counterAmount}
             onChange={(e) => setCounterAmount(e.target.value)}
-            placeholder="Montant DA"
+            placeholder={t("counterAmountPlaceholder")}
             className="w-28 bg-transparent px-2 py-1 text-sm outline-none"
             autoFocus
           />

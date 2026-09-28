@@ -71,7 +71,7 @@ export default function Step7Page() {
   }
 
   return (
-    <StepShell step={7} title={t("step7Title")} nextLabel={t("next")} onNext={handleNext}>
+    <StepShell step={7} title={t("step7Title")} nextLabel={t("next")} onNext={handleNext} errorMessage={error}>
       <div>
         <button
           type="button"
@@ -97,6 +97,7 @@ export default function Step7Page() {
           id="wizard-title"
           type="text"
           placeholder={t("titlePlaceholder")}
+          aria-invalid={error ? "true" : undefined}
           value={data.title ?? ""}
           onChange={(e) => setData({ title: e.target.value })}
           maxLength={120}
@@ -119,7 +120,6 @@ export default function Step7Page() {
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
     </StepShell>
   );
 }

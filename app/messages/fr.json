@@ -1294,6 +1294,7 @@
     "counterOfferProposal": "Le vendeur propose {amount} DA",
     "acceptCounter": "Accepter",
     "declineCounter": "Refuser",
+    "counterAmountPlaceholder": "Montant DA",
     "editOffer": "Modifier",
     "editSubmit": "Mettre à jour"
   },
