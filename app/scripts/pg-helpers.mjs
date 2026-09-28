@@ -6,11 +6,16 @@ import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 // Lit le fichier d'environnement (`--env chemin`, sinon `.env`) dans process.env.
+// Lot 233 — sans --env, un .env absent n'est plus une erreur : dans un conteneur (docker-compose.example.yml, service tools), la
+// configuration arrive par les variables d'environnement et .env n'existe pas (.dockerignore). Rend le fichier lu, ou null.
 export function loadEnv(argv = process.argv) {
   const flag = argv.indexOf("--env");
-  const file = flag >= 0 ? argv[flag + 1] : ".env";
-  const resolved = path.resolve(process.cwd(), file ?? ".env");
-  if (!existsSync(resolved)) fail(`Fichier de configuration introuvable : ${resolved}`, 2);
+  const explicit = flag >= 0;
+  const resolved = path.resolve(process.cwd(), (explicit ? argv[flag + 1] : undefined) ?? ".env");
+  if (!existsSync(resolved)) {
+    if (explicit) fail(`Fichier de configuration introuvable : ${resolved}`, 2);
+    return null;
+  }
   process.loadEnvFile(resolved);
   return resolved;
 }

@@ -1,16 +1,22 @@
 # Lot 147 — exemple de docker-compose pour Souq Auto.
 #
-# COMMENT UTILISER CE FICHIER :
+# COMMENT UTILISER CE FICHIER (depuis le dossier app/) :
 #   1. Copier vers docker-compose.yml (ne pas modifier celui-ci directement).
-#   2. Renseigner les variables d'environnement (voir .env.example, section « Mise en production »).
-#   3. Construire l'image avec le domaine final (intégré à la compilation) :
-#        docker build --build-arg NEXT_PUBLIC_SITE_URL=https://VOTRE-DOMAINE -t souq-auto:latest app/
+#   2. Renseigner les variables d'environnement dans un fichier .env à côté (voir .env.example, section « Mise en production »).
+#      NEXT_PUBLIC_SITE_URL y est OBLIGATOIRE dès la construction : elle est intégrée aux images.
+#   3. Construire les TROIS images (application, migrations, outils) — une étape du Dockerfile chacune :
+#        docker compose build
 #   4. Appliquer les migrations (AVANT le premier démarrage de l'application) :
 #        docker compose run --rm migrate
 #   5. Créer le compte administrateur et les données de référence :
 #        docker compose run --rm tools npm run db:seed
 #   6. Démarrer :
 #        docker compose up -d app
+#   7. Planifier sauvegardes, veilleur et test de restauration : ops/crontab.example, section « Docker ».
+#
+# Lot 233 — chaque service a SA cible de construction. Avant, les trois partageaient l'image de l'application (étape
+# `runner`, la seule que produit `docker build` sans --target) : `migrate` lançait le serveur au lieu des migrations (et ne
+# se terminait jamais, bloquant `app`), et `tools` n'avait ni pg_dump, ni les scripts d'exploitation.
 #
 # Ce fichier suppose que PostgreSQL tourne AILLEURS (serveur dédié, service managé). Ne pas
 # faire tourner une base de production dans un conteneur sans sauvegarde et persistance soignées.
@@ -19,8 +25,8 @@
 # port 5184 : un serveur web (Nginx, Caddy…) doit accepter les connexions HTTPS et les
 # transmettre à ce port. Voir docs/DEPLOIEMENT.md, section « Serveur web et TLS ».
 
-x-app-image: &app-image
-  image: souq-auto:latest     # à construire avec docker build --build-arg NEXT_PUBLIC_SITE_URL=...
+x-build-args: &build-args
+  NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL doit être définie (intégrée à la construction)}
 
 x-app-env: &app-env
   environment:
@@ -36,6 +42,8 @@ x-app-env: &app-env
     # SMTP_PASS:              ${SMTP_PASS}
     # SMTP_FROM:              ${SMTP_FROM}
     # TRUSTED_PROXY_HOPS:     "1"
+    # OPS_ALERT_EMAILS:       ${OPS_ALERT_EMAILS}      # sauvegardes en panne, erreurs 500 (veilleur : service tools)
+    # STAFF_ALERT_EMAILS:     ${STAFF_ALERT_EMAILS}    # file de modération
     # VAPID_PUBLIC_KEY:       ${VAPID_PUBLIC_KEY}
     # VAPID_PRIVATE_KEY:      ${VAPID_PRIVATE_KEY}
     # VAPID_SUBJECT:          ${VAPID_SUBJECT}
@@ -45,28 +53,51 @@ services:
   # Lance `prisma migrate deploy` et s'arrête. À lancer AVANT `app` au premier démarrage et
   # à chaque mise à jour qui ajoute des migrations.
   migrate:
-    <<: [*app-image, *app-env]
+    image: souq-auto-migrate:latest
+    build:
+      context: .
+      target: migrate
+    <<: *app-env
     restart: "no"
 
   # L'application. Attend que migrate ait réussi (`depends_on: condition: service_completed_successfully`).
   app:
-    <<: [*app-image, *app-env]
+    image: souq-auto:latest
+    build:
+      context: .
+      target: runner
+      args: *build-args
+    <<: *app-env
     depends_on:
       migrate:
         condition: service_completed_successfully
     ports:
-      - "5184:5184"      # exposer uniquement vers Nginx/Caddy, jamais directement vers Internet
+      # Lot 233 — sur 127.0.0.1 seulement : publié sur toutes les interfaces, le port contournait Nginx (Docker passe outre le
+      # pare-feu de l'hôte), et avec TRUSTED_PROXY_HOPS="1" l'adresse IP d'un visiteur venu en direct devenait falsifiable.
+      - "127.0.0.1:5184:5184"
     volumes:
       - uploads:/app/public/uploads       # photos envoyées : persistantes entre les déploiements
       - private-uploads:/app/private-uploads   # pièces d'identité chiffrées (jamais servies par le web)
     restart: unless-stopped
 
-  # Outils d'exploitation (npm run launch:check, npm run db:seed, npm run db:backup…). Non lancé en
+  # Outils d'exploitation (npm run launch:check, npm run db:seed, npm run db:backup, npm run ops:check…). Non lancé en
   # permanence : `docker compose run --rm tools <commande>`.
   tools:
-    <<: [*app-image, *app-env]
+    image: souq-auto-tools:latest
+    build:
+      context: .
+      target: tools
+      args: *build-args
+    <<: *app-env
     entrypoint: []
     command: ["echo", "Prêt. Lancer : docker compose run --rm tools <commande>"]
+    volumes:
+      # Les fichiers de l'application, en LECTURE SEULE : la sauvegarde (--with-uploads) les archive.
+      - uploads:/app/public/uploads:ro
+      - private-uploads:/app/private-uploads:ro
+      # Les sauvegardes ET leur journal (backups/status.json, lu par le veilleur) sur le disque de l'hôte : sans ce montage,
+      # tout disparaissait avec le conteneur (--rm). De là, les copier HORS du serveur (docs/EXPLOITATION.md, section 2).
+      - ./backups:/app/backups
     restart: "no"
 
 volumes:

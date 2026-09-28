@@ -1,21 +1,40 @@
 # Souq Auto — planification des sauvegardes et de la supervision (Linux, cron).
 # MODÈLE NON TESTÉ SUR UN SERVEUR LINUX (développé et vérifié sous Windows) : à essayer une fois à la main avant de s'y fier.
 #
-# Installation : adapter APP, puis `crontab -e` (utilisateur qui fait tourner l'application) et coller ces lignes.
-# Le programme `npm` doit être dans le PATH de cron (sinon indiquer son chemin complet, `which npm`).
+# Deux variantes : A (installation Docker, docker-compose.example.yml — la voie recommandée par docs/DEPLOIEMENT.md) ou
+# B (application installée directement sur le serveur). N'en garder QU'UNE.
+#
+# Installation : adapter APP (le dossier app/, celui du docker-compose.yml), puis `crontab -e` et coller les lignes retenues.
 # Les journaux (backups/*.log) grossissent : les faire tourner (logrotate) ou les vider de temps en temps.
+#
+# Prérequis communs, sinon les alertes ne partent pas : OPS_ALERT_EMAILS (ou STAFF_ALERT_EMAILS) ET les variables SMTP_* dans
+# la configuration (le .env à côté du docker-compose.yml en variante A, décommentées dans la section environment du fichier).
 
 APP=/srv/souq-auto/app
 
-# 1. Sauvegarde de la base chaque nuit à 02h15 (--with-uploads : aussi les photos, SEULEMENT si elles sont sur le disque
-#    du serveur ; inutile avec un stockage S3). Copier ensuite backups/ HORS du serveur (docs/EXPLOITATION.md, section 2).
-15 2 * * *  cd $APP && npm run db:backup -- --with-uploads >> backups/backup.log 2>&1
+# ---------------------------------------------------------------------------------------------------------------------------------
+# A. Installation Docker — utilisateur membre du groupe docker (ou root). Les sauvegardes et leur journal (status.json) sont
+#    écrites dans $APP/backups, monté dans le conteneur tools : c'est CE dossier qu'il faut copier hors du serveur.
+#    Le créer une fois avant la première nuit (les journaux y sont écrits avant même le lancement du conteneur) :
+#      mkdir -p /srv/souq-auto/app/backups && chmod 700 /srv/souq-auto/app/backups
+#    `-T` : pas de terminal (cron n'en a pas).
 
-# 2. Le VEILLEUR, toutes les heures — indépendant de la sauvegarde : c'est lui qui s'aperçoit qu'elle ne tourne plus, qu'elle
-#    échoue ou que l'archive est abîmée, et qui prévient par courriel (OPS_ALERT_EMAILS). Il contrôle aussi que le site répond
-#    (NEXT_PUBLIC_SITE_URL). Sans OPS_ALERT_EMAILS ni STAFF_ALERT_EMAILS, il n'écrit que dans son journal.
-5 * * * *   cd $APP && npm run ops:check -- --notify >> backups/ops-check.log 2>&1
+# 1. Sauvegarde chaque nuit à 02h15 : la base, les photos ET les pièces d'identité chiffrées (volumes montés en lecture seule).
+15 2 * * *  cd $APP && docker compose run --rm -T tools npm run db:backup -- --with-uploads >> backups/backup.log 2>&1
 
-# 3. Test de restauration chaque dimanche à 03h30 : restaure la dernière sauvegarde dans une base TEMPORAIRE et compare.
-#    Le rôle de base de données doit avoir CREATEDB (sinon utiliser un rôle de maintenance via --env).
-30 3 * * 0  cd $APP && npm run db:restore-check >> backups/restore-check.log 2>&1
+# 2. Le VEILLEUR, toutes les heures, à part de la sauvegarde : il s'aperçoit qu'elle ne tourne plus, échoue ou produit une
+#    archive abîmée, que le site ne répond plus (NEXT_PUBLIC_SITE_URL), et prévient par courriel (OPS_ALERT_EMAILS).
+5 * * * *   cd $APP && docker compose run --rm -T tools npm run ops:check -- --notify >> backups/ops-check.log 2>&1
+
+# 3. Test de restauration chaque dimanche à 03h30, dans une base TEMPORAIRE. Le rôle de DATABASE_URL doit avoir CREATEDB ; sinon
+#    ajouter au fichier .env un rôle de maintenance et le passer ici (voir docs/EXPLOITATION.md, section 2).
+30 3 * * 0  cd $APP && docker compose run --rm -T tools npm run db:restore-check >> backups/restore-check.log 2>&1
+
+# ---------------------------------------------------------------------------------------------------------------------------------
+# B. Application installée directement (sans Docker) — utilisateur qui fait tourner l'application. `npm` doit être dans le PATH
+#    de cron (sinon son chemin complet : `which npm`). --with-uploads : aussi les photos, SEULEMENT si elles sont sur le disque
+#    du serveur (inutile avec un stockage S3).
+#
+# 15 2 * * *  cd $APP && npm run db:backup -- --with-uploads >> backups/backup.log 2>&1
+# 5 * * * *   cd $APP && npm run ops:check -- --notify >> backups/ops-check.log 2>&1
+# 30 3 * * 0  cd $APP && npm run db:restore-check >> backups/restore-check.log 2>&1

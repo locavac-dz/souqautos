@@ -13,6 +13,7 @@ Le déploiement Docker a été préparé sur une machine **sans Docker installé
 | Le serveur autonome démarre et répond à `/api/health` | L'étape `migrate` (`prisma migrate deploy`) dans le conteneur |
 | Cohérence des fichiers (`tests/deployment-artifacts.test.ts`) | L'étape `tools` (backups, launch:check depuis le conteneur) |
 | `.dockerignore` ne casse pas `tsc` (vérification reconstituée) | Le volume uploads monté entre le conteneur et l'hôte |
+| Scripts d'exploitation sans fichier `.env` (configuration par variables d'environnement) | Construction des images `migrate` et `tools` (`docker compose build`) et tâches planifiées (`ops/crontab.example`) |
 
 **La CI** (`.github/workflows/ci.yml`, tâche `docker`) construit l'image à chaque envoi vers `main` ou `master`. La première exécution réelle est à surveiller.
 
@@ -29,14 +30,18 @@ Le déploiement Docker a été préparé sur une machine **sans Docker installé
 
 ## Première mise en ligne
 
-### 1. Construire l'image
+### 1. Construire les images
 
-`NEXT_PUBLIC_SITE_URL` est **intégrée à la compilation** (URLs canoniques, partages, sitemap, emails). Changer de domaine impose de reconstruire l'image.
+Trois images, une par étape du `Dockerfile` : l'application (`runner`), les migrations (`migrate`) et les outils d'exploitation (`tools` : `pg_dump`, scripts de sauvegarde, `launch:check`). `docker compose build` les construit toutes à partir de `docker-compose.yml` (copié de `docker-compose.example.yml`).
+
+`NEXT_PUBLIC_SITE_URL` est **intégrée à la compilation** (URLs canoniques, partages, sitemap, emails) : elle doit figurer dans le `.env` à côté du `docker-compose.yml` **avant** de construire. Changer de domaine impose de reconstruire.
 
 ```bash
 cd app/
-docker build --build-arg NEXT_PUBLIC_SITE_URL=https://VOTRE-DOMAINE -t souq-auto:latest .
+docker compose build
 ```
+
+> Un simple `docker build` sans `--target` ne produit **que** l'image de l'application : les services `migrate` et `tools` ne fonctionneraient pas (Lot 233).
 
 ### 2. Configurer les variables d'environnement
 
@@ -52,7 +57,7 @@ Partir de `app/.env.example` (section « Mise en production »). Variables **obl
 | `TRUSTED_PROXY_HOPS` | Nombre de serveurs intermédiaires devant l'application (1 pour Nginx seul) |
 | `ADMIN_EMAIL` + `ADMIN_PASSWORD` | Compte administrateur initial |
 
-Variables recommandées : `VAPID_*` (notifications push), `REDIS_URL` (rate limiting multi-instance), `S3_*` (stockage photos hors conteneur), `STAFF_ALERT_EMAILS` (alertes exploitation).
+Variables recommandées : `OPS_ALERT_EMAILS` (alertes techniques : sauvegarde en panne, site injoignable, erreurs 500 — **sans elle, personne n'est prévenu**), `STAFF_ALERT_EMAILS` (file de modération ; reçoit aussi les alertes techniques si `OPS_ALERT_EMAILS` est vide), `VAPID_*` (notifications push), `REDIS_URL` (rate limiting multi-instance), `S3_*` (stockage photos hors conteneur). Les alertes partent par courriel : elles exigent aussi les variables `SMTP_*`.
 
 ### 3. Appliquer les migrations
 
@@ -71,8 +76,10 @@ docker compose run --rm tools npm run db:seed
 ### 5. Contrôle avant démarrage
 
 ```bash
-docker compose run --rm tools npm run launch:check -- --env /chemin/de/votre.env
+docker compose run --rm tools npm run launch:check
 ```
+
+Dans le conteneur, la configuration est lue dans les variables d'environnement transmises par `docker-compose.yml` (pas de fichier `.env` dans l'image).
 
 Chaque point bloquant (✗) est expliqué avec sa correction. Le contrôle doit répondre « Prêt » avant de démarrer.
 
@@ -87,9 +94,10 @@ docker compose up -d app
 ## Mises à jour
 
 ```bash
-docker build --build-arg NEXT_PUBLIC_SITE_URL=https://VOTRE-DOMAINE -t souq-auto:latest app/
+cd app/
+docker compose build                      # les trois images
 docker compose run --rm migrate           # appliquer les nouvelles migrations (si aucune : sans effet)
-docker compose up -d app                  # remplacer l'image
+docker compose up -d app                  # remplacer l'application
 ```
 
 ---
@@ -114,7 +122,24 @@ server {
     server_name VOTRE-DOMAINE;
     # ssl_certificate / ssl_certificate_key ...
 
+    # Taille maximale d'un envoi. Nginx refuse par défaut tout ce qui dépasse 1 Mo (erreur 413) : sans ce réglage, la
+    # plupart des photos seraient refusées. 10 Mo couvrent tous les envois à un seul fichier (photo de profil 4 Mo,
+    # pièce d'identité, bannière ou couverture 8 Mo, pièce jointe 5 Mo, import CSV 4 Mo).
+    client_max_body_size 10m;
+
     location / {
+        proxy_pass http://127.0.0.1:5184;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Publication et modification d'une annonce : jusqu'à 10 photos de 8 Mo dans un même envoi
+    # (MAX_PHOTOS de src/app/api/listings/, MAX_PHOTO_BYTES de src/lib/uploads.ts) — 80 Mo, plus le formulaire.
+    location /api/listings {
+        client_max_body_size 90m;
+        client_body_timeout 120s;      # connexion mobile lente : ne pas couper un envoi en cours
+        proxy_read_timeout 120s;       # le serveur recadre et compresse chaque photo avant de répondre
         proxy_pass http://127.0.0.1:5184;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -123,7 +148,11 @@ server {
 }
 ```
 
-Définir `TRUSTED_PROXY_HOPS="1"` (un seul serveur intermédiaire). Sans cette variable, les limites de débit par IP se contournent.
+Définir `TRUSTED_PROXY_HOPS="1"` (un seul serveur intermédiaire). Sans cette variable, les limites de débit par IP se contournent. Pour la même raison, `docker-compose.example.yml` ne publie le port 5184 que sur `127.0.0.1` : joignable en direct, l'application recevrait des en-têtes `X-Forwarded-For` choisis par le visiteur.
+
+Caddy n'impose pas de taille maximale par défaut : rien à régler.
+
+Si ces limites changent dans le code (nombre ou taille des photos), ajuster `client_max_body_size` en conséquence.
 
 ---
 
@@ -132,12 +161,15 @@ Définir `TRUSTED_PROXY_HOPS="1"` (un seul serveur intermédiaire). Sans cette v
 Depuis le conteneur `tools` :
 
 ```bash
-docker compose run --rm tools npm run db:backup -- --with-uploads --out /sauvegardes
+mkdir -p backups && chmod 700 backups          # une fois
+docker compose run --rm tools npm run db:backup -- --with-uploads
 ```
 
-Les photos sont dans le volume `uploads` (`/app/public/uploads` dans le conteneur) et les pièces d'identité chiffrées dans le volume `private-uploads` (`/app/private-uploads`). `--with-uploads` archive ces deux volumes. Copier ces archives **hors du serveur** (autre machine, autre site) : une sauvegarde sur le même disque disparaît avec lui.
+La sauvegarde de la base, l'archive des photos (volume `uploads`) et celle des pièces d'identité chiffrées (volume `private-uploads`) sont écrites dans `app/backups/` **sur l'hôte** : le service `tools` monte ce dossier, et les deux volumes en lecture seule. Le journal `backups/status.json`, que lit le veilleur, y est aussi. Copier ce dossier **hors du serveur** (autre machine, autre site) : une sauvegarde sur le même disque disparaît avec lui.
 
-Voir `docs/EXPLOITATION.md`, section 2 pour la planification et les tests de restauration.
+**Planification** : sauvegarde chaque nuit, veilleur chaque heure, test de restauration chaque semaine. Lignes prêtes à coller dans `app/ops/crontab.example`, variante A (Docker). Le veilleur prévient par courriel : définir `OPS_ALERT_EMAILS` **et** les `SMTP_*` dans la configuration, décommentés dans la section `environment` de `docker-compose.yml`. Sans eux, une sauvegarde en panne ne prévient personne. Essayer chaque ligne une fois à la main avant de s'y fier.
+
+Voir `docs/EXPLOITATION.md`, section 2 pour les tests de restauration et la restauration réelle.
 
 ---
 

@@ -1,6 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+
+const require = createRequire(import.meta.url);
+const yaml = require("js-yaml") as { load(text: string): unknown };
 
 // Lot 147 — vérification des artefacts de déploiement. Ces tests prouvent que les fichiers
 // nécessaires à la mise en production existent et sont cohérents entre eux, SANS construire
@@ -166,6 +170,90 @@ describe("docker-compose.example.yml", () => {
     const content = read(path.join(APP, "docker-compose.example.yml"));
     expect(content).toContain("private-uploads:/app/private-uploads");
     expect(content).toMatch(/^\s+private-uploads:/m);
+  });
+});
+
+// Lot 233 — le fichier est ANALYSÉ (YAML, ancres et fusions comprises) : c'est ce que ferait `docker compose`.
+type Service = { image?: string; build?: { context?: string; target?: string; args?: Record<string, string> }; command?: string[]; volumes?: string[]; ports?: string[]; environment?: Record<string, string> };
+const compose = yaml.load(read(path.join(APP, "docker-compose.example.yml"))) as { services: Record<string, Service> };
+const dockerfile = read(path.join(APP, "Dockerfile"));
+const stageExists = (name: string) => new RegExp(`^FROM .+ AS ${name}$`, "m").test(dockerfile);
+
+describe("docker-compose.example.yml — chaque service construit SA cible du Dockerfile (Lot 233)", () => {
+  it("app → runner, migrate → migrate, tools → tools, trois images distinctes", () => {
+    expect(compose.services.app.build?.target).toBe("runner");
+    expect(compose.services.migrate.build?.target).toBe("migrate");
+    expect(compose.services.tools.build?.target).toBe("tools");
+    for (const service of Object.values(compose.services)) expect(stageExists(service.build!.target!), service.build?.target).toBe(true);
+    expect(new Set(Object.values(compose.services).map((s) => s.image)).size).toBe(3);
+  });
+
+  it("l'application et les outils reçoivent NEXT_PUBLIC_SITE_URL à la construction", () => {
+    expect(compose.services.app.build?.args).toHaveProperty("NEXT_PUBLIC_SITE_URL");
+    expect(compose.services.tools.build?.args).toHaveProperty("NEXT_PUBLIC_SITE_URL");
+  });
+
+  it("migrate n'écrase pas la commande de sa cible (prisma migrate deploy), et les trois reçoivent la configuration", () => {
+    expect(compose.services.migrate.command).toBeUndefined();
+    expect(dockerfile).toMatch(/AS migrate[\s\S]*?CMD \["npx", "prisma", "migrate", "deploy"\]/);
+    for (const service of Object.values(compose.services)) expect(service.environment).toHaveProperty("DATABASE_URL");
+  });
+
+  it("tools monte les deux volumes de fichiers en LECTURE SEULE et les sauvegardes sur l'hôte (sinon perdues avec --rm)", () => {
+    const volumes = compose.services.tools.volumes ?? [];
+    expect(volumes).toContain("uploads:/app/public/uploads:ro");
+    expect(volumes).toContain("private-uploads:/app/private-uploads:ro");
+    expect(volumes).toContain("./backups:/app/backups");
+  });
+
+  it("l'application n'est publiée que sur 127.0.0.1 (jamais en direct : Nginx devant)", () => {
+    expect(compose.services.app.ports).toEqual(["127.0.0.1:5184:5184"]);
+  });
+});
+
+describe("ops/crontab.example — variante Docker (Lot 233)", () => {
+  const crontab = read(path.join(APP, "ops", "crontab.example"));
+  const pkg = JSON.parse(read(path.join(APP, "package.json"))) as { scripts: Record<string, string> };
+  const dockerLines = crontab.split("\n").filter((line) => /^[0-9*]/.test(line) && line.includes("docker compose run"));
+
+  it("planifie sauvegarde, veilleur (avec --notify) et test de restauration, via le service tools, sans terminal", () => {
+    expect(dockerLines).toHaveLength(3);
+    for (const line of dockerLines) expect(line).toContain("docker compose run --rm -T tools npm run ");
+    expect(dockerLines.some((l) => l.includes("db:backup -- --with-uploads"))).toBe(true);
+    expect(dockerLines.some((l) => l.includes("ops:check -- --notify"))).toBe(true);
+    expect(dockerLines.some((l) => l.includes("db:restore-check"))).toBe(true);
+  });
+
+  it("ne lance que des scripts npm qui existent", () => {
+    for (const line of dockerLines) {
+      const script = line.match(/npm run ([a-z:-]+)/)?.[1];
+      expect(pkg.scripts, `${script}`).toHaveProperty(script!);
+    }
+  });
+});
+
+describe("docs/DEPLOIEMENT.md — taille des envois derrière Nginx (Lot 233)", () => {
+  const doc = read(path.join(ROOT, "docs", "DEPLOIEMENT.md"));
+  const mb = (pattern: RegExp, text: string) => Number(text.match(pattern)?.[1]);
+
+  it("l'emplacement /api/listings accepte 10 photos au maximum de leur taille, calculé depuis le code", () => {
+    const maxPhotos = Math.max(
+      mb(/const MAX_PHOTOS = (\d+);/, read(path.join(APP, "src", "app", "api", "listings", "route.ts"))),
+      mb(/const MAX_PHOTOS = (\d+);/, read(path.join(APP, "src", "app", "api", "listings", "[id]", "route.ts")))
+    );
+    const photoMb = mb(/const MAX_PHOTO_BYTES = (\d+) \* 1024 \* 1024;/, read(path.join(APP, "src", "lib", "uploads.ts")));
+    expect(maxPhotos).toBeGreaterThan(0);
+    expect(photoMb).toBeGreaterThan(0);
+    const listingsBlock = doc.match(/location \/api\/listings \{[\s\S]*?\}/)?.[0] ?? "";
+    expect(mb(/client_max_body_size (\d+)m;/, listingsBlock)).toBeGreaterThan(maxPhotos * photoMb);
+  });
+
+  it("la limite générale couvre le plus gros envoi à fichier unique (bannière, couverture, pièce d'identité)", () => {
+    const uploads = read(path.join(APP, "src", "lib", "uploads.ts"));
+    const identity = read(path.join(APP, "src", "lib", "identity-uploads.ts"));
+    const largest = Math.max(...[...uploads.matchAll(/const MAX_[A-Z]+_BYTES = (\d+) \* 1024 \* 1024;/g), ...identity.matchAll(/const MAX_BYTES = (\d+) \* 1024 \* 1024;/g)].map((m) => Number(m[1])));
+    const serverLevel = doc.match(/server \{\n[\s\S]*?client_max_body_size (\d+)m;/)?.[1];
+    expect(Number(serverLevel)).toBeGreaterThan(largest);
   });
 });
 

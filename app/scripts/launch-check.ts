@@ -14,15 +14,19 @@ import { evaluateLaunchReadiness, summarizeChecks, type LaunchFacts } from "../s
 
 const DEMO_DOMAINS = ["@example.dz", "@example.com", "@example.org"];
 
+// Lot 233 — sans --env, un .env absent n'est pas une erreur : dans un conteneur, la configuration est dans les variables
+// d'environnement (docker compose run --rm tools npm run launch:check). Rend ce qui a été lu, pour l'afficher.
 function loadEnvFile(): string {
   const flag = process.argv.indexOf("--env");
-  const file = flag >= 0 ? process.argv[flag + 1] : ".env";
+  const explicit = flag >= 0;
+  const file = explicit ? process.argv[flag + 1] : ".env";
   if (!file) {
     console.error("--env attend un chemin de fichier.");
     process.exit(2);
   }
   const resolved = path.resolve(process.cwd(), file);
   if (!existsSync(resolved)) {
+    if (!explicit) return "les variables d'environnement (aucun fichier .env)";
     console.error(`Fichier de configuration introuvable : ${resolved}`);
     process.exit(2);
   }
