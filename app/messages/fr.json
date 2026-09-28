@@ -1778,7 +1778,9 @@
   },
   "Pwa": {
     "install": "Installer l'application",
-    "iosHint": "Pour installer : touchez Partager, puis « Sur l'écran d'accueil »."
+    "iosHint": "Pour installer : touchez Partager, puis « Sur l'écran d'accueil ».",
+    "updateAvailable": "Une nouvelle version est disponible.",
+    "reload": "Recharger"
   },
   "PressReview": {
     "sectionTitle": "Revue de presse",

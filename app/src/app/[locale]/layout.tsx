@@ -15,6 +15,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { CompareProvider } from "@/components/compare/CompareContext";
 import { CompareTray } from "@/components/compare/CompareTray";
 import { PwaRegister } from "@/components/PwaRegister";
+import { PwaUpdateBanner } from "@/components/PwaUpdateBanner";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { ThemeApplicator } from "@/components/ThemeApplicator";
 import { buildSearchEngineVerification } from "@/lib/seo-verification";
@@ -108,6 +109,7 @@ export default async function LocaleLayout({
             <SiteFooter />
             <CompareTray />
             <PwaRegister />
+            <PwaUpdateBanner />
             <PageViewTracker />
             <ThemeApplicator />
           </CompareProvider>

@@ -30,6 +30,11 @@ APP=/srv/souq-auto/app
 #    ajouter au fichier .env un rôle de maintenance et le passer ici (voir docs/EXPLOITATION.md, section 2).
 30 3 * * 0  cd $APP && docker compose run --rm -T tools npm run db:restore-check >> backups/restore-check.log 2>&1
 
+# 4. Balayage nocturne des annonces (expiration, rappels d'expiration, renouvellement automatique).
+#    Déclenche POST /api/cron/sweep via CRON_SECRET (variable à définir dans le .env).
+#    À 04h00, quand le serveur est le moins chargé. Journalisé dans backups/sweep.log.
+0 4 * * *   cd $APP && docker compose run --rm -T tools npm run cron:sweep >> backups/sweep.log 2>&1
+
 # ---------------------------------------------------------------------------------------------------------------------------------
 # B. Application installée directement (sans Docker) — utilisateur qui fait tourner l'application. `npm` doit être dans le PATH
 #    de cron (sinon son chemin complet : `which npm`). --with-uploads : aussi les photos, SEULEMENT si elles sont sur le disque
@@ -38,3 +43,4 @@ APP=/srv/souq-auto/app
 # 15 2 * * *  cd $APP && npm run db:backup -- --with-uploads >> backups/backup.log 2>&1
 # 5 * * * *   cd $APP && npm run ops:check -- --notify >> backups/ops-check.log 2>&1
 # 30 3 * * 0  cd $APP && npm run db:restore-check >> backups/restore-check.log 2>&1
+# 0 4 * * *   cd $APP && npm run cron:sweep >> backups/sweep.log 2>&1

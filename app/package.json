@@ -32,7 +32,8 @@
     "auth:reset-2fa": "tsx scripts/reset-2fa.ts",
     "content:guide-general": "tsx scripts/create-general-guide.ts",
     "load:seed": "tsx prisma/seed-load.ts",
-    "load:test": "tsx scripts/load-test.ts"
+    "load:test": "tsx scripts/load-test.ts",
+    "cron:sweep": "node scripts/cron-sweep.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
