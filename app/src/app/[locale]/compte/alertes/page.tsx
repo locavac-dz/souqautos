@@ -3,6 +3,7 @@ import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { DeleteAlertButton } from "@/components/DeleteAlertButton";
+import { formatNumber } from "@/lib/format";
 import { PushToggle } from "@/components/PushToggle";
 
 const FUEL_KEY: Record<string, string> = {
@@ -56,8 +57,8 @@ export default async function SearchAlertsPage() {
       if (wilaya) parts.push(locale === "ar" ? wilaya.nomAr : wilaya.nomFr);
     }
     if (filters.priceMin || filters.priceMax) {
-      const min = filters.priceMin ? Number(filters.priceMin).toLocaleString() : "0";
-      const max = filters.priceMax ? Number(filters.priceMax).toLocaleString() : "∞";
+      const min = filters.priceMin ? formatNumber(Number(filters.priceMin), locale) : "0";
+      const max = filters.priceMax ? formatNumber(Number(filters.priceMax), locale) : "∞";
       parts.push(`${min} – ${max} DA`);
     }
     if (filters.yearMin || filters.yearMax) {

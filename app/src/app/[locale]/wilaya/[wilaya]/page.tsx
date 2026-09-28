@@ -16,6 +16,7 @@ import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
 import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
 import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
+import { formatNumber } from "@/lib/format";
 
 async function getWilaya(slug: string) {
   return prisma.wilaya.findUnique({ where: { slug } });
@@ -141,14 +142,14 @@ export default async function WilayaPage({
             {stats.avgPrice && (
               <div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{t("avgPrice")}</p>
-                <p className="font-medium text-slate-900 dark:text-slate-100">{stats.avgPrice.toLocaleString()} DA</p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">{formatNumber(stats.avgPrice, locale)} DA</p>
               </div>
             )}
             {stats.minPrice && stats.maxPrice && (
               <div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{t("priceRange")}</p>
                 <p className="font-medium text-slate-900 dark:text-slate-100">
-                  {stats.minPrice.toLocaleString()} – {stats.maxPrice.toLocaleString()} DA
+                  {formatNumber(stats.minPrice, locale)} – {formatNumber(stats.maxPrice, locale)} DA
                 </p>
               </div>
             )}
@@ -173,7 +174,7 @@ export default async function WilayaPage({
                       </p>
                       {brandStat.minPrice && (
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {t("fromPrice", { price: brandStat.minPrice.toLocaleString() })}
+                          {t("fromPrice", { price: formatNumber(brandStat.minPrice, locale) })}
                         </p>
                       )}
                     </Link>

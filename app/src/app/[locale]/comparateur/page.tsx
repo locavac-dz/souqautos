@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { formatPrice } from "@/lib/format";
 import { useCompare } from "@/components/compare/CompareContext";
 import type { CompareHighlights } from "@/lib/ai-compare";
 
@@ -116,7 +117,7 @@ export default function ComparePage() {
           ? tReview("averageRating", { average: l.sellerTrust.averageRating, count: l.sellerTrust.reviewCount })
           : tReview("noReviews"),
     },
-    { label: t("price"), render: (l) => `${l.price.toLocaleString()} DA` },
+    { label: t("price"), render: (l) => formatPrice(l.price, locale) },
     { label: t("year"), render: (l) => l.year },
     { label: t("mileage"), render: (l) => `${l.mileage.toLocaleString()} km` },
     { label: tWizard("fuelType"), render: (l) => tWizard(FUEL_KEY[l.fuelType]) },

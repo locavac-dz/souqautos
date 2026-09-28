@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { formatNumber } from "@/lib/format";
 import { WithdrawOfferButton } from "@/components/WithdrawOfferButton";
 import { EditOfferButton } from "@/components/EditOfferButton";
 import { RespondOfferButtons } from "@/components/RespondOfferButtons";
@@ -73,7 +74,7 @@ export default async function OffresPage() {
                       {offer.listing.title}
                     </Link>
                     <p className="text-base font-bold text-slate-900 dark:text-white">
-                      {offer.amount.toLocaleString()} DA
+                      {formatNumber(offer.amount, locale)} DA
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {offer.buyer.profile?.displayName ?? t("unknownBuyer")}
@@ -115,7 +116,7 @@ export default async function OffresPage() {
                       {offer.listing.title}
                     </Link>
                     <p className="text-base font-bold text-slate-900 dark:text-white">
-                      {offer.amount.toLocaleString()} DA
+                      {formatNumber(offer.amount, locale)} DA
                     </p>
                     {offer.message && (
                       <p className="text-sm text-slate-600 dark:text-slate-400">&ldquo;{offer.message}&rdquo;</p>
@@ -123,7 +124,7 @@ export default async function OffresPage() {
                     {/* Contre-offre du vendeur */}
                     {offer.status === "COUNTERED" && offer.counterAmount && (
                       <p className="rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
-                        {t("counterOfferProposal", { amount: offer.counterAmount.toLocaleString() })}
+                        {t("counterOfferProposal", { amount: formatNumber(offer.counterAmount, locale) })}
                       </p>
                     )}
                   </div>

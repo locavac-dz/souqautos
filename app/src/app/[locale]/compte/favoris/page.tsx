@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { formatNumber } from "@/lib/format";
 
 export default async function FavoritesPage() {
   const locale = await getLocale();
@@ -69,7 +70,7 @@ export default async function FavoritesPage() {
                     <span lang="fr">{brandLabel} {modelLabel}</span> · {wilayaLabel}
                   </p>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100 mt-1">
-                    {listing.price.toLocaleString()} DA
+                    {formatNumber(listing.price, locale)} DA
                   </p>
                 </div>
               </Link>

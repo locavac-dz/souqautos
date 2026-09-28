@@ -83,7 +83,7 @@ export function ConversationView({
 
   return (
     <>
-      <div className="mt-6">
+      <div className="mt-6" aria-live="polite" aria-relevant="additions">
         <MessageList
           conversationId={conversationId}
           messages={messages}

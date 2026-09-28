@@ -28,6 +28,7 @@ import { parseHorairesSemaine, isOpenNow, todayDayKey, DAYS } from "@/lib/horair
 import type { Prisma } from "@prisma/client";
 import { ProStockFilters, type StockFilterValues } from "@/components/ProStockFilters";
 import { FollowProButton } from "@/components/FollowProButton";
+import { formatNumber } from "@/lib/format";
 
 // Lot 108 — SEO de la vitrine : métadonnées, image de partage (bannière, à
 // défaut le logo), et noindex tant que le compte n'a aucune annonce publiée.
@@ -458,7 +459,7 @@ export default async function ProShowcasePage({
                         <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-300">
                           {brandName} {modelName} {listing.year}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{listing.price.toLocaleString()} DA</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{formatNumber(listing.price, locale)} DA</p>
                       </div>
                     </div>
                   );

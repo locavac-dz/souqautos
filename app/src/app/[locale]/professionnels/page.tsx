@@ -8,6 +8,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { hasAdvancedProTools, priceForAnyTier, quotaForTier } from "@/lib/pro-subscription";
 import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
 import type { ProSubscriptionTier } from "@prisma/client";
+import { formatPrice } from "@/lib/format";
 
 // Lot 80 — dernière page documentée au sitemap (docs/ARCHITECTURE.md §2 :
 // "/professionnels Landing pro (abonnements)") jamais construite : le
@@ -93,7 +94,7 @@ export default async function ProfessionalsLandingPage() {
             <div key={tier} className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 flex flex-col">
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t(`tier${tier}`)}</p>
               <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                {price === null ? t("pricingFree") : `${price.toLocaleString()} DA`}
+                {price === null ? t("pricingFree") : formatPrice(price, locale)}
                 {price !== null && <span className="text-sm font-normal text-slate-500 dark:text-slate-400">/{t("pricingPerMonth")}</span>}
               </p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">

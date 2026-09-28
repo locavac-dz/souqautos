@@ -7,6 +7,7 @@ import { localizedAlternates } from "@/lib/seo-alternates";
 import { getListingCountsPerWilaya } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { formatNumber } from "@/lib/format";
 
 export async function generateMetadata({
   params,
@@ -63,7 +64,7 @@ export default async function WilayaIndexPage() {
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{t("statsCount", { count: stat?.count ?? 0 })}</p>
               {stat?.avgPrice && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {t("avgPrice")}: {stat.avgPrice.toLocaleString()} DA
+                  {t("avgPrice")}: {formatNumber(stat.avgPrice, locale)} DA
                 </p>
               )}
             </Link>

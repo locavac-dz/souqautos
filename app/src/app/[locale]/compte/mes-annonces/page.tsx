@@ -23,6 +23,7 @@ import { ListingLifecycleActions } from "@/components/ListingLifecycleActions";
 import { ListingPriceEditor } from "@/components/ListingPriceEditor";
 import { ListingFormulaUpgrade } from "@/components/ListingFormulaUpgrade";
 import { ListingAutoRenewToggle } from "@/components/ListingAutoRenewToggle";
+import { formatNumber } from "@/lib/format";
 
 const PHOTO_QUALITY_FLAG_KEY: Record<PhotoQualityFlag, string> = {
   low_resolution: "photoQualityLowResolution",
@@ -158,7 +159,7 @@ export default async function MyListingsPage() {
                   )}
                   <div className="flex-1">
                     <p className="font-medium text-slate-900 dark:text-slate-100">{listing.title}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{listing.price.toLocaleString()} DA</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{formatNumber(listing.price, locale)} DA</p>
                     <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <StatusBadge status={listing.status} />
                       {listing.formula !== "STANDARD" && (

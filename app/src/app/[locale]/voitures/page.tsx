@@ -8,6 +8,7 @@ import { getListingCountsPerBrand } from "@/lib/catalogue-stats";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { brandCategories, CATALOGUE_CATEGORIES, categoryFromSlug, categorySlug, filterCatalogueByCategory } from "@/lib/vehicle-catalogue";
+import { formatNumber } from "@/lib/format";
 
 export async function generateMetadata({
   params,
@@ -96,7 +97,7 @@ export default async function BrandsIndexPage({
               </p>
               {stat?.avgPrice && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {t("avgPrice")}: {stat.avgPrice.toLocaleString()} DA
+                  {t("avgPrice")}: {formatNumber(stat.avgPrice, locale)} DA
                 </p>
               )}
             </Link>

@@ -47,6 +47,7 @@ import { parseHorairesSemaine, isOpenNow } from "@/lib/horaires-semaine";
 import { CallbackRequestButton } from "@/components/CallbackRequestButton";
 import { MakeOfferButton } from "@/components/MakeOfferButton";
 import { MarketStatsWidget } from "@/components/MarketStatsWidget";
+import { formatNumber } from "@/lib/format";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
 const BADGE_KEY = PRICE_BADGE_KEY;
@@ -436,7 +437,7 @@ export default async function ListingDetailPage({
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 text-balance">{listing.title}</h1>
           <p className="mt-1 text-slate-500 dark:text-slate-400">
             <span lang="fr">{brandLabel} {modelLabel}</span> · {tListing("yearLabel", { value: listing.year })} ·{" "}
-            {tListing("mileageUnit", { value: listing.mileage.toLocaleString() })}
+            {tListing("mileageUnit", { value: formatNumber(listing.mileage, locale) })}
           </p>
 
           {modelGuide && (
@@ -511,8 +512,8 @@ export default async function ListingDetailPage({
             <div className="mt-6">
               <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tPriceBadge("estimationTitle")}</h2>
               <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
-                <DetailRow label={tPriceBadge("priceRequested")} value={`${listing.price.toLocaleString()} DA`} />
-                <DetailRow label={tPriceBadge("priceMarket")} value={`${estimate.mid.toLocaleString()} DA`} />
+                <DetailRow label={tPriceBadge("priceRequested")} value={`${formatNumber(listing.price, locale)} DA`} />
+                <DetailRow label={tPriceBadge("priceMarket")} value={`${formatNumber(estimate.mid, locale)} DA`} />
                 {priceBadge && (
                   <DetailRow
                     label={tPriceBadge("deviationLabel")}
@@ -541,7 +542,7 @@ export default async function ListingDetailPage({
                     label={new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
                       dateStyle: "long",
                     }).format(entry.recordedAt)}
-                    value={`${entry.price.toLocaleString()} DA`}
+                    value={`${formatNumber(entry.price, locale)} DA`}
                   />
                 ))}
               </div>
@@ -574,7 +575,7 @@ export default async function ListingDetailPage({
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-4">
             <div className="flex items-start justify-between gap-2">
               <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                {listing.price.toLocaleString()} DA
+                {formatNumber(listing.price, locale)} DA
               </p>
               <div className="flex gap-4 shrink-0">
                 <FavoriteButton
@@ -695,7 +696,7 @@ export default async function ListingDetailPage({
             {/* Partager l'annonce via WhatsApp — disponible pour tous (acheteur et vendeur) */}
             <div className="mt-4 border-t border-slate-100 dark:border-slate-700 pt-4">
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(`${listing.title} — ${new Intl.NumberFormat("fr-DZ").format(listing.price)} DA\n${SITE_URL}/${locale}/annonce/${listing.id}`)}`}
+                href={`https://wa.me/?text=${encodeURIComponent(`${listing.title} — ${formatNumber(listing.price, locale)} DA\n${SITE_URL}/${locale}/annonce/${listing.id}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex w-full items-center justify-center gap-2 rounded-md border border-green-700 dark:border-green-400 px-4 py-2.5 text-sm font-medium text-green-700 dark:text-green-400 hover:bg-green-700/5 dark:hover:bg-green-400/10 transition-colors"

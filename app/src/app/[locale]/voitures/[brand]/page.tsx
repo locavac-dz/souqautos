@@ -16,6 +16,7 @@ import { getSellerTrustSummariesForSellers } from "@/lib/seller-trust";
 import { getSellerResponsivenessCached } from "@/lib/seller-responsiveness-service";
 import { cardSellerBadges } from "@/lib/seller-card-badges";
 import { getProfessionalBadgesForSellers } from "@/lib/professional-accounts";
+import { formatNumber } from "@/lib/format";
 
 async function getBrand(slug: string) {
   return prisma.brand.findUnique({
@@ -146,14 +147,14 @@ export default async function BrandPage({
             {stats.avgPrice && (
               <div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{t("avgPrice")}</p>
-                <p className="font-medium text-slate-900 dark:text-slate-100">{stats.avgPrice.toLocaleString()} DA</p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">{formatNumber(stats.avgPrice, locale)} DA</p>
               </div>
             )}
             {stats.minPrice && stats.maxPrice && (
               <div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{t("priceRange")}</p>
                 <p className="font-medium text-slate-900 dark:text-slate-100">
-                  {stats.minPrice.toLocaleString()} – {stats.maxPrice.toLocaleString()} DA
+                  {formatNumber(stats.minPrice, locale)} – {formatNumber(stats.maxPrice, locale)} DA
                 </p>
               </div>
             )}
@@ -178,7 +179,7 @@ export default async function BrandPage({
                       </p>
                       {modelStat.minPrice && (
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {t("fromPrice", { price: modelStat.minPrice.toLocaleString() })}
+                          {t("fromPrice", { price: formatNumber(modelStat.minPrice, locale) })}
                         </p>
                       )}
                     </Link>

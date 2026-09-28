@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
+import { formatNumber } from "@/lib/format";
 
 const CATEGORY_KEY: Record<string, string> = {
   VOITURE: "categoryVoiture",
@@ -41,6 +42,7 @@ const CONDITION_KEY: Record<string, string> = {
 
 export default function Step9Page() {
   const t = useTranslations("Wizard");
+  const locale = useLocale();
   const { data, photos } = useWizard();
 
   const previews = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
@@ -93,7 +95,7 @@ export default function Step9Page() {
             value={new Date(data.assuranceExpiry + "T00:00:00").toLocaleDateString("fr-DZ", { dateStyle: "long" })}
           />
         )}
-        <Row label={t("price")} value={data.price ? `${data.price.toLocaleString()} DA` : undefined} />
+        <Row label={t("price")} value={data.price ? `${formatNumber(data.price, locale)} DA` : undefined} />
         <Row label={t("wilaya")} value={data.wilayaName} />
         {data.communeName && <Row label={t("commune")} value={data.communeName} />}
       </div>

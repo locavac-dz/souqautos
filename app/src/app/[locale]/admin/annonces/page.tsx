@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { formatNumber } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { ModerationActions } from "@/components/admin/ModerationActions";
 import { getFraudSignalsForListings } from "@/lib/fraud-signals";
@@ -69,7 +70,7 @@ export default async function AdminListingsPage() {
                       <Link href={`/annonce/${listing.id}`} className="font-medium text-slate-900 dark:text-slate-100 hover:underline">
                         {listing.title}
                       </Link>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{listing.price.toLocaleString()} DA</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{formatNumber(listing.price, locale)} DA</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email} ·{" "}
                         {t("submittedOn", {
@@ -134,7 +135,7 @@ export default async function AdminListingsPage() {
                   <Link href={`/annonce/${listing.id}`} className="font-medium text-slate-900 dark:text-slate-100 hover:underline">
                     {listing.title}
                   </Link>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{listing.price.toLocaleString()} DA</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{formatNumber(listing.price, locale)} DA</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email}
                   </p>
