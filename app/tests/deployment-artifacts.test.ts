@@ -216,12 +216,13 @@ describe("ops/crontab.example — variante Docker (Lot 233)", () => {
   const pkg = JSON.parse(read(path.join(APP, "package.json"))) as { scripts: Record<string, string> };
   const dockerLines = crontab.split("\n").filter((line) => /^[0-9*]/.test(line) && line.includes("docker compose run"));
 
-  it("planifie sauvegarde, veilleur (avec --notify) et test de restauration, via le service tools, sans terminal", () => {
-    expect(dockerLines).toHaveLength(3);
+  it("planifie sauvegarde, veilleur (avec --notify), test de restauration et balayage cron, via le service tools, sans terminal", () => {
+    expect(dockerLines).toHaveLength(4);
     for (const line of dockerLines) expect(line).toContain("docker compose run --rm -T tools npm run ");
     expect(dockerLines.some((l) => l.includes("db:backup -- --with-uploads"))).toBe(true);
     expect(dockerLines.some((l) => l.includes("ops:check -- --notify"))).toBe(true);
     expect(dockerLines.some((l) => l.includes("db:restore-check"))).toBe(true);
+    expect(dockerLines.some((l) => l.includes("cron:sweep"))).toBe(true);
   });
 
   it("ne lance que des scripts npm qui existent", () => {
