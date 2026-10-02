@@ -53,6 +53,18 @@ npm run test:e2e:pwa # application installable : service worker et mode hors con
 npm run verify      # équivalent local de la chaîne d'intégration (types, lint, tests, écart schéma/migrations) ; `-- --e2e` ajoute les tests de bout en bout
 ```
 
+## Dépannage
+
+**Tests de sauvegarde échouent avec « permission denied to create database »**
+
+Les tests `backup-chain` (`npm run db:restore-check`) créent une base temporaire. Le rôle `souq_auto` doit avoir `CREATEDB` (déjà inclus dans `CREATE ROLE … CREATEDB` ci-dessus ; absent si le rôle a été créé différemment) :
+
+```sql
+ALTER ROLE souq_auto CREATEDB;
+```
+
+Après cette commande, relancer `npm test` : les 6 tests concernés repassent au vert.
+
 ## Mise en production
 
 Ne jamais réutiliser la base de développement : elle contient des comptes et des annonces de démonstration.

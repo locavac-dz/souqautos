@@ -1115,8 +1115,10 @@ enum ArticleKind {
 
 // Lot 110 — fiche d'un essai auto. Seulement des données réellement saisies par
 // la rédaction : aucune consommation/prix « mesuré » inventé. Note sur 5 par
-// demi-point ; points forts/faibles = un élément par ligne (même convention
-// « liste dans une String » que le reste du schéma).
+// demi-point ; points forts/faibles stockés comme String, un élément par ligne.
+// Ce format convient tant que ces champs sont seulement affichés (split("\n")).
+// Si une requête filtrante devient nécessaire (WHERE prosFr LIKE …), migrer
+// vers une table associative RoadTestPoint { kind, locale, text }.
 model RoadTest {
   articleId     String      @id
   article       BlogArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)

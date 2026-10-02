@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
 import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
+import { throttledSweep } from "@/lib/sweeper-throttle";
 import {
   checkListingRenewable,
   checkListingCanBeMarkedSold,
@@ -55,9 +56,11 @@ export default async function MyListingsPage() {
   const t = await getTranslations("MyListings");
   const tListing = await getTranslations("Listing");
 
-  await sweepAutoRenewals();
-  await sweepExpiredListings();
-  await sweepExpiringListingsForReminders();
+  await Promise.all([
+    throttledSweep("auto-renewals", sweepAutoRenewals),
+    throttledSweep("expired-listings", sweepExpiredListings),
+    throttledSweep("expiry-reminders", sweepExpiringListingsForReminders),
+  ]);
 
   // Lot 43 — comble l'écart signalé au Lot 41 : les annonces d'un compte
   // professionnel appartiennent toujours à sellerId = ProfessionalAccount.userId,
