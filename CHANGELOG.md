@@ -3096,3 +3096,333 @@ L'aperçu du Lot 145 est réservé aux administrateurs. Or les personnes qui doi
 - **Pas de limitation de débit sur les jetons devinés** : à 256 bits, deviner un jeton est infaisable ; une attaque par volume relèverait de l'hébergement.
 - L'aperçu montre l'état **enregistré**, pas les modifications non enregistrées du formulaire.
 - Le texte arabe de l'écran et du bandeau (32 libellés) est à faire relire par un locuteur natif.
+
+## Lot 147 — Déploiement : Docker, photos en production, sauvegardes (2026-09-22)
+
+Première livraison complète pour la production. `Dockerfile` multi-stage (build → production), `docker-compose.example.yml` et `.dockerignore`. Le service de photos (`src/lib/uploads.ts`) lit depuis `public/uploads/` en dev, depuis le volume Docker `/uploads` en production. Route `/uploads/[...path]` sert les photos avec `Cache-Control: public, max-age=31536000, immutable`. Script `scripts/backup-db.mjs` : dump PostgreSQL daté, rotation des 7 derniers, alerte si la taille est inférieure à 1 Ko. Test `backup-chain.test.ts` rejoue le dump sur une base temporaire et compare les comptes de lignes. Nouvelle bibliothèque `src/lib/uploads-serve.ts` centralisant la résolution du chemin selon l'environnement. Documentation opérationnelle dans `docs/DEPLOIEMENT.md`.
+
+## Lot 148 — Estimation de prix en temps réel à la publication (2026-09-22)
+
+À l'étape 5 du wizard de publication (prix), une fourchette de marché s'affiche en temps réel dès la saisie du montant. `src/lib/price-estimate-action.ts` (Server Action) calcule les 10e et 90e percentiles sur les annonces publiées de même marque/modèle/année/kilométrage. `PriceRangeHint.tsx` affiche « marché : X – Y DA » avec un retour coloré (sous le marché, dans la fourchette, au-dessus) ; neutre si moins de 5 annonces de référence. Tests unitaires sur la logique de fourchette.
+
+## Lot 149 — Simulateur de crédit sur la fiche annonce (2026-09-22)
+
+Un simulateur de crédit intégré sur la fiche annonce permet à l'acheteur d'estimer les mensualités. `src/lib/credit-calculator.ts` (pur, testé) calcule la mensualité par la formule de rente fixe, avec durée (12–84 mois, pas de 6), apport et taux annuel paramétrables. `CreditCalculator.tsx` affiche le résultat en temps réel côté client. Valeurs par défaut : durée 48 mois, apport 20 %, taux 8,5 %.
+
+## Lot 150 — Note vendeur sur les cartes de résultats (2026-09-22)
+
+La note moyenne du vendeur (calculée par `src/lib/seller-review-service.ts`) s'affiche sous le nom du vendeur sur les cartes de résultats de recherche (`ListingCard`), avec le nombre d'avis entre parenthèses. Masquée si le vendeur n'a aucun avis, afin de ne pas pénaliser les vendeurs sans historique.
+
+## Lot 151 — Annonces récemment vues (2026-09-22)
+
+Section « Annonces récemment vues » sur la page d'accueil, alimentée par `localStorage`. `RecentlyViewedTracker` enregistre l'identifiant à chaque visite de fiche annonce (client-side uniquement). `RecentlyViewedSection` charge les annonces correspondantes via fetch côté client et affiche jusqu'aux 6 dernières. Aucun cookie ni appel backend à la visite ; la liste est locale au navigateur.
+
+## Lot 152 — Annonces similaires sur la fiche annonce (2026-09-22)
+
+`src/lib/similar-listings.ts` : requête Prisma cherchant les annonces publiées de même marque et modèle, triées par proximité de prix puis par date, limitées à 4 résultats en excluant l'annonce courante. Affichées en bas de la fiche. Si moins de 2 résultats, la section reste masquée.
+
+## Lot 153 — Message pré-rempli au premier contact vendeur (2026-09-22)
+
+Lorsqu'un acheteur envoie son premier message à propos d'une annonce, le champ est pré-rempli avec une formule de politesse mentionnant le titre de l'annonce (en français ou en arabe selon la locale, via `src/lib/contact-templates.ts`). L'utilisateur peut modifier ou effacer le texte avant l'envoi. Tests sur la génération du gabarit dans les deux langues.
+
+## Lot 154 — Galerie photos avec lightbox (swipe / clavier / zoom) (2026-09-22)
+
+Remplacement de l'affichage statique par une galerie interactive dans `PhotoGallery.tsx` : défilement tactile (swipe), navigation au clavier (← →, Échap), zoom sur clic, affichage plein écran. Accessible : `role="dialog"`, labels ARIA, piège de focus.
+
+## Lot 155 — Coordonnées et catégorie d'activité des comptes pro (2026-09-22)
+
+Migration `20260922100000_pro_category_contacts` : champs `phone`, `website`, `activityCategory` (`CONCESSIONNAIRE | GARAGE | AUTRE`) et `address` sur `ProfessionalAccount`. Formulaire de profil enrichi (`ProProfileForm`). L'annuaire (`/concessionnaires`) filtre par catégorie. La vitrine pro `/pro/[id]` affiche les coordonnées et la catégorie. Tests sur `src/lib/professional-directory.ts`.
+
+## Lot 156 — Horaires structurés avec indicateur ouvert/fermé (2026-09-22)
+
+Migration `20260922110000_pro_horaires_semaine` : champ `horaires` JSON (tableau de 7 jours, chacun avec `open: boolean`, `from/to: string HH:MM`). `src/lib/horaires-semaine.ts` (pur, testé) : `isOpenNow(horaires, now)` calcule si le compte est actuellement ouvert selon l'heure locale algérienne. Composant `StructuredHoursEditor.tsx` pour la saisie. La vitrine pro affiche « Ouvert » / « Fermé » en temps réel.
+
+## Lot 157 — Annonces vendues sur la vitrine pro + compteur de visites (2026-09-22)
+
+Migration `20260922120000_pro_vitrine_views` : compteur `vitrine_views` sur `ProfessionalAccount`, incrémenté à chaque visite de `/pro/[id]`. La vitrine pro affiche les annonces vendues (statut `VENDUE`) dans une section séparée, en lecture seule. Le tableau de bord pro expose le compteur de visites.
+
+## Lot 158 — Filtre « vendeur pro » dans la recherche + encart concessionnaire (2026-09-22)
+
+Nouveau filtre `sellerType` (particulier / professionnel) dans les filtres de recherche (`SearchFilters`, `src/lib/search.ts`, `src/lib/validation/search.ts`). Sur la fiche annonce d'un compte professionnel, un encart affiche le logo, le nom et un lien vers la vitrine du concessionnaire.
+
+## Lot 159 — Filtres rapides sur le stock de la vitrine pro (2026-09-22)
+
+Composant `ProStockFilters.tsx` ajouté sur la vitrine pro : filtres côté client par marque, carburant et transmission, sans rechargement de page. Masqué si le compte pro a moins de 10 annonces publiées.
+
+## Lots 160-163 — Rappel téléphonique, suivi concessionnaire, activité acheteur, tests e2e (2026-09-22)
+
+**Lot 160 — Rappel téléphonique** : migration `20260922173617_lot_160_161_callback_follow` ; un acheteur peut demander un rappel téléphonique sur une fiche annonce (`CallbackRequestButton`, `POST /api/callback-requests`) ; le vendeur gère les demandes dans ses prospects (`CallbackEditor`, `PATCH /api/callback-requests/[id]`).
+
+**Lot 161 — Suivi de concessionnaire** : un utilisateur peut suivre un compte professionnel (`FollowProButton`, `POST /api/pro/[id]/follow`). La vitrine pro affiche le compteur d'abonnés. `src/lib/pro-follow.ts` gère la logique de bascule suivi/désabonnement.
+
+**Lot 162 — Activité acheteur** : page `/compte/activite` regroupant les rappels demandés, les concessionnaires suivis et les offres envoyées.
+
+**Lot 163 — Tests e2e** : `e2e/pro-features.spec.ts` couvre le rappel téléphonique et le suivi de concessionnaire.
+
+## Lots 164-165 — Historique de prix par modèle + CTA avis sur la fiche (2026-09-22)
+
+**Lot 164 — Historique de prix par modèle** : `MonthlyPriceBars.tsx` affiche un histogramme mensuel du prix médian des annonces publiées pour un modèle, via `src/lib/catalogue-stats.ts`. Présent sur `/voitures/[brand]/[model]` et `/vendeur/[id]`.
+
+**Lot 165 — CTA avis sur la fiche annonce** : un appel à l'action « Laisser un avis » apparaît sur la fiche lorsque l'acheteur a déjà eu une conversation avec ce vendeur mais n'a pas encore laissé d'avis.
+
+## Lots 166-168 — Seed historique de prix, pré-modération avis, vérification identité pro uniquement (2026-09-22)
+
+**Lot 166 — Seed historique de prix** : `prisma/seed-price-history.ts` génère 12 mois de prix médians artificiels pour les modèles de démonstration.
+
+**Lot 167 — Pré-modération des avis** : migration `20260922184953_lot_167_review_status` ; statuts `EN_ATTENTE | PUBLIE | REFUSE` sur les avis ; admin `/admin/avis` avec `ModerateReviewButton` et `PATCH /api/admin/reviews/[id]`. Les avis n'apparaissent qu'une fois approuvés.
+
+**Lot 168 — Vérification d'identité réservée aux comptes pro** : la route de demande de vérification d'identité est désormais réservée aux comptes professionnels ; `src/lib/seller-trust.ts` tient compte de cette restriction.
+
+## Lot 169 — Compléter le magazine (2026-09-22)
+
+Ajout du flux RSS `/mag/feed.xml` et alignement du flux `/guides/feed.xml`. Script de seed `prisma/seed-mag-articles.ts` pour les articles de démonstration. Corrections de rendu dans `/mag/[slug]` et `/mag`. Harmonisation de `BlogArticleForm` et de `src/lib/validation/blog.ts`.
+
+## Lot 170 — Système d'offres de prix et négociation (2026-09-23)
+
+Fonctionnalité complète de négociation de prix entre acheteur et vendeur, livrée en plusieurs passes.
+
+**Socle** : migration `20260923000000_lot_170_offers` ; modèle `PriceOffer` avec états `EN_ATTENTE | ACCEPTEE | REFUSEE | CONTREOFFRE | ANNULEE | EXPIREE`. `MakeOfferButton` (`POST /api/listings/[id]/offers`), `RespondOfferButtons` (`PATCH /api/offers/[id]`). Page `/compte/offres` pour les deux parties.
+
+**Améliorations** : clôture automatique des offres concurrentes à l'acceptation, revalidation de la fiche, pré-vérification d'éligibilité (annonce encore publiée, pas d'offre active du même acheteur).
+
+**Négociation complète** : migration `20260923000001_lot_170b_offer_improvements` ; contre-offre modifiable (`EditOfferButton`), réponse à une contre-offre (`RespondCounterButtons`). Acceptation d'une offre passe automatiquement l'annonce en `VENDUE`.
+
+**Accessibilité** : augmentation de la taille de police de base en arabe (`globals.css`) pour améliorer la lisibilité RTL.
+
+**Corrections e2e** : harmonisation de la configuration Playwright, correction des 3 tests e2e cassés par les nouvelles interactions.
+
+## Identité visuelle et application Android (2026-09-24)
+
+**Application Android (Capacitor)** : projet Android natif (`android/`) configuré pour le Play Store. `ANDROID.md` documente les étapes de build. Script `scripts/generate-android-icons.mjs` génère les icônes dans toutes les résolutions Android depuis le SVG source.
+
+**Logo et identité visuelle** : refonte en trois passes — monogramme « S » avec police Bebas Neue, couleur split orange/bleu, décliné en `SiteLogoMark.tsx` (icône) et `SiteWordMark.tsx` (wordmark « SOUQAUTO »). Icônes Android mises à jour. Couleurs des anneaux synchronisées entre les composants.
+
+## Lots 171-174 — WhatsApp opt-out, statistiques de marché, VT/assurance, accessoires (2026-09-25)
+
+**Lot 171 — WhatsApp opt-out** : migration `20260925000000_whatsapp_opt_out` ; champ `whatsappOptOut: boolean` sur `User`. Un utilisateur peut désactiver le bouton WhatsApp depuis ses paramètres. `ContactButtons.tsx` respecte ce flag.
+
+**Lot 172 — Statistiques de marché** : `MarketStatsWidget.tsx` sur la page d'accueil — annonces publiées, prix médian, délai médian de vente — via `src/lib/catalogue-stats.ts`.
+
+**Lot 173 — Champs VT et assurance** : migration `20260925100000_listing_vt_assurance` ; `vtDate` et `assuranceDate` sur `Listing`. Affichés sur la fiche annonce et dans le wizard étape 9.
+
+**Lot 174 — Accessoires** : migration `20260925110000_equipment_accessoire` ; nouvelle catégorie `ACCESSOIRE` dans `EquipmentCategory`. Seed mis à jour. Wizard étape 11 adapté.
+
+## Lots 177-178 — Mode sombre, puissance fiscale, carrosserie, négociable, autocomplete, statistiques (2026-09-25)
+
+**Lot 177 — Mode sombre** : infrastructure dark mode via `ThemeApplicator.tsx` (injecte la classe `dark` depuis un cookie côté serveur), `ThemeToggle.tsx` (bascule client), `ThemeProvider.tsx` (contexte React). Classes `dark:` ajoutées sur `SiteHeader`, `SiteFooter`, `ListingCard`, `SearchFilters`.
+
+**Lot 178 — Puissance fiscale, carrosserie, négociable, autocomplete, statistiques, renouvellement** : migrations `20260925120000_listing_fiscal_power` et `20260925130000_listing_body_type_negotiable` ; champs `fiscalPower` (int, CV), `bodyType` (enum BERLINE/SUV/BREAK/COUPE/CABRIOLET/MONOSPACE/UTILITAIRE/AUTRE) et `negotiable` (boolean). Autocomplete sur la barre de recherche par suggestions. Page de statistiques vendeur enrichie. Filtres de recherche enrichis.
+
+## Lot 179 — Mode sombre complet — couverture totale de l'application (2026-09-25)
+
+Passage en revue systématique de l'intégralité de l'application pour ajouter les classes `dark:` manquantes : 19 pages admin, espace compte, pages publiques, plus de 80 composants. `ArticleBody.tsx` inclus.
+
+## Lot 180 — Corrections RTL — flèches directionnelles inversées en arabe (2026-09-25)
+
+Les chevrons de navigation (pagination, wizard, fil d'Ariane, graphiques) étaient inversés en arabe. Correction par `rtl:rotate-180` ou classes `ltr:` / `rtl:` selon la direction. Affecte `Pagination`, `StepShell`, `MarketStatsWidget`, la fiche annonce et le journal d'audit.
+
+## Lot 181 — Corrections ESLint (2026-09-25)
+
+Corrections des erreurs ESLint restantes : `react-hooks/exhaustive-deps` dans `PhotoGallery` (dépendances d'effet manquantes), `no-unused-expressions` dans `ThemeToggle` et `ThemeProvider`, `react-hooks/rules-of-hooks` dans `SearchFilters` (hook conditionnel extrait). `PriceRangeHint` et `RecentlyViewedSection` également corrigés.
+
+## Lot 182 — Corrections Lighthouse — accessibilité 100/100 sur accueil et recherche (2026-09-25)
+
+Corrections ciblées : `aria-label` sur les boutons d'icône du header, rapport de contraste du logo, `role` sur les éléments interactifs de `Pagination` et `SearchFilters`.
+
+## Lots 183-184 — Métadonnées SEO + corrections accessibilité Lighthouse (2026-09-26)
+
+**Lot 183 — Métadonnées SEO** : balises `<title>`, `<meta name="description">` et `<meta name="robots">` ajoutées sur toutes les pages statiques manquantes (mentions légales, CGU, politique de confidentialité, connexion, inscription, comparateur, cote). Composant `SellerTrustBadges.tsx` extrait.
+
+**Lot 184 — Corrections accessibilité Lighthouse** : `alt` descriptif sur le logo, correction du contraste sur les boutons de signalement, `aria-label` sur le calculateur de crédit.
+
+## Lot 185 — Lien « Voir tout » sur la section revue de presse de la page modèle (2026-09-26)
+
+Lien « Voir tous les essais de ce modèle » sur `/voitures/[brand]/[model]` lorsque la section revue de presse contient plus de 3 résultats. Pointe vers `/essais/revue-de-presse?modelId=…`.
+
+## Lot 186 — Accessibilité ARIA — `role=alert`/`status` sur tous les formulaires (2026-09-26)
+
+Audit systématique de tous les composants de formulaire et d'action : les messages d'erreur utilisent `role="alert"` (interruption immédiate) et les confirmations `role="status"` (non-bloquant). Couvre plus de 40 composants, des formulaires auth aux boutons admin.
+
+## Lot 187 — Qualité — `autocomplete` sur les champs d'authentification et de profil (2026-09-26)
+
+Attributs `autocomplete` appropriés sur tous les champs de formulaire d'authentification et de profil (`LoginForm`, `RegisterForm`, `EmailChangeForm`, `EditProfileForm`, `ProProfileForm`, `ProCollaboratorsManager`, `CallbackRequestButton`). Attribut `rel="noopener noreferrer"` sur tous les liens externes manquants dans les pages admin.
+
+## Lot 188 — Qualité UX — `inputMode=numeric` + squelettes `loading.tsx` (2026-09-26)
+
+Attribut `inputMode="numeric"` sur tous les champs numériques (prix, kilométrage, année, montant de crédit, offre de prix) pour afficher le clavier numérique sur mobile. Squelettes `loading.tsx` ajoutés sur les pages à fort temps de chargement : fiche annonce, mes-annonces, messages, tableau de bord, recherche.
+
+## Lot 189 — Qualité UX — `loading.tsx` sur 10 pages + i18n `ThemeToggle`/`PhotoGallery` (2026-09-26)
+
+Extension des squelettes de chargement à 10 pages supplémentaires : concessionnaires, magazine (index et article), vitrine pro, prospects, statistiques pro, tableau de bord pro, profil vendeur, pages de modèle et de marque. Traduction des libellés d'accessibilité de `ThemeToggle` et `PhotoGallery` dans les deux langues.
+
+## Lot 190 — SMS Twilio — remplace le stub par l'API REST Twilio (2026-09-26)
+
+`src/lib/sms.ts` : le stub est remplacé par un appel à l'API REST Twilio. Variables requises : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`. En leur absence, retour gracieux au log de développement. Documenté dans `.env.example`.
+
+## Lot 191 — Qualité — unités ch/CV, landmarks de navigation, sitemap (2026-09-26)
+
+Traduction des unités de puissance : « ch » en français, « حصان » en arabe, sur la fiche annonce. `role="nav"` / `aria-label` ajoutés sur le menu mobile (`MobileMenuToggle`) et le pied de page (`SiteFooter`) pour les landmarks. Correction du sitemap (ajout de `/contact`).
+
+## Lot 192 — Accessibilité — suppression du `<main>` imbriqué dans `/compte/offres` (2026-09-26)
+
+La page `/compte/offres` avait un `<main>` imbriqué dans le `<main>` du layout. Corrigé en remplaçant l'élément interne par un `<div>`.
+
+## Lot 193 — Page `/contact` — formulaire + API + i18n FR/AR (2026-09-26)
+
+Page de contact complète : `ContactForm` (nom, email, sujet, message), validation Zod (`src/lib/validation/contact.ts`), route `POST /api/contact` envoyant un email à l'adresse admin. Localisée en français et en arabe. Lien dans le pied de page et dans le sitemap.
+
+## Lot 194 — Accessibilité — `error.tsx`, `<time>`, focus traps, rôles dialog (2026-09-26)
+
+`error.tsx` pour la locale avec bouton « Réessayer » accessible (`role="alert"`). Balises `<time dateTime="…">` sur toutes les dates de la fiche annonce et du magazine. Piège de focus dans la lightbox `PhotoGallery`. `role="dialog"` avec `aria-modal` sur les modales d'offre (`MakeOfferButton`) et de carte essai (`RoadTestCard`).
+
+## Lot 195 — Accessibilité — `aria-live`, `<article>`, `<time>`, statut du wizard (2026-09-26)
+
+`role="article"` sur les cartes `GuideCard`, `PressReviewCard`, `RoadTestCard`. `<time>` sur leurs dates. `aria-live="polite"` sur la zone de résultats de la recherche. Annonce du numéro d'étape courant dans le wizard (`StepShell`). `CallbackRequestButton` : le dialogue de confirmation utilise `role="dialog"`.
+
+## Lot 196 — Accessibilité — `aria-current`, `aria-describedby`, `alt` décoratif, `rel="noopener"` (2026-09-26)
+
+`NavLink.tsx` : `aria-current="page"` sur le lien actif. `SiteHeader.tsx` : `aria-label` sur le logo-lien. `ListingEditForm.tsx` et `ContactForm.tsx` : `aria-describedby` reliant les champs à leur aide contextuelle. Images décoratives avec `alt=""` dans `AdminBlogList`. Liens externes : `rel="noopener noreferrer"`.
+
+## Lot 197 — Sécurité — rate limiting sur 5 routes non protégées (2026-09-26)
+
+Cinq routes exposées sans limite de débit en reçoivent une : confirmation de téléphone (`/api/auth/verify-phone/confirm`), demande de rappel (`/api/callback-requests`), flux SSE de messages (`/api/conversations/[id]/stream`), réponse à une offre (`/api/offers/[id]`), blocage utilisateur (`/api/users/[id]/block`). Limites calquées sur les routes similaires existantes.
+
+## Lot 198 — PWA et perf — AVIF, icône maskable 192 px, apple-touch-icon, preconnect S3 (2026-09-26)
+
+`next.config.mjs` : ajout du format `avif` dans `images.formats`. `manifest.ts` : icône maskable 192 px (`purpose: "maskable"`) et `apple-touch-icon` dans le layout. `<link rel="preconnect">` vers l'origine S3 ajouté dans le layout.
+
+## Lot 199 — Tests — validation des offres, confirmation téléphonique, demandes de rappel (2026-09-26)
+
+Trois nouveaux fichiers Vitest : `offer-validation.test.ts` (schéma Zod de l'offre, montants limites, états de transition), `verify-phone-confirm.test.ts` (codes corrects/incorrects/expirés, débit), `callback-request.test.ts` (création, mise à jour, droits d'accès).
+
+## Lot 200 — Tests routes offres/blocage, `lang=fr` marques, `Image` comparateur (2026-09-27)
+
+`offer-route.test.ts` et `user-block.test.ts` : tests d'intégration des routes HTTP. Remplacement des `<img>` par `next/image` dans le comparateur. Attribut `lang="fr"` / `lang="ar"` ajouté sur les pages de marque. Ajout de `npm-check-updates` comme dépendance de dev.
+
+## Lot 201 — Correctifs des tests préexistants (2026-09-27)
+
+Lot de maintenance : `deployment-artifacts.test.ts` mis à jour pour les nouveaux fichiers de déploiement, `search.test.ts` adapté aux nouveaux filtres. `manifest.ts` : correction du champ `lang` manquant. Clés i18n manquantes ajoutées dans `fr.json` et `ar.json`. Correction mineure du schéma de validation blog.
+
+## Lots 202-204 — Sécurité, accessibilité `lang`, ARIA/alt/i18n (2026-09-27)
+
+**Lot 202 — Sécurité** : vérification CSRF sur `/api/listings/compare` ; correction d'une fuite d'information dans `/api/search/suggest` (annonces non publiées masquées).
+
+**Lot 203 — Attribut `lang`** : pages `/voitures`, `/voitures/[brand]`, `/voitures/[brand]/[model]`, `/compte/activite` et `/compte/favoris` reçoivent l'attribut `lang` correct selon la locale. Correction de `MakeOfferButton` (`aria-modal` manquant).
+
+**Lot 204 — ARIA/alt/i18n** : `alt` descriptif sur les images de `/essais/[slug]` et `/voitures/[brand]/[model]`. `aria-label` sur les fils d'Ariane (`Breadcrumbs`). Libellés i18n manquants ajoutés. Correctif `AiAdvisorChat` : bouton d'envoi labelisé.
+
+## Lots 205-209 — SEO, perf, tests routes/libs/sweepers, `error`+`loading` boundaries (2026-09-27)
+
+**Lot 205 — SEO blog/essais/guides** : balises canoniques, `revalidate`, `generateMetadata` enrichis. `structured-data.ts` : `buildReviewJsonLd` corrigé (champ `image` conditionnel). Sitemap : `revalidate = 3600` pour les articles.
+
+**Lot 206 — Tests routes admin** : `admin-user-role.test.ts` (promotion/dégradation de rôle), `listing-access.test.ts` (droits selon le rôle).
+
+**Lot 207 — Tests sweepers** : `listing-expiry-sweep.test.ts`, `listing-expiry-reminder-sweep.test.ts`, `listing-auto-renew-sweep.test.ts`.
+
+**Lot 208 — Tests libs** : `listing-update-price.test.ts`, `pro-access.test.ts`, `pro-collaborators.test.ts`, `pro-follow.test.ts`, `two-factor-routes.test.ts`, `verify-email-request.test.ts`, `verify-phone-request.test.ts`.
+
+**Lot 209 — Frontières `error` et `loading`** : `error.tsx` dans les sections admin, annonce, compte et pro. `loading.tsx` dans les sections compte/alertes, compte/assistant-achat, compte/favoris, compte/offres, compte/profil, compte/securite, compte/activite. Mailer : gestion gracieuse du cas sans SMTP.
+
+## Lots 210-214 — Perf page d'accueil, enrichissement, tests manquants, sweeper throttle, SEO wilaya (2026-09-27)
+
+**Lot 210 — Perf page d'accueil** : requête des annonces « à la une » limitée à 8 avec les champs stricts nécessaires. Suppression du doublon d'agrégats.
+
+**Lot 211 — Enrichissement fiche annonce** : affichage conditionnel de `vtDate`, `assuranceDate`, `negotiable`, `fiscalPower`, `bodyType`. Structured data `Vehicle` enrichie.
+
+**Lot 212 — Tests manquants** : `seller-review-service.test.ts`, `similar-listings.test.ts`, `sms.test.ts`.
+
+**Lot 213 — Sweeper throttle** : `src/lib/sweeper-throttle.ts` — garde-fou pour les sweepers déclenchés à la visite : un même sweeper ne peut s'exécuter plus d'une fois toutes les 30 secondes (clé en mémoire). Test `sweeper-throttle.test.ts`.
+
+**Lot 214 — SEO wilaya** : `generateMetadata`, `BreadcrumbList` JSON-LD et canonical sur `/wilaya/[wilaya]`.
+
+## Lots 215-219 — Sweeper recherche, SEO catalogue, tests alertes, messages noindex, N+1 fix (2026-09-27)
+
+**Lot 215 — Sweeper sur la page de recherche** : `/recherche` déclenche les sweepers via `throttledSweep`.
+
+**Lot 216 — SEO catalogue** : `buildBreadcrumbJsonLd` sur les pages de marque et de modèle.
+
+**Lot 217 — Tests alertes de recherche** : `search-alerts.test.ts`.
+
+**Lot 218 — Messages noindex** : les pages de messagerie reçoivent `noindex, nofollow`.
+
+**Lot 219 — N+1 fix page modèle** : inclusion des photos dans la requête principale de la section « Annonces de ce modèle » sur `/voitures/[brand]/[model]`.
+
+## Lots 220-224 — `generateStaticParams` blog/essais, tests JSON-LD, `revalidate` index (2026-09-27)
+
+**Lot 220 — `generateStaticParams` essais** : `/essais/[slug]` prépare les slugs publiés au build. ISR `revalidate = 3600`.
+
+**Lot 221 — `generateStaticParams` magazine** : idem pour `/mag/[slug]`.
+
+**Lot 222 — `revalidate` sur les index** : `/voitures` et `/wilaya` passent de `force-dynamic` à `revalidate = 3600`.
+
+**Lot 223 — Tests JSON-LD** : `structured-data.test.ts` — 8 fonctions de `src/lib/structured-data.ts` testées unitairement.
+
+**Lot 224 — Tests `generateStaticParams` catalogue** : `catalogue-static-params.test.ts` vérifie l'exclusion des brouillons.
+
+## Migration 225 — Suppression des index GIN `pg_trgm` (2026-09-27)
+
+Migration `20260927120000_drop_trgm_indexes` supprimant les index `GIN` basés sur `pg_trgm`, qui provoquaient l'erreur `58P01` sur Windows (extension absente par défaut). La recherche s'appuie désormais sur les index `@@` natifs de PostgreSQL.
+
+## Lot 226 — Vrais 404, contraste logo, spec de recherche e2e (2026-09-27)
+
+Les `loading.tsx` sur les pages de détail (fiche annonce, article magazine, vitrine pro, profil vendeur, pages de catalogue) masquaient les vrais 404 : Next.js affichait le squelette puis une erreur silencieuse. Suppression des `loading.tsx` concernés. Correction du contraste du logo en dark mode (`SiteWordMark`). Ajout de `e2e/search.spec.ts` : parcours de recherche de bout en bout.
+
+## Lot 227 — Cache des agrégats catalogue, contraste étape 4 (2026-09-27)
+
+`src/lib/catalogue-stats.ts` : les comptages d'annonces par marque, modèle et wilaya sont mis en cache en base (table `CatalogueStatsCache`, TTL 1 heure). Test `catalogue-stats-cache.test.ts`. Pages magazine, essais et guides passent à `revalidate = 3600`. Correction du contraste de texte sur l'étape 4 du wizard. `playwright.config.ts` : port 5184 ajouté dans `baseURL`.
+
+## Lot 228 — `noindex` de l'espace privé par layout, traduction SUV, bandeau formulaire (2026-09-27)
+
+Layouts `admin/layout.tsx`, `compte/layout.tsx` et `pro/(prive)/layout.tsx` : `robots: { index: false, follow: false }` dans `generateMetadata`. Toutes les pages de ces espaces héritent du `noindex` automatiquement. Traduction manquante de « SUV » en arabe. Bandeau d'information ajouté en haut du wizard de publication pour rappeler les règles de modération.
+
+## Lot 229 — Révocation des sessions à la déconnexion, mot de passe requis pour e-mail et 2FA (2026-09-27)
+
+`src/lib/auth-server/session-revocation.ts` : la déconnexion révoque toutes les sessions actives du compte. Le jeton est invalidé en base ; `getCurrentUser` vérifie la révocation à chaque requête.
+
+Confirmation du mot de passe actuel désormais obligatoire avant de modifier l'adresse e-mail ou d'activer/désactiver la double authentification TOTP. Protège contre la prise de contrôle partielle d'une session non verrouillée.
+
+Tests : `session-revocation.test.ts`, `current-user-revocation.test.ts`, `email-change-emails.test.ts`, `two-factor-service.test.ts`, `two-factor-routes.test.ts`.
+
+## Lot 230 — Volume Docker des pièces d'identité, `global-error.tsx` (2026-09-27)
+
+Les fichiers de pièces d'identité chiffrés n'étaient pas montés dans `docker-compose.example.yml` : un redémarrage du conteneur les effaçait. Ajout du volume `identity-docs:/app/public/identity-docs`. Documentation mise à jour dans `docs/DEPLOIEMENT.md`. `src/app/global-error.tsx` : gestionnaire d'erreur racine de Next.js pour les erreurs en dehors des layouts de locale.
+
+## Lot 231 — `hreflang` FR/AR sur les pages, métadonnées du comparateur, `/vendre` hors sitemap (2026-09-27)
+
+`src/lib/seo-alternates.ts` : helper `buildAlternates(pathname)` générant les balises `<link rel="alternate" hreflang="fr|ar">`. Appliqué sur toutes les pages publiques (annonce, accueil, recherche, catalogue, wilaya, mag, essais, guides, pro, conditions, etc.). Test `seo-alternates.test.ts`. Page comparateur : `generateMetadata` ajouté. Page `/vendre` retirée du sitemap.
+
+## Lot 232 — Plafond de taille à l'import CSV, formules neutralisées à l'export (2026-09-27)
+
+`src/lib/csv.ts` : l'import CSV est limité à 500 lignes et 2 Mo. Côté export, les formules Excel (`=`, `+`, `-`, `@`) sont préfixées par une apostrophe (CSV injection neutralisée). Tests `csv.test.ts`.
+
+## Lot 233 — Sauvegardes Docker, crontab, nginx `client_max_body_size`, `launch:check` sans `.env` (2026-09-28)
+
+`docker-compose.example.yml` : service de sauvegarde dans le compose. `ops/crontab.example` : sauvegarde quotidienne à 03:00 et rotation hebdomadaire. `docs/DEPLOIEMENT.md` : nginx avec `client_max_body_size 10m`. `scripts/launch-check.ts` : peut fonctionner sans fichier `.env` en lisant les variables du processus. Tests `pg-helpers-load-env.test.ts` et `deployment-artifacts.test.ts` mis à jour.
+
+## Lot 234 — Accessibilité wizard, ESLint, focus ring, traduction placeholder (2026-09-28)
+
+`aria-required` sur tous les champs obligatoires du wizard de publication (étapes 2, 3, 4, 5, 6, 7, 8, 11). `StepShell` : `focus-visible:ring` sur les boutons de navigation. Corrections ESLint dans `EditOfferButton`, `RespondOfferButtons`, `PhotoGallery`. Traduction du placeholder « Rechercher… » en arabe dans le header.
+
+## Lot 235 — Helper `formatPrice`/`formatNumber`, `aria-live` messagerie (2026-09-28)
+
+`src/lib/format.ts` : helpers `formatNumber(n, locale)` et `formatPrice(n, locale)` centralisant le formatage des nombres (séparateurs DZ) et des prix (suffixe DA). Appliqués sur toutes les pages affichant des prix ou des kilométrages (annonce, mes-annonces, alertes, favoris, comparateur, wizard, wilaya, voitures, pro, etc.). `ConversationView.tsx` : région `aria-live="polite"` autour des nouveaux messages pour les lecteurs d'écran.
+
+## Lot 236 — Bandeau PWA de mise à jour, cron de balayage des annonces (2026-09-28)
+
+`PwaUpdateBanner.tsx` : détecte l'événement `controllerchange` du service worker (nouveau SW activé) et affiche un bandeau invitant à recharger la page. Route `POST /api/cron/sweep` protégée par `Authorization: Bearer CRON_SECRET` : appelle les trois sweepers en séquence. `scripts/cron-sweep.mjs` appelle la route via `fetch` depuis les variables d'environnement. Script npm `cron:sweep`. Ligne cron dans `ops/crontab.example` (04:00 quotidien). Documentation `.env.example`.
+
+## Lot 237 — `CRON_SECRET` vérifié par `launch:check` (2026-09-28)
+
+`src/lib/launch-checks.ts` : ajout de `checkCronSweep(env)` — avertissement non bloquant si `CRON_SECRET` est absent ou correspond au placeholder. Intégré dans `evaluateLaunchReadiness`. Tests `launch-checks.test.ts` mis à jour.
+
+## Lot 238 — Tests route `/api/cron/sweep` et crontab (2026-10-01)
+
+`tests/cron-sweep-route.test.ts` : 6 tests sur la route POST — secret absent (500), mauvais secret (401), bon secret (200 + `{ ok, sweptAt }`), appels effectifs aux 3 sweepers. `tests/deployment-artifacts.test.ts` mis à jour (compteur `crontab.example` 3 → 4, assertion `cron:sweep`).
+
+## Lot 239 — Tests routes HTTP admin de modération (2026-10-01)
+
+Trois nouveaux fichiers de tests pour les routes de modération admin : `admin-moderate-listing-route.test.ts` (11 tests : 403, 400, 404, transitions approve/reject/suspend, conflit concurrent, journal d'audit), `admin-moderate-owner-review-route.test.ts` (9 tests : statuts `PUBLIE`/`REFUSE`, 409 sur conflit), `admin-resolve-report-route.test.ts` (15 tests : résolution/rejet, suspension automatique de l'annonce, suspension automatique de l'utilisateur protégée si staff, retrait de l'avis propriétaire sur signalement confirmé).
+
+## Lot 240 — Throttle sweepers sur `mes-annonces`, doc `CREATEDB`, guide migration `RoadTest` (2026-10-02)
+
+`/compte/mes-annonces/page.tsx` : les trois sweepers étaient appelés séquentiellement sans `throttledSweep`, contrairement à `/annonce/[id]` et `/recherche`. Corrigé par `Promise.all([throttledSweep(…), …])`. Section « Dépannage » dans `README.md` : `ALTER ROLE souq_auto CREATEDB;` explique pourquoi les 6 tests `backup-chain` échouent sur une installation existante. Commentaire enrichi sur `RoadTest` dans `prisma/schema.prisma` : chemin de migration vers `RoadTestPoint { kind, locale, text }` si le besoin de filtrer ces champs se présente.
