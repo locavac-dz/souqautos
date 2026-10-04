@@ -68,6 +68,64 @@ async function callAnthropic(
   return { title: parsed.title.slice(0, 120), description: parsed.description.slice(0, 5000) };
 }
 
+// Lot 249 — améliore un titre et une description déjà saisis par le vendeur :
+// corrige les fautes, améliore la clarté et la structure, n'invente rien.
+export type ImproveInput = {
+  title: string;
+  description: string;
+  brand?: string;
+  model?: string;
+  year?: number;
+  mileage?: number;
+  condition?: string;
+};
+
+export async function improveListingText(
+  input: ImproveInput
+): Promise<{ title: string; description: string } | null> {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+
+  const context = [
+    input.brand && input.model ? `${input.brand} ${input.model}` : input.brand,
+    input.year ? `${input.year}` : null,
+    input.mileage != null ? `${input.mileage.toLocaleString("fr-DZ")} km` : null,
+    input.condition === "NEUF" ? "neuf" : input.condition === "OCCASION" ? "occasion" : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const text = await callAnthropicMessages({
+    maxTokens: 600,
+    system:
+      'Tu améliores des annonces de vente de véhicules pour la plateforme Souq Auto (Algérie). ' +
+      'Corrige les fautes, améliore la clarté, la fluidité et la structure, sans jamais inventer de ' +
+      'caractéristiques absentes du texte original. Réponds UNIQUEMENT avec un objet JSON : ' +
+      '{"title": string (max 120 car.), "description": string (30-500 car.)}, aucun autre texte.',
+    messages: [
+      {
+        role: "user",
+        content: JSON.stringify({
+          context,
+          title: input.title,
+          description: input.description,
+        }),
+      },
+    ],
+  });
+  if (!text) return null;
+
+  try {
+    const parsed = JSON.parse(text) as { title?: unknown; description?: unknown };
+    if (typeof parsed.title !== "string" || typeof parsed.description !== "string") return null;
+    return {
+      title: parsed.title.slice(0, 120),
+      description: parsed.description.slice(0, 5000),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function generateListingSuggestion(
   input: ListingSuggestionInput
 ): Promise<{ title: string; description: string; source: "ai" | "heuristic" }> {
