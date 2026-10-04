@@ -5,6 +5,7 @@ import { formatNumber } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { ModerationActions } from "@/components/admin/ModerationActions";
 import { getFraudSignalsForListings } from "@/lib/fraud-signals";
+import type { PhotoAiTag } from "@/lib/photo-ai";
 
 export default async function AdminListingsPage() {
   const locale = await getLocale();
@@ -16,7 +17,7 @@ export default async function AdminListingsPage() {
       // Lot 246 — les annonces les plus risquées d'abord ; à score égal, FIFO.
       orderBy: [{ fraudScore: "desc" }, { createdAt: "asc" }],
       include: {
-        photos: { orderBy: { position: "asc" }, select: { path: true, sha256: true } },
+        photos: { orderBy: { position: "asc" }, select: { path: true, sha256: true, aiTags: true } },
         seller: { include: { profile: true } },
       },
     }),
@@ -130,6 +131,32 @@ export default async function AdminListingsPage() {
                           {t("fraudAiPrefix")} {listing.aiSuspicion}
                         </p>
                       )}
+                      {/* Lot 247 — tags IA des photos : watermark et photo catalogue */}
+                      {(() => {
+                        const photoTags = listing.photos
+                          .map((p) => {
+                            if (!p.aiTags) return null;
+                            try { return JSON.parse(p.aiTags) as PhotoAiTag; } catch { return null; }
+                          })
+                          .filter((t): t is PhotoAiTag => t !== null);
+                        const anyWatermark = photoTags.some((tag) => tag.hasWatermark);
+                        const anyStock = photoTags.some((tag) => tag.isProfessionalStock);
+                        if (!anyWatermark && !anyStock) return null;
+                        return (
+                          <div className="mt-1 flex flex-wrap gap-2">
+                            {anyWatermark && (
+                              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                {t("photoAiWatermark")}
+                              </span>
+                            )}
+                            {anyStock && (
+                              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                {t("photoAiProfessionalStock")}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="sm:w-56 sm:shrink-0">

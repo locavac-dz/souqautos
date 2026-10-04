@@ -716,6 +716,8 @@
     "fraudSignalVehicleInconsistency": "⚠ الكيلومترات/السنة لا تتطابق مع حالة «جديدة»",
     "fraudScore": "درجة الخطر:",
     "fraudAiPrefix": "الذكاء الاصطناعي:",
+    "photoAiWatermark": "⚠ تم اكتشاف علامة مائية على إحدى الصور",
+    "photoAiProfessionalStock": "⚠ صورة كتالوج/استوديو",
     "proAccountLabel": "المؤسسة",
     "userReportBadge": "ملف شخصي",
     "navReports": "البلاغات",

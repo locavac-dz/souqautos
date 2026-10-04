@@ -716,6 +716,8 @@
     "fraudSignalVehicleInconsistency": "⚠ Kilométrage/année incohérent avec l'état « Neuf »",
     "fraudScore": "Score de risque :",
     "fraudAiPrefix": "IA :",
+    "photoAiWatermark": "⚠ Filigrane détecté sur une photo",
+    "photoAiProfessionalStock": "⚠ Photo catalogue/studio",
     "proAccountLabel": "Entreprise",
     "userReportBadge": "Profil",
     "navReports": "Signalements",

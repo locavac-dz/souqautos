@@ -1009,6 +1009,11 @@ model ListingPhoto {
   // le vendeur (nudge sur /compte/mes-annonces) — jamais un signal de fraude,
   // jamais visible des acheteurs ni des modérateurs.
   qualityFlags String @default("[]")
+  // Lot 247 — analyse Claude Vision (V3, §16 « analyse photo ») : JSON sérialisé
+  // de PhotoAiTag (subject, hasWatermark, isProfessionalStock, note), null si pas
+  // encore analysé ou si ANTHROPIC_API_KEY absent. Jamais affiché à l'acheteur —
+  // aide à la décision du modérateur, signal anti-fraude complémentaire au SHA-256.
+  aiTags    String?
   createdAt DateTime @default(now())
 
   @@index([listingId])

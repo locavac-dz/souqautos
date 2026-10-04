@@ -8,6 +8,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getSubscriptionStatus, isWithinQuota } from "@/lib/pro-subscription";
 import { computeListingContentHash, refreshListingFraudScore } from "@/lib/fraud-signals";
 import { analyzeAndStoreListingFraud } from "@/lib/fraud-ai";
+import { analyzeListingPhotos } from "@/lib/photo-ai";
 import { validateCatalogueRefs } from "@/lib/listing-catalogue-refs";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 
@@ -147,12 +148,13 @@ export async function POST(request: NextRequest) {
         create: data.equipmentIds.map((equipmentId) => ({ equipmentId })),
       },
     },
-    select: { id: true },
+    select: { id: true, photos: { select: { id: true, path: true } } },
   });
 
-  // Lot 118 — prévient l'équipe. Lot 246 — calcule les signaux anti-fraude et
-  // lance l'analyse IA du texte ; les deux sont non-bloquants (after).
+  // Lot 118 — prévient l'équipe. Lots 246-247 — score anti-fraude, analyse IA
+  // du texte et des photos ; tout est non-bloquant (after).
   const listingId = listing.id;
+  const listingPhotos = listing.photos;
   const listingForAi = {
     title: data.title,
     description: data.description,
@@ -165,6 +167,7 @@ export async function POST(request: NextRequest) {
     await notifyStaffOfPending("listing");
     await refreshListingFraudScore(listingId);
     await analyzeAndStoreListingFraud(listingId, listingForAi);
+    await analyzeListingPhotos(listingPhotos);
   });
 
   return NextResponse.json({ listing }, { status: 201 });
