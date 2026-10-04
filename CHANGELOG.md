@@ -1,5 +1,14 @@
 # Souq Auto — journal des lots
 
+## Lot 244 — Export RGPD complet + nettoyage (2026-10-04)
+
+**Livré**
+
+- `api/profile/export/route.ts` : ajout de `alertesRecherche` (`SearchAlert`), `offresEmises`/`offresRecues` (`Offer`), `notifications` (`UserNotification`), `historiqueConnexion` (`LoginEvent`) — l'export couvre désormais la totalité des données personnelles de l'utilisateur (art. 15/20 RGPD).
+- `src/components/ThemeProvider.tsx` supprimé — fichier orphelin depuis la refonte dark mode (Lot 177), aucune référence dans le code.
+
+---
+
 ## Lot 243 — Historique de connexion (2026-10-04)
 
 **Contexte** : la page `/compte/securite` n'affichait que le panneau de double authentification. L'utilisateur n'avait aucun moyen de vérifier qui s'était connecté à son compte ni depuis quel appareil, ce qui est attendu pour la conformité CNIL et la sécurité personnelle.

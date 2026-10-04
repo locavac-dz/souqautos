@@ -33,6 +33,11 @@ export async function GET() {
     identityRequests,
     proCollaborations,
     ownerReviewsWritten,
+    notifications,
+    loginEvents,
+    searchAlerts,
+    offersBuyer,
+    offersSeller,
   ] = await Promise.all([
     prisma.listing.findMany({
       where: { sellerId: user.id },
@@ -82,6 +87,31 @@ export async function GET() {
     prisma.ownerReview.findMany({
       where: { userId: user.id },
       include: { model: { include: { brand: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.userNotification.findMany({
+      where: { userId: user.id },
+      select: { kind: true, data: true, readAt: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.loginEvent.findMany({
+      where: { userId: user.id },
+      select: { ip: true, userAgent: true, method: true, success: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.searchAlert.findMany({
+      where: { userId: user.id },
+      select: { label: true, filters: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.offer.findMany({
+      where: { buyerId: user.id },
+      include: { listing: { select: { id: true, title: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.offer.findMany({
+      where: { sellerId: user.id },
+      include: { listing: { select: { id: true, title: true } } },
       orderBy: { createdAt: "asc" },
     }),
   ]);
@@ -197,6 +227,42 @@ export async function GET() {
       note: d.reviewNote,
       soumiseLe: d.createdAt,
       traiteeLe: d.reviewedAt,
+    })),
+    alertesRecherche: searchAlerts.map((a) => ({
+      nom: a.label,
+      filtres: JSON.parse(a.filters),
+      creeeLe: a.createdAt,
+    })),
+    offresEmises: offersBuyer.map((o) => ({
+      annonceId: o.listingId,
+      annonceTitre: o.listing.title,
+      montant: o.amount,
+      message: o.message,
+      statut: o.status,
+      contreOffre: o.counterAmount,
+      creeLe: o.createdAt,
+    })),
+    offresRecues: offersSeller.map((o) => ({
+      annonceId: o.listingId,
+      annonceTitre: o.listing.title,
+      montant: o.amount,
+      message: o.message,
+      statut: o.status,
+      contreOffre: o.counterAmount,
+      creeLe: o.createdAt,
+    })),
+    notifications: notifications.map((n) => ({
+      type: n.kind,
+      donnees: n.data,
+      luLe: n.readAt,
+      recuLe: n.createdAt,
+    })),
+    historiqueConnexion: loginEvents.map((e) => ({
+      ip: e.ip,
+      navigateur: e.userAgent,
+      methode: e.method,
+      succes: e.success,
+      le: e.createdAt,
     })),
   };
 
