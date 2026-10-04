@@ -42,6 +42,7 @@ import { RecentlyViewedTracker } from "@/components/RecentlyViewedTracker";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { getSimilarListings } from "@/lib/similar-listings";
+import { getAlternativeListings } from "@/lib/similar-ai";
 import { ListingCard } from "@/components/search/ListingCard";
 import { parseHorairesSemaine, isOpenNow } from "@/lib/horaires-semaine";
 import { CallbackRequestButton } from "@/components/CallbackRequestButton";
@@ -176,12 +177,22 @@ export default async function ListingDetailPage({
       select: guideSelect,
     }));
 
-  const similarListings = await getSimilarListings({
-    excludeId: listing.id,
-    brandId: listing.brandId,
-    modelId: listing.modelId,
-    price: listing.price,
-  });
+  const [similarListings, alternativeListings] = await Promise.all([
+    getSimilarListings({
+      excludeId: listing.id,
+      brandId: listing.brandId,
+      modelId: listing.modelId,
+      price: listing.price,
+    }),
+    // Lot 250 — recommandations inter-marques via Claude (même segment, autre marque).
+    // Silencieux si ANTHROPIC_API_KEY absent ou Claude indisponible.
+    getAlternativeListings({
+      excludeId: listing.id,
+      brandId: listing.brandId,
+      modelId: listing.modelId,
+      price: listing.price,
+    }),
+  ]);
 
   // Lot 158 — encart pro : statut ouverture + compteur stock actif
   const proAccount = listing.seller.professionalAccount;
@@ -740,6 +751,25 @@ export default async function ListingDetailPage({
                   isLoggedIn={Boolean(currentUser)}
                   isFavorited={false}
                   eager={index === 0}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Lot 250 — recommandations inter-marques : même segment, autres marques */}
+      {alternativeListings.length > 0 && (
+        <section className="mt-10" aria-labelledby="alt-listings-heading">
+          <h2 id="alt-listings-heading" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">{tListing("alternativesTitle")}</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+            {alternativeListings.map((alt) => (
+              <div key={alt.id} className="snap-start shrink-0 w-56">
+                <ListingCard
+                  listing={alt}
+                  isLoggedIn={Boolean(currentUser)}
+                  isFavorited={false}
+                  eager={false}
                 />
               </div>
             ))}
