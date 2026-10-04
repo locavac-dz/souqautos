@@ -9,6 +9,7 @@ import { getSubscriptionStatus, isWithinQuota } from "@/lib/pro-subscription";
 import { computeListingContentHash, refreshListingFraudScore } from "@/lib/fraud-signals";
 import { analyzeAndStoreListingFraud } from "@/lib/fraud-ai";
 import { analyzeListingPhotos } from "@/lib/photo-ai";
+import { computeAndStorePriceAiEstimate } from "@/lib/price-ai";
 import { validateCatalogueRefs } from "@/lib/listing-catalogue-refs";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 
@@ -163,11 +164,20 @@ export async function POST(request: NextRequest) {
     year: data.year,
     mileage: data.mileage,
   } as const;
+  const priceAiParams = {
+    brandId: data.brandId ?? null,
+    modelId: data.modelId ?? null,
+    year: data.year,
+    mileage: data.mileage,
+    condition: data.condition,
+    fuelType: data.fuelType,
+  } as const;
   after(async () => {
     await notifyStaffOfPending("listing");
     await refreshListingFraudScore(listingId);
     await analyzeAndStoreListingFraud(listingId, listingForAi);
     await analyzeListingPhotos(listingPhotos);
+    await computeAndStorePriceAiEstimate(listingId, priceAiParams);
   });
 
   return NextResponse.json({ listing }, { status: 201 });

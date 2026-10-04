@@ -427,6 +427,11 @@ model Listing {
   // Jamais affiché au vendeur — aide à la décision du modérateur uniquement.
   aiSuspicion    String?
   aiCheckedAt    DateTime?
+  // Estimation de prix par IA (Lot 248) — activée uniquement si < 3 comparables
+  // DB. Complète price-estimation.ts qui retourne null faute de données.
+  priceAiLow     Int?
+  priceAiHigh    Int?
+  priceAiAt      DateTime?
 
   @@index([status, category, wilayaId])
   // Lot 137 — mesurés sur 20 000 annonces (EXPLAIN ANALYZE) : la recherche « plus récentes » lisait toute la table pour

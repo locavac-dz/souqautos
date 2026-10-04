@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { computePriceBadge } from "@/lib/price-badge";
 import { PRICE_BADGE_KEY, PRICE_BADGE_STYLE } from "@/lib/price-badge-style";
-import { getPriceEstimate, type EstimateResult } from "@/lib/price-estimate-action";
+import { getPriceEstimate, type PriceEstimateResponse } from "@/lib/price-estimate-action";
 import type { WizardData } from "./types";
 
 // Calcule la position du prix sur la barre [0 % = low … 100 % = high], clampée.
@@ -22,7 +22,7 @@ export function barPosition(price: number, low: number, high: number): number {
 export function PriceRangeHint({ data, price }: { data: WizardData; price?: number }) {
   const t = useTranslations("Wizard");
   const tBadge = useTranslations("PriceBadge");
-  const [estimate, setEstimate] = useState<EstimateResult | null>(null);
+  const [estimate, setEstimate] = useState<PriceEstimateResponse | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Clé stable qui change uniquement quand les données utiles à l'estimation changent.
@@ -51,6 +51,8 @@ export function PriceRangeHint({ data, price }: { data: WizardData; price?: numb
         mileage: data.mileage,
         wilayaId: data.wilayaId,
         equipmentIds: data.equipmentIds,
+        condition: data.condition,
+        fuelType: data.fuelType,
       });
       setEstimate(result);
     });
@@ -73,9 +75,13 @@ export function PriceRangeHint({ data, price }: { data: WizardData; price?: numb
     <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm">
       {/* En-tête */}
       <div className="flex items-center justify-between mb-3">
-        <span className="font-medium text-slate-700 dark:text-slate-300">{t("priceEstimateTitle")}</span>
+        <span className="font-medium text-slate-700 dark:text-slate-300">
+          {estimate.source === "ai" ? t("priceEstimateAiTitle") : t("priceEstimateTitle")}
+        </span>
         <span className="text-xs text-slate-400">
-          {t("priceEstimateComparables", { count: sampleSize })}
+          {estimate.source === "ai"
+            ? t("priceEstimateAiNote")
+            : t("priceEstimateComparables", { count: sampleSize })}
         </span>
       </div>
 

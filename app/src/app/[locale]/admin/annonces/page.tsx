@@ -131,6 +131,15 @@ export default async function AdminListingsPage() {
                           {t("fraudAiPrefix")} {listing.aiSuspicion}
                         </p>
                       )}
+                      {/* Lot 248 — fourchette IA quand les comparables DB sont insuffisants */}
+                      {listing.priceAiLow && listing.priceAiHigh && (
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          {t("priceAiRange")}{" "}
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                            {formatNumber(listing.priceAiLow, locale)} – {formatNumber(listing.priceAiHigh, locale)} DA
+                          </span>
+                        </p>
+                      )}
                       {/* Lot 247 — tags IA des photos : watermark et photo catalogue */}
                       {(() => {
                         const photoTags = listing.photos
