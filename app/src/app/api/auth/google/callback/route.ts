@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { cookies } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
+import { recordLoginEvent } from "@/lib/login-event-service";
 import { SITE_URL } from "@/lib/site";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
 import { createPendingToken, setPendingCookie } from "@/lib/auth-server/two-factor-pending";
@@ -86,5 +87,12 @@ export async function GET(request: NextRequest) {
   }
 
   await setSessionCookie(await createSessionToken({ sub: result.user.id, role: result.user.role }));
+  after(() => recordLoginEvent({
+    userId: result.user.id,
+    ip: getClientIp(request),
+    userAgent: request.headers.get("user-agent") ?? "",
+    method: "google",
+    success: true,
+  }));
   return redirectTo(`/${flow.locale}${flow.next}`);
 }

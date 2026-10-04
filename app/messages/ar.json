@@ -2058,5 +2058,16 @@
       "SEARCH_ALERT_MATCH": "تنبيه بحث",
       "PRO_FOLLOWER_LISTING": "إعلان جديد"
     }
+  },
+  "LoginHistory": {
+    "title": "سجل تسجيل الدخول",
+    "empty": "لا توجد عمليات تسجيل دخول مسجلة.",
+    "method": {
+      "password": "كلمة المرور",
+      "google": "جوجل",
+      "totp": "التحقق الثنائي"
+    },
+    "success": "تسجيل دخول ناجح",
+    "failure": "محاولة فاشلة"
   }
 }

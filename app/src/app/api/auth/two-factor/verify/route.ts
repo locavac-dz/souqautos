@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { clearPendingCookie, getPendingFromCookies } from "@/lib/auth-server/two-factor-pending";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, safeUser } from "@/lib/http";
+import { recordLoginEvent } from "@/lib/login-event-service";
 import { LOGIN_ACCOUNT_LIMIT, isAccountLocked, lockedUntilForAttempts } from "@/lib/login-lockout";
 import { sanitizeNextPath } from "@/lib/google-oauth";
 import { challenge } from "@/lib/two-factor";
@@ -69,5 +70,12 @@ export async function POST(request: NextRequest) {
   }
   await clearPendingCookie();
   await setSessionCookie(await createSessionToken({ sub: user.id, role: user.role }));
+  after(() => recordLoginEvent({
+    userId: user.id,
+    ip: getClientIp(request),
+    userAgent: request.headers.get("user-agent") ?? "",
+    method: "totp",
+    success: true,
+  }));
   return NextResponse.json({ user: safeUser(user), next: sanitizeNextPath(pending.next), method: result.method }, { headers: NO_STORE });
 }

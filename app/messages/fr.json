@@ -2058,5 +2058,16 @@
       "SEARCH_ALERT_MATCH": "Alerte de recherche",
       "PRO_FOLLOWER_LISTING": "Nouvelle annonce"
     }
+  },
+  "LoginHistory": {
+    "title": "Historique de connexion",
+    "empty": "Aucune connexion enregistrée.",
+    "method": {
+      "password": "Mot de passe",
+      "google": "Google",
+      "totp": "Double authentification"
+    },
+    "success": "Connexion réussie",
+    "failure": "Tentative échouée"
   }
 }

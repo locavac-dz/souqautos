@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validation/auth";
 import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/auth-server/password";
@@ -7,9 +7,11 @@ import { createPendingToken, setPendingCookie } from "@/lib/auth-server/two-fact
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, safeUser } from "@/lib/http";
 import { isAccountLocked, lockedUntilForAttempts, LOGIN_ACCOUNT_LIMIT } from "@/lib/login-lockout";
+import { recordLoginEvent } from "@/lib/login-event-service";
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
+  const userAgent = request.headers.get("user-agent") ?? "";
   if (!(await checkRateLimit(`login:${ip}`, { limit: 10, windowMs: 15 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
@@ -73,6 +75,7 @@ export async function POST(request: NextRequest) {
       await prisma.user.update({ where: { id: user.id }, data: { lockedUntil } });
       console.warn(`[auth] Compte verrouillé après ${failedLoginAttempts} échecs : ${user.email}`);
     }
+    after(() => recordLoginEvent({ userId: user.id, ip, userAgent, method: "password", success: false }));
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
   }
 
@@ -99,6 +102,7 @@ export async function POST(request: NextRequest) {
 
   const token = await createSessionToken({ sub: user.id, role: user.role });
   await setSessionCookie(token);
+  after(() => recordLoginEvent({ userId: user.id, ip, userAgent, method: "password", success: true }));
 
   return NextResponse.json({ user: safeUser(user) });
 }

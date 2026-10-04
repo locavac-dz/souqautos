@@ -107,6 +107,8 @@ model User {
   offersAsSeller                Offer[]  @relation("SellerOffers")
   // Lot 241 — centre de notifications in-app
   notifications                 UserNotification[]
+  // Lot 243 — historique de connexion
+  loginEvents                   LoginEvent[]
 }
 
 model Profile {
@@ -1480,4 +1482,22 @@ model ArticlePreviewLink {
   lastUsedAt  DateTime?
 
   @@index([articleId])
+}
+
+// Lot 243 — historique de connexion. TTL 90 jours (sweeper nightly).
+// userId nullable : les tentatives sur un compte inexistant ne sont PAS enregistrées
+// (évite l'énumération d'adresses via la table). Seules les tentatives sur un compte
+// trouvé (succès ou échec de mot de passe) sont conservées.
+model LoginEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  ip        String
+  userAgent String
+  method    String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([createdAt])
 }

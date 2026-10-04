@@ -5,11 +5,13 @@ const sweepAutoRenewals = vi.fn();
 const sweepExpiringListingsForReminders = vi.fn();
 const sweepExpiredListings = vi.fn();
 const sweepOldNotifications = vi.fn();
+const sweepOldLoginEvents = vi.fn();
 
 vi.mock("@/lib/listing-auto-renew-sweep", () => ({ sweepAutoRenewals: (...a: unknown[]) => sweepAutoRenewals(...a) }));
 vi.mock("@/lib/listing-expiry-reminder-sweep", () => ({ sweepExpiringListingsForReminders: (...a: unknown[]) => sweepExpiringListingsForReminders(...a) }));
 vi.mock("@/lib/listing-expiry-sweep", () => ({ sweepExpiredListings: (...a: unknown[]) => sweepExpiredListings(...a) }));
 vi.mock("@/lib/notification-sweep", () => ({ sweepOldNotifications: (...a: unknown[]) => sweepOldNotifications(...a) }));
+vi.mock("@/lib/login-event-sweep", () => ({ sweepOldLoginEvents: (...a: unknown[]) => sweepOldLoginEvents(...a) }));
 
 import { POST } from "@/app/api/cron/sweep/route";
 
@@ -24,6 +26,7 @@ beforeEach(() => {
   sweepExpiringListingsForReminders.mockReset().mockResolvedValue(undefined);
   sweepExpiredListings.mockReset().mockResolvedValue(undefined);
   sweepOldNotifications.mockReset().mockResolvedValue(undefined);
+  sweepOldLoginEvents.mockReset().mockResolvedValue(undefined);
   vi.stubEnv("CRON_SECRET", "test-secret-value");
 });
 
@@ -38,6 +41,7 @@ describe("POST /api/cron/sweep", () => {
     expect(sweepExpiringListingsForReminders).toHaveBeenCalledOnce();
     expect(sweepExpiredListings).toHaveBeenCalledOnce();
     expect(sweepOldNotifications).toHaveBeenCalledOnce();
+    expect(sweepOldLoginEvents).toHaveBeenCalledOnce();
   });
 
   it("runs sweepers with the same timestamp for consistency", async () => {
@@ -46,9 +50,11 @@ describe("POST /api/cron/sweep", () => {
     const reminderDate = sweepExpiringListingsForReminders.mock.calls[0][0] as Date;
     const expiryDate = sweepExpiredListings.mock.calls[0][0] as Date;
     const notifDate = sweepOldNotifications.mock.calls[0][0] as Date;
+    const loginDate = sweepOldLoginEvents.mock.calls[0][0] as Date;
     expect(autoDate).toEqual(reminderDate);
     expect(reminderDate).toEqual(expiryDate);
     expect(expiryDate).toEqual(notifDate);
+    expect(notifDate).toEqual(loginDate);
   });
 
   it("rejects a wrong token with 401 and does not call any sweeper", async () => {

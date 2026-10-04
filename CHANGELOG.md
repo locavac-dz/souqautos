@@ -1,5 +1,32 @@
 # Souq Auto — journal des lots
 
+## Lot 243 — Historique de connexion (2026-10-04)
+
+**Contexte** : la page `/compte/securite` n'affichait que le panneau de double authentification. L'utilisateur n'avait aucun moyen de vérifier qui s'était connecté à son compte ni depuis quel appareil, ce qui est attendu pour la conformité CNIL et la sécurité personnelle.
+
+**Livré**
+
+- `prisma/schema.prisma` : modèle `LoginEvent` (`userId?`, `ip`, `userAgent`, `method`, `success`, `createdAt`) ; relation `loginEvents` sur `User` avec `onDelete: SetNull`. Index `(userId, createdAt DESC)` et `(createdAt)`.
+- Migration `20261004120000_lot_243_login_events` appliquée manuellement.
+- `src/lib/login-event-service.ts` : `recordLoginEvent` (ne lève jamais), `getLoginHistory` avec parsing navigateur/OS sans dépendance externe.
+- `src/lib/login-event-sweep.ts` : `sweepOldLoginEvents(now)` — TTL 90 jours.
+- Hooks dans les trois routes de connexion : `api/auth/login` (mot de passe, succès + échec), `api/auth/google/callback` (Google), `api/auth/two-factor/verify` (TOTP) — via `after()` non-bloquant.
+- `src/app/api/cron/sweep/route.ts` : 5ᵉ sweeper `sweepOldLoginEvents` ajouté.
+- `src/app/[locale]/compte/securite/page.tsx` : section « Historique de connexion » sous le panel 2FA — navigateur, OS, IP, méthode, date et badge vert/rouge.
+- i18n FR et AR (`LoginHistory.*`).
+- `tests/login-event-service.test.ts` : 7 tests (service + sweeper).
+- `tests/cron-sweep-route.test.ts` : mis à jour pour 5 sweepers.
+
+**Décision de conception** : les tentatives sur un e-mail inexistant ne sont PAS enregistrées (évite l'énumération via la table). Seules les tentatives sur un compte trouvé sont conservées, qu'elles réussissent ou non.
+
+---
+
+## Lot 242 — Nouveau logo losange teal (2026-10-04)
+
+**Livré** : `SiteLogoMark` (losange `#0BBFB0→#0891B2` + S Georgia blanc), `SiteWordMark` (SOUQ slate, AUTO cyan/teal), `SiteHeader` (taille h-11/text-2xl), `icon.svg` mis à jour.
+
+---
+
 ## Lot 241 — Centre de notifications in-app (2026-10-04)
 
 **Contexte** : l'application envoyait déjà des e-mails et des notifications push, mais aucun historique n'était consultable depuis l'interface. Un utilisateur dont le push est désactivé ou qui rate un e-mail n'avait aucun moyen de retrouver les événements manqués.
