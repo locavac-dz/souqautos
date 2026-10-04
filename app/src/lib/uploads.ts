@@ -153,6 +153,41 @@ export async function saveMessageAttachment(file: File): Promise<string> {
   return storeProcessedImage("messages", filename, output);
 }
 
+// Lot 251 — message vocal enregistré depuis le navigateur.
+// Le fichier audio est stocké brut (pas de transcodage) : le navigateur produit
+// lui-même du WebM/Opus (Chrome), Ogg/Opus (Firefox) ou AAC/MP4 (Safari).
+const MAX_VOICE_BYTES = 10 * 1024 * 1024; // 10 Mo
+const ALLOWED_AUDIO_MIME = /^audio\/(webm|ogg|mp4|mpeg)/;
+const AUDIO_EXT: Record<string, string> = { webm: ".webm", ogg: ".ogg", mp4: ".mp4", mpeg: ".mp3" };
+
+export class VoiceValidationError extends Error {}
+
+// Stocke un fichier quelconque (non-image) — version générique de storeProcessedImage.
+async function storeFile(subdir: string, filename: string, bytes: Buffer, contentType: string): Promise<string> {
+  const key = `${subdir}/${filename}`;
+  if (isS3Configured()) {
+    try {
+      await putObject(key, bytes, contentType);
+      return buildPublicUrl(key);
+    } catch (err) {
+      console.error(`[uploads] S3 indisponible, repli disque local: ${(err as Error).message}`);
+    }
+  }
+  const dir = path.join(uploadsRoot(), subdir);
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, filename), bytes);
+  return `/uploads/${subdir}/${filename}`;
+}
+
+export async function saveVoiceMessage(file: File): Promise<string> {
+  if (file.size > MAX_VOICE_BYTES) throw new VoiceValidationError("voice_too_large");
+  const match = file.type.match(ALLOWED_AUDIO_MIME);
+  if (!match) throw new VoiceValidationError("voice_invalid_type");
+  const ext = AUDIO_EXT[match[1]] ?? ".webm";
+  const bytes = Buffer.from(await file.arrayBuffer());
+  return storeFile("voice-messages", `${randomUUID()}${ext}`, bytes, `audio/${match[1]}`);
+}
+
 // Lot 103 — logo de compte professionnel (concessionnaire/garage/showroom) :
 // mêmes règles de sécurité que saveAvatar, cadrage carré identique (un logo
 // se présente comme un avatar, pas comme une photo d'annonce).

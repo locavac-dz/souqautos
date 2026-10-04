@@ -7,7 +7,7 @@ import { canAccessConversation } from "@/lib/listing-access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
-import { saveMessageAttachment, PhotoValidationError } from "@/lib/uploads";
+import { saveMessageAttachment, PhotoValidationError, saveVoiceMessage, VoiceValidationError } from "@/lib/uploads";
 import { publishToConversation } from "@/lib/realtime";
 import { createNotification } from "@/lib/notification-service";
 
@@ -59,10 +59,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const attachmentFile = formData.get("attachment");
   const hasAttachmentFile = attachmentFile instanceof File && attachmentFile.size > 0;
+  const voiceFile = formData.get("voice");
+  const hasVoiceFile = voiceFile instanceof File && voiceFile.size > 0;
 
   const contentCheck = checkMessageHasContent({
     hasText: parsed.data.content.length > 0,
     hasAttachment: hasAttachmentFile,
+    hasVoice: hasVoiceFile,
   });
   if (!contentCheck.ok) {
     return NextResponse.json({ error: contentCheck.error }, { status: 400 });
@@ -80,13 +83,25 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
+  let audioUrl: string | null = null;
+  if (hasVoiceFile) {
+    try {
+      audioUrl = await saveVoiceMessage(voiceFile as File);
+    } catch (err) {
+      if (err instanceof VoiceValidationError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      throw err;
+    }
+  }
+
   const unreadCountBeforeThisMessage = await prisma.message.count({
     where: { conversationId: id, senderId: user.id, readAt: null },
   });
 
   const message = await prisma.message.create({
-    data: { conversationId: id, senderId: user.id, content: parsed.data.content, attachmentUrl },
-    select: { id: true, content: true, attachmentUrl: true, senderId: true, createdAt: true },
+    data: { conversationId: id, senderId: user.id, content: parsed.data.content, attachmentUrl, audioUrl },
+    select: { id: true, content: true, attachmentUrl: true, audioUrl: true, senderId: true, createdAt: true },
   });
 
   await publishToConversation(id, {
@@ -113,7 +128,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const listingTitle = escapeHtml(conversation.listing.title);
       const messageHtml = parsed.data.content
         ? escapeHtml(parsed.data.content)
-        : "[Pièce jointe]";
+        : audioUrl
+          ? "[Message vocal]"
+          : "[Pièce jointe]";
       const threadLink = `${SITE_URL}/${recipient.locale}/compte/messages/${id}`;
       const emailResult = await sendEmail({
         to: recipient.email,

@@ -3472,3 +3472,21 @@ Nouveau champ `ListingPhoto.aiTags` (JSON). Migration `20261004170000_lot_247_ph
 ## Lot 250 — Recommandations inter-marques — même segment, autres marques via Claude (2026-10-04)
 
 `similar-ai.ts` : `getAlternativeListings()` demande à Claude 3 à 5 modèles concurrents directs (ex. Renault Clio → Peugeot 208, Hyundai i20…), puis interroge la base pour chaque paire marque/modèle dans une fourchette de prix ±40 % ; résultat mis en cache 1 h par couple `brandId/modelId` via `cachedReference` (les concurrents d'un modèle changent rarement) ; retourne toujours une liste vide si `ANTHROPIC_API_KEY` est absent. `annonce/[id]/page.tsx` : section « Vous pourriez aussi comparer » affichée après les annonces similaires ; `getSimilarListings` et `getAlternativeListings` appelés en parallèle via `Promise.all`. i18n FR/AR : clé `alternativesTitle`.
+
+## Lot 251 — Messagerie vocale — enregistrement et lecture audio dans les conversations (2026-10-04)
+
+`prisma/schema.prisma` : nouveau champ `audioUrl String?` sur `Message` (distinct de `attachmentUrl` pour différencier audio et image à l'affichage). Migration `20261004190000_lot_251_voice_messages`.
+
+`uploads-serve.ts` : ajout du sous-répertoire `voice-messages` dans `UPLOAD_SUBDIRS` et des types MIME audio (`.webm`, `.ogg`, `.mp3`, `.mp4`) dans `CONTENT_TYPES`.
+
+`uploads.ts` : fonction privée `storeFile` (S3 avec repli disque, accepte n'importe quel `contentType`) ; export `saveVoiceMessage` (validation taille ≤ 10 Mo, MIME `audio/webm|ogg|mp4|mpeg`, génération UUID + extension) ; export `VoiceValidationError`.
+
+`messaging.ts` : `checkMessageHasContent` étendu avec `hasVoice?: boolean` — un message vocal seul est valide sans texte ni image.
+
+`api/conversations/[id]/messages/route.ts` : lecture du champ `voice` dans `FormData` ; appel `saveVoiceMessage` ; inclusion de `audioUrl` dans `prisma.message.create` et `select` ; notification email affiche `[Message vocal]` si le contenu texte est vide.
+
+`api/conversations/[id]/messages/[messageId]/route.ts` : `audioUrl: null` dans la mise à jour de suppression ; appel `deleteStoredFile(message.audioUrl)` pour nettoyer le fichier stocké.
+
+Côté client — `ConversationView.tsx` : `audioUrl` ajouté au type `MessageRow` ; gestionnaires SSE et `handleDeleted` effacent `audioUrl` lors d'une suppression. `MessageList.tsx` : lecteur `<audio controls>` affiché sous l'image éventuelle si `audioUrl` est présent. `MessageThread.tsx` : bouton microphone 🎤 ; démarrage/arrêt de l'enregistrement via `MediaRecorder` (WebM/Chrome, OGG/Firefox, MP4/Safari) ; minuterie temps réel (limite 2 min) ; aperçu audio avant envoi avec bouton « Supprimer » ; FormData inclut le champ `voice` ; gestion des erreurs `voice_too_large` et `voice_invalid_type`.
+
+i18n FR/AR : 8 nouvelles clés (`voiceRecord`, `voiceStop`, `voiceDiscard`, `voicePreviewLabel`, `voiceTooLarge`, `voiceInvalidType`, `voicePermissionDenied`, `voiceAttachment`).

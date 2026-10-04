@@ -30,12 +30,13 @@ export async function DELETE(
 
   await prisma.message.update({
     where: { id: messageId },
-    data: { content: "", attachmentUrl: null, deletedAt: new Date() },
+    data: { content: "", attachmentUrl: null, audioUrl: null, deletedAt: new Date() },
   });
 
   // Après la mutation seulement, jamais avant — même discipline que la
   // suppression de photo d'annonce/avatar.
   if (message.attachmentUrl) await deleteStoredFile(message.attachmentUrl);
+  if (message.audioUrl) await deleteStoredFile(message.audioUrl);
 
   await publishToConversation(id, { type: "delete", messageId });
 

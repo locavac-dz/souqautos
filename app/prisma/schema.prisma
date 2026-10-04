@@ -643,6 +643,9 @@ model Message {
   // moment d'une suppression (Lot 38) ; le fichier reste sur disque, comme
   // les photos d'annonce supprimées (Lot 36).
   attachmentUrl  String?
+  // Lot 251 — message vocal enregistré depuis le navigateur (WebM/OGG/MP4).
+  // Champ distinct de attachmentUrl pour différencier audio et image à l'affichage.
+  audioUrl       String?
   readAt         DateTime?
   createdAt      DateTime     @default(now())
   // Suppression « pour tout le monde » (Lot 38) — seul l'expéditeur peut

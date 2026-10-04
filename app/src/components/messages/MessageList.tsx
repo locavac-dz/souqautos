@@ -8,6 +8,7 @@ type MessageRow = {
   senderId: string;
   content: string;
   attachmentUrl: string | null;
+  audioUrl: string | null;
   deletedAt: Date | null;
 };
 
@@ -69,6 +70,14 @@ export function MessageList({
                         src={message.attachmentUrl}
                         alt={t("attachmentAlt")}
                         className="max-w-full max-h-64 rounded mb-1 block"
+                      />
+                    )}
+                    {message.audioUrl && (
+                      <audio
+                        controls
+                        src={message.audioUrl}
+                        aria-label={t("voicePreviewLabel")}
+                        className="max-w-[260px] mb-1 block"
                       />
                     )}
                     {message.content}

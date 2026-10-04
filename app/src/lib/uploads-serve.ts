@@ -11,10 +11,20 @@ import path from "node:path";
 // AUSSI ÉTROIT que ce que le site écrit : mêmes dossiers que `storeProcessedImage` (src/lib/uploads.ts), jamais autre chose.
 
 // Les dossiers où le site écrit (src/lib/uploads.ts) : rien d'autre n'est servi.
-export const UPLOAD_SUBDIRS = ["listings", "avatars", "messages", "pro-logos", "pro-banners", "blog-covers"] as const;
+export const UPLOAD_SUBDIRS = ["listings", "avatars", "messages", "pro-logos", "pro-banners", "blog-covers", "voice-messages"] as const;
 
-// Le site n'écrit que du JPEG (sharp), mais des fichiers de démonstration ou anciens peuvent porter une autre extension d'image.
-const CONTENT_TYPES: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp" };
+// Le site n'écrit que du JPEG (sharp) pour les images, mais des fichiers de démonstration ou anciens peuvent porter une autre extension.
+// Lot 251 : extensions audio pour les messages vocaux.
+const CONTENT_TYPES: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".webm": "audio/webm",
+  ".ogg": "audio/ogg",
+  ".mp3": "audio/mpeg",
+  ".mp4": "audio/mp4",
+};
 
 export function uploadsRoot(): string {
   return path.join(process.cwd(), "public", "uploads");

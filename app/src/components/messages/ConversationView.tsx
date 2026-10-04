@@ -9,6 +9,7 @@ type MessageRow = {
   senderId: string;
   content: string;
   attachmentUrl: string | null;
+  audioUrl: string | null;
   deletedAt: Date | null;
 };
 
@@ -58,7 +59,7 @@ export function ConversationView({
         setMessages((prev) =>
           prev.map((m) =>
             m.id === data.messageId
-              ? { ...m, content: "", attachmentUrl: null, deletedAt: new Date() }
+              ? { ...m, content: "", attachmentUrl: null, audioUrl: null, deletedAt: new Date() }
               : m
           )
         );
@@ -77,7 +78,7 @@ export function ConversationView({
 
   function handleDeleted(messageId: string) {
     setMessages((prev) =>
-      prev.map((m) => (m.id === messageId ? { ...m, content: "", attachmentUrl: null, deletedAt: new Date() } : m))
+      prev.map((m) => (m.id === messageId ? { ...m, content: "", attachmentUrl: null, audioUrl: null, deletedAt: new Date() } : m))
     );
   }
 

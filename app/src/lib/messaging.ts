@@ -58,10 +58,12 @@ export type MessageContentCheck = { ok: true } | { ok: false; error: "empty_mess
 export function checkMessageHasContent({
   hasText,
   hasAttachment,
+  hasVoice = false,
 }: {
   hasText: boolean;
   hasAttachment: boolean;
+  hasVoice?: boolean;
 }): MessageContentCheck {
-  if (!hasText && !hasAttachment) return { ok: false, error: "empty_message" };
+  if (!hasText && !hasAttachment && !hasVoice) return { ok: false, error: "empty_message" };
   return { ok: true };
 }
