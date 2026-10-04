@@ -414,6 +414,19 @@ model Listing {
   // classique d'une annonce-appât sous plusieurs faux comptes) — même
   // principe que ListingPhoto.sha256 (Lot 77), jamais une comparaison floue.
   contentHash  String           @default("")
+  // Lot 246 — score de risque persistant (V3, §16) : calculé à la soumission
+  // via after() et rafraîchi à chaque édition — évite un recalcul complet à
+  // chaque chargement de la file de modération. Pondéré sur les 5 signaux
+  // (duplicatePhoto 40, duplicateContent 35, lowPrice/vehicleInconsistency 20,
+  // sellerRejectionHistory 15 — plafonné à 100). Permet de trier la file par
+  // risque décroissant plutôt que par date d'arrivée.
+  fraudScore     Int       @default(0)
+  fraudCheckedAt DateTime?
+  // Analyse Claude API du texte de l'annonce (V3 « Règles + IA »).
+  // null si ANTHROPIC_API_KEY absent ou aucun signal détecté.
+  // Jamais affiché au vendeur — aide à la décision du modérateur uniquement.
+  aiSuspicion    String?
+  aiCheckedAt    DateTime?
 
   @@index([status, category, wilayaId])
   // Lot 137 — mesurés sur 20 000 annonces (EXPLAIN ANALYZE) : la recherche « plus récentes » lisait toute la table pour
@@ -428,6 +441,8 @@ model Listing {
   @@index([contentHash])
   @@index([communeId])
   @@index([generationId])
+  // Lot 246 — tri de la file de modération par risque décroissant.
+  @@index([status, fraudScore(sort: Desc)])
   contactEvents    ContactEvent[]
   callbackRequests CallbackRequest[]
 }

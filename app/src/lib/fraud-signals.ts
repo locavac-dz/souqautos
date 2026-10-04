@@ -108,6 +108,65 @@ export function detectVehicleInconsistency(
   return false;
 }
 
+// Lot 246 — score composite 0-100 : pondération empirique des 5 signaux.
+// duplicatePhoto (40) et duplicateContent (35) sont les plus forts car ils
+// impliquent nécessairement un AUTRE compte — une erreur de bonne foi n'existe
+// pas. lowPrice (20) et vehicleInconsistency (20) sont modérés : légitimes si
+// isolés (bonne affaire, kilométrage déclaré à la louche). sellerRejectionHistory
+// (15) est le plus faible : un refus isolé n'est pas un signal, seul un historique
+// répété (≥2) est comptabilisé — voir detectSellerRejectionHistory ci-dessus.
+export const FRAUD_SIGNAL_WEIGHTS = {
+  duplicatePhoto: 40,
+  duplicateContent: 35,
+  lowPrice: 20,
+  vehicleInconsistency: 20,
+  sellerRejectionHistory: 15,
+} as const satisfies Record<keyof FraudSignals, number>;
+
+export function computeFraudScore(signals: FraudSignals): number {
+  let score = 0;
+  for (const key of Object.keys(FRAUD_SIGNAL_WEIGHTS) as (keyof FraudSignals)[]) {
+    if (signals[key]) score += FRAUD_SIGNAL_WEIGHTS[key];
+  }
+  return Math.min(score, 100);
+}
+
+// Calcule les signaux pour une seule annonce, persiste fraudScore +
+// fraudCheckedAt. Utilisé via after() à la soumission et à chaque édition.
+export async function refreshListingFraudScore(listingId: string): Promise<void> {
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: {
+      id: true,
+      sellerId: true,
+      price: true,
+      brandId: true,
+      modelId: true,
+      year: true,
+      mileage: true,
+      wilayaId: true,
+      condition: true,
+      contentHash: true,
+      photos: { select: { sha256: true } },
+    },
+  });
+  if (!listing) return;
+
+  const signalsMap = await getFraudSignalsForListings([listing]);
+  const signals = signalsMap.get(listingId) ?? {
+    duplicatePhoto: false,
+    duplicateContent: false,
+    lowPrice: false,
+    vehicleInconsistency: false,
+    sellerRejectionHistory: false,
+  };
+
+  await prisma.listing.update({
+    where: { id: listingId },
+    data: { fraudScore: computeFraudScore(signals), fraudCheckedAt: new Date() },
+  });
+}
+
 type ListingForFraudSignals = {
   id: string;
   sellerId: string;

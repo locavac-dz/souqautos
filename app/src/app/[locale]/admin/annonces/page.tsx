@@ -13,7 +13,8 @@ export default async function AdminListingsPage() {
   const [pending, published] = await Promise.all([
     prisma.listing.findMany({
       where: { status: "EN_ATTENTE" },
-      orderBy: { createdAt: "asc" },
+      // Lot 246 — les annonces les plus risquées d'abord ; à score égal, FIFO.
+      orderBy: [{ fraudScore: "desc" }, { createdAt: "asc" }],
       include: {
         photos: { orderBy: { position: "asc" }, select: { path: true, sha256: true } },
         seller: { include: { profile: true } },
@@ -79,38 +80,55 @@ export default async function AdminListingsPage() {
                           }).format(listing.createdAt),
                         })}
                       </p>
+                      {/* Lot 246 — score composite + note IA */}
+                      {listing.fraudCheckedAt && listing.fraudScore > 0 && (
+                        <span
+                          className={`mt-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                            listing.fraudScore >= 60
+                              ? "border border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+                              : "border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                          }`}
+                        >
+                          {t("fraudScore")}&nbsp;{listing.fraudScore}/100
+                        </span>
+                      )}
                       {(signals?.duplicatePhoto ||
                         signals?.lowPrice ||
                         signals?.sellerRejectionHistory ||
                         signals?.duplicateContent ||
                         signals?.vehicleInconsistency) && (
-                        <div className="mt-2 flex flex-wrap gap-2">
+                        <div className="mt-1 flex flex-wrap gap-2">
                           {signals.duplicatePhoto && (
-                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
                               {t("fraudSignalDuplicatePhoto")}
                             </span>
                           )}
                           {signals.duplicateContent && (
-                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
                               {t("fraudSignalDuplicateContent")}
                             </span>
                           )}
                           {signals.lowPrice && (
-                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
                               {t("fraudSignalLowPrice")}
                             </span>
                           )}
                           {signals.sellerRejectionHistory && (
-                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
                               {t("fraudSignalRejectionHistory")}
                             </span>
                           )}
                           {signals.vehicleInconsistency && (
-                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
                               {t("fraudSignalVehicleInconsistency")}
                             </span>
                           )}
                         </div>
+                      )}
+                      {listing.aiSuspicion && (
+                        <p className="mt-1 text-xs italic text-slate-500 dark:text-slate-400">
+                          {t("fraudAiPrefix")} {listing.aiSuspicion}
+                        </p>
                       )}
                     </div>
                   </div>

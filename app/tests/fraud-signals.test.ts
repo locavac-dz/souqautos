@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   computeListingContentHash,
+  computeFraudScore,
   detectDuplicateContent,
   detectDuplicatePhoto,
   detectLowPrice,
   detectSellerRejectionHistory,
   detectVehicleInconsistency,
+  FRAUD_SIGNAL_WEIGHTS,
   LOW_PRICE_RATIO,
   MIN_REJECTIONS_FOR_SIGNAL,
   NEUF_MAX_AGE_YEARS,
@@ -172,5 +174,49 @@ describe("detectVehicleInconsistency", () => {
   it("uses exactly the documented age threshold as the boundary", () => {
     const stillPlausible = CURRENT_YEAR - NEUF_MAX_AGE_YEARS;
     expect(detectVehicleInconsistency("NEUF", 0, stillPlausible, CURRENT_YEAR)).toBe(false);
+  });
+});
+
+describe("computeFraudScore", () => {
+  const noSignals = {
+    duplicatePhoto: false,
+    duplicateContent: false,
+    lowPrice: false,
+    vehicleInconsistency: false,
+    sellerRejectionHistory: false,
+  };
+
+  it("returns 0 when no signal fires", () => {
+    expect(computeFraudScore(noSignals)).toBe(0);
+  });
+
+  it("returns the exact weight for a single signal", () => {
+    expect(computeFraudScore({ ...noSignals, duplicatePhoto: true })).toBe(FRAUD_SIGNAL_WEIGHTS.duplicatePhoto);
+    expect(computeFraudScore({ ...noSignals, duplicateContent: true })).toBe(FRAUD_SIGNAL_WEIGHTS.duplicateContent);
+    expect(computeFraudScore({ ...noSignals, lowPrice: true })).toBe(FRAUD_SIGNAL_WEIGHTS.lowPrice);
+    expect(computeFraudScore({ ...noSignals, vehicleInconsistency: true })).toBe(FRAUD_SIGNAL_WEIGHTS.vehicleInconsistency);
+    expect(computeFraudScore({ ...noSignals, sellerRejectionHistory: true })).toBe(FRAUD_SIGNAL_WEIGHTS.sellerRejectionHistory);
+  });
+
+  it("sums correctly when two signals fire", () => {
+    const score = computeFraudScore({ ...noSignals, duplicatePhoto: true, duplicateContent: true });
+    expect(score).toBe(FRAUD_SIGNAL_WEIGHTS.duplicatePhoto + FRAUD_SIGNAL_WEIGHTS.duplicateContent);
+  });
+
+  it("is capped at 100 even when the raw sum would exceed it", () => {
+    // All five signals sum to 40+35+20+20+15 = 130 > 100.
+    const allSignals = {
+      duplicatePhoto: true,
+      duplicateContent: true,
+      lowPrice: true,
+      vehicleInconsistency: true,
+      sellerRejectionHistory: true,
+    };
+    expect(computeFraudScore(allSignals)).toBe(100);
+  });
+
+  it("reaches 60+ (high-risk threshold) with the two heaviest signals only", () => {
+    const score = computeFraudScore({ ...noSignals, duplicatePhoto: true, duplicateContent: true });
+    expect(score).toBeGreaterThanOrEqual(60);
   });
 });

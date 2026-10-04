@@ -714,6 +714,8 @@
     "fraudSignalRejectionHistory": "⚠ بائع لديه إعلانات سبق رفضها أو تعليقها",
     "fraudSignalDuplicateContent": "⚠ نص مطابق لإعلان بائع آخر",
     "fraudSignalVehicleInconsistency": "⚠ الكيلومترات/السنة لا تتطابق مع حالة «جديدة»",
+    "fraudScore": "درجة الخطر:",
+    "fraudAiPrefix": "الذكاء الاصطناعي:",
     "proAccountLabel": "المؤسسة",
     "userReportBadge": "ملف شخصي",
     "navReports": "البلاغات",

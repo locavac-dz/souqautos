@@ -1,5 +1,24 @@
 # Souq Auto — journal des lots
 
+## Lot 246 — Anti-fraude V3 : score persistant + analyse IA (2026-10-04)
+
+**Contexte** : les 5 signaux de fraude (Lots 77/84/93) étaient recalculés à chaque chargement de la file de modération et la queue était triée par date d'arrivée — les annonces les plus risquées n'étaient pas mises en avant. Il manquait aussi la couche « IA » documentée depuis le Lot 0 (§16 : « Règles + IA ») : tout était purement déterministe.
+
+**Ce qui a changé** :
+
+- `prisma/schema.prisma` — 4 nouveaux champs sur `Listing` : `fraudScore Int @default(0)` (score composite 0-100), `fraudCheckedAt DateTime?` (horodatage du dernier calcul), `aiSuspicion String?` (note textuelle Claude API), `aiCheckedAt DateTime?`. Index `@@index([status, fraudScore(sort: Desc)])` pour le tri de la file de modération.
+- `prisma/migrations/20261004160000_lot_246_fraud_score/migration.sql` — 4 `ALTER TABLE` + 1 `CREATE INDEX`.
+- `src/lib/fraud-signals.ts` — `FRAUD_SIGNAL_WEIGHTS` (constantes pondérées : photo 40, contenu 35, prix bas 20, incohérence 20, historique 15), `computeFraudScore(signals)` (somme plafonnée à 100), `refreshListingFraudScore(listingId)` (charge l'annonce, calcule les 5 signaux, persiste score + horodatage).
+- `src/lib/fraud-ai.ts` — nouveau fichier : `analyzeListingForFraud()` (appel Claude API avec prompt focalisé sur les signaux sémantiques — urgence suspecte, promesses invraisemblables, incohérences déclaratives — repli silencieux si `ANTHROPIC_API_KEY` absent), `analyzeAndStoreListingFraud()` (appelle + persiste `aiSuspicion` + `aiCheckedAt`).
+- `src/app/api/listings/route.ts` — hook `after()` étendu : en plus de `notifyStaffOfPending`, appelle désormais `refreshListingFraudScore` et `analyzeAndStoreListingFraud` en non-bloquant à chaque soumission.
+- `src/app/[locale]/admin/annonces/page.tsx` — file d'attente triée par `fraudScore DESC, createdAt ASC` (les plus risquées d'abord) ; badge de score couleur (rouge ≥ 60, ambre < 60) ; note IA sous les badges de signaux si `aiSuspicion` non nulle.
+- `messages/fr.json` / `messages/ar.json` — clés `fraudScore`, `fraudAiPrefix`.
+- `tests/fraud-signals.test.ts` — 9 nouveaux tests sur `computeFraudScore` : score 0 sans signal, poids unitaires, somme de deux signaux, plafond à 100, seuil « risque élevé » (≥ 60) atteint avec les deux signaux les plus lourds.
+
+**Total** : 31 → 40 tests (40/40 passent). `tsc --noEmit` sans erreur.
+
+---
+
 ## Lot 245 — Rôle SUPPORT (2026-10-04)
 
 **Contexte** : le back-office n'offrait que deux niveaux d'équipe (MODERATEUR, ADMIN). Un agent de modération de premier niveau n'a pas besoin d'accéder aux statistiques, au journal d'audit, aux comptes utilisateurs ni aux paramètres globaux. Le rôle SUPPORT couvre exactement le périmètre nécessaire.

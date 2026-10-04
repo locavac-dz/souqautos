@@ -6,7 +6,8 @@ import { listingSchema } from "@/lib/validation/listing";
 import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getSubscriptionStatus, isWithinQuota } from "@/lib/pro-subscription";
-import { computeListingContentHash } from "@/lib/fraud-signals";
+import { computeListingContentHash, refreshListingFraudScore } from "@/lib/fraud-signals";
+import { analyzeAndStoreListingFraud } from "@/lib/fraud-ai";
 import { validateCatalogueRefs } from "@/lib/listing-catalogue-refs";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 
@@ -149,8 +150,22 @@ export async function POST(request: NextRequest) {
     select: { id: true },
   });
 
-  // Lot 118 — prévient l'équipe (après la réponse : n'allonge pas la requête).
-  after(() => notifyStaffOfPending("listing"));
+  // Lot 118 — prévient l'équipe. Lot 246 — calcule les signaux anti-fraude et
+  // lance l'analyse IA du texte ; les deux sont non-bloquants (after).
+  const listingId = listing.id;
+  const listingForAi = {
+    title: data.title,
+    description: data.description,
+    price: data.price,
+    condition: data.condition,
+    year: data.year,
+    mileage: data.mileage,
+  } as const;
+  after(async () => {
+    await notifyStaffOfPending("listing");
+    await refreshListingFraudScore(listingId);
+    await analyzeAndStoreListingFraud(listingId, listingForAi);
+  });
 
   return NextResponse.json({ listing }, { status: 201 });
 }
