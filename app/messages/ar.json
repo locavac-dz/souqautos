@@ -13,6 +13,7 @@
     "myListings": "إعلاناتي",
     "favorites": "المفضلة لدي",
     "alerts": "تنبيهاتي",
+    "notifications": "الإشعارات",
     "aiAdvisor": "المستشار الذكي",
     "roadTests": "التجارب",
     "logout": "تسجيل الخروج",
@@ -2039,5 +2040,23 @@
     "unfollowConfirm": "إلغاء المتابعة",
     "navLabel": "نشاطي",
     "verifiedBadge": "✓ موثّق"
+  },
+  "InAppNotifications": {
+    "title": "إشعاراتي",
+    "empty": "لا توجد إشعارات في الوقت الحالي.",
+    "markAllRead": "تحديد الكل كمقروء",
+    "navLabel": "الإشعارات",
+    "kind": {
+      "NEW_MESSAGE": "رسالة جديدة",
+      "LISTING_APPROVED": "تم نشر الإعلان",
+      "LISTING_REJECTED": "تم رفض الإعلان",
+      "LISTING_SUSPENDED": "تم إيقاف الإعلان",
+      "OFFER_RECEIVED": "عرض سعر جديد",
+      "OFFER_ACCEPTED": "تم قبول عرضك",
+      "OFFER_DECLINED": "تم رفض عرضك",
+      "OFFER_COUNTERED": "عرض مضاد",
+      "SEARCH_ALERT_MATCH": "تنبيه بحث",
+      "PRO_FOLLOWER_LISTING": "إعلان جديد"
+    }
   }
 }

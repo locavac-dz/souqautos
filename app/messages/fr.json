@@ -13,6 +13,7 @@
     "myListings": "Mes annonces",
     "favorites": "Mes favoris",
     "alerts": "Mes alertes",
+    "notifications": "Notifications",
     "aiAdvisor": "Conseiller IA",
     "roadTests": "Essais",
     "logout": "Déconnexion",
@@ -2039,5 +2040,23 @@
     "unfollowConfirm": "Se désabonner",
     "navLabel": "Mon activité",
     "verifiedBadge": "✓ Vérifié"
+  },
+  "InAppNotifications": {
+    "title": "Mes notifications",
+    "empty": "Aucune notification pour le moment.",
+    "markAllRead": "Tout marquer comme lu",
+    "navLabel": "Notifications",
+    "kind": {
+      "NEW_MESSAGE": "Nouveau message",
+      "LISTING_APPROVED": "Annonce publiée",
+      "LISTING_REJECTED": "Annonce refusée",
+      "LISTING_SUSPENDED": "Annonce suspendue",
+      "OFFER_RECEIVED": "Nouvelle offre",
+      "OFFER_ACCEPTED": "Offre acceptée",
+      "OFFER_DECLINED": "Offre refusée",
+      "OFFER_COUNTERED": "Contre-offre reçue",
+      "SEARCH_ALERT_MATCH": "Alerte de recherche",
+      "PRO_FOLLOWER_LISTING": "Nouvelle annonce"
+    }
   }
 }

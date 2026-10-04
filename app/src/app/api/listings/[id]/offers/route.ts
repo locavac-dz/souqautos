@@ -8,6 +8,7 @@ import { makeOfferSchema } from "@/lib/validation/offer";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { sendPushToUser } from "@/lib/push-send";
 import { SITE_URL } from "@/lib/site";
+import { createNotification } from "@/lib/notification-service";
 
 export async function POST(
   request: NextRequest,
@@ -79,6 +80,11 @@ export async function POST(
       url: `/${sellerLocale}/compte/offres`,
       tag: `offer-${offer.id}`,
       lang: sellerLocale === "ar" ? "ar" : "fr",
+    });
+
+    await createNotification(listing.sellerId, "OFFER_RECEIVED", {
+      url: `/${sellerLocale}/compte/offres`,
+      body: listing.title,
     });
   });
 

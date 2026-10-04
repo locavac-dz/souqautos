@@ -9,6 +9,7 @@ import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
 import { saveMessageAttachment, PhotoValidationError } from "@/lib/uploads";
 import { publishToConversation } from "@/lib/realtime";
+import { createNotification } from "@/lib/notification-service";
 
 const bodySchema = z.object({ content: z.string().trim().max(2000) });
 
@@ -122,6 +123,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (emailResult?.previewUrl) {
         console.log(`[EMAIL notification nouveau message] ${emailResult.previewUrl}`);
       }
+
+      await createNotification(otherUserId, "NEW_MESSAGE", {
+        url: `/${recipient.locale}/compte/messages/${id}`,
+        body: conversation.listing.title,
+      });
     }
   }
 

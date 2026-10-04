@@ -1,5 +1,32 @@
 # Souq Auto — journal des lots
 
+## Lot 241 — Centre de notifications in-app (2026-10-04)
+
+**Contexte** : l'application envoyait déjà des e-mails et des notifications push, mais aucun historique n'était consultable depuis l'interface. Un utilisateur dont le push est désactivé ou qui rate un e-mail n'avait aucun moyen de retrouver les événements manqués.
+
+**Livré**
+
+- `prisma/schema.prisma` : enum `NotificationKind` (10 valeurs) + modèle `UserNotification` (`userId`, `kind`, `data JSON`, `readAt`, `createdAt`) ; relation sur `User`. Index `(userId, createdAt DESC)` et `(userId, readAt)`.
+- Migration `20261004100000_lot_241_notifications` appliquée manuellement (contournement CREATEDB connu, cf. `README.md`).
+- `src/lib/notification-service.ts` : `createNotification`, `getNotifications`, `getUnreadCount`, `markAllRead`, `markRead`. Ne lève jamais d'exception — un échec de création ne bloque jamais l'action principale.
+- `src/lib/notification-sweep.ts` : `sweepOldNotifications(now)` — TTL 30 jours, appelé par le cron nightly.
+- `src/app/api/notifications/route.ts` : `GET` — liste les 20 dernières notifications + badge count.
+- `src/app/api/notifications/read-all/route.ts` : `PATCH` — marque tout comme lu.
+- `src/app/[locale]/compte/notifications/page.tsx` : page dédiée, fond bleu pâle sur les non lues, temps relatif FR/AR sans dépendance externe, bouton « Tout marquer comme lu ».
+- `src/components/notifications/MarkAllReadButton.tsx` : bouton client (refresh Next.js après PATCH).
+- `src/components/SiteHeader.tsx` : prop `unreadNotificationsCount`, badge rouge identique au badge Messages.
+- `src/app/[locale]/layout.tsx` : fetch parallèle `getUnreadCount` + `prisma.message.count` ; passage au header.
+- Points déclencheurs (création in-app en parallèle de l'e-mail/push existant) :
+  - `admin/listings/[id]/moderate/route.ts` → `LISTING_APPROVED` / `LISTING_REJECTED` / `LISTING_SUSPENDED`
+  - `conversations/[id]/messages/route.ts` → `NEW_MESSAGE`
+  - `listings/[id]/offers/route.ts` → `OFFER_RECEIVED` (vendeur)
+  - `offers/[id]/route.ts` → `OFFER_ACCEPTED` / `OFFER_DECLINED` / `OFFER_COUNTERED` (acheteur)
+  - `src/lib/search-alerts.ts` → `SEARCH_ALERT_MATCH`
+  - `src/lib/pro-follow.ts` → `PRO_FOLLOWER_LISTING`
+- `src/app/api/cron/sweep/route.ts` : ajout de `sweepOldNotifications` au sweep nightly (4 sweepers désormais).
+- i18n FR/AR : namespace `InAppNotifications` (titre, vide, markAllRead, kind × 10) + clé `Nav.notifications`.
+- Tests : `notification-service.test.ts` (8 tests — create sans exception, getNotifications, getUnreadCount, markAllRead, markRead, sweep TTL) ; `cron-sweep-route.test.ts` mis à jour (4→4 sweepers, même horodatage). Total suite : 2 159 tests, 3 échecs backup-chain pré-existants (CREATEDB).
+
 ## Lot 1 — Comptes & fondations (2026-09-02)
 
 Premier module codé après validation du cahier d'architecture ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)), stack Next.js confirmée.

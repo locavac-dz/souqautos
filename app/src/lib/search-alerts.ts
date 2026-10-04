@@ -6,6 +6,7 @@ import { SITE_URL } from "@/lib/site";
 import { searchParamsSchema } from "@/lib/validation/search";
 import { buildListingWhere } from "@/lib/search";
 import { sendPushToUser } from "@/lib/push-send";
+import { createNotification } from "@/lib/notification-service";
 
 // Déclenché une seule fois, au moment précis où une annonce devient PUBLIEE
 // (approbation en modération) — un vrai événement métier, pas un balayage
@@ -77,6 +78,11 @@ async function notifyOneSearchAlert(
     url: `/${locale}/annonce/${listing.id}`,
     tag: `alert-${alert.id}-${listing.id}`,
     lang: locale,
+  });
+
+  await createNotification(alert.userId, "SEARCH_ALERT_MATCH", {
+    url: `/${locale}/annonce/${listing.id}`,
+    body: listing.title,
   });
 }
 

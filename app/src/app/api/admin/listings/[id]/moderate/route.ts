@@ -10,6 +10,7 @@ import { notifyMatchingSearchAlerts } from "@/lib/search-alerts";
 import { notifyProFollowers } from "@/lib/pro-follow";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
+import { createNotification } from "@/lib/notification-service";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject", "suspend"]),
@@ -93,6 +94,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (emailResult?.previewUrl) {
       console.log(`[EMAIL modération annonce] ${emailResult.previewUrl}`);
     }
+
+    const notifKind =
+      action === "approve" ? "LISTING_APPROVED" :
+      action === "reject"  ? "LISTING_REJECTED" :
+                             "LISTING_SUSPENDED";
+    const notifUrl = action === "approve"
+      ? `/${seller.locale}/annonce/${id}`
+      : `/${seller.locale}/compte/mes-annonces`;
+    await createNotification(listing.sellerId, notifKind, {
+      url: notifUrl,
+      body: listing.title,
+    });
   }
 
   await writeAuditLog({

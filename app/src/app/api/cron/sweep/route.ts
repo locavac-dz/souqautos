@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sweepExpiredListings } from "@/lib/listing-expiry-sweep";
 import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder-sweep";
 import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
+import { sweepOldNotifications } from "@/lib/notification-sweep";
 
 // Called nightly by cron (see ops/crontab.example).
 // Runs the three sweepers directly — bypasses throttledSweep which is designed
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
   await sweepAutoRenewals(now);
   await sweepExpiringListingsForReminders(now);
   await sweepExpiredListings(now);
+  await sweepOldNotifications(now);
 
   return NextResponse.json({ ok: true, sweptAt: now.toISOString() });
 }

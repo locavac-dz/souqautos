@@ -10,6 +10,7 @@ import { routing, localeDirection, type AppLocale } from "@/i18n/routing";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { prisma } from "@/lib/prisma";
 import { getManageableSellerIds } from "@/lib/listing-access";
+import { getUnreadCount as getUnreadNotificationsCount } from "@/lib/notification-service";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CompareProvider } from "@/components/compare/CompareContext";
@@ -70,17 +71,20 @@ export default async function LocaleLayout({
   const user = await getCurrentUser();
   const direction = localeDirection[locale as AppLocale];
 
-  const unreadMessagesCount = user
-    ? await prisma.message.count({
-        where: {
-          senderId: { not: user.id },
-          readAt: null,
-          conversation: {
-            OR: [{ buyerId: user.id }, { sellerId: { in: await getManageableSellerIds(user.id) } }],
+  const [unreadMessagesCount, unreadNotificationsCount] = user
+    ? await Promise.all([
+        prisma.message.count({
+          where: {
+            senderId: { not: user.id },
+            readAt: null,
+            conversation: {
+              OR: [{ buyerId: user.id }, { sellerId: { in: await getManageableSellerIds(user.id) } }],
+            },
           },
-        },
-      })
-    : 0;
+        }),
+        getUnreadNotificationsCount(user.id),
+      ])
+    : [0, 0];
 
   return (
     <html lang={locale} dir={direction} className={bebasNeue.variable}>
@@ -102,6 +106,7 @@ export default async function LocaleLayout({
                   : null
               }
               unreadMessagesCount={unreadMessagesCount}
+              unreadNotificationsCount={unreadNotificationsCount}
             />
             <main id="contenu" tabIndex={-1} className="flex-1 focus:outline-none">
               {children}

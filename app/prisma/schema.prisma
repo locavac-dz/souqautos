@@ -105,6 +105,8 @@ model User {
   // Lot 170 — offres de prix
   offersAsBuyer                 Offer[]  @relation("BuyerOffers")
   offersAsSeller                Offer[]  @relation("SellerOffers")
+  // Lot 241 — centre de notifications in-app
+  notifications                 UserNotification[]
 }
 
 model Profile {
@@ -1427,6 +1429,39 @@ model TwoFactorRecoveryCode {
 
   @@unique([userId, codeHash])
   @@index([userId])
+}
+
+// Lot 241 — notification in-app persistante, complémentaire de l'email et du push.
+// Jamais un doublon de l'email : c'est l'historique consultable depuis l'application,
+// que le push soit activé ou non, que l'email soit arrivé ou non.
+// TTL 30 jours : le sweeper nightly supprime les entrées plus anciennes.
+enum NotificationKind {
+  NEW_MESSAGE
+  LISTING_APPROVED
+  LISTING_REJECTED
+  LISTING_SUSPENDED
+  OFFER_RECEIVED
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  OFFER_COUNTERED
+  SEARCH_ALERT_MATCH
+  PRO_FOLLOWER_LISTING
+}
+
+model UserNotification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      NotificationKind
+  // Données contextuelles (titre de l'annonce, montant de l'offre, etc.) et URL
+  // de destination. Stocker l'URL ici évite de la recalculer à l'affichage et
+  // permet de l'utiliser dans le badge même si l'objet cible a été supprimé.
+  data      Json
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
 }
 
 // Lot 146 — lien d'APERÇU d'un contenu non publié, pour un relecteur qui n'a pas de compte administrateur (un juriste, un locuteur

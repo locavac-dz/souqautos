@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/push-send";
+import { createNotification } from "@/lib/notification-service";
 import type { PushPayload } from "@/lib/push";
 
 // Lot 161 — notifie tous les abonnés d'un compte pro quand une nouvelle annonce est publiée.
@@ -26,9 +27,16 @@ export async function notifyProFollowers(listing: {
       tag: `new-listing-${listing.id}`,
     };
 
-    await Promise.all(
-      proAccount.followers.map(({ userId }) => sendPushToUser(userId, payload))
-    );
+    await Promise.all([
+      ...proAccount.followers.map(({ userId }) => sendPushToUser(userId, payload)),
+      ...proAccount.followers.map(({ userId }) =>
+        createNotification(userId, "PRO_FOLLOWER_LISTING", {
+          url: `/fr/annonce/${listing.id}`,
+          body: listing.title,
+          title: proAccount.nomCommercial,
+        })
+      ),
+    ]);
   } catch (error) {
     console.error(`[pro-follow] notification échouée : ${(error as Error).message}`);
   }

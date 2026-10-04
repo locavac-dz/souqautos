@@ -9,6 +9,7 @@ import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { sendPushToUser } from "@/lib/push-send";
 import { SITE_URL } from "@/lib/site";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { createNotification } from "@/lib/notification-service";
 
 // PATCH — vendeur : accepte / refuse / contre-offre ; acheteur : retire / répond à une contre-offre
 export async function PATCH(
@@ -108,6 +109,10 @@ export async function PATCH(
         tag:   `offer-accepted-${offer.id}`,
         lang:  buyerLocale === "ar" ? "ar" : "fr",
       });
+      await createNotification(offer.buyerId, "OFFER_ACCEPTED", {
+        url: `/${buyerLocale}/compte/offres`,
+        body: offer.listing.title,
+      });
     } else if (action === "DECLINED") {
       const recipient = offer.status === "COUNTERED" ? "seller" : "buyer";
       if (recipient === "buyer") {
@@ -125,6 +130,10 @@ export async function PATCH(
           url:   `/${buyerLocale}/compte/offres`,
           tag:   `offer-declined-${offer.id}`,
           lang:  buyerLocale === "ar" ? "ar" : "fr",
+        });
+        await createNotification(offer.buyerId, "OFFER_DECLINED", {
+          url: `/${buyerLocale}/compte/offres`,
+          body: offer.listing.title,
         });
       }
       // Si c'est l'acheteur qui refuse une contre-offre, notifier le vendeur
@@ -152,6 +161,10 @@ export async function PATCH(
         url:   `/${buyerLocale}/compte/offres`,
         tag:   `offer-countered-${offer.id}`,
         lang:  buyerLocale === "ar" ? "ar" : "fr",
+      });
+      await createNotification(offer.buyerId, "OFFER_COUNTERED", {
+        url: `/${buyerLocale}/compte/offres`,
+        body: offer.listing.title,
       });
     }
   });

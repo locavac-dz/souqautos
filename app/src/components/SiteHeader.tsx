@@ -13,9 +13,11 @@ import type { Role } from "@prisma/client";
 export async function SiteHeader({
   user,
   unreadMessagesCount = 0,
+  unreadNotificationsCount = 0,
 }: {
   user: { email: string; displayName: string | null; role: Role } | null;
   unreadMessagesCount?: number;
+  unreadNotificationsCount?: number;
 }) {
   const tNav = await getTranslations("Nav");
   const tAdmin = await getTranslations("Admin");
@@ -42,6 +44,14 @@ export async function SiteHeader({
           </NavLink>
           <NavLink href="/compte/favoris" className={navLinkClass}>{tNav("favorites")}</NavLink>
           <NavLink href="/compte/alertes" className={navLinkClass}>{tNav("alerts")}</NavLink>
+          <NavLink href="/compte/notifications" className={`relative ${navLinkClass}`}>
+            {tNav("notifications")}
+            {unreadNotificationsCount > 0 && (
+              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">
+                {unreadNotificationsCount}
+              </span>
+            )}
+          </NavLink>
           <NavLink href="/compte/assistant-achat" className={navLinkClass}>{tNav("aiAdvisor")}</NavLink>
           <NavLink href="/compte/tableau-de-bord" className={navLinkClass}>{tNav("dashboard")}</NavLink>
           {isStaff(user.role) && (
