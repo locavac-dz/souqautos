@@ -79,9 +79,9 @@ export async function SiteHeader({
   return (
     <header className="border-b border-slate-200 dark:border-slate-700 dark:bg-slate-900">
       <div className="relative mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2">
-          <SiteLogoMark className="h-7 w-7 shrink-0" />
-          <SiteWordMark className="text-lg" />
+        <Link href="/" className="flex items-center gap-3">
+          <SiteLogoMark className="h-11 w-11 shrink-0" />
+          <SiteWordMark className="text-2xl" />
         </Link>
 
         <nav aria-label={tNav("main")} className="hidden sm:flex items-center gap-4 text-sm">{navContent}</nav>
