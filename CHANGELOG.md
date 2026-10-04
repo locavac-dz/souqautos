@@ -1,5 +1,27 @@
 # Souq Auto — journal des lots
 
+## Lot 245 — Rôle SUPPORT (2026-10-04)
+
+**Contexte** : le back-office n'offrait que deux niveaux d'équipe (MODERATEUR, ADMIN). Un agent de modération de premier niveau n'a pas besoin d'accéder aux statistiques, au journal d'audit, aux comptes utilisateurs ni aux paramètres globaux. Le rôle SUPPORT couvre exactement le périmètre nécessaire.
+
+**Livré**
+
+- `prisma/schema.prisma` : `SUPPORT` ajouté à l'enum `Role` (entre MODERATEUR et ADMIN).
+- `prisma/migrations/20261004140000_lot_245_role_support/migration.sql` : `ALTER TYPE "Role" ADD VALUE 'SUPPORT'`.
+- `src/lib/auth-server/roles.ts` : `isStaff()` étendu à SUPPORT ; `isModerator()` (ADMIN | MODERATEUR) et `isSupport()` ajoutés.
+- `src/lib/staff-two-factor.ts` : `isStaffRole()` étendu à SUPPORT — la 2FA est requise pour SUPPORT comme pour les autres rôles d'équipe.
+- `src/app/[locale]/admin/layout.tsx` : les liens `utilisateurs`, `pro`, `statistiques`, `audience`, `parametres` et `journal` sont masqués pour SUPPORT (affichés uniquement si `isModerator`).
+- Guards `isModerator` ajoutés en tête des pages : `utilisateurs`, `statistiques`, `journal`, `audience`, `pro` — un SUPPORT qui navigue directement vers ces URLs est redirigé vers `/admin`.
+- `src/app/api/admin/users/[id]/role/route.ts` : `SUPPORT` ajouté à l'enum Zod des rôles assignables (route déjà restreinte à `isAdmin`).
+- `src/components/admin/RoleSelect.tsx` + `admin/utilisateurs/page.tsx` : SUPPORT apparaît dans le menu de changement de rôle.
+- `messages/fr.json` + `messages/ar.json` : clé `roleOptionSupport` (`"Support"` / `"دعم"`).
+- `tests/staff-two-factor.test.ts` : 3 nouveaux cas couvrant SUPPORT (dégradation sans 2FA, conservation avec 2FA, `isStaffRole`).
+
+**Périmètre SUPPORT** (accès en lecture + actions) : annonces, signalements, avis, avis propriétaires, vérification d'identité.
+**Hors périmètre SUPPORT** : utilisateurs, comptes pro, statistiques, audience, paramètres, journal d'audit, paiements, contenu éditorial.
+
+---
+
 ## Lot 244 — Export RGPD complet + nettoyage (2026-10-04)
 
 **Livré**

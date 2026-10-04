@@ -688,6 +688,7 @@
     "roleOptionParticulier": "فرد",
     "roleOptionProfessionnel": "محترف",
     "roleOptionModerateur": "مراقب",
+    "roleOptionSupport": "دعم",
     "roleOptionAdmin": "مدير",
     "roleSelectLabel": "دور {name}",
     "changeRole": "تعديل",

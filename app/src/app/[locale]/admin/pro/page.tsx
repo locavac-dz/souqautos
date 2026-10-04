@@ -1,9 +1,17 @@
-import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Link, redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isModerator } from "@/lib/auth-server/roles";
 import { ToggleProVerifiedButton } from "@/components/admin/ToggleProVerifiedButton";
 
 export default async function AdminProAccountsPage() {
+  const locale = await getLocale();
+  const user = await getCurrentUser();
+  if (!user || !isModerator(user.role)) {
+    redirect({ href: "/admin", locale });
+    return null;
+  }
   const t = await getTranslations("Admin");
 
   const accounts = await prisma.professionalAccount.findMany({

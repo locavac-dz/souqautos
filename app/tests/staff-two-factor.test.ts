@@ -31,14 +31,19 @@ describe("effectiveRole", () => {
   it("un compte d'équipe sans double authentification devient un particulier quand elle est exigée", () => {
     expect(effectiveRole({ role: "ADMIN", totpEnabledAt: null }, true)).toBe("PARTICULIER");
     expect(effectiveRole({ role: "MODERATEUR", totpEnabledAt: null }, true)).toBe("PARTICULIER");
+    expect(effectiveRole({ role: "SUPPORT", totpEnabledAt: null }, true)).toBe("PARTICULIER");
   });
   it("garde son rôle avec la double authentification, ou quand elle n'est pas exigée", () => {
     expect(effectiveRole({ role: "ADMIN", totpEnabledAt: enabled }, true)).toBe("ADMIN");
     expect(effectiveRole({ role: "ADMIN", totpEnabledAt: null }, false)).toBe("ADMIN");
+    expect(effectiveRole({ role: "SUPPORT", totpEnabledAt: enabled }, true)).toBe("SUPPORT");
+    expect(effectiveRole({ role: "SUPPORT", totpEnabledAt: null }, false)).toBe("SUPPORT");
   });
   it("ne touche jamais aux autres rôles", () => {
     for (const role of ["PARTICULIER", "PROFESSIONNEL"] as const) expect(effectiveRole({ role, totpEnabledAt: null }, true)).toBe(role);
     expect(isStaffRole("ADMIN")).toBe(true);
+    expect(isStaffRole("MODERATEUR")).toBe(true);
+    expect(isStaffRole("SUPPORT")).toBe(true);
     expect(isStaffRole("PROFESSIONNEL")).toBe(false);
   });
 });
@@ -64,6 +69,26 @@ describe("getCurrentUser applique le rôle effectif (point unique de toutes les 
       expect(user?.role).toBe("PARTICULIER");
       expect(isAdmin(user!.role)).toBe(false);
       expect(isStaff(user!.role)).toBe(false);
+    });
+  });
+
+  it("un compte SUPPORT sans double authentification perd ses droits quand elle est exigée", async () => {
+    getSessionFromCookies.mockResolvedValue({ sub: "u1", role: "SUPPORT", issuedAtMs: Date.now() });
+    findUnique.mockResolvedValue(row({ role: "SUPPORT" }));
+    await withEnv({ REQUIRE_STAFF_2FA: "1" }, async () => {
+      const user = await getCurrentUser();
+      expect(user?.role).toBe("PARTICULIER");
+      expect(isStaff(user!.role)).toBe(false);
+    });
+  });
+
+  it("un compte SUPPORT avec double authentification garde ses droits", async () => {
+    getSessionFromCookies.mockResolvedValue({ sub: "u1", role: "SUPPORT", issuedAtMs: Date.now() });
+    findUnique.mockResolvedValue(row({ role: "SUPPORT", totpEnabledAt: new Date() }));
+    await withEnv({ REQUIRE_STAFF_2FA: "1" }, async () => {
+      const user = await getCurrentUser();
+      expect(user?.role).toBe("SUPPORT");
+      expect(isStaff(user!.role)).toBe(true);
     });
   });
 

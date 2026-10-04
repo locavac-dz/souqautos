@@ -1,6 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isModerator } from "@/lib/auth-server/roles";
 import { formatAuditLogDetails } from "@/lib/audit-log";
 
 // Journal d'audit (§47 du cahier d'architecture : « logs d'audit sur toute
@@ -17,9 +19,14 @@ export default async function AdminAuditLogPage({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
+  const locale = await getLocale();
+  const user = await getCurrentUser();
+  if (!user || !isModerator(user.role)) {
+    redirect({ href: "/admin", locale });
+    return null;
+  }
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
-  const locale = await getLocale();
   const t = await getTranslations("AdminAuditLog");
 
   const [entries, totalCount] = await Promise.all([

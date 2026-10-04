@@ -688,6 +688,7 @@
     "roleOptionParticulier": "Particulier",
     "roleOptionProfessionnel": "Professionnel",
     "roleOptionModerateur": "Modérateur",
+    "roleOptionSupport": "Support",
     "roleOptionAdmin": "Administrateur",
     "roleSelectLabel": "Rôle de {name}",
     "changeRole": "Modifier",

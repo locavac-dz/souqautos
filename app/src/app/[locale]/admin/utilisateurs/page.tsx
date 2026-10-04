@@ -1,7 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isAdmin, isStaff } from "@/lib/auth-server/roles";
+import { isAdmin, isStaff, isModerator } from "@/lib/auth-server/roles";
 import { RoleSelect } from "@/components/admin/RoleSelect";
 import { SuspendUserButton } from "@/components/admin/SuspendUserButton";
 import { UnlockUserButton } from "@/components/admin/UnlockUserButton";
@@ -12,15 +13,21 @@ const ROLE_KEY: Record<string, string> = {
   PARTICULIER: "roleOptionParticulier",
   PROFESSIONNEL: "roleOptionProfessionnel",
   MODERATEUR: "roleOptionModerateur",
+  SUPPORT: "roleOptionSupport",
   ADMIN: "roleOptionAdmin",
 };
 
 export default async function AdminUsersPage() {
+  const locale = await getLocale();
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isModerator(currentUser.role)) {
+    redirect({ href: "/admin", locale });
+    return null;
+  }
   const t = await getTranslations("Admin");
   const tTwoFactor = await getTranslations("TwoFactor");
-  const currentUser = await getCurrentUser();
-  const canChangeRoles = Boolean(currentUser && isAdmin(currentUser.role));
-  const canSuspend = Boolean(currentUser && isStaff(currentUser.role));
+  const canChangeRoles = isAdmin(currentUser.role);
+  const canSuspend = isStaff(currentUser.role);
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },

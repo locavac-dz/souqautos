@@ -1,5 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isModerator } from "@/lib/auth-server/roles";
 import { bucketByWeek } from "@/lib/product-stats";
 import { computeAverageRating } from "@/lib/reviews";
 
@@ -9,6 +12,11 @@ const STATUS_ORDER = ["EN_ATTENTE", "PUBLIEE", "REFUSEE", "SUSPENDUE", "VENDUE",
 
 export default async function AdminStatisticsPage() {
   const locale = await getLocale();
+  const user = await getCurrentUser();
+  if (!user || !isModerator(user.role)) {
+    redirect({ href: "/admin", locale });
+    return null;
+  }
   const t = await getTranslations("Admin");
   const tStatus = await getTranslations("Status");
 

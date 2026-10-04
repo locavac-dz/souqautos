@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isStaff, isAdmin } from "@/lib/auth-server/roles";
+import { isStaff, isAdmin, isModerator } from "@/lib/auth-server/roles";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
@@ -29,9 +29,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/annonces" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
           {t("navListings")}
         </Link>
-        <Link href="/admin/utilisateurs" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navUsers")}
-        </Link>
+        {isModerator(user.role) && (
+          <Link href="/admin/utilisateurs" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navUsers")}
+          </Link>
+        )}
         <Link href="/admin/signalements" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
           {t("navReports")}
         </Link>
@@ -41,27 +43,37 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/avis-proprietaires" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
           {t("navOwnerReviews")}
         </Link>
-        <Link href="/admin/pro" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navPro")}
-        </Link>
+        {isModerator(user.role) && (
+          <Link href="/admin/pro" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navPro")}
+          </Link>
+        )}
         <Link href="/admin/identite" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
           {t("navIdentity")}
         </Link>
         <Link href="/admin/referentiels" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
           {t("navCatalogue")}
         </Link>
-        <Link href="/admin/statistiques" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navStatistics")}
-        </Link>
-        <Link href="/admin/audience" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navAudience")}
-        </Link>
-        <Link href="/admin/parametres" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navSettings")}
-        </Link>
-        <Link href="/admin/journal" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navAuditLog")}
-        </Link>
+        {isModerator(user.role) && (
+          <Link href="/admin/statistiques" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navStatistics")}
+          </Link>
+        )}
+        {isModerator(user.role) && (
+          <Link href="/admin/audience" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navAudience")}
+          </Link>
+        )}
+        {isModerator(user.role) && (
+          <Link href="/admin/parametres" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navSettings")}
+          </Link>
+        )}
+        {isModerator(user.role) && (
+          <Link href="/admin/journal" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navAuditLog")}
+          </Link>
+        )}
         {isAdmin(user.role) && (
           <Link href="/admin/paiements" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navPayments")}

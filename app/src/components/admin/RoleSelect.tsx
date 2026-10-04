@@ -5,11 +5,12 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Role } from "@prisma/client";
 
-const ROLES: Role[] = ["PARTICULIER", "PROFESSIONNEL", "MODERATEUR", "ADMIN"];
+const ROLES: Role[] = ["PARTICULIER", "PROFESSIONNEL", "MODERATEUR", "SUPPORT", "ADMIN"];
 const ROLE_KEY: Record<Role, string> = {
   PARTICULIER: "roleOptionParticulier",
   PROFESSIONNEL: "roleOptionProfessionnel",
   MODERATEUR: "roleOptionModerateur",
+  SUPPORT: "roleOptionSupport",
   ADMIN: "roleOptionAdmin",
 };
 

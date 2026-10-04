@@ -1,5 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isModerator } from "@/lib/auth-server/roles";
 import { STATS_RANGES, parseStatsRange } from "@/lib/pro-stats";
 import { contentHref, loadAudience, percentChange, sharePercent, type CountRow } from "@/lib/audience-data";
 import { DailyBars } from "@/components/DailyBars";
@@ -8,6 +10,11 @@ import { DailyBars } from "@/components/DailyBars";
 // L'accès est celui de tout le back-office (équipe seulement, contrôlé par le layout d'administration).
 export default async function AdminAudiencePage({ searchParams }: { searchParams: Promise<{ jours?: string | string[] }> }) {
   const locale = await getLocale();
+  const user = await getCurrentUser();
+  if (!user || !isModerator(user.role)) {
+    redirect({ href: "/admin", locale });
+    return null;
+  }
   const t = await getTranslations("Audience");
   const days = parseStatsRange((await searchParams).jours);
   const report = await loadAudience(days);

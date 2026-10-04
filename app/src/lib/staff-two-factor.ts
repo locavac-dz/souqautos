@@ -17,7 +17,7 @@ export function staffTwoFactorRequired(env: Record<string, string | undefined>):
 }
 
 export function isStaffRole(role: Role): boolean {
-  return role === "ADMIN" || role === "MODERATEUR";
+  return role === "ADMIN" || role === "MODERATEUR" || role === "SUPPORT";
 }
 
 // Le rôle EFFECTIF : celui de la base, sauf pour un compte d'équipe qui doit avoir la double authentification et ne l'a pas.
