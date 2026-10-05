@@ -37,7 +37,6 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SITE_URL, resolveAbsolutePhotoUrl } from "@/lib/site";
 import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildVehicleJsonLd, buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
-import { CreditCalculator } from "@/components/CreditCalculator";
 import { IslamicFinancingSimulator } from "@/components/IslamicFinancingSimulator";
 import { RecentlyViewedTracker } from "@/components/RecentlyViewedTracker";
 import { PhotoGallery } from "@/components/PhotoGallery";
@@ -540,9 +539,6 @@ export default async function ListingDetailPage({
               <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{tEstimate("disclaimer")}</p>
             </div>
           )}
-
-          {/* Lot 149 — simulateur de crédit classique */}
-          <CreditCalculator price={listing.price} />
 
           {/* Lot 253 — simulateur de financement islamique (Murābaha) */}
           <IslamicFinancingSimulator price={listing.price} />

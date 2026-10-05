@@ -71,7 +71,7 @@ export default async function LocaleLayout({
   const user = await getCurrentUser();
   const direction = localeDirection[locale as AppLocale];
 
-  const [unreadMessagesCount, unreadNotificationsCount] = user
+  const [unreadMessagesCount, unreadNotificationsCount, unreadGroupsCount] = user
     ? await Promise.all([
         prisma.message.count({
           where: {
@@ -83,8 +83,17 @@ export default async function LocaleLayout({
           },
         }),
         getUnreadNotificationsCount(user.id),
+        prisma.groupMember.findMany({
+          where: { userId: user.id },
+          select: {
+            lastReadAt: true,
+            group: { select: { messages: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } } } },
+          },
+        }).then((ms) =>
+          ms.filter((m) => m.group.messages[0] && (!m.lastReadAt || m.group.messages[0].createdAt > m.lastReadAt)).length
+        ).catch(() => 0),
       ])
-    : [0, 0];
+    : [0, 0, 0];
 
   return (
     <html lang={locale} dir={direction} className={bebasNeue.variable}>
@@ -107,6 +116,7 @@ export default async function LocaleLayout({
               }
               unreadMessagesCount={unreadMessagesCount}
               unreadNotificationsCount={unreadNotificationsCount}
+              unreadGroupsCount={unreadGroupsCount}
             />
             <main id="contenu" tabIndex={-1} className="flex-1 focus:outline-none">
               {children}

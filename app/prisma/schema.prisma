@@ -110,6 +110,10 @@ model User {
   notifications                 UserNotification[]
   // Lot 243 — historique de connexion
   loginEvents                   LoginEvent[]
+  // Lot 252 — messagerie de groupe
+  groupsCreated    GroupConversation[] @relation("GroupCreator")
+  groupMemberships GroupMember[]
+  groupMessages    GroupMessage[]
 }
 
 model Profile {
@@ -1529,4 +1533,50 @@ model LoginEvent {
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([createdAt])
+}
+
+// --- Lot 252 — Messagerie de groupe ---
+
+model GroupConversation {
+  id          String         @id @default(cuid())
+  name        String
+  createdById String
+  createdBy   User           @relation("GroupCreator", fields: [createdById], references: [id])
+  members     GroupMember[]
+  messages    GroupMessage[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([createdById])
+}
+
+model GroupMember {
+  groupId    String
+  group      GroupConversation @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User              @relation(fields: [userId], references: [id])
+  isAdmin    Boolean           @default(false)
+  joinedAt   DateTime          @default(now())
+  // Dernier moment où ce membre a ouvert la conversation — sert à calculer
+  // les messages non lus sans table de jonction supplémentaire.
+  lastReadAt DateTime?
+
+  @@id([groupId, userId])
+  @@index([userId])
+}
+
+model GroupMessage {
+  id            String            @id @default(cuid())
+  groupId       String
+  group         GroupConversation @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  senderId      String
+  sender        User              @relation(fields: [senderId], references: [id])
+  content       String
+  attachmentUrl String?
+  audioUrl      String?
+  deletedAt     DateTime?
+  createdAt     DateTime          @default(now())
+
+  @@index([groupId])
+  @@index([groupId, createdAt])
 }

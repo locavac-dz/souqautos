@@ -18,7 +18,27 @@ export type ConversationEvent =
     }
   | { type: "delete"; messageId: string };
 
+// Lot 252 — événements de groupe
+export type GroupEvent =
+  | {
+      type: "message";
+      message: {
+        id: string;
+        senderId: string;
+        senderName: string;
+        content: string;
+        attachmentUrl: string | null;
+        audioUrl: string | null;
+        deletedAt: null;
+        createdAt: string;
+      };
+    }
+  | { type: "delete"; messageId: string }
+  | { type: "member_added"; member: { userId: string; userName: string; isAdmin: boolean } }
+  | { type: "member_removed"; userId: string };
+
 type Listener = (event: ConversationEvent) => void;
+type GroupListener = (event: GroupEvent) => void;
 
 // Abonnés de CETTE instance uniquement — un navigateur connecté en SSE parle
 // toujours à une seule instance à la fois, jamais besoin de les partager
@@ -113,5 +133,79 @@ export async function publishToConversation(conversationId: string, event: Conve
   } catch (err) {
     console.error(`[realtime] Redis indisponible, repli diffusion locale: ${(err as Error).message}`);
     deliverLocally(conversationId, event);
+  }
+}
+
+// --- Lot 252 — pub/sub pour les groupes (même architecture, préfixe "group:") ---
+
+const localGroupSubscribers = new Map<string, Set<GroupListener>>();
+const REDIS_GROUP_PREFIX = "group:";
+
+function deliverGroupLocally(groupId: string, event: GroupEvent): void {
+  const set = localGroupSubscribers.get(groupId);
+  if (!set) return;
+  for (const listener of set) listener(event);
+}
+
+let groupPmessageHandlerRegistered = false;
+let groupRedisSubscriptionPromise: Promise<void> | null = null;
+
+function ensureGroupRedisSubscription(): void {
+  const subscriber = getRedisSubscriberClient();
+  if (!subscriber) return;
+
+  if (!groupPmessageHandlerRegistered) {
+    groupPmessageHandlerRegistered = true;
+    subscriber.on("pmessage", (_pattern: string, channel: string, message: string) => {
+      if (!channel.startsWith(REDIS_GROUP_PREFIX)) return;
+      const groupId = channel.slice(REDIS_GROUP_PREFIX.length);
+      try {
+        deliverGroupLocally(groupId, JSON.parse(message) as GroupEvent);
+      } catch (err) {
+        console.error(`[realtime/group] message Redis illisible, ignoré: ${(err as Error).message}`);
+      }
+    });
+  }
+
+  if (groupRedisSubscriptionPromise) return;
+  groupRedisSubscriptionPromise = subscriber.psubscribe(`${REDIS_GROUP_PREFIX}*`).then(
+    () => undefined,
+    (err: Error) => {
+      console.error(`[realtime/group] échec abonnement Redis: ${err.message}`);
+      groupRedisSubscriptionPromise = null;
+    }
+  );
+}
+
+export function subscribeToGroup(groupId: string, listener: GroupListener): () => void {
+  ensureGroupRedisSubscription();
+
+  let set = localGroupSubscribers.get(groupId);
+  if (!set) {
+    set = new Set();
+    localGroupSubscribers.set(groupId, set);
+  }
+  set.add(listener);
+
+  return () => {
+    const current = localGroupSubscribers.get(groupId);
+    if (!current) return;
+    current.delete(listener);
+    if (current.size === 0) localGroupSubscribers.delete(groupId);
+  };
+}
+
+export async function publishToGroup(groupId: string, event: GroupEvent): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) {
+    deliverGroupLocally(groupId, event);
+    return;
+  }
+
+  try {
+    await redis.publish(`${REDIS_GROUP_PREFIX}${groupId}`, JSON.stringify(event));
+  } catch (err) {
+    console.error(`[realtime/group] Redis indisponible, repli local: ${(err as Error).message}`);
+    deliverGroupLocally(groupId, event);
   }
 }

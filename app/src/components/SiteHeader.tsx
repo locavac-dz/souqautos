@@ -14,10 +14,12 @@ export async function SiteHeader({
   user,
   unreadMessagesCount = 0,
   unreadNotificationsCount = 0,
+  unreadGroupsCount = 0,
 }: {
   user: { email: string; displayName: string | null; role: Role } | null;
   unreadMessagesCount?: number;
   unreadNotificationsCount?: number;
+  unreadGroupsCount?: number;
 }) {
   const tNav = await getTranslations("Nav");
   const tAdmin = await getTranslations("Admin");
@@ -39,6 +41,14 @@ export async function SiteHeader({
             {unreadMessagesCount > 0 && (
               <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">
                 {unreadMessagesCount}
+              </span>
+            )}
+          </NavLink>
+          <NavLink href="/compte/groupes" className={`relative ${navLinkClass}`}>
+            {tNav("groups")}
+            {unreadGroupsCount > 0 && (
+              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">
+                {unreadGroupsCount}
               </span>
             )}
           </NavLink>
