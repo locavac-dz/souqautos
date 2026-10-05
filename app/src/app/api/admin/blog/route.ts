@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     guideBrandId = guideModel.brandId;
   }
 
-  const existingSlugs = (await prisma.blogArticle.findMany({ select: { slug: true } })).map(
+  const existingSlugs = (await prisma.blogArticle.findMany({ select: { slug: true }, take: 500 })).map(
     (a) => a.slug
   );
   // `revue-de-presse` est une page fixe de /essais : un essai qui porterait ce

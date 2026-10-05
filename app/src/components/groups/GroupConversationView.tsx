@@ -95,7 +95,8 @@ export function GroupConversationView({ group, initialMessages, currentUserId }:
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       if (data?.error === "not_found") setMemberError(t("memberNotFound", { email }));
-      else if (data?.error === "max_members") setMemberError(t("maxMembersError"));
+      else if (data?.error === "already_member") setMemberError(t("alreadyMember"));
+      else if (data?.error === "group_full") setMemberError(t("maxMembersError"));
       else setMemberError(t("errorGeneric"));
       return;
     }

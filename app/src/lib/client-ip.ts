@@ -14,6 +14,13 @@
 // Non défini : ancien comportement (première valeur), signalé comme risque par
 // `npm run launch:check`.
 
+if (process.env.NODE_ENV === "production" && !process.env.TRUSTED_PROXY_HOPS) {
+  console.error(
+    "[security] TRUSTED_PROXY_HOPS non défini — le rate limiting par IP est contournable " +
+    "via X-Forwarded-For. Définir TRUSTED_PROXY_HOPS = nombre de reverse proxies de confiance."
+  );
+}
+
 export const DEFAULT_CLIENT_IP = "local";
 export const MAX_TRUSTED_PROXY_HOPS = 5;
 

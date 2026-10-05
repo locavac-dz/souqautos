@@ -159,6 +159,14 @@ export async function saveMessageAttachment(file: File): Promise<string> {
 const MAX_VOICE_BYTES = 10 * 1024 * 1024; // 10 Mo
 const ALLOWED_AUDIO_MIME = /^audio\/(webm|ogg|mp4|mpeg)/;
 const AUDIO_EXT: Record<string, string> = { webm: ".webm", ogg: ".ogg", mp4: ".mp4", mpeg: ".mp3" };
+// MIME types retournés par fileTypeFromBuffer pour les conteneurs audio/vidéo légitimes.
+// WebM est détecté "video/webm" même pour de l'audio pur (c'est un conteneur générique).
+const ALLOWED_DETECTED_AUDIO = new Set([
+  "video/webm", "audio/webm",
+  "application/ogg", "audio/ogg",
+  "audio/mp4", "video/mp4",
+  "audio/mpeg", "audio/x-m4a",
+]);
 
 export class VoiceValidationError extends Error {}
 
@@ -181,10 +189,17 @@ async function storeFile(subdir: string, filename: string, bytes: Buffer, conten
 
 export async function saveVoiceMessage(file: File): Promise<string> {
   if (file.size > MAX_VOICE_BYTES) throw new VoiceValidationError("voice_too_large");
+  const bytes = Buffer.from(await file.arrayBuffer());
+  // Vérification des octets réels : rejeter si le contenu est un type connu non-audio
+  // (image, exécutable, PDF…). Si fileTypeFromBuffer ne reconnaît pas le format,
+  // on tombe sur la vérification du MIME déclaré par le client (comportement précédent).
+  const detected = await fileTypeFromBuffer(bytes);
+  if (detected && !ALLOWED_DETECTED_AUDIO.has(detected.mime)) {
+    throw new VoiceValidationError("voice_invalid_type");
+  }
   const match = file.type.match(ALLOWED_AUDIO_MIME);
   if (!match) throw new VoiceValidationError("voice_invalid_type");
   const ext = AUDIO_EXT[match[1]] ?? ".webm";
-  const bytes = Buffer.from(await file.arrayBuffer());
   return storeFile("voice-messages", `${randomUUID()}${ext}`, bytes, `audio/${match[1]}`);
 }
 

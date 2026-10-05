@@ -30,7 +30,7 @@ export async function GET(
     }),
     prisma.groupMessage.findMany({
       where: { groupId: id },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
       take: MESSAGES_PAGE_SIZE,
       include: { sender: { include: { profile: true } } },
     }),
@@ -56,7 +56,7 @@ export async function GET(
         isAdmin: m.isAdmin,
       })),
     },
-    messages: messages.map((m) => ({
+    messages: messages.reverse().map((m) => ({
       id: m.id,
       senderId: m.senderId,
       senderName: m.sender.profile?.displayName ?? m.sender.email,

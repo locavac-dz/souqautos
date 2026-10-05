@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isStaff } from "@/lib/auth-server/roles";
+import { isModerator } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!user || !isStaff(user.role)) {
+  if (!user || !isModerator(user.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

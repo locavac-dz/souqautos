@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { publishToGroup } from "@/lib/realtime";
 
-const addSchema = z.object({ userId: z.string() });
+const addSchema = z.object({ email: z.string().email() });
 
 export async function POST(
   request: NextRequest,
@@ -25,13 +25,15 @@ export async function POST(
   const parsed = addSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400 });
 
-  const { userId } = parsed.data;
+  const { email } = parsed.data;
 
   const targetUser = await prisma.user.findUnique({
-    where: { id: userId, deletedAt: null },
+    where: { email, deletedAt: null },
     include: { profile: true },
   });
-  if (!targetUser) return NextResponse.json({ error: "user_not_found" }, { status: 404 });
+  if (!targetUser) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  const userId = targetUser.id;
 
   const existing = await prisma.groupMember.findUnique({
     where: { groupId_userId: { groupId: id, userId } },

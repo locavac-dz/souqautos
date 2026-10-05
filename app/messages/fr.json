@@ -840,6 +840,7 @@
     "cancel": "Annuler",
     "maxMembersError": "Un groupe peut contenir au maximum 50 membres.",
     "memberNotFound": "Utilisateur introuvable : {email}",
+    "alreadyMember": "Cet utilisateur est déjà membre du groupe.",
     "back": "Retour aux groupes",
     "typePlaceholder": "Écrire un message…",
     "send": "Envoyer",

@@ -37,7 +37,7 @@ export default async function GroupConversationPage({
     }),
     prisma.groupMessage.findMany({
       where: { groupId: id },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
       take: 50,
       include: { sender: { include: { profile: true } } },
     }),
@@ -63,7 +63,7 @@ export default async function GroupConversationPage({
     })),
   };
 
-  const initialMessages = messages.map((m) => ({
+  const initialMessages = messages.reverse().map((m) => ({
     id: m.id,
     senderId: m.senderId,
     senderName: m.sender.profile?.displayName ?? m.sender.email,
