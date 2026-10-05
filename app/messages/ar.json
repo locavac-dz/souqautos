@@ -717,6 +717,7 @@
     "roleOptionModerateur": "مراقب",
     "roleOptionSupport": "دعم",
     "roleOptionAdmin": "مدير",
+    "roleOptionSuperAdmin": "مدير عام",
     "roleSelectLabel": "دور {name}",
     "changeRole": "تعديل",
     "roleUpdated": "تم تحديث الدور.",

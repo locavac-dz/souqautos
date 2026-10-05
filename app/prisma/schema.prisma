@@ -17,6 +17,7 @@ enum Role {
   MODERATEUR
   SUPPORT
   ADMIN
+  SUPER_ADMIN
 }
 
 model User {

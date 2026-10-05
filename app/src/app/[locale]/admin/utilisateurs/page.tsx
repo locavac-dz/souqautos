@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isAdmin, isStaff, isModerator } from "@/lib/auth-server/roles";
+import { isAdmin, isStaff, isModerator, isSuperAdmin } from "@/lib/auth-server/roles";
 import { RoleSelect } from "@/components/admin/RoleSelect";
 import { SuspendUserButton } from "@/components/admin/SuspendUserButton";
 import { UnlockUserButton } from "@/components/admin/UnlockUserButton";
@@ -15,6 +15,7 @@ const ROLE_KEY: Record<string, string> = {
   MODERATEUR: "roleOptionModerateur",
   SUPPORT: "roleOptionSupport",
   ADMIN: "roleOptionAdmin",
+  SUPER_ADMIN: "roleOptionSuperAdmin",
 };
 
 export default async function AdminUsersPage() {
@@ -27,6 +28,7 @@ export default async function AdminUsersPage() {
   const t = await getTranslations("Admin");
   const tTwoFactor = await getTranslations("TwoFactor");
   const canChangeRoles = isAdmin(currentUser.role);
+  const canAssignSuperAdmin = isSuperAdmin(currentUser.role);
   const canSuspend = isStaff(currentUser.role);
 
   const users = await prisma.user.findMany({
@@ -72,6 +74,7 @@ export default async function AdminUsersPage() {
                         currentRole={user.role}
                         disabled={user.id === currentUser?.id}
                         label={t("roleSelectLabel", { name: user.profile?.displayName ?? user.email })}
+                        canAssignSuperAdmin={canAssignSuperAdmin}
                       />
                     ) : (
                       <span className="text-slate-600 dark:text-slate-300">{t(ROLE_KEY[user.role])}</span>

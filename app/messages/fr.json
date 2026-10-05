@@ -717,6 +717,7 @@
     "roleOptionModerateur": "Modérateur",
     "roleOptionSupport": "Support",
     "roleOptionAdmin": "Administrateur",
+    "roleOptionSuperAdmin": "Super administrateur",
     "roleSelectLabel": "Rôle de {name}",
     "changeRole": "Modifier",
     "roleUpdated": "Rôle mis à jour.",
