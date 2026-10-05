@@ -3491,13 +3491,44 @@ Côté client — `ConversationView.tsx` : `audioUrl` ajouté au type `MessageRo
 
 i18n FR/AR : 8 nouvelles clés (`voiceRecord`, `voiceStop`, `voiceDiscard`, `voicePreviewLabel`, `voiceTooLarge`, `voiceInvalidType`, `voicePermissionDenied`, `voiceAttachment`).
 
+## Lot 252 — Messagerie de groupe (2026-10-05)
+
+**Schéma & migration** — `prisma/schema.prisma` : 3 nouveaux modèles. `GroupConversation` (id, name, createdById, timestamps). `GroupMember` (clé composite `[groupId, userId]`, `isAdmin`, `joinedAt`, `lastReadAt` pour le suivi des non-lus sans table de jonction supplémentaire). `GroupMessage` (id, groupId, senderId, content, attachmentUrl, audioUrl, deletedAt, createdAt) — mêmes capacités qu'un message 1-1 (texte, image, vocal). Migration `20261005000000_lot_252_group_messaging`.
+
+**Temps réel** — `src/lib/realtime.ts` : type `GroupEvent` (`message | delete | member_added | member_removed`) ; `subscribeToGroup` / `publishToGroup` sur le canal Redis `group:<id>` (préfixe distinct de `conversation:` pour éviter les collisions) ; `localGroupSubscribers` avec flag `pmessageHandlerRegistered` dédié.
+
+**API (7 routes)**
+- `GET /api/groups` — liste les groupes de l'utilisateur avec `hasUnread` (comparaison `lastReadAt` vs `createdAt` du dernier message).
+- `POST /api/groups` — crée un groupe, valide les memberIds, plafond 50 membres, rate limit 10/h.
+- `GET /api/groups/[id]` — détail + 50 messages les plus récents ; met à jour `lastReadAt` du membre courant.
+- `POST /api/groups/[id]/messages` — envoi texte/image/vocal, met à jour `group.updatedAt`, publie l'événement SSE avec `senderName`.
+- `DELETE /api/groups/[id]/messages/[messageId]` — tombstone (content vide, urls nullifiées, `deletedAt`), supprime les fichiers stockés, publie l'événement `delete`.
+- `POST /api/groups/[id]/members` — ajout d'un membre (admin uniquement), plafond 50, publie `member_added`.
+- `DELETE /api/groups/[id]/members/[userId]` — quitter soi-même ou exclure (admin), publie `member_removed`.
+- `GET /api/groups/[id]/stream` — SSE via `subscribeToGroup`, heartbeat 25 s.
+- `POST /api/users/lookup-by-emails` — résout une liste d'emails en `{id, email}` (utilisé par le formulaire de création) ; renvoie `{ users, notFound }`.
+
+**Composants**
+- `GroupMessageList.tsx` : affichage des messages (regroupement par expéditeur, nom au-dessus de chaque groupe de messages distincts), lecteur audio, image, suppression avec confirmation.
+- `GroupMessageThread.tsx` : formulaire d'envoi — texte, image (input file), vocal (MediaRecorder, même fallback MIME WebM/OGG/MP4 que la messagerie 1-1, limite 2 min).
+- `GroupConversationView.tsx` : état + SSE (EventSource) — combine la liste et le formulaire ; gestion ajout de membre (admin) et quitter le groupe ; déduplication des messages reçus par SSE vs serveur.
+
+**Pages**
+- `/compte/groupes` — liste des groupes (point vert si non lu, dernier message affiché).
+- `/compte/groupes/nouveau` — formulaire de création : nom + emails des membres (un par ligne) ; résolution email→userId via `/api/users/lookup-by-emails`.
+- `/compte/groupes/[id]` — conversation de groupe (composant serveur → props → `GroupConversationView`).
+
+**Navigation** — `SiteHeader.tsx` : lien « Groupes » avec badge rouge (non-lus) après « Messages ». `src/app/[locale]/layout.tsx` : calcul `unreadGroupsCount` (memberships avec au moins un message plus récent que `lastReadAt`) via `Promise.all` parallèle aux compteurs existants.
+
+**i18n FR/AR** — namespace `Groups` (40 clés : navigation, création, membres, messages, vocal, erreurs) ; clé `Nav.groups`.
+
 ## Lot 253 — Simulateur de financement islamique (Murābaha) (2026-10-05)
 
 `src/lib/islamic-financing.ts` : constante `ISLAMIC_BANKS` (Al Baraka 6 %, BNA islamique 6,5 %, CPA islamique 6,5 %, BADR islamique 7 %), options de durée (12–60 mois), fonction pure `computeIslamicFinancing` — formule Murābaha : marge = `prix × taux × années`, mensualité = `(prix de vente − apport) ÷ mois`. Aucun intérêt composé.
 
 `src/components/IslamicFinancingSimulator.tsx` : composant client — sélecteur de banque (pills teal), slider apport (0 → 80 % du prix, pas 1 %), boutons durée, résultat en temps réel (mensualité, prix de vente banque→client, marge bénéficiaire totale, montant financé), label « Contrat Murābaha », disclaimer. Thème teal pour le distinguer visuellement du simulateur de crédit classique (vert).
 
-`annonce/[id]/page.tsx` : `IslamicFinancingSimulator` inséré directement après `CreditCalculator`.
+`annonce/[id]/page.tsx` : `IslamicFinancingSimulator` remplace `CreditCalculator` — le simulateur de crédit classique (taux d'intérêt composés) est retiré de la fiche annonce ; `CreditCalculator.tsx` supprimé (composant orphelin). Seul le financement islamique (Murābaha, marge fixe, sans intérêts) est désormais proposé.
 
 i18n FR/AR : namespace `IslamicFinancing` — 13 clés dont `contractType`, `totalMargin`, `salePrice`, `annualMarginRate`, `disclaimer` (terminologie islamique correcte, sans mention d'intérêt).
 
