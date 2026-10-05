@@ -3490,3 +3490,15 @@ Nouveau champ `ListingPhoto.aiTags` (JSON). Migration `20261004170000_lot_247_ph
 Côté client — `ConversationView.tsx` : `audioUrl` ajouté au type `MessageRow` ; gestionnaires SSE et `handleDeleted` effacent `audioUrl` lors d'une suppression. `MessageList.tsx` : lecteur `<audio controls>` affiché sous l'image éventuelle si `audioUrl` est présent. `MessageThread.tsx` : bouton microphone 🎤 ; démarrage/arrêt de l'enregistrement via `MediaRecorder` (WebM/Chrome, OGG/Firefox, MP4/Safari) ; minuterie temps réel (limite 2 min) ; aperçu audio avant envoi avec bouton « Supprimer » ; FormData inclut le champ `voice` ; gestion des erreurs `voice_too_large` et `voice_invalid_type`.
 
 i18n FR/AR : 8 nouvelles clés (`voiceRecord`, `voiceStop`, `voiceDiscard`, `voicePreviewLabel`, `voiceTooLarge`, `voiceInvalidType`, `voicePermissionDenied`, `voiceAttachment`).
+
+## Lot 253 — Simulateur de financement islamique (Murābaha) (2026-10-05)
+
+`src/lib/islamic-financing.ts` : constante `ISLAMIC_BANKS` (Al Baraka 6 %, BNA islamique 6,5 %, CPA islamique 6,5 %, BADR islamique 7 %), options de durée (12–60 mois), fonction pure `computeIslamicFinancing` — formule Murābaha : marge = `prix × taux × années`, mensualité = `(prix de vente − apport) ÷ mois`. Aucun intérêt composé.
+
+`src/components/IslamicFinancingSimulator.tsx` : composant client — sélecteur de banque (pills teal), slider apport (0 → 80 % du prix, pas 1 %), boutons durée, résultat en temps réel (mensualité, prix de vente banque→client, marge bénéficiaire totale, montant financé), label « Contrat Murābaha », disclaimer. Thème teal pour le distinguer visuellement du simulateur de crédit classique (vert).
+
+`annonce/[id]/page.tsx` : `IslamicFinancingSimulator` inséré directement après `CreditCalculator`.
+
+i18n FR/AR : namespace `IslamicFinancing` — 13 clés dont `contractType`, `totalMargin`, `salePrice`, `annualMarginRate`, `disclaimer` (terminologie islamique correcte, sans mention d'intérêt).
+
+100 % client-side — aucune migration, aucun appel backend.

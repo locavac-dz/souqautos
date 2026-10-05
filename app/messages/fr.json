@@ -524,6 +524,22 @@
     "noLoan": "L'apport couvre le prix total — aucun crédit nécessaire.",
     "disclaimer": "Simulation indicative. Les conditions réelles dépendent de votre établissement bancaire."
   },
+  "IslamicFinancing": {
+    "title": "Financement islamique — Murābaha",
+    "bank": "Banque",
+    "annualMarginRate": "Taux de marge annuel",
+    "downPayment": "Apport initial",
+    "duration": "Durée",
+    "months": "{count} mois",
+    "monthlyPayment": "Mensualité",
+    "perMonth": "/mois",
+    "salePrice": "Prix de vente (banque → client)",
+    "totalMargin": "Marge bénéficiaire totale",
+    "totalCost": "Montant financé",
+    "contractType": "Contrat Murābaha — conforme à la charia islamique",
+    "noLoan": "L'apport couvre le prix total — aucun financement nécessaire.",
+    "disclaimer": "Simulation indicative uniquement. Aucun intérêt n'est appliqué — le bénéfice de la banque est une marge bénéficiaire fixe convenue à l'avance. Conditions sous réserve d'acceptation du dossier."
+  },
   "MarketStats": {
     "title": "Marché · {brand} {model} {year}",
     "countLabel": "{count} annonces en ligne",
