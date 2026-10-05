@@ -7,7 +7,8 @@ import { decidePushState, urlBase64ToUint8Array, type PushToggleState } from "@/
 type Message = { kind: "ok" | "error"; text: string };
 
 // Lot 121 — activer ou couper les notifications d'alerte sur CET appareil.
-export function PushToggle() {
+// compact=true : icône cloche seule (pour les en-têtes étroits comme les conversations de groupe).
+export function PushToggle({ compact = false }: { compact?: boolean } = {}) {
   const t = useTranslations("PushNotifications");
   const [state, setState] = useState<PushToggleState>("loading");
   const [publicKey, setPublicKey] = useState<string | null>(null);
@@ -130,6 +131,27 @@ export function PushToggle() {
   }
 
   if (state === "loading") return null;
+
+  // Mode compact : une simple icône cloche pour les en-têtes étroits.
+  if (compact) {
+    if (state === "off") {
+      return (
+        <button type="button" onClick={enable} disabled={pending} title={t("enable")}
+          className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 disabled:opacity-40 text-base leading-none">
+          🔔
+        </button>
+      );
+    }
+    if (state === "on") {
+      return (
+        <button type="button" onClick={disable} disabled={pending} title={t("disable")}
+          className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 disabled:opacity-40 text-base leading-none">
+          🔔
+        </button>
+      );
+    }
+    return null;
+  }
 
   return (
     <section className="mb-6 rounded-lg border border-slate-200 dark:border-slate-700 p-4" aria-labelledby="push-title">

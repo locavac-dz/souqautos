@@ -1,10 +1,13 @@
+import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { saveMessageAttachment, PhotoValidationError, saveVoiceMessage, VoiceValidationError } from "@/lib/uploads";
 import { publishToGroup } from "@/lib/realtime";
+import { sendPushToUser } from "@/lib/push-send";
 
 const contentSchema = z.object({ content: z.string().trim().max(2000) });
 
@@ -84,6 +87,34 @@ export async function POST(
   };
 
   await publishToGroup(id, { type: "message", message: eventMessage });
+
+  // Notifications push — envoyées en tâche de fond pour ne pas bloquer la réponse.
+  after(async () => {
+    const group = await prisma.groupConversation.findUnique({
+      where: { id },
+      select: { name: true },
+    });
+    if (!group) return;
+
+    const otherMembers = await prisma.groupMember.findMany({
+      where: { groupId: id, userId: { not: user.id } },
+      select: { user: { select: { id: true, locale: true } } },
+    });
+
+    await Promise.allSettled(
+      otherMembers.map(async ({ user: member }) => {
+        const locale = member.locale ?? "fr";
+        const t = await getTranslations({ locale, namespace: "Notifications" });
+        await sendPushToUser(member.id, {
+          title: t("pushGroupMessageTitle"),
+          body: t("pushGroupMessageBody", { senderName, groupName: group.name }),
+          url: `/${locale}/compte/groupes/${id}`,
+          tag: `group-${id}`,
+          lang: locale === "ar" ? "ar" : "fr",
+        });
+      })
+    );
+  });
 
   return NextResponse.json({ message: eventMessage }, { status: 201 });
 }

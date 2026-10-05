@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { GroupMessageList, type GroupMessageRow } from "./GroupMessageList";
 import { GroupMessageThread } from "./GroupMessageThread";
+import { PushToggle } from "@/components/PushToggle";
 
 type Member = { userId: string; userName: string; isAdmin: boolean };
 
@@ -119,7 +120,8 @@ export function GroupConversationView({ group, initialMessages, currentUserId }:
             {t("memberCount", { count: group.members.length })}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          <PushToggle compact />
           {group.isAdmin && (
             <button type="button" onClick={() => setAddingMember((v) => !v)}
               className="text-xs text-teal-700 dark:text-teal-400 hover:underline">

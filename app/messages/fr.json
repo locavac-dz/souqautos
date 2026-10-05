@@ -1322,7 +1322,9 @@
     "pushCounterOfferBody": "{amount} DA proposé par le vendeur pour « {title} »",
     "counterDeclinedSubject": "Votre contre-offre a été refusée — Souq Auto",
     "counterDeclinedBody": "L'acheteur a refusé votre contre-offre pour l'annonce « {title} ».",
-    "counterDeclinedLink": "Voir mes offres sur Souq Auto"
+    "counterDeclinedLink": "Voir mes offres sur Souq Auto",
+    "pushGroupMessageTitle": "Nouveau message de groupe",
+    "pushGroupMessageBody": "{senderName} dans « {groupName} »"
   },
   "Alerts": {
     "title": "Mes alertes",

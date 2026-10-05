@@ -1322,7 +1322,9 @@
     "pushCounterOfferBody": "{amount} د.ج مقترح من البائع لـ « {title} »",
     "counterDeclinedSubject": "تم رفض عرضك المضاد — سوق أوتو",
     "counterDeclinedBody": "رفض المشتري عرضك المضاد للإعلان « {title} ».",
-    "counterDeclinedLink": "عرض عروضي على سوق أوتو"
+    "counterDeclinedLink": "عرض عروضي على سوق أوتو",
+    "pushGroupMessageTitle": "رسالة مجموعة جديدة",
+    "pushGroupMessageBody": "{senderName} في « {groupName} »"
   },
   "Alerts": {
     "title": "تنبيهاتي",
