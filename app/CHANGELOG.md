@@ -3533,3 +3533,36 @@ i18n FR/AR : 8 nouvelles clés (`voiceRecord`, `voiceStop`, `voiceDiscard`, `voi
 i18n FR/AR : namespace `IslamicFinancing` — 13 clés dont `contractType`, `totalMargin`, `salePrice`, `annualMarginRate`, `disclaimer` (terminologie islamique correcte, sans mention d'intérêt).
 
 100 % client-side — aucune migration, aucun appel backend.
+
+## Lot 254 — Notifications push pour les nouveaux messages de groupe (2026-10-05)
+
+L'infrastructure push (service worker, modèle `PushSubscription`, VAPID, `sendPushToUser`, `PushToggle`) était déjà en place depuis le Lot 121. Ce lot la branche sur la messagerie de groupe.
+
+`api/groups/[id]/messages/route.ts` : `after()` envoie, après création du message et publication SSE, une notification push à chaque membre du groupe (sauf l'expéditeur). La locale de chaque destinataire (`User.locale`) est respectée. Tag `group-<id>` : les notifications du même groupe se remplacent dans le centre de notifications au lieu de s'empiler.
+
+`PushToggle.tsx` : prop `compact` (défaut `false`) — en mode compact, le composant se réduit à une icône 🔔 (grise = désactivé, verte = activé) pour s'intégrer dans les en-têtes étroits sans occuper un bloc entier.
+
+`GroupConversationView.tsx` : `<PushToggle compact />` ajouté dans l'en-tête de la conversation, à côté de « Ajouter un membre » et « Quitter ».
+
+i18n FR/AR : 2 clés dans le namespace `Notifications` (`pushGroupMessageTitle`, `pushGroupMessageBody`).
+
+## Ajout du rôle SUPER_ADMIN (2026-10-05)
+
+Nouveau rôle `SUPER_ADMIN` au sommet de la hiérarchie : `SUPER_ADMIN > ADMIN > MODERATEUR > SUPPORT > PROFESSIONNEL > PARTICULIER`.
+
+`prisma/schema.prisma` : valeur `SUPER_ADMIN` ajoutée à l'enum `Role`. Migration `20261005000001_super_admin_role` : `ALTER TYPE "Role" ADD VALUE 'SUPER_ADMIN' AFTER 'ADMIN'`.
+
+`roles.ts` : nouvelle fonction `isSuperAdmin()` ; `isAdmin`, `isStaff` et `isModerator` incluent désormais `SUPER_ADMIN` — tous les accès existants s'appliquent automatiquement au SUPER_ADMIN sans modifier les gardes en place.
+
+`api/admin/users/[id]/role/route.ts` : double protection — un ADMIN ordinaire ne peut ni attribuer le rôle `SUPER_ADMIN` à quelqu'un, ni dégrader un utilisateur qui l'a déjà. Seul un SUPER_ADMIN connecté peut faire les deux.
+
+`RoleSelect.tsx` : prop `canAssignSuperAdmin` (défaut `false`) — l'option `SUPER_ADMIN` n'apparaît dans le menu déroulant que si le visiteur est lui-même SUPER_ADMIN.
+
+`admin/utilisateurs/page.tsx` : `canAssignSuperAdmin` calculé et transmis à `RoleSelect` ; `SUPER_ADMIN` ajouté au mapping `ROLE_KEY`.
+
+i18n FR/AR : clé `roleOptionSuperAdmin` (« Super administrateur » / « مدير عام »).
+
+**Activation du premier SUPER_ADMIN** (opération unique en base) :
+```sql
+UPDATE "User" SET role = 'SUPER_ADMIN' WHERE email = 'votre@email.com';
+```
