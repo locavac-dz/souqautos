@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isModerator } from "@/lib/auth-server/roles";
+import { isModerator, isStaff } from "@/lib/auth-server/roles";
 import { checkCanSuspendUser } from "@/lib/user-suspension";
 import { writeAuditLog } from "@/lib/audit-log";
 import { sendAccountSuspendedEmail } from "@/lib/account-suspension-email";

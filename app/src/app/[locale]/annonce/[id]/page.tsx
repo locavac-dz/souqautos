@@ -23,6 +23,7 @@ import {
 } from "@/lib/listing-lifecycle";
 import { ListingLifecycleActions } from "@/components/ListingLifecycleActions";
 import { ListingPriceEditor } from "@/components/ListingPriceEditor";
+import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { ContactButtons } from "@/components/ContactButtons";
 import { PhotoCredits } from "@/components/PhotoCredits";
 import { collectPhotoCredits } from "@/lib/photo-credit";
@@ -544,20 +545,13 @@ export default async function ListingDetailPage({
           <IslamicFinancingSimulator price={listing.price} />
 
           {listing.priceHistory.length > 1 && (
-            <div className="mt-6">
-              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tListing("priceHistoryTitle")}</h2>
-              <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
-                {listing.priceHistory.map((entry) => (
-                  <DetailRow
-                    key={entry.id}
-                    label={new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
-                      dateStyle: "long",
-                    }).format(entry.recordedAt)}
-                    value={`${formatNumber(entry.price, locale)} DA`}
-                  />
-                ))}
-              </div>
-            </div>
+            <PriceHistoryChart
+              points={listing.priceHistory
+                .slice()
+                .reverse()
+                .map((e) => ({ price: e.price, recordedAt: e.recordedAt.toISOString() }))}
+              locale={locale}
+            />
           )}
 
           {listing.renewals.length > 0 && (
