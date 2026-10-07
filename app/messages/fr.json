@@ -868,7 +868,8 @@
     "voicePreviewLabel": "Message vocal",
     "voiceTooLarge": "Enregistrement trop volumineux (10 Mo maximum).",
     "voicePermissionDenied": "Accès au microphone refusé. Autorisez l'accès dans les paramètres de votre navigateur.",
-    "voiceInvalidType": "Format audio non pris en charge."
+    "voiceInvalidType": "Format audio non pris en charge.",
+    "loadMoreMessages": "Charger les messages précédents"
   },
   "Messages": {
     "navLabel": "Messages",

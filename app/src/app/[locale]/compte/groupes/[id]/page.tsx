@@ -85,6 +85,7 @@ export default async function GroupConversationPage({
           group={groupDetail}
           initialMessages={initialMessages}
           currentUserId={user.id}
+          initialHasMore={messages.length >= 50}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { GroupMessageList, type GroupMessageRow } from "./GroupMessageList";
 import { GroupMessageThread } from "./GroupMessageThread";
@@ -20,16 +20,23 @@ type Props = {
   group: GroupDetail;
   initialMessages: GroupMessageRow[];
   currentUserId: string;
+  initialHasMore: boolean;
 };
 
-export function GroupConversationView({ group, initialMessages, currentUserId }: Props) {
+export function GroupConversationView({ group, initialMessages, currentUserId, initialHasMore }: Props) {
   const t = useTranslations("Groups");
   const [messages, setMessages] = useState<GroupMessageRow[]>(initialMessages);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
   const [memberEmail, setMemberEmail] = useState("");
   const [memberError, setMemberError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prevScrollHeightRef = useRef<number>(0);
+  // true while load-more is in flight — prevents useEffect from scrolling to bottom
+  const justLoadedMoreRef = useRef<boolean>(false);
 
   // SSE
   useEffect(() => {
@@ -59,8 +66,20 @@ export function GroupConversationView({ group, initialMessages, currentUserId }:
     return () => es.close();
   }, [group.id]);
 
-  // Scroll to bottom on new messages
+  // Restore scroll position after prepending history — must run before paint
+  useLayoutEffect(() => {
+    if (!justLoadedMoreRef.current) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.scrollTop += container.scrollHeight - prevScrollHeightRef.current;
+  }, [messages]);
+
+  // Scroll to bottom for new messages; skip when load-more just prepended
   useEffect(() => {
+    if (justLoadedMoreRef.current) {
+      justLoadedMoreRef.current = false;
+      return;
+    }
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -79,6 +98,26 @@ export function GroupConversationView({ group, initialMessages, currentUserId }:
           : m
       )
     );
+  }
+
+  async function handleLoadMore() {
+    if (loadingMore || !hasMore || !messages.length) return;
+    setLoadingMore(true);
+    const oldest = messages[0];
+    try {
+      const res = await fetch(`/api/groups/${group.id}/messages?before=${oldest.id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      // Save scroll height before prepend; layout effect will restore it after re-render
+      prevScrollHeightRef.current = scrollContainerRef.current?.scrollHeight ?? 0;
+      justLoadedMoreRef.current = true;
+
+      setMessages((prev) => [...data.messages, ...prev]);
+      setHasMore(data.hasMore);
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
   async function handleAddMember() {
@@ -155,7 +194,19 @@ export function GroupConversationView({ group, initialMessages, currentUserId }:
       {memberError && <p className="mb-2 text-xs text-red-600 dark:text-red-400">{memberError}</p>}
 
       {/* Liste messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
+        {hasMore && (
+          <div className="flex justify-center py-2">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="text-xs text-teal-700 dark:text-teal-400 hover:underline disabled:opacity-50"
+            >
+              {loadingMore ? "…" : t("loadMoreMessages")}
+            </button>
+          </div>
+        )}
         <GroupMessageList
           groupId={group.id}
           messages={messages}
