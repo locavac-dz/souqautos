@@ -3589,6 +3589,18 @@ Audit complet effectué sur les 116 routes API, les bibliothèques sensibles et 
 **i18n**
 - Clé `alreadyMember` ajoutée en FR et AR (namespace `Groups`).
 
+## Lot 256 — Pagination curseur pour la messagerie de groupe (2026-10-07)
+
+La messagerie de groupe affichait les 50 messages les plus récents, sans accès à l'historique antérieur. Ce lot introduit un chargement à la demande des messages plus anciens.
+
+**Endpoint** `GET /api/groups/[id]/messages?before=<messageId>` : retourne jusqu'à 50 messages antérieurs au curseur (la date de création du message référencé), triés du plus ancien au plus récent. Renvoie également un flag `hasMore` (fetch de 51, slice à 50, present = il en reste). L'accès est réservé aux membres du groupe (même vérification que pour l'envoi).
+
+**`GroupConversationView`** : nouveau bouton « Charger les messages précédents » affiché en haut de la liste tant que `hasMore` est vrai. Au clic, les messages sont prépendus et la position visuelle de défilement est préservée — `useLayoutEffect` enregistre le `scrollHeight` avant le re-render et corrige le `scrollTop` synchroniquement après, avant que le navigateur ne repeigne. L'effet `useEffect([messages])` existant (scroll vers le bas) est court-circuité pendant ce chargement via `justLoadedMoreRef`, pour ne pas sauter à la fin lors d'un retour en arrière dans l'historique. Le scroll vers le bas reste actif pour les nouveaux messages SSE et les messages envoyés.
+
+**Page serveur** : prop `initialHasMore={messages.length >= 50}` transmise au composant client.
+
+i18n FR/AR : 1 nouvelle clé dans le namespace `Groups` (`loadMoreMessages`).
+
 ## Lot 255 — Graphe interactif de l'historique des prix (2026-10-07)
 
 La liste statique affichée sur la fiche annonce quand le vendeur avait modifié son prix est remplacée par un graphe SVG interactif.
