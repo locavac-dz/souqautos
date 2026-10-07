@@ -3566,3 +3566,25 @@ i18n FR/AR : clé `roleOptionSuperAdmin` (« Super administrateur » / « مدي
 ```sql
 UPDATE "User" SET role = 'SUPER_ADMIN' WHERE email = 'votre@email.com';
 ```
+
+## Audit sécurité & qualité — correctifs (2026-10-07)
+
+Audit complet effectué sur les 116 routes API, les bibliothèques sensibles et les composants critiques. Le projet présente un très bon niveau de sécurité de base (Zod sur toutes les entrées, gardes de rôle centralisés, cookies sécurisés, CSP avec nonce, HSTS, documents d'identité chiffrés, uploads validés sur les octets réels, protection path-traversal). Neuf correctifs appliqués.
+
+**Sécurité (MOYEN)**
+- `api/admin/users/[id]/suspend|unsuspend|unlock` : garde `isStaff` → `isModerator` — le rôle `SUPPORT` ne doit pas pouvoir suspendre, désuspendre ou déverrouiller un compte utilisateur (la documentation de `roles.ts` l'indique explicitement).
+- `lib/client-ip.ts` : warning `console.error` au démarrage si `NODE_ENV=production` et `TRUSTED_PROXY_HOPS` absent — sans cette variable, `X-Forwarded-For` est pris tel quel (valeur cliente, falsifiable) et tous les rate limits par IP sont contournables.
+
+**Sécurité (FAIBLE)**
+- `lib/uploads.ts` — `saveVoiceMessage` : vérification des octets réels via `fileTypeFromBuffer` avant d'accepter le MIME déclaré par le client. Si le type détecté est connu et n'appartient pas à l'ensemble des conteneurs audio/vidéo légitimes (WebM, OGG, MP4, MP3), le fichier est rejeté. Alignement avec la politique déjà appliquée aux images (`savePhoto`, `saveAvatar`, etc.).
+
+**Bugs fonctionnels**
+- `api/groups/[id]/members` : le schéma Zod attendait `{ userId }` alors que le frontend envoyait `{ email }` — ajout d'un membre cassé à 100 % (400 systématique). L'API accepte désormais `{ email }` et résout l'adresse en `userId` en base.
+- `GroupConversationView` : gestion des codes d'erreur alignée sur l'API réelle (`already_member`, `group_full`).
+- Pagination des messages de groupe : `orderBy: { createdAt: "asc" }, take: 50` chargeait les 50 messages les plus *anciens* — corrigé en `desc` + `.reverse()` côté réponse, dans la page serveur et la route API (`/api/groups/[id]`).
+
+**Qualité (PERF)**
+- `api/admin/blog` : `prisma.blogArticle.findMany({ select: { slug: true } })` sans limite → ajout de `take: 500` pour éviter un scan complet de la table à l'échelle.
+
+**i18n**
+- Clé `alreadyMember` ajoutée en FR et AR (namespace `Groups`).
