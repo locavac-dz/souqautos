@@ -3588,3 +3588,13 @@ Audit complet effectué sur les 116 routes API, les bibliothèques sensibles et 
 
 **i18n**
 - Clé `alreadyMember` ajoutée en FR et AR (namespace `Groups`).
+
+## Lot 255 — Graphe interactif de l'historique des prix (2026-10-07)
+
+La liste statique affichée sur la fiche annonce quand le vendeur avait modifié son prix est remplacée par un graphe SVG interactif.
+
+`PriceHistoryChart.tsx` (nouveau composant client) : courbe SVG sans dépendance externe (pas de Chart.js, recharts ou autre lib de graphes). Axe Y avec étiquettes de prix arrondies (`niceYTicks`), axe X avec dates courtes (premier et dernier toujours affichés). Zone de remplissage dégradée sous la courbe (teal). Tooltip au survol : prix + date complète, positionné à gauche ou à droite selon la position dans le graphe pour ne jamais déborder. Badge delta en en-tête : ▼ N% (vert, baisse) ou ▲ N% (rouge, hausse). Légende en pied de graphe : prix initial / prix actuel + montant absolu de la variation.
+
+Dark mode natif (Tailwind `dark:`), RTL (formatage `ar-DZ`), accessible (`role="img"`, `aria-label`). Le graphe ne s'affiche que lorsqu'une annonce possède au moins deux entrées `ListingPriceHistory` — seuil déjà en place dans l'ancienne table.
+
+i18n FR/AR : 4 nouvelles clés dans le namespace `Listing` (`priceHistoryInitial`, `priceHistoryCurrent`, `priceHistoryDrop`, `priceHistoryRise`).
