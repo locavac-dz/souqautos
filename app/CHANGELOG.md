@@ -3589,6 +3589,18 @@ Audit complet effectué sur les 116 routes API, les bibliothèques sensibles et 
 **i18n**
 - Clé `alreadyMember` ajoutée en FR et AR (namespace `Groups`).
 
+## Lot 257 — Pagination curseur pour la messagerie directe (2026-10-08)
+
+Même mécanique que le Lot 256, appliquée aux conversations 1-à-1. La page chargeait jusqu'ici la totalité des messages sans limite (`orderBy: asc`, sans `take`) — une conversation longue ralentissait le rendu et transférait inutilement des données.
+
+**Endpoint** `GET /api/conversations/[id]/messages?before=<messageId>` : retourne jusqu'à 50 messages antérieurs au curseur + flag `hasMore`. Accès vérifié via `canAccessConversation` (acheteur, vendeur ou collaborateur pro).
+
+**Page serveur** : `orderBy: desc, take: 50` + `.slice().reverse()` pour conserver l'ordre chronologique affiché, prop `initialHasMore={messages.length >= 50}`.
+
+**`ConversationView`** : bouton « Charger les messages précédents » affiché si `hasMore`. Ancrage du scroll via `document.documentElement.scrollHeight` + `window.scrollBy()` dans un `useLayoutEffect` — différence structurelle avec le Lot 256 : la messagerie directe défile au niveau de la fenêtre (pas dans un conteneur `div` à hauteur fixe), donc l'ajustement cible `window` plutôt qu'un `scrollContainerRef`.
+
+i18n FR/AR : clé `loadMoreMessages` ajoutée dans le namespace `Messages`.
+
 ## Lot 256 — Pagination curseur pour la messagerie de groupe (2026-10-07)
 
 La messagerie de groupe affichait les 50 messages les plus récents, sans accès à l'historique antérieur. Ce lot introduit un chargement à la demande des messages plus anciens.
