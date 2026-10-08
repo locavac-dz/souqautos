@@ -3699,3 +3699,25 @@ La rubrique reste accessible directement via `/equipement` et `/equipement/[slug
 `SiteHeader.tsx` : `ThemeToggle` et `LocaleSwitcher` se trouvaient en fin de `navContent`, à l'intérieur du `<nav>` en `overflow-hidden`. Avec de nombreux liens (utilisateur connecté + admin), ils étaient poussés hors de l'écran visible.
 
 Correction : les deux composants sont déplacés dans un conteneur `shrink-0 ltr:ml-auto rtl:mr-auto` placé directement dans la `div` de la barre de navigation, en dehors du `<nav>`. Ils restent ainsi toujours visibles quelle que soit la longueur de la liste de liens, et sont accessibles depuis le menu mobile (`MobileMenuToggle`) qui reprend `navContent`.
+
+## Fix — erreurs TypeScript après mileage nullable (Lot 258) (2026-10-08)
+
+Le Lot 258 a rendu `mileage` nullable (`Int?`) dans le schéma Prisma pour la catégorie EQUIPEMENT, mais de nombreuses définitions de types en aval déclaraient encore `mileage: number`. Correction systématique sur 15 fichiers (`tsc --noEmit` : 0 erreur après fix).
+
+**Types mis à jour (`number | null`)**
+- `ComparableRow`, `ListingForBatchEstimate` (`price-estimation.ts`)
+- `ListingForFraudSignals`, paramètre de `detectVehicleInconsistency` (`fraud-signals.ts`)
+- `ComparableListingFacts` (`ai-compare.ts`)
+- `ListingTextForAi` (`fraud-ai.ts`)
+- `ShareCardInput.mileage` + `fuelType: string | null` (`share-image.ts`)
+- `ListingForExport.mileage`, `fuelType`, `gearbox` (`bulk-import.ts`)
+- paramètres `mileage/fuelType` de `computeAndStorePriceAiEstimate` (`price-ai.ts`)
+- `VehicleJsonLdInput.mileage/fuelTypeLabel/gearboxLabel` optionnels (`structured-data.ts`)
+
+**Call sites** : `?? undefined` ou `?? null` ajoutés partout où `number | null` était passé vers `number | undefined` ou `number`.
+
+**JSON-LD** : `mileageFromOdometer`, `fuelType`, `vehicleTransmission` omis (spread conditionnel) si absent — cohérent pour les annonces EQUIPEMENT sans kilométrage ni carburant.
+
+**Editorial** : section `"equipment"` ajoutée à `EDITORIAL_SECTIONS`, `TARGET_DAYS`, `KIND_TO_SECTION` et `ADMIN_BASE` de la page `/admin/editorial`.
+
+**Tests** : types locaux `Row`/`Card` dans `price-estimation-equivalence.test.ts` mis à jour, guard `null` ajouté dans l'algo de référence.
