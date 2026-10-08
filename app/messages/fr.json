@@ -1938,6 +1938,24 @@
     "updatedOn": "Mis à jour le {date}",
     "byline": "Par {author}"
   },
+  "EquipementSearch": {
+    "pageTitle": "Équipements auto",
+    "metaDescription": "Achetez des équipements et accessoires automobiles d'occasion ou neufs sur Souq Auto : remorques, coffres de toit, porte-vélos, galeries, attelages et plus.",
+    "resultsCount": "{count} annonces",
+    "noResults": "Aucune annonce correspondante.",
+    "filterTitle": "Filtres",
+    "searchPlaceholder": "Rechercher un équipement…",
+    "searchButton": "Rechercher",
+    "resetFilters": "Réinitialiser",
+    "priceMin": "Prix min (DA)",
+    "priceMax": "Prix max (DA)",
+    "conditionLabel": "État",
+    "conditionAll": "Tous les états",
+    "conditionNeuf": "Neuf",
+    "conditionOccasion": "Occasion",
+    "wilayaLabel": "Wilaya",
+    "wilayaAll": "Toutes les wilayas"
+  },
   "AdminEquipement": {
     "title": "Équipements auto",
     "subtitle": "Articles sur les accessoires et équipements automobiles (remorques, coffres de toit, porte-vélos, attelages…).",

@@ -1938,6 +1938,24 @@
     "updatedOn": "حُدِّث في {date}",
     "byline": "بقلم {author}"
   },
+  "EquipementSearch": {
+    "pageTitle": "تجهيزات السيارة",
+    "metaDescription": "اشترِ تجهيزات وإكسسوارات سيارة مستعملة أو جديدة على سوق أوتو: مقطورات، صناديق السقف، حوامل الدراجات، الرفوف وأكثر.",
+    "resultsCount": "{count} إعلان",
+    "noResults": "لا توجد إعلانات مطابقة.",
+    "filterTitle": "تصفية",
+    "searchPlaceholder": "ابحث عن تجهيز…",
+    "searchButton": "بحث",
+    "resetFilters": "إعادة تعيين",
+    "priceMin": "أدنى سعر (دج)",
+    "priceMax": "أعلى سعر (دج)",
+    "conditionLabel": "الحالة",
+    "conditionAll": "جميع الحالات",
+    "conditionNeuf": "جديد",
+    "conditionOccasion": "مستعمل",
+    "wilayaLabel": "الولاية",
+    "wilayaAll": "جميع الولايات"
+  },
   "AdminEquipement": {
     "title": "تجهيزات السيارة",
     "subtitle": "مقالات عن الملحقات والتجهيزات السيارة (مقطورات، صناديق السقف، حوامل الدراجات، الوصلات…).",
