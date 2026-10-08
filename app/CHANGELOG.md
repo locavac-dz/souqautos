@@ -3687,9 +3687,12 @@ Les liens utilisateur (mes annonces, messages, groupes, favoris, alertes, notifi
 | Booster Noco Boost Plus 1200A | Sofiane — Sétif | 12 000 DA | Neuf |
 | Galerie de toit acier 120×80 cm | Nadia — Annaba | 8 500 DA | Occasion |
 
-## Fix — retire le lien Équipements du header (2026-10-08)
+## Fix — retire le lien Équipements du header et du footer (2026-10-08)
 
-`SiteHeader.tsx` : suppression du `<NavLink href="/equipement">` dans `publicLinks` — la rubrique existe toujours (`/equipement`, `/equipement/[slug]`) mais n'est plus exposée dans la navigation principale.
+`SiteHeader.tsx` : suppression du `<NavLink href="/equipement">` dans `publicLinks`.
+`SiteFooter.tsx` : suppression du `<Link href="/equipement">` dans la colonne gauche du footer.
+
+La rubrique reste accessible directement via `/equipement` et `/equipement/[slug]`.
 
 ## Fix — bouton langue toujours visible dans le header (2026-10-08)
 
