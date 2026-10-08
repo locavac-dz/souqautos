@@ -3660,6 +3660,14 @@ Double correction : (1) la condition d'initialisation du `useState` inclut déso
 
 L'enum `ListingCategory.AUTRE` est inchangé en base et dans le code — modification de la traduction uniquement.
 
+## Lot 259 — Dropdown compte dans le header desktop (2026-10-08)
+
+Les liens utilisateur (mes annonces, messages, groupes, favoris, alertes, notifications, conseiller IA, tableau de bord, admin, déconnexion) sont regroupés dans un menu déroulant « Nom ▼ » sur le desktop. Le header passe de 14+ éléments à 6 (4 liens publics + Vendre + dropdown).
+
+`AccountDropdown.tsx` (nouveau composant client) : bouton avec nom tronqué à 8 rem + chevron, overlay transparent de fermeture au clic extérieur, fermeture sur Escape avec retour du focus. Badges de compteurs non lus (messages, groupes, notifications) conservés. Lien « Back-office » conditionnel au rôle staff. Positionnement `ltr:right-0 rtl:left-0` pour la compatibilité RTL.
+
+`SiteHeader` : `desktopNav` compact transmis au `<nav hidden sm:flex>` ; `mobileNav` (liste plate complète) transmis à `MobileMenuToggle` — les deux états d'affichage restent indépendants.
+
 ## Fix — bouton langue toujours visible dans le header (2026-10-08)
 
 `SiteHeader.tsx` : `ThemeToggle` et `LocaleSwitcher` se trouvaient en fin de `navContent`, à l'intérieur du `<nav>` en `overflow-hidden`. Avec de nombreux liens (utilisateur connecté + admin), ils étaient poussés hors de l'écran visible.
