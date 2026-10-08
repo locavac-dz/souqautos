@@ -13,6 +13,48 @@ import { createNotification } from "@/lib/notification-service";
 
 const bodySchema = z.object({ content: z.string().trim().max(2000) });
 
+const MESSAGES_PAGE_SIZE = 50;
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+
+  const { id } = await params;
+  const conversation = await prisma.conversation.findUnique({
+    where: { id },
+    select: { buyerId: true, sellerId: true },
+  });
+  if (!conversation || !(await canAccessConversation(user.id, conversation))) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  const before = new URL(request.url).searchParams.get("before");
+
+  let cursorDate: Date | undefined;
+  if (before) {
+    const cursor = await prisma.message.findUnique({
+      where: { id: before, conversationId: id },
+      select: { createdAt: true },
+    });
+    if (cursor) cursorDate = cursor.createdAt;
+  }
+
+  const raw = await prisma.message.findMany({
+    where: {
+      conversationId: id,
+      ...(cursorDate ? { createdAt: { lt: cursorDate } } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take: MESSAGES_PAGE_SIZE + 1,
+    select: { id: true, senderId: true, content: true, attachmentUrl: true, audioUrl: true, deletedAt: true },
+  });
+
+  const hasMore = raw.length > MESSAGES_PAGE_SIZE;
+  const page = raw.slice(0, MESSAGES_PAGE_SIZE).reverse();
+
+  return NextResponse.json({ messages: page, hasMore });
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) {

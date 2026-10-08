@@ -32,7 +32,7 @@ export default async function ConversationPage({
       listing: true,
       buyer: { include: { profile: true } },
       seller: { include: { profile: true } },
-      messages: { orderBy: { createdAt: "asc" } },
+      messages: { orderBy: { createdAt: "desc" }, take: 50 },
     },
   });
 
@@ -87,7 +87,8 @@ export default async function ConversationPage({
 
       <ConversationView
         conversationId={conversation.id}
-        initialMessages={conversation.messages}
+        initialMessages={conversation.messages.slice().reverse()}
+        initialHasMore={conversation.messages.length >= 50}
         currentUserId={user.id}
         otherUserId={otherUser.id}
         initialBlocked={Boolean(blockedByMe)}

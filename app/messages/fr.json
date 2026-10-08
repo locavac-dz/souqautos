@@ -915,7 +915,8 @@
     "template_testDrive_label": "Essai possible ?",
     "template_testDrive_text": "Bonjour, puis-je faire un essai de « {title} » ?",
     "sendMessage": "Envoyer",
-    "cancelMessage": "Annuler"
+    "cancelMessage": "Annuler",
+    "loadMoreMessages": "Charger les messages précédents"
   },
   "Review": {
     "sellerMetaTitle": "{name} sur Souq Auto",

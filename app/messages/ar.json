@@ -915,7 +915,8 @@
     "template_testDrive_label": "تجربة قيادة؟",
     "template_testDrive_text": "مرحباً، هل يمكنني تجربة قيادة « {title} »؟",
     "sendMessage": "إرسال",
-    "cancelMessage": "إلغاء"
+    "cancelMessage": "إلغاء",
+    "loadMoreMessages": "تحميل الرسائل السابقة"
   },
   "Review": {
     "sellerMetaTitle": "{name} على سوق أوتو",

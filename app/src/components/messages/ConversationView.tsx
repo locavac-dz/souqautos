@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { MessageList } from "./MessageList";
 import { MessageThread } from "./MessageThread";
 
@@ -11,6 +12,15 @@ type MessageRow = {
   attachmentUrl: string | null;
   audioUrl: string | null;
   deletedAt: Date | null;
+};
+
+type ApiMessageRow = {
+  id: string;
+  senderId: string;
+  content: string;
+  attachmentUrl: string | null;
+  audioUrl: string | null;
+  deletedAt: string | null;
 };
 
 type ConversationEvent =
@@ -25,6 +35,7 @@ type ConversationEvent =
 export function ConversationView({
   conversationId,
   initialMessages,
+  initialHasMore,
   currentUserId,
   otherUserId,
   initialBlocked,
@@ -33,13 +44,20 @@ export function ConversationView({
 }: {
   conversationId: string;
   initialMessages: MessageRow[];
+  initialHasMore: boolean;
   currentUserId: string;
   otherUserId: string;
   initialBlocked: boolean;
   blockedByOther: boolean;
   initialAlreadyReported: boolean;
 }) {
+  const t = useTranslations("Messages");
   const [messages, setMessages] = useState<MessageRow[]>(initialMessages);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // Scroll restoration when prepending history (window-level scroll)
+  const prevScrollHeightRef = useRef<number>(0);
+  const preserveScrollRef = useRef<boolean>(false);
 
   useEffect(() => {
     const source = new EventSource(`/api/conversations/${conversationId}/stream`);
@@ -69,6 +87,35 @@ export function ConversationView({
     return () => source.close();
   }, [conversationId, currentUserId]);
 
+  // Restore window scroll position after prepending old messages
+  useLayoutEffect(() => {
+    if (!preserveScrollRef.current) return;
+    preserveScrollRef.current = false;
+    window.scrollBy(0, document.documentElement.scrollHeight - prevScrollHeightRef.current);
+  }, [messages]);
+
+  async function handleLoadMore() {
+    if (loadingMore || !hasMore || !messages.length) return;
+    setLoadingMore(true);
+    const oldest = messages[0];
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}/messages?before=${oldest.id}`);
+      if (!res.ok) return;
+      const data: { messages: ApiMessageRow[]; hasMore: boolean } = await res.json();
+
+      prevScrollHeightRef.current = document.documentElement.scrollHeight;
+      preserveScrollRef.current = true;
+
+      setMessages((prev) => [
+        ...data.messages.map((m) => ({ ...m, deletedAt: m.deletedAt ? new Date(m.deletedAt) : null })),
+        ...prev,
+      ]);
+      setHasMore(data.hasMore);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
   function handleSent(message: Omit<MessageRow, "deletedAt">) {
     setMessages((prev) => {
       if (prev.some((m) => m.id === message.id)) return prev;
@@ -84,7 +131,20 @@ export function ConversationView({
 
   return (
     <>
-      <div className="mt-6" aria-live="polite" aria-relevant="additions">
+      {hasMore && (
+        <div className="flex justify-center mt-6 mb-2">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="text-xs text-teal-700 dark:text-teal-400 hover:underline disabled:opacity-50"
+          >
+            {loadingMore ? "…" : t("loadMoreMessages")}
+          </button>
+        </div>
+      )}
+
+      <div className="mt-2" aria-live="polite" aria-relevant="additions">
         <MessageList
           conversationId={conversationId}
           messages={messages}
