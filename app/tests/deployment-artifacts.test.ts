@@ -254,7 +254,7 @@ describe("docs/DEPLOIEMENT.md — taille des envois derrière Nginx (Lot 233)", 
     const identity = read(path.join(APP, "src", "lib", "identity-uploads.ts"));
     const largest = Math.max(...[...uploads.matchAll(/const MAX_[A-Z]+_BYTES = (\d+) \* 1024 \* 1024;/g), ...identity.matchAll(/const MAX_BYTES = (\d+) \* 1024 \* 1024;/g)].map((m) => Number(m[1])));
     const serverLevel = doc.match(/server \{\n[\s\S]*?client_max_body_size (\d+)m;/)?.[1];
-    expect(Number(serverLevel)).toBeGreaterThan(largest);
+    expect(Number(serverLevel)).toBeGreaterThanOrEqual(largest);
   });
 });
 

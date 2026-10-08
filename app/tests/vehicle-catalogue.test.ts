@@ -37,10 +37,11 @@ const brands = [
 ];
 
 describe("catégories du catalogue", () => {
-  it("has four catalogue families, and « AUTRE » is a listing category without a catalogue", () => {
+  it("has four catalogue families, and « AUTRE » and « EQUIPEMENT » are listing categories without a catalogue", () => {
     expect(CATALOGUE_CATEGORIES).toEqual(["VOITURE", "UTILITAIRE", "POIDS_LOURD", "DEUX_ROUES"]);
-    expect(LISTING_CATEGORIES).toEqual([...CATALOGUE_CATEGORIES, "AUTRE"]);
+    expect(LISTING_CATEGORIES).toEqual([...CATALOGUE_CATEGORIES, "AUTRE", "EQUIPEMENT"]);
     expect(isCatalogueCategory("AUTRE")).toBe(false);
+    expect(isCatalogueCategory("EQUIPEMENT")).toBe(false);
     expect(isCatalogueCategory("VOITURE")).toBe(true);
     expect(isCatalogueCategory(undefined)).toBe(false);
   });

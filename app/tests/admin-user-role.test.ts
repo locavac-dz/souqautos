@@ -15,7 +15,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 vi.mock("@/lib/auth-server/current-user", () => ({ getCurrentUser: () => getCurrentUser() }));
-vi.mock("@/lib/auth-server/roles",        () => ({ isAdmin: (role: string) => role === "ADMIN" }));
+vi.mock("@/lib/auth-server/roles",        () => ({ isAdmin: (role: string) => role === "ADMIN" || role === "SUPER_ADMIN", isSuperAdmin: (role: string) => role === "SUPER_ADMIN" }));
 vi.mock("@/lib/audit-log",               () => ({ writeAuditLog: (...a: unknown[]) => writeAuditLog(...a) }));
 
 import { POST } from "@/app/api/admin/users/[id]/role/route";

@@ -25,7 +25,7 @@ describe("resolveUploadFile — ce qui est servi", () => {
   });
 
   it("les dossiers servis sont exactement ceux où le site écrit (src/lib/uploads.ts) : ni plus, ni moins", () => {
-    expect([...UPLOAD_SUBDIRS].sort()).toEqual(["avatars", "blog-covers", "listings", "messages", "pro-banners", "pro-logos"]);
+    expect([...UPLOAD_SUBDIRS].sort()).toEqual(["avatars", "blog-covers", "listings", "messages", "pro-banners", "pro-logos", "voice-messages"]);
   });
 });
 

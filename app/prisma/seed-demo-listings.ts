@@ -107,6 +107,37 @@ type DemoListing = {
   daysAgo: number;
 };
 
+type DemoEquipementListing = {
+  sellerKey: string;
+  title: string;
+  brandFreeText?: string;
+  modelFreeText: string;
+  year: number;
+  price: number;
+  condition: ListingCondition;
+  formula: ListingFormula;
+  description: string;
+  daysAgo: number;
+};
+
+const EQUIPEMENT_LISTINGS: DemoEquipementListing[] = [
+  { sellerKey: "karim", title: "Coffre de toit Thule 400 L", brandFreeText: "Thule", modelFreeText: "Motion XT XL 400 L",
+    year: 2022, price: 65000, condition: "OCCASION", formula: "STANDARD", daysAgo: 5,
+    description: "Coffre de toit Thule Motion XT XL, capacité 400 litres. Bon état général, quelques légères rayures sur le dessus. Barres de toit non incluses. Compatible la plupart des voitures à barres longitudinales." },
+  { sellerKey: "yasmine", title: "Porte-vélos attelage 3 vélos Thule", brandFreeText: "Thule", modelFreeText: "VeloCompact 927",
+    year: 2023, price: 28000, condition: "OCCASION", formula: "STANDARD", daysAgo: 3,
+    description: "Porte-vélos sur attelage Thule VeloCompact 927, 3 vélos maximum. Tiltable pour accès au coffre, éclairage 13 broches inclus. Très peu utilisé, comme neuf." },
+  { sellerKey: "riad", title: "Remorque benne basculante 750 kg", brandFreeText: undefined, modelFreeText: "Remorque benne 750 kg",
+    year: 2020, price: 95000, condition: "OCCASION", formula: "STANDARD", daysAgo: 8,
+    description: "Remorque benne basculante, PTAC 750 kg, permis B suffisant. Benne acier galvanisé, ridelles amovibles, plateau 200×115 cm. Roue de secours incluse. Carte grise disponible, contrôle technique à jour." },
+  { sellerKey: "sofiane", title: "Booster de batterie 1200A Noco Boost", brandFreeText: "Noco", modelFreeText: "Boost Plus GB40",
+    year: 2024, price: 12000, condition: "NEUF", formula: "STANDARD", daysAgo: 2,
+    description: "Booster de démarrage Noco Boost Plus GB40, 1200A de courant de démarrage. Neuf, jamais sorti de la boîte, reçu en cadeau en double. Convient aux moteurs essence jusqu'à 6L et diesel jusqu'à 3L." },
+  { sellerKey: "nadia", title: "Galerie de toit universelle acier", brandFreeText: undefined, modelFreeText: "Galerie de toit acier 120×80 cm",
+    year: 2021, price: 8500, condition: "OCCASION", formula: "STANDARD", daysAgo: 6,
+    description: "Galerie de toit en acier avec protège-bord caoutchouc, dimensions 120×80 cm. Compatible barres de toit standard. Quelques traces de rouille superficielle, structure saine. Idéale pour transporter des bagages encombrants ou des kayaks." },
+];
+
 const LISTINGS: DemoListing[] = [
   // Karim Boudiaf — Oran
   { sellerKey: "karim", brand: "Renault", model: "Clio", year: 2018, mileage: 92000, price: 2200000, fuelType: "DIESEL", gearbox: "MANUELLE", condition: "OCCASION", formula: "STANDARD", daysAgo: 3,
@@ -286,7 +317,46 @@ async function main() {
     created += 1;
   }
 
-  console.log(`Annonces de démonstration créées : ${created}`);
+  console.log(`Annonces véhicules de démonstration créées : ${created}`);
+
+  let createdEquip = 0;
+  for (const item of EQUIPEMENT_LISTINGS) {
+    const sellerId = sellerIdByKey.get(item.sellerKey);
+    if (!sellerId) throw new Error(`Vendeur inconnu pour la clé "${item.sellerKey}"`);
+
+    const seller = DEMO_SELLERS.find((s) => s.key === item.sellerKey);
+    const wilayaId = seller ? seller.wilayaId : 16;
+
+    const publishedAt = new Date(Date.now() - item.daysAgo * 24 * 60 * 60 * 1000);
+    const expiresAt = computeExpiryDate(publishedAt, formulaValidityDays(item.formula));
+
+    const listing = await prisma.listing.create({
+      data: {
+        sellerId,
+        category: "EQUIPEMENT",
+        brandFreeText: item.brandFreeText ?? null,
+        modelFreeText: item.modelFreeText,
+        title: item.title,
+        description: item.description,
+        price: item.price,
+        year: item.year,
+        condition: item.condition,
+        wilayaId,
+        formula: item.formula,
+        status: "PUBLIEE",
+        createdAt: publishedAt,
+        publishedAt,
+        expiresAt,
+      },
+    });
+
+    const photoPath = await generatePlaceholderPhoto(item.brandFreeText ?? "Équipement", item.modelFreeText);
+    await prisma.listingPhoto.create({ data: { listingId: listing.id, path: photoPath, position: 0 } });
+
+    createdEquip += 1;
+  }
+
+  console.log(`Annonces équipements de démonstration créées : ${createdEquip}`);
   console.log(`Mot de passe des comptes vendeurs de démonstration : ${DEMO_PASSWORD}`);
 }
 
