@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
@@ -25,9 +25,17 @@ const CATEGORY_KEY: Record<ListingCategory, string> = {
 export function Step2Fields({ brands }: { brands: BrandRow[] }) {
   const t = useTranslations("Wizard");
   const { data, setData } = useWizard();
-  const [brandOther, setBrandOther] = useState(!data.brandId && Boolean(data.brandFreeText));
-  const [modelOther, setModelOther] = useState(!data.modelId && Boolean(data.modelFreeText));
+  const [brandOther, setBrandOther] = useState(data.category === "EQUIPEMENT" || (!data.brandId && Boolean(data.brandFreeText)));
+  const [modelOther, setModelOther] = useState(data.category === "EQUIPEMENT" || (!data.modelId && Boolean(data.modelFreeText)));
   const [error, setError] = useState<string | null>(null);
+
+  // Quand le draft restaure category=EQUIPEMENT de façon asynchrone, useState ne se réexécute pas.
+  useEffect(() => {
+    if (data.category === "EQUIPEMENT") {
+      setBrandOther(true);
+      setModelOther(true);
+    }
+  }, [data.category]);
 
   // Lot 130 — marques et modèles proposés selon la catégorie choisie (un deux-roues ne propose pas Renault).
   const visibleBrands = useMemo(() => filterCatalogueByCategory(brands, data.category), [brands, data.category]);
