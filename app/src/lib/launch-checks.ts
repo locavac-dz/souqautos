@@ -199,6 +199,42 @@ function checkCronSweep(env: Env): CheckResult {
   };
 }
 
+// Lot 265 (audit 2026-10-08, constat A5) — sans Twilio, `sendSms` journalisait et rendait la main : la vérification du
+// téléphone affichait « code envoyé » sans jamais rien envoyer, et ce contrôle n'existait pas.
+function checkSms(env: Env): CheckResult {
+  const sid = env.TWILIO_ACCOUNT_SID?.trim();
+  const token = env.TWILIO_AUTH_TOKEN?.trim();
+  const from = env.TWILIO_FROM_NUMBER?.trim();
+  const fix = "Définir TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_FROM_NUMBER (voir .env.example) depuis la console Twilio.";
+  if (!sid && !token && !from) {
+    return { id: "sms", level: "error", message: "Envoi de SMS non configuré (TWILIO_*) : la vérification du numéro de téléphone afficherait « code envoyé » sans jamais rien envoyer.", fix };
+  }
+  if (!sid || !token || !from) {
+    return { id: "sms", level: "error", message: "Configuration Twilio incomplète : les trois variables TWILIO_* sont nécessaires ensemble.", fix };
+  }
+  if (!/^\+[1-9]\d{6,14}$/.test(from)) {
+    return { id: "sms", level: "error", message: `TWILIO_FROM_NUMBER (${from}) n'est pas un numéro au format E.164 (ex. +12015551234) : Twilio refuserait chaque envoi.`, fix: "Copier le numéro expéditeur tel qu'il apparaît dans la console Twilio, avec l'indicatif et sans espace." };
+  }
+  if (!/^AC[0-9a-fA-F]{32}$/.test(sid)) {
+    return { id: "sms", level: "warning", message: "TWILIO_ACCOUNT_SID n'a pas la forme d'un Account SID Twilio (AC suivi de 32 caractères hexadécimaux) : vérifier qu'il vient bien de la console Twilio.", fix: "Copier l'Account SID affiché sur le tableau de bord Twilio." };
+  }
+  return { id: "sms", level: "ok", message: "Envoi de SMS configuré (Twilio)." };
+}
+
+// Lot 265 (constat A5) — sans ADMIN_EMAIL, le formulaire de contact retombait sur l'adresse de développement
+// admin@souqauto.dz (domaine non maîtrisé) sans aucune erreur, et le compte administrateur de production n'est pas créé.
+function checkAdminEmail(env: Env): CheckResult {
+  const value = env.ADMIN_EMAIL?.trim();
+  const fix = "Définir ADMIN_EMAIL (adresse réellement lue par l'équipe) et ADMIN_PASSWORD (voir .env.example).";
+  if (!value) {
+    return { id: "admin-email", level: "error", message: "ADMIN_EMAIL n'est pas défini : les messages du formulaire de contact n'auraient aucun destinataire réel, et le compte administrateur de production ne serait pas créé par db:seed.", fix };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return { id: "admin-email", level: "error", message: "ADMIN_EMAIL n'est pas une adresse email valide.", fix };
+  }
+  return { id: "admin-email", level: "ok", message: `ADMIN_EMAIL : ${value} (destinataire du formulaire de contact, compte administrateur).` };
+}
+
 // Lot 264 — paiement en ligne (Chargily Pay, CIB / Edahabia), facultatif : sans clé, seuls les virements
 // manuels sont proposés. Une clé de TEST en production est une erreur (le site proposerait « payer en
 // ligne » sans jamais rien encaisser). Le webhook est déclaré par checkout (pas dans le tableau de bord
@@ -310,6 +346,8 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     ...checkDatabase(env),
     checkSiteUrl(env),
     ...checkMail(env),
+    checkSms(env),
+    checkAdminEmail(env),
     checkPush(env),
     checkGoogleLogin(env),
     checkSearchConsole(env),

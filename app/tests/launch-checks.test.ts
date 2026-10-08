@@ -34,6 +34,10 @@ const goodEnv = {
   OPS_ALERT_EMAILS: "technique@souqauto.example",
   CRON_SECRET: "un-secret-de-cron-suffisamment-long",
   CHARGILY_SECRET_KEY: "live_sk_abcdefghijklmnopqrstuvwxyz0123456789",
+  TWILIO_ACCOUNT_SID: "AC" + "0123456789abcdef".repeat(2),
+  TWILIO_AUTH_TOKEN: "jeton-twilio-de-test",
+  TWILIO_FROM_NUMBER: "+12015551234",
+  ADMIN_EMAIL: "gestion@souqauto.example",
 };
 
 const level = (results: ReturnType<typeof evaluateLaunchReadiness>, id: string) => results.filter((r) => r.id === id).map((r) => r.level);
@@ -258,6 +262,38 @@ describe("evaluateLaunchReadiness — Search Console (Lot 124)", () => {
       const results = evaluateLaunchReadiness({ env: { ...goodEnv, GOOGLE_OAUTH_TEST_BASE_URL: "http://localhost:5187" }, facts: goodFacts });
       expect(level(results, "google-login")).toEqual(["ok"]);
     });
+  });
+});
+
+describe("evaluateLaunchReadiness — SMS Twilio et ADMIN_EMAIL (Lot 265, audit A5)", () => {
+  const without = (...keys: string[]) => Object.fromEntries(Object.entries(goodEnv).filter(([k]) => !keys.includes(k)));
+
+  it("is fine when Twilio is fully configured", () => {
+    expect(level(evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts }), "sms")).toEqual(["ok"]);
+  });
+
+  it("blocks when SMS is not configured at all (the phone check would say « code sent » and send nothing)", () => {
+    const results = evaluateLaunchReadiness({ env: without("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER"), facts: goodFacts });
+    expect(level(results, "sms")).toEqual(["error"]);
+    expect(results.find((r) => r.id === "sms")?.fix).toContain("TWILIO_");
+    expect(summarizeChecks(results).ready).toBe(false);
+  });
+
+  it("blocks on a partial Twilio configuration or a sender that is not E.164", () => {
+    expect(level(evaluateLaunchReadiness({ env: without("TWILIO_AUTH_TOKEN"), facts: goodFacts }), "sms")).toEqual(["error"]);
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, TWILIO_FROM_NUMBER: "0555 12 34 56" }, facts: goodFacts }), "sms")).toEqual(["error"]);
+  });
+
+  it("only warns when the Account SID does not look like Twilio's", () => {
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, TWILIO_ACCOUNT_SID: "mon-sid" }, facts: goodFacts }), "sms")).toEqual(["warning"]);
+  });
+
+  it("blocks without ADMIN_EMAIL (contact form would have no real recipient) or with an invalid one", () => {
+    const missing = evaluateLaunchReadiness({ env: without("ADMIN_EMAIL"), facts: goodFacts });
+    expect(level(missing, "admin-email")).toEqual(["error"]);
+    expect(missing.find((r) => r.id === "admin-email")?.fix).toContain("ADMIN_EMAIL");
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, ADMIN_EMAIL: "pas-une-adresse" }, facts: goodFacts }), "admin-email")).toEqual(["error"]);
+    expect(level(evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts }), "admin-email")).toEqual(["ok"]);
   });
 });
 

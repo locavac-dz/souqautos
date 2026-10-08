@@ -10,6 +10,7 @@ const notifyMatchingSearchAlerts = vi.fn();
 const notifyProFollowers = vi.fn();
 const sendEmail = vi.fn();
 const writeAuditLog = vi.fn();
+const updateManyPaymentOrder = vi.fn();
 
 vi.mock("@/lib/auth-server/current-user", () => ({ getCurrentUser: () => getCurrentUser() }));
 vi.mock("@/lib/auth-server/roles", () => ({ isStaff: (role: string) => isStaff(role) }));
@@ -17,6 +18,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     listing: { findUnique: (...a: unknown[]) => findUniqueListing(...a), updateMany: (...a: unknown[]) => updateManyListing(...a) },
     user: { findUnique: (...a: unknown[]) => findUniqueUser(...a) },
+    paymentOrder: { updateMany: (...a: unknown[]) => updateManyPaymentOrder(...a) },
   },
 }));
 vi.mock("@/lib/search-alerts", () => ({ notifyMatchingSearchAlerts: (...a: unknown[]) => notifyMatchingSearchAlerts(...a) }));
@@ -52,6 +54,7 @@ beforeEach(() => {
   notifyProFollowers.mockReset().mockResolvedValue(undefined);
   sendEmail.mockReset().mockResolvedValue(null);
   writeAuditLog.mockReset().mockResolvedValue(undefined);
+  updateManyPaymentOrder.mockReset().mockResolvedValue({ count: 0 });
 });
 
 describe("POST /api/admin/listings/[id]/moderate", () => {
@@ -96,12 +99,35 @@ describe("POST /api/admin/listings/[id]/moderate", () => {
     expect(writeAuditLog).toHaveBeenCalledOnce();
   });
 
-  it("rejects a pending listing when a reason is given, without notifying search alerts", async () => {
+  it("sets the expiry date on the FIRST publication (Lot 265, audit A2: listings never expired before)", async () => {
+    const before = Date.now();
+    await POST(request({ action: "approve" }), { params });
+    const { data } = updateManyListing.mock.calls[0][0];
+    expect(data.status).toBe("PUBLIEE");
+    expect(data.publishedAt).toBeInstanceOf(Date);
+    expect(data.expiryReminderSentAt).toBeNull();
+    const days = (data.expiresAt.getTime() - before) / 86_400_000;
+    expect(days).toBeGreaterThan(29.9);
+    expect(days).toBeLessThan(30.1); // STANDARD : 30 jours
+    expect(updateManyPaymentOrder).not.toHaveBeenCalled();
+  });
+
+  it("keeps the running expiry cycle on a re-approval after an edit (publishedAt already set)", async () => {
+    findUniqueListing.mockResolvedValue({ ...LISTING_PENDING, publishedAt: new Date("2026-10-01T00:00:00Z") });
+    await POST(request({ action: "approve" }), { params });
+    const { data } = updateManyListing.mock.calls[0][0];
+    expect(data).not.toHaveProperty("expiresAt");
+    expect(data.publishedAt).toEqual(new Date("2026-10-01T00:00:00Z"));
+  });
+
+  it("rejects a pending listing when a reason is given, without notifying search alerts, and cancels its pending payment orders", async () => {
     const res = await POST(request({ action: "reject", reason: "Photos floues" }), { params });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ status: "REFUSEE" });
     expect(notifyMatchingSearchAlerts).not.toHaveBeenCalled();
     expect(sendEmail).toHaveBeenCalledOnce();
+    expect(updateManyPaymentOrder).toHaveBeenCalledOnce();
+    expect(updateManyPaymentOrder.mock.calls[0][0]).toMatchObject({ where: { listingId: "listing-1", status: "EN_ATTENTE" }, data: { status: "ANNULEE", reviewNote: "listing_refusee" } });
   });
 
   it("returns 400 when rejecting without a reason (invalid transition from the logic layer)", async () => {
@@ -117,6 +143,8 @@ describe("POST /api/admin/listings/[id]/moderate", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ status: "SUSPENDUE" });
     expect(notifyMatchingSearchAlerts).not.toHaveBeenCalled();
+    // Lot 265 — une annonce suspendue ne doit pas être republiée par un paiement qui arriverait ensuite.
+    expect(updateManyPaymentOrder.mock.calls[0][0].data.reviewNote).toBe("listing_suspendue");
   });
 
   it("returns 400 when the state machine rejects the transition (race condition guard)", async () => {

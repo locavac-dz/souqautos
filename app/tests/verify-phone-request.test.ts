@@ -36,7 +36,7 @@ beforeEach(() => {
   checkRateLimit.mockResolvedValue(true);
   phoneCodeDeleteMany.mockResolvedValue({ count: 0 });
   phoneCodeCreate.mockResolvedValue({});
-  sendSms.mockResolvedValue(undefined);
+  sendSms.mockResolvedValue(true);
 });
 
 describe("POST /api/auth/verify-phone/request", () => {
@@ -99,5 +99,12 @@ describe("POST /api/auth/verify-phone/request", () => {
     const res = await POST();
     expect(res.status).toBe(200);
     expect((await res.json()).ok).toBe(true);
+  });
+
+  it("answers 502 sms_failed when the SMS did not leave (Lot 265: never « code sent » for a message that was not sent)", async () => {
+    sendSms.mockResolvedValue(false);
+    const res = await POST();
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ error: "sms_failed" });
   });
 });

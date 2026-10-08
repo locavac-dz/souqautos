@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cancelPendingOrdersForListing } from "@/lib/payment-fulfillment";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
@@ -78,6 +79,8 @@ export async function PATCH(
         where: { id: offer.listingId },
         data:  { status: "VENDUE" },
       });
+      // Lot 265 — plus de formule à activer sur une annonce vendue : commandes EN_ATTENTE annulées.
+      await cancelPendingOrdersForListing(tx, offer.listingId, "listing_vendue", new Date());
     }
 
     return result;

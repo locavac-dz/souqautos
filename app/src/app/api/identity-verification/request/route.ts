@@ -3,6 +3,7 @@ import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isModerator } from "@/lib/auth-server/roles";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkCanSubmitIdentityRequest } from "@/lib/identity-verification";
 import { saveIdentityDocument, DocumentValidationError } from "@/lib/identity-uploads";
@@ -14,7 +15,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Lot 168 — vérification d'identité réservée aux comptes professionnels.
-  if (user.role !== "PROFESSIONNEL" && user.role !== "MODERATEUR" && user.role !== "ADMIN") {
+  // Lot 265 — rôles d'équipe lus depuis roles.ts (SUPER_ADMIN était oublié par la comparaison manuelle).
+  if (user.role !== "PROFESSIONNEL" && !isModerator(user.role)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

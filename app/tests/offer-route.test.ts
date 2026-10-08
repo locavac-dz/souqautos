@@ -5,6 +5,7 @@ const offerFindUnique = vi.fn();
 const offerUpdate = vi.fn();
 const offerUpdateMany = vi.fn();
 const listingUpdate = vi.fn();
+const paymentOrderUpdateMany = vi.fn();
 const transaction = vi.fn();
 const getCurrentUser = vi.fn();
 const checkRateLimit = vi.fn();
@@ -59,8 +60,14 @@ beforeEach(() => {
   checkRateLimit.mockResolvedValue(true);
   offerFindUnique.mockResolvedValue(pendingOffer);
   transaction.mockImplementation((cb: (tx: unknown) => unknown) =>
-    cb({ offer: { update: offerUpdate, updateMany: offerUpdateMany }, listing: { update: listingUpdate } })
+    cb({
+      offer: { update: offerUpdate, updateMany: offerUpdateMany },
+      listing: { update: listingUpdate },
+      // Lot 265 — l'acceptation annule les commandes de formule EN_ATTENTE de l'annonce vendue.
+      paymentOrder: { updateMany: paymentOrderUpdateMany },
+    })
   );
+  paymentOrderUpdateMany.mockResolvedValue({ count: 0 });
   offerUpdate.mockResolvedValue({ ...pendingOffer, status: "ACCEPTED" });
   offerUpdateMany.mockResolvedValue({ count: 0 });
   listingUpdate.mockResolvedValue({});
@@ -117,6 +124,9 @@ describe("PATCH /api/offers/[id]", () => {
   it("seller accepts PENDING: updates offer, declines other offers, marks listing VENDUE", async () => {
     const res = await PATCH(request({ action: "ACCEPTED" }), params());
     expect(res.status).toBe(200);
+    // Lot 265 — plus de formule à activer sur une annonce vendue : commandes EN_ATTENTE annulées.
+    expect(paymentOrderUpdateMany).toHaveBeenCalledOnce();
+    expect(paymentOrderUpdateMany.mock.calls[0][0]).toMatchObject({ where: { listingId: "listing1", status: "EN_ATTENTE" }, data: { status: "ANNULEE", reviewNote: "listing_vendue" } });
     expect(offerUpdate).toHaveBeenCalledWith({
       where: { id: "offer1" },
       data: { status: "ACCEPTED", counterAmount: undefined },

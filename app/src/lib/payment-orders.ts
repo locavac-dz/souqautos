@@ -38,7 +38,13 @@ export function formulaRank(formula: ListingFormula): number {
 // Statuts depuis lesquels une annonce peut être mise en avant — mêmes
 // statuts que le renouvellement (Lot 22) : jamais depuis SUSPENDUE/REFUSEE
 // (contournerait la modération), ni depuis VENDUE ou BROUILLON.
-const UPGRADABLE_STATUSES: ListingStatus[] = ["PUBLIEE", "EXPIREE"];
+export const UPGRADABLE_STATUSES: ListingStatus[] = ["PUBLIEE", "EXPIREE"];
+
+// Lot 265 — même règle appliquée au moment de l'ACTIVATION (confirmation du paiement), pas seulement à
+// la création de la commande : entre les deux, l'annonce a pu être suspendue, refusée ou vendue.
+export function isListingUpgradable(status: ListingStatus): boolean {
+  return UPGRADABLE_STATUSES.includes(status);
+}
 
 export type FormulaUpgradeEligibility =
   | { ok: true }

@@ -86,6 +86,16 @@ export async function POST(request: NextRequest) {
       where: { sellerId: user.id, status: { in: ["BROUILLON", "EN_ATTENTE", "PUBLIEE"] } },
       data: { status: "SUSPENDUE", moderationNote: ACCOUNT_DELETED_LISTING_NOTE },
     }),
+    // Lot 265 — un paiement de formule ou d'abonnement qui arriverait après la suppression ne doit rien
+    // activer au nom d'un compte anonymisé : commandes EN_ATTENTE annulées.
+    prisma.paymentOrder.updateMany({
+      where: { userId: user.id, status: "EN_ATTENTE" },
+      data: { status: "ANNULEE", reviewNote: "account_deleted", reviewedAt: now },
+    }),
+    prisma.proSubscriptionOrder.updateMany({
+      where: { userId: user.id, status: "EN_ATTENTE" },
+      data: { status: "ANNULEE", reviewNote: "account_deleted", reviewedAt: now },
+    }),
   ]);
 
   await clearSessionCookie();

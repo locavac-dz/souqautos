@@ -18,7 +18,13 @@ export async function POST(request: NextRequest) {
   }
 
   const { name, email, subject, message } = parsed.data;
-  const to = process.env.ADMIN_EMAIL ?? DEV_ADMIN_EMAIL;
+  // Lot 265 (audit, constat A5) — en production, pas de repli sur l'adresse de développement : sans ADMIN_EMAIL,
+  // le message serait parti vers un domaine non maîtrisé sans que personne ne le sache. `launch:check` l'exige.
+  const to = process.env.ADMIN_EMAIL?.trim() || (process.env.NODE_ENV !== "production" ? DEV_ADMIN_EMAIL : null);
+  if (!to) {
+    console.error("[contact] ADMIN_EMAIL non défini : message de contact refusé");
+    return NextResponse.json({ error: "contact_unavailable" }, { status: 503 });
+  }
 
   const html = `
     <p><strong>Nom :</strong> ${escapeHtml(name)}</p>

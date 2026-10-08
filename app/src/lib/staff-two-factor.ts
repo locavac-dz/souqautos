@@ -16,8 +16,10 @@ export function staffTwoFactorRequired(env: Record<string, string | undefined>):
   return env.NODE_ENV === "production";
 }
 
+// Lot 265 (audit 2026-10-08, constat A3) — SUPER_ADMIN (fondateur, le compte le plus puissant) fait partie
+// de l'équipe : le rôle avait été ajouté après le Lot 138 sans être reporté ici, et échappait à l'obligation.
 export function isStaffRole(role: Role): boolean {
-  return role === "ADMIN" || role === "MODERATEUR" || role === "SUPPORT";
+  return role === "SUPER_ADMIN" || role === "ADMIN" || role === "MODERATEUR" || role === "SUPPORT";
 }
 
 // Le rôle EFFECTIF : celui de la base, sauf pour un compte d'équipe qui doit avoir la double authentification et ne l'a pas.

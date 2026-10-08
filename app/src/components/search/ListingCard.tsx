@@ -19,6 +19,8 @@ type CardListing = {
   fuelType: string | null;
   gearbox: string | null;
   formula: string;
+  // Lot 265 — le comparateur ne compare que des véhicules : pas de bouton « Comparer » sur un équipement.
+  category?: string | null;
   views: number;
   createdAt: Date;
   brand: { name: string } | null;
@@ -108,7 +110,7 @@ export async function ListingCard({
             isLoggedIn={isLoggedIn}
             label={isFavorited ? tFavorites("removeFromFavorites") : tFavorites("addToFavorites")}
           />
-          <CompareToggle listingId={listing.id} label={tCompare("addToCompare")} />
+          {listing.category !== "EQUIPEMENT" && <CompareToggle listingId={listing.id} label={tCompare("addToCompare")} />}
         </div>
         <div className="absolute top-2 rtl:right-2 ltr:left-2 flex flex-col gap-1">
           {listing.formula !== "STANDARD" && (

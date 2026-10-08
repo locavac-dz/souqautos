@@ -21,6 +21,7 @@ export type ChargilyOutcome =
   | "ignored" // statut sans effet (pending/processing) ou type d'événement inconnu
   | "unknown_checkout"
   | "not_found" // commande supprimée entre la recherche et l'activation (course avec un échec de création)
+  | "listing_not_upgradable" // annonce suspendue / refusée / vendue depuis la commande : laissée à un humain (Lot 265)
   | "amount_mismatch";
 
 type FoundOrder = { kind: ProviderOrderKind; id: string; amountDzd: number };

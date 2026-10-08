@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
   }
 
   const listings = await prisma.listing.findMany({
-    where: { id: { in: ids }, status: "PUBLIEE" },
+    // Lot 265 — un équipement (sans kilométrage, carburant ni boîte) n'a pas sa place dans un tableau de
+    // comparaison de véhicules ; il faisait planter la page (audit A4).
+    where: { id: { in: ids }, status: "PUBLIEE", category: { not: "EQUIPEMENT" } },
     include: {
       brand: true,
       model: true,

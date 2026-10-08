@@ -29,6 +29,8 @@ describe("staffTwoFactorRequired — exigée en production, réglable", () => {
 describe("effectiveRole", () => {
   const enabled = new Date();
   it("un compte d'équipe sans double authentification devient un particulier quand elle est exigée", () => {
+    // Lot 265 — SUPER_ADMIN (fondateur) est le compte le plus puissant : il n'échappe pas à la règle (audit A3).
+    expect(effectiveRole({ role: "SUPER_ADMIN", totpEnabledAt: null }, true)).toBe("PARTICULIER");
     expect(effectiveRole({ role: "ADMIN", totpEnabledAt: null }, true)).toBe("PARTICULIER");
     expect(effectiveRole({ role: "MODERATEUR", totpEnabledAt: null }, true)).toBe("PARTICULIER");
     expect(effectiveRole({ role: "SUPPORT", totpEnabledAt: null }, true)).toBe("PARTICULIER");
@@ -41,6 +43,7 @@ describe("effectiveRole", () => {
   });
   it("ne touche jamais aux autres rôles", () => {
     for (const role of ["PARTICULIER", "PROFESSIONNEL"] as const) expect(effectiveRole({ role, totpEnabledAt: null }, true)).toBe(role);
+    expect(isStaffRole("SUPER_ADMIN")).toBe(true);
     expect(isStaffRole("ADMIN")).toBe(true);
     expect(isStaffRole("MODERATEUR")).toBe(true);
     expect(isStaffRole("SUPPORT")).toBe(true);
@@ -69,6 +72,16 @@ describe("getCurrentUser applique le rôle effectif (point unique de toutes les 
       expect(user?.role).toBe("PARTICULIER");
       expect(isAdmin(user!.role)).toBe(false);
       expect(isStaff(user!.role)).toBe(false);
+    });
+  });
+
+  it("un SUPER_ADMIN sans double authentification perd aussi tous ses droits quand elle est exigée (audit A3)", async () => {
+    getSessionFromCookies.mockResolvedValue({ sub: "u1", role: "SUPER_ADMIN", issuedAtMs: Date.now() });
+    findUnique.mockResolvedValue(row({ role: "SUPER_ADMIN" }));
+    await withEnv({ REQUIRE_STAFF_2FA: "1" }, async () => {
+      const user = await getCurrentUser();
+      expect(user?.role).toBe("PARTICULIER");
+      expect(isAdmin(user!.role)).toBe(false);
     });
   });
 

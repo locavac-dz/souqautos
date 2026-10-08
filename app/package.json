@@ -21,6 +21,7 @@
     "db:price-history": "tsx prisma/seed-price-history.ts",
     "db:seed:mag": "tsx prisma/seed-mag-articles.ts",
     "db:demo-photos": "tsx prisma/apply-demo-photos.ts",
+    "db:backfill-expiry": "tsx scripts/backfill-listing-expiry.ts",
     "verify": "node scripts/verify.mjs",
     "i18n:check": "vitest run tests/i18n-messages.test.ts tests/i18n-audit.test.ts",
     "i18n:review": "tsx scripts/i18n-review.ts",

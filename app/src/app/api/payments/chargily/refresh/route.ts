@@ -61,6 +61,10 @@ export async function POST(request: NextRequest) {
   const now = new Date();
   const state = checkoutStatusFromRetrieve(checkout);
   const outcome = await applyChargilyCheckoutState(checkout, state, now, `chargily:${checkout.status ?? "unknown"}`);
-  const status = outcome === "confirmed" || outcome === "already_decided" ? "CONFIRMEE" : outcome === "canceled" ? "ANNULEE" : "EN_ATTENTE";
-  return NextResponse.json({ status, outcome, providerStatus: checkout.status ?? null });
+  // Statut relu en base plutôt que déduit de l'issue : « already_decided » peut aussi vouloir dire ANNULEE ou REJETEE.
+  const refreshed =
+    kind === "listing_formula"
+      ? await prisma.paymentOrder.findUnique({ where: { id: orderId }, select: { status: true } })
+      : await prisma.proSubscriptionOrder.findUnique({ where: { id: orderId }, select: { status: true } });
+  return NextResponse.json({ status: refreshed?.status ?? "EN_ATTENTE", outcome, providerStatus: checkout.status ?? null });
 }

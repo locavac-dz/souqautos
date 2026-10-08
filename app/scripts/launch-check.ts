@@ -52,7 +52,7 @@ async function collectFacts(): Promise<LaunchFacts> {
     // Lot 138 — cette colonne vient d'une migration : tant qu'elle n'est pas appliquée, la requête échoue. Ce n'est pas une raison de
     // planter (le contrôle « migrations » le dit déjà, en clair) : le chiffre reste simplement inconnu.
     const staffWithoutTwoFactor = await prisma.user
-      .count({ where: { role: { in: ["ADMIN", "MODERATEUR"] }, totpEnabledAt: null, deletedAt: null, suspendedAt: null } })
+      .count({ where: { role: { in: ["SUPER_ADMIN", "ADMIN", "MODERATEUR", "SUPPORT"] }, totpEnabledAt: null, deletedAt: null, suspendedAt: null } })
       .catch(() => undefined);
     const demoAccounts = await prisma.user.count({ where: { OR: DEMO_DOMAINS.map((domain) => ({ email: { endsWith: domain, mode: "insensitive" as const } })) } });
     return {

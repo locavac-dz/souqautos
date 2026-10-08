@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
-import { activateProSubscription, sendProSubscriptionDecisionEmail } from "@/lib/payment-fulfillment";
+import { confirmProSubscriptionOrder, sendProSubscriptionDecisionEmail } from "@/lib/payment-fulfillment";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -13,7 +13,8 @@ const bodySchema = z.object({
 
 // Réservé à ADMIN, même sensibilité que la revue des virements de formule
 // d'annonce (Lot 66/69) — argent réel, jamais ouvert à MODERATEUR.
-// Lot 264 : activation et courriel partagés avec le webhook Chargily (payment-fulfillment).
+// Lot 264/265 : approbation via `confirmProSubscriptionOrder` (transaction, activation, courriel),
+// partagée avec le webhook Chargily.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user || !isAdmin(user.role)) {
@@ -44,24 +45,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const now = new Date();
   const isApproval = parsed.data.action === "approve";
-
-  // Même garde atomique que payment-orders/[id]/review (Lot 69) : deux admins
-  // ne peuvent pas trancher deux fois la même demande.
-  const { count } = await prisma.proSubscriptionOrder.updateMany({
-    where: { id, status: "EN_ATTENTE" },
-    data: {
-      status: isApproval ? "CONFIRMEE" : "REJETEE",
-      reviewedById: user.id,
-      reviewedAt: now,
-      reviewNote: parsed.data.reason?.trim() || null,
-    },
-  });
-  if (count === 0) {
-    return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
-  }
+  const reason = parsed.data.reason?.trim() || null;
 
   if (isApproval) {
-    await activateProSubscription(order.professionalAccountId, order.tier, now);
+    const outcome = await confirmProSubscriptionOrder(id, now, { kind: "admin", adminId: user.id, note: reason });
+    if (outcome === "not_found") return NextResponse.json({ error: "not_found" }, { status: 404 });
+    if (outcome !== "confirmed") return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
+  } else {
+    // Même garde atomique que payment-orders/[id]/review (Lot 69).
+    const { count } = await prisma.proSubscriptionOrder.updateMany({
+      where: { id, status: "EN_ATTENTE" },
+      data: { status: "REJETEE", reviewedById: user.id, reviewedAt: now, reviewNote: reason },
+    });
+    if (count === 0) {
+      return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
+    }
+    await sendProSubscriptionDecisionEmail(order.user, order.professionalAccount, order.tier, { approved: false, reason: reason ?? "" });
   }
 
   await writeAuditLog({
@@ -78,15 +77,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       reason: parsed.data.reason ?? null,
     },
   });
-
-  await sendProSubscriptionDecisionEmail(
-    order.user,
-    order.professionalAccount,
-    order.tier,
-    isApproval
-      ? { approved: true, source: order.provider === "CHARGILY" ? "chargily" : "virement" }
-      : { approved: false, reason: parsed.data.reason?.trim() ?? "" }
-  );
 
   return NextResponse.json({ status: isApproval ? "CONFIRMEE" : "REJETEE" });
 }

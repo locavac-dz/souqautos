@@ -1,50 +1,85 @@
 import { getTranslations } from "next-intl/server";
 import type { ListingFormula, ListingStatus, ProSubscriptionTier } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { formulaValidityDays } from "@/lib/payment-orders";
+import { formulaValidityDays, isListingUpgradable, UPGRADABLE_STATUSES } from "@/lib/payment-orders";
 import { SUBSCRIPTION_VALIDITY_DAYS } from "@/lib/pro-subscription";
 import { computeExpiryDate } from "@/lib/listing-lifecycle";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
 
 // Lot 264 — ce qu'une commande CONFIRMÉE déclenche (mise en formule d'une annonce, passage de palier
-// d'un compte pro, courriel au vendeur), extrait des routes de revue admin (Lots 66/79) pour être
-// partagé avec le webhook Chargily et la relecture manuelle du statut : une seule logique
-// d'activation, quel que soit le canal qui a prouvé le paiement.
+// d'un compte pro, courriel au vendeur), partagé par la revue admin, le webhook Chargily et la relecture
+// manuelle du statut : une seule logique d'activation, quel que soit le canal qui a prouvé le paiement.
 //
-// Idempotence : la transition EN_ATTENTE → CONFIRMEE est un `updateMany` filtré sur le statut. Un webhook
-// rejoué, un webhook ET une relecture manuelle, ou deux admins en même temps : un seul gagne (`count` = 1),
-// les autres ne font rien — jamais deux activations ni deux courriels.
+// Lot 265 (audit 2026-10-08, constat A1) — deux garanties ajoutées :
+//   1. la bascule EN_ATTENTE → CONFIRMEE et l'activation sont dans la MÊME transaction : une panne entre
+//      les deux ne peut plus laisser une commande payée jamais appliquée (que le rejeu aurait ignorée) ;
+//   2. l'annonce n'est activée que si elle est encore PUBLIEE ou EXPIREE au moment de la preuve de
+//      paiement. Suspendue, refusée ou vendue entre-temps : la commande RESTE EN_ATTENTE, annotée
+//      « listing_not_upgradable », pour qu'un humain tranche depuis /admin/paiements — jamais une
+//      republication automatique qui contournerait la modération.
+// Idempotence : `updateMany` filtré sur le statut — un webhook rejoué, un webhook ET une relecture, ou deux
+// admins : un seul gagne (`count` = 1), les autres ne font rien — jamais deux activations ni deux courriels.
+
+// Le client Prisma du projet est étendu (journal des requêtes lentes) : son client de transaction n'est pas
+// `Prisma.TransactionClient`. On type structurellement sur les modèles utilisés — accepte `prisma` et `tx`.
+type Tx = Pick<typeof prisma, "paymentOrder" | "proSubscriptionOrder" | "listing" | "proSubscription">;
+type Db = Pick<typeof prisma, "paymentOrder" | "proSubscriptionOrder">;
 
 export type PaymentSource = "virement" | "chargily";
-export type FulfillmentOutcome = "confirmed" | "already_decided" | "not_found";
+export type ConfirmActor = { kind: "provider" } | { kind: "admin"; adminId: string; note?: string | null };
+export type ConfirmOutcome = "confirmed" | "already_decided" | "not_found" | "listing_not_upgradable";
+// Alias conservé pour les appelants du Lot 264.
+export type FulfillmentOutcome = ConfirmOutcome;
 
-export async function activateListingFormula(
+const NOT_UPGRADABLE_NOTE = "listing_not_upgradable";
+
+class ListingNotUpgradableError extends Error {
+  constructor(readonly listingStatus: ListingStatus) {
+    super(NOT_UPGRADABLE_NOTE);
+  }
+}
+
+// Activation conditionnelle : `updateMany` filtré sur les statuts éligibles. `false` = l'annonce n'est
+// plus activable (course entre la lecture et l'écriture) ; l'appelant annule alors la transaction.
+async function activateListingFormula(
+  tx: Tx,
   listing: { id: string; status: ListingStatus; publishedAt: Date | null },
   formula: ListingFormula,
   now: Date
-): Promise<void> {
-  const newExpiresAt = computeExpiryDate(now, formulaValidityDays(formula));
-  await prisma.listing.update({
-    where: { id: listing.id },
+): Promise<boolean> {
+  const { count } = await tx.listing.updateMany({
+    where: { id: listing.id, status: { in: UPGRADABLE_STATUSES } },
     data: {
       formula,
       status: "PUBLIEE",
-      expiresAt: newExpiresAt,
+      expiresAt: computeExpiryDate(now, formulaValidityDays(formula)),
       publishedAt: listing.status === "EXPIREE" ? now : listing.publishedAt,
       // Nouveau cycle d'expiration (même principe que le renouvellement, Lot 48).
       expiryReminderSentAt: null,
     },
   });
+  return count === 1;
 }
 
-export async function activateProSubscription(professionalAccountId: string, tier: ProSubscriptionTier, now: Date): Promise<void> {
+async function activateProSubscription(tx: Tx, professionalAccountId: string, tier: ProSubscriptionTier, now: Date): Promise<void> {
   const newExpiresAt = computeExpiryDate(now, SUBSCRIPTION_VALIDITY_DAYS);
-  await prisma.proSubscription.upsert({
+  await tx.proSubscription.upsert({
     where: { professionalAccountId },
     create: { professionalAccountId, tier, expiresAt: newExpiresAt },
     update: { tier, expiresAt: newExpiresAt },
   });
+}
+
+function confirmationData(actor: ConfirmActor, now: Date) {
+  return {
+    status: "CONFIRMEE" as const,
+    // Date à laquelle le paiement a été constaté (prestataire ou humain) — jamais nulle sur une CONFIRMEE.
+    paidAt: now,
+    reviewedAt: now,
+    reviewedById: actor.kind === "admin" ? actor.adminId : null,
+    reviewNote: actor.kind === "admin" ? (actor.note ?? null) : null,
+  };
 }
 
 type Recipient = { email: string; locale: string };
@@ -89,32 +124,77 @@ export async function sendProSubscriptionDecisionEmail(user: Recipient, account:
   await deliver("abonnement pro", user.email, t("subscriptionRejectedSubject"), html);
 }
 
-// Confirmation prouvée par le PRESTATAIRE (webhook signé ou relecture du statut) : pas de relecteur
-// humain (`reviewedById` reste nul), `paidAt` renseigné.
-export async function fulfillListingFormulaOrderFromProvider(orderId: string, now: Date): Promise<FulfillmentOutcome> {
-  const order = await prisma.paymentOrder.findUnique({ where: { id: orderId }, include: { listing: true, user: true } });
-  if (!order) return "not_found";
-  const { count } = await prisma.paymentOrder.updateMany({
-    where: { id: orderId, status: "EN_ATTENTE" },
-    data: { status: "CONFIRMEE", paidAt: now, reviewedAt: now },
-  });
-  if (count === 0) return "already_decided";
-  await activateListingFormula(order.listing, order.formula, now);
-  await sendListingFormulaDecisionEmail(order.user, order.listing, { approved: true, source: "chargily" });
-  return "confirmed";
+// Confirme une commande de formule d'annonce et active la formule, atomiquement. Le courriel part
+// APRÈS la validation de la transaction (jamais pour une activation annulée).
+export async function confirmListingFormulaOrder(orderId: string, now: Date, actor: ConfirmActor): Promise<ConfirmOutcome> {
+  type Done = { outcome: ConfirmOutcome; email?: { user: Recipient; listing: { id: string; title: string }; source: PaymentSource } };
+  let done: Done;
+  try {
+    done = await prisma.$transaction(async (tx): Promise<Done> => {
+      const order = await tx.paymentOrder.findUnique({ where: { id: orderId }, include: { listing: true, user: true } });
+      if (!order) return { outcome: "not_found" };
+      if (order.status !== "EN_ATTENTE") return { outcome: "already_decided" };
+      if (!isListingUpgradable(order.listing.status)) {
+        await tx.paymentOrder.updateMany({
+          where: { id: orderId, status: "EN_ATTENTE" },
+          data: { reviewNote: `${NOT_UPGRADABLE_NOTE}:${order.listing.status}` },
+        });
+        return { outcome: "listing_not_upgradable" };
+      }
+      const { count } = await tx.paymentOrder.updateMany({ where: { id: orderId, status: "EN_ATTENTE" }, data: confirmationData(actor, now) });
+      if (count === 0) return { outcome: "already_decided" };
+      if (!(await activateListingFormula(tx, order.listing, order.formula, now))) {
+        throw new ListingNotUpgradableError(order.listing.status);
+      }
+      return {
+        outcome: "confirmed",
+        email: { user: order.user, listing: order.listing, source: order.provider === "CHARGILY" ? "chargily" : "virement" },
+      };
+    });
+  } catch (err) {
+    if (err instanceof ListingNotUpgradableError) {
+      // La transaction a été annulée : la commande est toujours EN_ATTENTE ; on l'annote pour l'admin.
+      await prisma.paymentOrder.updateMany({
+        where: { id: orderId, status: "EN_ATTENTE" },
+        data: { reviewNote: `${NOT_UPGRADABLE_NOTE}:${err.listingStatus}` },
+      });
+      return "listing_not_upgradable";
+    }
+    throw err;
+  }
+  if (done.email) {
+    await sendListingFormulaDecisionEmail(done.email.user, done.email.listing, { approved: true, source: done.email.source });
+  }
+  return done.outcome;
 }
 
-export async function fulfillProSubscriptionOrderFromProvider(orderId: string, now: Date): Promise<FulfillmentOutcome> {
-  const order = await prisma.proSubscriptionOrder.findUnique({ where: { id: orderId }, include: { professionalAccount: true, user: true } });
-  if (!order) return "not_found";
-  const { count } = await prisma.proSubscriptionOrder.updateMany({
-    where: { id: orderId, status: "EN_ATTENTE" },
-    data: { status: "CONFIRMEE", paidAt: now, reviewedAt: now },
+export async function confirmProSubscriptionOrder(orderId: string, now: Date, actor: ConfirmActor): Promise<ConfirmOutcome> {
+  type Done = { outcome: ConfirmOutcome; email?: { user: Recipient; account: { nomCommercial: string }; tier: ProSubscriptionTier; source: PaymentSource } };
+  const done = await prisma.$transaction(async (tx): Promise<Done> => {
+    const order = await tx.proSubscriptionOrder.findUnique({ where: { id: orderId }, include: { professionalAccount: true, user: true } });
+    if (!order) return { outcome: "not_found" };
+    if (order.status !== "EN_ATTENTE") return { outcome: "already_decided" };
+    const { count } = await tx.proSubscriptionOrder.updateMany({ where: { id: orderId, status: "EN_ATTENTE" }, data: confirmationData(actor, now) });
+    if (count === 0) return { outcome: "already_decided" };
+    await activateProSubscription(tx, order.professionalAccountId, order.tier, now);
+    return {
+      outcome: "confirmed",
+      email: { user: order.user, account: order.professionalAccount, tier: order.tier, source: order.provider === "CHARGILY" ? "chargily" : "virement" },
+    };
   });
-  if (count === 0) return "already_decided";
-  await activateProSubscription(order.professionalAccountId, order.tier, now);
-  await sendProSubscriptionDecisionEmail(order.user, order.professionalAccount, order.tier, { approved: true, source: "chargily" });
-  return "confirmed";
+  if (done.email) {
+    await sendProSubscriptionDecisionEmail(done.email.user, done.email.account, done.email.tier, { approved: true, source: done.email.source });
+  }
+  return done.outcome;
+}
+
+// Confirmation prouvée par le PRESTATAIRE (webhook signé ou relecture du statut) : pas de relecteur humain.
+export function fulfillListingFormulaOrderFromProvider(orderId: string, now: Date): Promise<ConfirmOutcome> {
+  return confirmListingFormulaOrder(orderId, now, { kind: "provider" });
+}
+
+export function fulfillProSubscriptionOrderFromProvider(orderId: string, now: Date): Promise<ConfirmOutcome> {
+  return confirmProSubscriptionOrder(orderId, now, { kind: "provider" });
 }
 
 export type ProviderOrderKind = "listing_formula" | "pro_subscription";
@@ -129,4 +209,24 @@ export async function cancelProviderOrder(kind: ProviderOrderKind, orderId: stri
       ? await prisma.paymentOrder.updateMany({ where: { id: orderId, status: "EN_ATTENTE" }, data })
       : await prisma.proSubscriptionOrder.updateMany({ where: { id: orderId, status: "EN_ATTENTE" }, data });
   return count === 1;
+}
+
+// Lot 265 — une annonce qui quitte le marché (suspension, refus, vente) ou un compte supprimé rend ses
+// commandes EN_ATTENTE sans objet : elles passent ANNULEE pour que le paiement, s'il arrive encore, ne
+// soit pas appliqué (la confirmation ne part que d'EN_ATTENTE) et que la place soit libérée.
+export async function cancelPendingOrdersForListing(db: Db, listingId: string, note: string, now: Date): Promise<number> {
+  const { count } = await db.paymentOrder.updateMany({
+    where: { listingId, status: "EN_ATTENTE" },
+    data: { status: "ANNULEE", reviewNote: note.slice(0, 500), reviewedAt: now },
+  });
+  return count;
+}
+
+export async function cancelPendingOrdersForUser(db: Db, userId: string, note: string, now: Date): Promise<number> {
+  const data = { status: "ANNULEE" as const, reviewNote: note.slice(0, 500), reviewedAt: now };
+  const [listings, subscriptions] = await Promise.all([
+    db.paymentOrder.updateMany({ where: { userId, status: "EN_ATTENTE" }, data }),
+    db.proSubscriptionOrder.updateMany({ where: { userId, status: "EN_ATTENTE" }, data }),
+  ]);
+  return listings.count + subscriptions.count;
 }

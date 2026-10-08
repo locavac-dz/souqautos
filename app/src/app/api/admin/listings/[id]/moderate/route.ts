@@ -11,6 +11,9 @@ import { notifyProFollowers } from "@/lib/pro-follow";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
 import { createNotification } from "@/lib/notification-service";
+import { computeExpiryDate } from "@/lib/listing-lifecycle";
+import { formulaValidityDays } from "@/lib/payment-orders";
+import { cancelPendingOrdersForListing } from "@/lib/payment-fulfillment";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject", "suspend"]),
@@ -41,9 +44,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: transition.error }, { status: 400 });
   }
 
+  const now = new Date();
   const isApproval = action === "approve";
   const moderationNote = isApproval ? null : (parsed.data.reason?.trim() ?? null);
-  const publishedAt = isApproval && !listing.publishedAt ? new Date() : listing.publishedAt;
+  const firstPublication = isApproval && !listing.publishedAt;
+  const publishedAt = firstPublication ? now : listing.publishedAt;
+  // Lot 265 (audit 2026-10-08, constat A2) — la première publication fixe la date d'expiration (publishedAt +
+  // durée de la formule, cf. schema.prisma) : sans elle, l'annonce n'expirait jamais, sans rappel ni
+  // renouvellement automatique. Une ré-approbation après modification garde le cycle en cours.
+  const expiry = firstPublication
+    ? { expiresAt: computeExpiryDate(now, formulaValidityDays(listing.formula)), expiryReminderSentAt: null }
+    : {};
 
   // Deux membres du staff pourraient modérer la même annonce en même temps
   // (deux onglets, double-clic) : `findUnique` ci-dessus ne protège pas
@@ -53,12 +64,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // tranché entre-temps. Même correctif que sur PaymentOrder (Lot 69).
   const { count } = await prisma.listing.updateMany({
     where: { id, status: listing.status },
-    data: { status: transition.newStatus, moderationNote, publishedAt },
+    data: { status: transition.newStatus, moderationNote, publishedAt, ...expiry },
   });
   if (count === 0) {
     return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
   }
-  const updatedListing = { ...listing, status: transition.newStatus, moderationNote, publishedAt };
+  const updatedListing = { ...listing, status: transition.newStatus, moderationNote, publishedAt, ...expiry };
+
+  // Lot 265 — une annonce refusée ou suspendue ne doit pas être republiée par un paiement qui arriverait
+  // ensuite : ses commandes EN_ATTENTE sont annulées (place libérée pour une nouvelle demande plus tard).
+  if (!isApproval) {
+    await cancelPendingOrdersForListing(prisma, id, `listing_${transition.newStatus.toLowerCase()}`, now);
+  }
 
   if (isApproval) {
     await notifyMatchingSearchAlerts(updatedListing);

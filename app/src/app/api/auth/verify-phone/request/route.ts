@@ -27,7 +27,11 @@ export async function POST() {
     data: { userId: user.id, code, expiresAt: generateExpiry(10) },
   });
 
-  await sendSms({ to: user.phone, message: `Votre code de vérification Souq Auto : ${code}` });
+  // Lot 265 — un SMS non parti n'est plus un succès silencieux : 502 pour que l'écran dise « réessayez ».
+  const sent = await sendSms({ to: user.phone, message: `Votre code de vérification Souq Auto : ${code}` });
+  if (!sent) {
+    return NextResponse.json({ error: "sms_failed" }, { status: 502 });
+  }
 
   return NextResponse.json({ ok: true });
 }

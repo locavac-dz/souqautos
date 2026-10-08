@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { formatPrice } from "@/lib/format";
+import { formatNumber, formatPrice } from "@/lib/format";
 import { useCompare } from "@/components/compare/CompareContext";
 import type { CompareHighlights } from "@/lib/ai-compare";
 
@@ -13,9 +13,10 @@ type CompareListing = {
   title: string;
   price: number;
   year: number;
-  mileage: number;
-  fuelType: string;
-  gearbox: string;
+  // Lot 260 : nuls pour une annonce Équipement (le type local doit le dire, sinon tsc ne voit pas le null — audit A4).
+  mileage: number | null;
+  fuelType: string | null;
+  gearbox: string | null;
   condition: string;
   color: string | null;
   powerHp: number | null;
@@ -119,9 +120,9 @@ export default function ComparePage() {
     },
     { label: t("price"), render: (l) => formatPrice(l.price, locale) },
     { label: t("year"), render: (l) => l.year },
-    { label: t("mileage"), render: (l) => `${l.mileage.toLocaleString()} km` },
-    { label: tWizard("fuelType"), render: (l) => tWizard(FUEL_KEY[l.fuelType]) },
-    { label: tWizard("gearbox"), render: (l) => tWizard(GEARBOX_KEY[l.gearbox]) },
+    { label: t("mileage"), render: (l) => (l.mileage !== null ? `${formatNumber(l.mileage, locale)} km` : "—") },
+    { label: tWizard("fuelType"), render: (l) => (l.fuelType && FUEL_KEY[l.fuelType] ? tWizard(FUEL_KEY[l.fuelType]) : "—") },
+    { label: tWizard("gearbox"), render: (l) => (l.gearbox && GEARBOX_KEY[l.gearbox] ? tWizard(GEARBOX_KEY[l.gearbox]) : "—") },
     {
       label: tWizard("condition"),
       render: (l) => (l.condition === "NEUF" ? tListing("conditionNeuf") : tListing("conditionOccasion")),

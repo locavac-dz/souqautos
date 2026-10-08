@@ -31,9 +31,9 @@ describe("sendSms — mode production", () => {
     vi.stubEnv("NODE_ENV", "production");
   });
 
-  it("envoie une requête POST à l'API Twilio", async () => {
+  it("envoie une requête POST à l'API Twilio et répond true", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    await sendSms(ARGS);
+    await expect(sendSms(ARGS)).resolves.toBe(true);
     expect(fetchMock).toHaveBeenCalledOnce();
     const [url, opts] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toContain("AC_test");
@@ -53,20 +53,32 @@ describe("sendSms — mode production", () => {
     expect(decoded.get("Body")).toBe(ARGS.message);
   });
 
-  it("logue une erreur sans lancer d'exception si Twilio répond en erreur", async () => {
+  // Lot 265 — `false` (et non une exception, ni un faux succès) quand le message n'est pas parti ; le journal
+  // ne contient ni le code ni le numéro complet.
+  it("répond false et logue une erreur sans le numéro complet si Twilio répond en erreur", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 400, text: async () => "invalid number" });
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(sendSms(ARGS)).resolves.toBeUndefined();
+    await expect(sendSms(ARGS)).resolves.toBe(false);
+    expect(spy).toHaveBeenCalled();
+    const logged = String(spy.mock.calls[0][0]);
+    expect(logged).not.toContain(ARGS.to);
+    expect(logged).not.toContain("123456");
+    spy.mockRestore();
+  });
+
+  it("répond false sans appel réseau si les variables Twilio manquent", async () => {
+    vi.stubEnv("TWILIO_ACCOUNT_SID", "");
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(sendSms(ARGS)).resolves.toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
   });
 
-  it("logue une erreur et ne lance pas d'exception si les variables Twilio manquent", async () => {
-    vi.stubEnv("TWILIO_ACCOUNT_SID", "");
+  it("répond false si Twilio est injoignable (exception réseau), sans propager", async () => {
+    fetchMock.mockRejectedValue(new Error("ECONNRESET"));
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(sendSms(ARGS)).resolves.toBeUndefined();
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(spy).toHaveBeenCalled();
+    await expect(sendSms(ARGS)).resolves.toBe(false);
     spy.mockRestore();
   });
 });

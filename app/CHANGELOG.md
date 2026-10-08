@@ -3361,7 +3361,7 @@ Lot de maintenance : `deployment-artifacts.test.ts` mis à jour pour les nouveau
 
 ## Migration 225 — Suppression des index GIN `pg_trgm` (2026-09-27)
 
-Migration `20260927120000_drop_trgm_indexes` supprimant les index `GIN` basés sur `pg_trgm`, qui provoquaient l'erreur `58P01` sur Windows (extension absente par défaut). La recherche s'appuie désormais sur les index `@@` natifs de PostgreSQL.
+Migration `20260927120000_drop_trgm_indexes` supprimant les index `GIN` basés sur `pg_trgm`, qui provoquaient l'erreur `58P01` sur Windows (extension absente par défaut). ~~La recherche s'appuie désormais sur les index `@@` natifs de PostgreSQL.~~ *(Correction, audit 2026-10-08 : cette phrase était fausse — aucun index plein-texte n'existait, la recherche par mot lisait toute la table. Rétabli de façon conditionnelle au Lot 265.)*
 
 ## Lot 226 — Vrais 404, contraste logo, spec de recherche e2e (2026-09-27)
 

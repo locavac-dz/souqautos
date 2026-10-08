@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
-import { activateListingFormula, sendListingFormulaDecisionEmail } from "@/lib/payment-fulfillment";
+import { confirmListingFormulaOrder, sendListingFormulaDecisionEmail } from "@/lib/payment-fulfillment";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -18,6 +18,8 @@ const bodySchema = z.object({
 // action de modération courante (argent réel), donc pas ouvert à MODERATEUR.
 // Lot 264 : une commande Chargily EN_ATTENTE (webhook jamais arrivé) peut aussi être tranchée ici,
 // après vérification dans le tableau de bord Chargily — l'activation est la même (payment-fulfillment).
+// Lot 265 : l'approbation passe par `confirmListingFormulaOrder` (transaction + contrôle du statut de
+// l'annonce) — une annonce suspendue entre-temps n'est pas republiée : 400 `listing_not_upgradable`.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user || !isAdmin(user.role)) {
@@ -48,28 +50,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const now = new Date();
   const isApproval = parsed.data.action === "approve";
-
-  // Deux admins pourraient approuver/refuser la même demande en même temps
-  // (deux onglets, double-clic) : le `findUnique` ci-dessus ne protège pas
-  // contre cette course. `updateMany` avec le statut EN_ATTENTE dans le
-  // `where` est atomique — si une autre requête a déjà tranché entre-temps,
-  // `count` vaut 0 et on s'arrête avant d'appliquer deux fois la formule ou
-  // d'envoyer deux fois l'email.
-  const { count } = await prisma.paymentOrder.updateMany({
-    where: { id, status: "EN_ATTENTE" },
-    data: {
-      status: isApproval ? "CONFIRMEE" : "REJETEE",
-      reviewedById: user.id,
-      reviewedAt: now,
-      reviewNote: parsed.data.reason?.trim() || null,
-    },
-  });
-  if (count === 0) {
-    return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
-  }
+  const reason = parsed.data.reason?.trim() || null;
 
   if (isApproval) {
-    await activateListingFormula(order.listing, order.formula, now);
+    const outcome = await confirmListingFormulaOrder(id, now, { kind: "admin", adminId: user.id, note: reason });
+    if (outcome === "not_found") return NextResponse.json({ error: "not_found" }, { status: 404 });
+    if (outcome === "already_decided") return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
+    if (outcome === "listing_not_upgradable") {
+      return NextResponse.json({ error: "listing_not_upgradable", listingStatus: order.listing.status }, { status: 400 });
+    }
+  } else {
+    // Deux admins pourraient trancher la même demande en même temps (deux onglets, double-clic) :
+    // `updateMany` filtré sur EN_ATTENTE est atomique — si `count` vaut 0, une autre requête a gagné.
+    const { count } = await prisma.paymentOrder.updateMany({
+      where: { id, status: "EN_ATTENTE" },
+      data: { status: "REJETEE", reviewedById: user.id, reviewedAt: now, reviewNote: reason },
+    });
+    if (count === 0) {
+      return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
+    }
+    await sendListingFormulaDecisionEmail(order.user, order.listing, { approved: false, reason: reason ?? "" });
   }
 
   await writeAuditLog({
@@ -86,14 +86,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       reason: parsed.data.reason ?? null,
     },
   });
-
-  await sendListingFormulaDecisionEmail(
-    order.user,
-    order.listing,
-    isApproval
-      ? { approved: true, source: order.provider === "CHARGILY" ? "chargily" : "virement" }
-      : { approved: false, reason: parsed.data.reason?.trim() ?? "" }
-  );
 
   return NextResponse.json({ status: isApproval ? "CONFIRMEE" : "REJETEE" });
 }
