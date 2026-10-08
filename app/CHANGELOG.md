@@ -3767,3 +3767,38 @@ Les annonces de démonstration (vendeurs `@example.dz`) n'étaient pas distingua
 - Les 5 annonces équipements ont une photo avec `creditAuthor`/`creditLicense` renseignés (requête Prisma).
 - Badge centré et lisible, contrôlé visuellement sur deux photos régénérées (coffre de toit 1 600×1 096, remorque 1 277×718).
 - `tsc` sans erreur.
+
+## Fix Lot 263 — photos équipements conformes aux garde-fous (2026-10-08)
+
+Le Lot 263 avait été commité sans relancer la suite complète : `tests/demo-photos.test.ts` échouait (entrées `CREDITS.json` sans `title`/`width`/`height`, remorque et galerie de toit sous 1 600 px de large, dossier `prisma/demo-photos/` à 22 Mo pour 16 Mo autorisés, README sans les équipements).
+
+**Corrigé**
+- Les 5 photos d'équipements passent en **version 1 920 px** de Wikimedia Commons, comme les 24 véhicules : coffre de toit, porte-vélos et booster retéléchargés à cette taille ; **remorque et galerie de toit remplacées** par des photos dont l'original dépasse 1 600 px (Land Rover + remorque, Leif Jørgensen, CC BY-SA 4.0 ; UAZ Patriot avec galerie, Retired electrician, CC0).
+- `CREDITS.json` complété (`title`, `width`, `height`, `note`), `README.md` : tableau des 5 équipements. Dossier à 15,1 Mo.
+- Photos démo régénérées en base (`apply-demo-photos --force`, 53/0/0).
+
+**Vérifié** : `demo-photos.test.ts` 63/63 ; suite complète 2 272 tests verts (depuis Git Bash — sous PowerShell, `backup-chain.test.ts` produit 3 faux échecs dus au `tar` Windows, sans rapport avec le code).
+
+## Lot 264 — Paiement en ligne CIB / Edahabia via Chargily Pay, mode test (2026-10-08)
+
+Jusqu'ici, formules d'annonce (Premium / Premium+) et abonnements professionnels ne se payaient que par **virement bancaire avec rapprochement humain** (Lot 66), faute d'accès SATIM. Chargily Pay est un prestataire algérien agréé qui donne accès aux cartes **CIB** et **Edahabia** sans contrat SATIM direct. Ce lot l'intègre comme second moyen de paiement ; le virement reste le repli. Chaque moyen n'est proposé que s'il est réellement configuré (clé Chargily / coordonnées bancaires) — jamais un bouton qui ne marcherait pas.
+
+**Principe de sécurité** : un paiement n'est **jamais** confirmé sur la seule page de retour du navigateur (l'acheteur peut la forger ou ne jamais l'ouvrir). Seules deux preuves comptent : le **webhook signé** par Chargily, ou la **relecture du statut** chez Chargily avec notre clé secrète.
+
+**Livré**
+- `src/lib/chargily.ts` (pur sauf deux appels réseau) : `resolveChargilyConfig` — mode déduit du **préfixe de la clé** (`test_sk_` = bac à sable, `live_sk_` = production), clé de test **refusée en production**, `CHARGILY_API_BASE_URL` pour les tests seulement (ignorée en production) ; `verifyChargilySignature` — HMAC-SHA256 du **corps brut** (pas re-sérialisé), comparaison à temps constant ; `parseChargilyEvent` (zod, type inconnu accepté puis ignoré, forme invalide refusée) ; `createChargilyCheckout` / `retrieveChargilyCheckout` (Bearer clé secrète, timeout 10 s, `ChargilyApiError`).
+- `src/lib/payment-fulfillment.ts` : activation de formule / de palier et courriels **extraits des routes de revue admin** (Lots 66/79) et partagés avec le webhook et la relecture — une seule logique d'activation. **Idempotence** : `EN_ATTENTE → CONFIRMEE` par `updateMany` filtré sur le statut ; un webhook rejoué, un webhook + une relecture, ou deux admins : un seul gagne, jamais deux activations ni deux courriels. Les routes admin existantes utilisent désormais ces fonctions (comportement inchangé, `provider` ajouté au journal d'audit).
+- `src/lib/chargily-events.ts` : commande retrouvée par `providerCheckoutId` (unique sur chaque table), jamais par une métadonnée recopiée par le prestataire ; **montant et devise vérifiés** avant activation (écart → rien, commande laissée à un humain, trace `[chargily]`) ; `paid` active, `failed`/`canceled`/`expired` annulent, le reste est ignoré.
+- Routes : `POST /api/webhooks/chargily` (corps lu en texte avant tout JSON ; 503 non configuré, 401 signature fausse, 400 corps illisible, **200** sinon — y compris checkout inconnu ou déjà tranché, pour que Chargily cesse de renvoyer) ; `POST /api/payments/chargily/refresh` (« Vérifier le paiement » : auteur de la commande seulement, 404 sinon, limite 30/h, même transition que le webhook — indispensable en local où Chargily ne peut pas joindre le serveur) ; `method: "virement" | "chargily"` sur `upgrade-formula` et `subscription/upgrade` (la commande existe avant le checkout, son identifiant sert de référence ; si Chargily ne répond pas, elle est **supprimée** et la route répond 502 — jamais une commande EN_ATTENTE sans checkout qui bloquerait l'annonce).
+- Schéma + migration `20261008020000_lot_264_chargily_pay` : enum `PaymentProvider` (VIREMENT | CHARGILY), colonnes `provider`, `providerCheckoutId @unique`, `paidAt` sur `PaymentOrder` et `ProSubscriptionOrder` ; statut **`ANNULEE`** (échec / annulation côté prestataire : ni confirmé ni refusé par un humain, compté à part dans les statistiques, hors taux de confirmation, libère la place « une seule commande EN_ATTENTE »).
+- UI : `ListingFormulaUpgrade` et `ProSubscriptionUpgrade` — panneau « Payer en ligne (CIB / Edahabia) » puis « ou par virement bancaire » ; `ChargilyPendingOrder` (statut en attente + bouton « Vérifier le paiement ») ; `PaymentReturnBanner` (`?paiement=ok|echec`, texte explicite : « en cours de confirmation », pas « confirmé ») ; tableau de bord pro : commande en attente affichée (virement ou en ligne) ; `/admin/paiements` : moyen de paiement, identifiant de checkout Chargily, compteur d'annulations. Namespaces `Payment` (nouveau), `MyListings`, `Pro`, `AdminPayments`, `Notifications` (courriels « paiement en ligne confirmé ») en FR et AR.
+- `launch:check` : contrôle `chargily` (clé de test en production = **erreur** ; absence = avertissement « virement seulement » ; ok = adresse du webhook à rendre joignable). `.env.example` (`CHARGILY_SECRET_KEY`, `CHARGILY_API_BASE_URL`), `docs/EXPLOITATION.md` § 5 quaterdecies (mise en place, confirmation, limites : pas de remboursement depuis le site, frais à vérifier chez Chargily).
+
+**Vérifié**
+- `tsc` propre ; **2 272 tests / 197 fichiers** verts, dont 49 nouveaux : `chargily.test.ts` (config, signature, événements, client avec `fetch` simulé), `chargily-events.test.ts`, `chargily-webhook-route.test.ts`, `upgrade-formula-route.test.ts` (virement conservé, chargily, suppression sur 502, éligibilité), `launch-checks.test.ts`, `payment-orders.test.ts` (ANNULEE). Lint propre sur les fichiers du lot.
+- En navigateur, contre un **faux serveur Chargily local** (script hors dépôt ; clé factice et `CHARGILY_API_BASE_URL` dans `.env.local`, ignoré par git) : paiement → webhook signé → annonce Premium (45 j) ; webhook volontairement perdu → « Vérifier le paiement » → Premium ; échec → `ANNULEE`, boutons de nouveau disponibles ; abonnement pro Business en ligne → palier actif ; commande Chargily restée en attente **approuvée depuis `/admin/paiements`** → palier Pro, `reviewedById` renseigné. Sondes : rejeu du webhook → `already_decided`, signature fausse ou absente → 401, montant falsifié → `amount_mismatch` sans activation.
+
+**Limites**
+- Aucune clé Chargily réelle n'a été utilisée : le bac à sable officiel reste à tester avec une clé `test_sk_…` (mettre la clé dans `.env.local`, retirer `CHARGILY_API_BASE_URL`). Frais, montant minimum et délais de versement sont à confirmer sur le tableau de bord Chargily.
+- Pas de remboursement depuis le site ; pas de choix forcé CIB/Edahabia (la page hébergée laisse l'acheteur choisir).
+- Les 18 libellés arabes sont à faire relire par un locuteur natif.
