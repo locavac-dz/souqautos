@@ -270,25 +270,31 @@
     "license": "CC0 1.0 Universal (Public Domain)",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Moscow,_Toyota_IQ_with_Thule_top,_Aug_2025_01.jpg",
-    "note": "Photo originale téléchargée depuis Wikimedia Commons (CC0)."
+    "note": "Version redimensionnée (1920 px de large) téléchargée depuis Wikimedia Commons, sans autre modification.",
+    "width": 1920,
+    "height": 1315
   },
   "Thule VeloCompact 927": {
     "file": "porte-velos.jpg",
     "title": "Farmington Police Ford Police Interceptor Utility with Bike Rack.jpg",
     "author": "42-BRT",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Farmington_Police_Ford_Police_Interceptor_Utility_with_Bike_Rack.jpg",
-    "note": "Photo originale téléchargée depuis Wikimedia Commons (CC BY-SA 4.0)."
+    "note": "Version redimensionnée (1920 px de large) téléchargée depuis Wikimedia Commons, sans autre modification.",
+    "width": 1920,
+    "height": 1079
   },
   "Équipement Remorque benne 750 kg": {
     "file": "remorque.jpg",
-    "title": "NB FL 19 facing SB Jeep Grand Cherokee and trailer in Salt Springs.jpg",
-    "author": "DanTD",
+    "title": "Land Rover with Dan Trailer at Sporvejsmuseet 01.jpg",
+    "author": "Leif Jørgensen",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:NB_FL_19_facing_SB_Jeep_Grand_Cherokee_and_trailer_in_Salt_Springs.jpg",
-    "note": "Photo originale téléchargée depuis Wikimedia Commons (CC BY-SA 4.0)."
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Land_Rover_with_Dan_Trailer_at_Sporvejsmuseet_01.jpg",
+    "note": "Version redimensionnée (1920 px de large) téléchargée depuis Wikimedia Commons, sans autre modification.",
+    "width": 1920,
+    "height": 1282
   },
   "Noco Boost Plus GB40": {
     "file": "booster-batterie.jpg",
@@ -297,15 +303,19 @@
     "license": "CC BY 2.0",
     "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:NOCO_Genius_Boost_GB40_-_Car_Battery_Booster_Jump_Starter_(27189494027).jpg",
-    "note": "Miniature 1280 px téléchargée depuis Wikimedia Commons (CC BY 2.0)."
+    "note": "Version redimensionnée (1920 px de large) téléchargée depuis Wikimedia Commons, sans autre modification.",
+    "width": 1920,
+    "height": 1280
   },
   "Équipement Galerie de toit acier 120×80 cm": {
     "file": "galerie-toit.jpg",
-    "title": "Roof Rack - 2012 Nissan Xterra Pro-4X (7549939082).jpg",
-    "author": "Michael Sheehan (hightechdad)",
-    "license": "CC BY 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Roof_Rack_-_2012_Nissan_Xterra_Pro-4X_(7549939082).jpg",
-    "note": "Miniature 1280 px téléchargée depuis Wikimedia Commons (CC BY 2.0)."
+    "title": "Moscow, UAZ Patriot with roof rack and cow catcher, Aug 2025 01.jpg",
+    "author": "Retired electrician",
+    "license": "CC0 1.0 Universal (Public Domain)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Moscow,_UAZ_Patriot_with_roof_rack_and_cow_catcher,_Aug_2025_01.jpg",
+    "note": "Version redimensionnée (1920 px de large) téléchargée depuis Wikimedia Commons, sans autre modification.",
+    "width": 1920,
+    "height": 1403
   }
 }

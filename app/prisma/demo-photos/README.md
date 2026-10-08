@@ -30,3 +30,13 @@ Chaque photo est un exemple du modèle, pas du véhicule décrit dans l'annonce 
 | Toyota Yaris | [Toyota Yaris 1.33 Dual VVT-i Comfort (XP130, Facelift) – Frontansicht, 17. August 2014, Düsseldorf.jpg](https://commons.wikimedia.org/wiki/File:Toyota_Yaris_1.33_Dual_VVT-i_Comfort_(XP130,_Facelift)_%E2%80%93_Frontansicht,_17._August_2014,_D%C3%BCsseldorf.jpg) | M 93 | [CC BY-SA 3.0 de](https://creativecommons.org/licenses/by-sa/3.0/de/deed.en) |
 | Volkswagen Golf | [2018 Volkswagen Golf R-Line TSi EVO S-A 1.5.jpg](https://commons.wikimedia.org/wiki/File:2018_Volkswagen_Golf_R-Line_TSi_EVO_S-A_1.5.jpg) | Vauxford | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | Volkswagen Passat | [Volkswagen Passat B8 (2019) IMG 1992.jpg](https://commons.wikimedia.org/wiki/File:Volkswagen_Passat_B8_(2019)_IMG_1992.jpg) | Alexander Migl | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
+
+Équipements (Lot 263) — mêmes règles, mêmes versions redimensionnées à 1 920 px :
+
+| Annonce | Photo (page source) | Auteur | Licence |
+|---|---|---|---|
+| Coffre de toit Thule 400 L | [Moscow, Toyota IQ with Thule top, Aug 2025 01.jpg](https://commons.wikimedia.org/wiki/File:Moscow,_Toyota_IQ_with_Thule_top,_Aug_2025_01.jpg) | Retired electrician | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Porte-vélos attelage 3 vélos Thule | [Farmington Police Ford Police Interceptor Utility with Bike Rack.jpg](https://commons.wikimedia.org/wiki/File:Farmington_Police_Ford_Police_Interceptor_Utility_with_Bike_Rack.jpg) | 42-BRT | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
+| Remorque benne basculante 750 kg | [Land Rover with Dan Trailer at Sporvejsmuseet 01.jpg](https://commons.wikimedia.org/wiki/File:Land_Rover_with_Dan_Trailer_at_Sporvejsmuseet_01.jpg) | Leif Jørgensen | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
+| Booster de batterie 1200A Noco Boost | [NOCO Genius Boost GB40 - Car Battery Booster Jump Starter (27189494027).jpg](https://commons.wikimedia.org/wiki/File:NOCO_Genius_Boost_GB40_-_Car_Battery_Booster_Jump_Starter_(27189494027).jpg) | Tony Webster | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) |
+| Galerie de toit universelle acier | [Moscow, UAZ Patriot with roof rack and cow catcher, Aug 2025 01.jpg](https://commons.wikimedia.org/wiki/File:Moscow,_UAZ_Patriot_with_roof_rack_and_cow_catcher,_Aug_2025_01.jpg) | Retired electrician | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
