@@ -3622,3 +3622,46 @@ La liste statique affichée sur la fiche annonce quand le vendeur avait modifié
 Dark mode natif (Tailwind `dark:`), RTL (formatage `ar-DZ`), accessible (`role="img"`, `aria-label`). Le graphe ne s'affiche que lorsqu'une annonce possède au moins deux entrées `ListingPriceHistory` — seuil déjà en place dans l'ancienne table.
 
 i18n FR/AR : 4 nouvelles clés dans le namespace `Listing` (`priceHistoryInitial`, `priceHistoryCurrent`, `priceHistoryDrop`, `priceHistoryRise`).
+
+## Lot 258 — Rubrique Équipements (magazine + annonces) (2026-10-08)
+
+**Magazine — nouvelle rubrique Équipements** (`kind: EQUIPEMENT` sur `BlogArticle`) :
+
+Migration `add_equipement_kind` : valeur `EQUIPEMENT` ajoutée à l'enum `ArticleKind`.
+
+Pages publiques `/equipement` (index paginé, cartes, JSON-LD `ItemList`) et `/equipement/[slug]` (article complet, fil d'Ariane, JSON-LD `Article`, métadonnées OG). La page `/mag/[slug]` redirige vers `/equipement/[slug]` si le slug appartient à un article de type `EQUIPEMENT`, et réciproquement pour un slug de type `ARTICLE`.
+
+Administration : `/admin/equipement` (liste avec badge brouillon/publié/programmé), `/admin/equipement/nouveau`, `/admin/equipement/[id]/modifier` — réutilise `BlogArticleForm` et `/api/admin/blog` avec `kind: EQUIPEMENT`. Entrée dans le menu admin. Sitemap mis à jour.
+
+7 articles de départ : coffre de toit, porte-vélos, attelage/remorque, galerie de toit, tapis/housses de siège, déflecteurs/bavettes, booster de batterie.
+
+Navigation : lien « Équipements » dans l'en-tête (`SiteHeader`) et le pied de page (`SiteFooter`). i18n FR/AR : 20 nouvelles clés dans les namespaces `Equipment` et `AdminEquipment`.
+
+**Annonces — nouvelle catégorie `ListingCategory.EQUIPEMENT`** :
+
+Migration `add_equipement_listing_category` : valeur `EQUIPEMENT` ajoutée à l'enum `ListingCategory` ; `fuelType`, `gearbox` et `mileage` rendus nullable pour accueillir les équipements sans motorisation.
+
+Validation Zod (`listing.ts`) : `fuelType`, `gearbox`, `mileage`, `power`, `bodyType` optionnels pour la catégorie `EQUIPEMENT` ; `superRefine` conserve les contraintes pour toutes les autres catégories (véhicules). Marque facultative pour les équipements.
+
+Wizard étape 2 (`Step2Fields`) : texte libre marque/modèle activé automatiquement à la sélection de la catégorie `EQUIPEMENT`, catalogue déroulant masqué. Étape 3 : carburant, boîte de vitesse, kilométrage, puissance et carrosserie masqués pour `EQUIPEMENT`.
+
+`ListingCard`, fiche annonce (`annonce/[id]`), `ListingEditForm` : gestion null-safe des champs mécaniques — aucun affichage si la valeur est `null`. `SearchFilters` : option « Équipements & accessoires » ajoutée au sélecteur de catégorie.
+
+## Fix — brandOther non initialisé pour EQUIPEMENT au chargement du draft (2026-10-08)
+
+`Step2Fields.tsx` : le `useState` initialisant `brandOther`/`modelOther` s'exécute une seule fois au montage, avant que `WizardContext` ait restauré le brouillon depuis `localStorage`. Pour un brouillon `category=EQUIPEMENT` sans `brandFreeText`, le flag restait à `false`, masquant les champs de saisie libre.
+
+Double correction : (1) la condition d'initialisation du `useState` inclut désormais `data.category === "EQUIPEMENT"` ; (2) un `useEffect` sur `data.category` force `setBrandOther(true)` / `setModelOther(true)` dès que la catégorie EQUIPEMENT arrive asynchronement.
+
+## Fix — catégorie AUTRE renommée en « Pièces détachées » (i18n uniquement) (2026-10-08)
+
+`messages/fr.json` : `"categoryAutre": "Pièces détachées"` (était `"Autre"`).
+`messages/ar.json` : `"categoryAutre": "قطع غيار"` (était `"أخرى"`).
+
+L'enum `ListingCategory.AUTRE` est inchangé en base et dans le code — modification de la traduction uniquement.
+
+## Fix — bouton langue toujours visible dans le header (2026-10-08)
+
+`SiteHeader.tsx` : `ThemeToggle` et `LocaleSwitcher` se trouvaient en fin de `navContent`, à l'intérieur du `<nav>` en `overflow-hidden`. Avec de nombreux liens (utilisateur connecté + admin), ils étaient poussés hors de l'écran visible.
+
+Correction : les deux composants sont déplacés dans un conteneur `shrink-0 ltr:ml-auto rtl:mr-auto` placé directement dans la `div` de la barre de navigation, en dehors du `<nav>`. Ils restent ainsi toujours visibles quelle que soit la longueur de la liste de liens, et sont accessibles depuis le menu mobile (`MobileMenuToggle`) qui reprend `navContent`.
