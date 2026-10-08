@@ -3735,3 +3735,9 @@ Page dédiée aux annonces de catégorie EQUIPEMENT, distincte de `/recherche`.
 - Vérifié en navigateur : FR et AR (RTL), filtres pré-remplis depuis l'URL, message « Aucune annonce » quand 0 résultat.
 
 **Note** : le lien de navigation vers `/equipement` a été retiré du header et du footer (session précédente) et n'est pas remis ici — la page reste accessible directement ou via `/recherche?categorie=EQUIPEMENT`.
+
+## Fix — réintégrer le lien Équipements dans le header et le footer (2026-10-08)
+
+`SiteHeader.tsx` : ajout de `<NavLink href="/equipement">{tNav("navEquipement")}</NavLink>` dans `publicLinks`, après le lien Essais — visible en desktop et dans le menu mobile.
+
+`SiteFooter.tsx` : ajout de `<Link href="/equipement">{t("equipment")}</Link>` dans la première colonne de la grille, après Guides — clé `"equipment"` déjà présente dans le namespace `Footer`.
