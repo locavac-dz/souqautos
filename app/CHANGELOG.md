@@ -3721,3 +3721,17 @@ Le Lot 258 a rendu `mileage` nullable (`Int?`) dans le schéma Prisma pour la ca
 **Editorial** : section `"equipment"` ajoutée à `EDITORIAL_SECTIONS`, `TARGET_DAYS`, `KIND_TO_SECTION` et `ADMIN_BASE` de la page `/admin/editorial`.
 
 **Tests** : types locaux `Row`/`Card` dans `price-estimation-equivalence.test.ts` mis à jour, guard `null` ajouté dans l'algo de référence.
+
+## Lot 261 — Page publique `/equipement` (2026-10-08)
+
+Page dédiée aux annonces de catégorie EQUIPEMENT, distincte de `/recherche`.
+
+**Livré**
+- `app/[locale]/equipement/page.tsx` : Server Component ; `category: "EQUIPEMENT"` fixé côté serveur (non surchargeable par l'URL) ; pagination 20/page ; réutilise `listingCardInclude`, `ListingCard`, `Pagination`, `SortSelect` et les helpers `buildListingWhere`/`buildListingOrderBy`.
+- `components/equipement/EquipementFilters.tsx` : filtres client adaptés à la catégorie (recherche texte, prix min/max, état, wilaya) — sans marque/modèle/carburant/boîte qui n'ont pas de sens pour les équipements.
+- Namespace i18n `EquipementSearch` (18 clés) ajouté à `messages/fr.json` et `messages/ar.json`.
+- SEO : `generateMetadata` avec titre, description, `alternates` bilingues FR/AR.
+- Pas de badge « Bon Prix » (pas de comparables catalogue pour EQUIPEMENT, `priceBadge: null`).
+- Vérifié en navigateur : FR et AR (RTL), filtres pré-remplis depuis l'URL, message « Aucune annonce » quand 0 résultat.
+
+**Note** : le lien de navigation vers `/equipement` a été retiré du header et du footer (session précédente) et n'est pas remis ici — la page reste accessible directement ou via `/recherche?categorie=EQUIPEMENT`.
