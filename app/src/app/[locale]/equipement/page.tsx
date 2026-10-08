@@ -12,7 +12,6 @@ import {
   paginationOffset,
   totalPages as computeTotalPages,
   listingCardInclude,
-  type ListingWithCardRelations,
 } from "@/lib/search";
 import { getSearchWilayas } from "@/lib/reference-data";
 import { ListingCard } from "@/components/search/ListingCard";

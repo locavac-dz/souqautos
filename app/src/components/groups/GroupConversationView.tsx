@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { GroupMessageList, type GroupMessageRow } from "./GroupMessageList";
 import { GroupMessageThread } from "./GroupMessageThread";
 import { PushToggle } from "@/components/PushToggle";
@@ -25,6 +26,7 @@ type Props = {
 
 export function GroupConversationView({ group, initialMessages, currentUserId, initialHasMore }: Props) {
   const t = useTranslations("Groups");
+  const router = useRouter();
   const [messages, setMessages] = useState<GroupMessageRow[]>(initialMessages);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -146,7 +148,9 @@ export function GroupConversationView({ group, initialMessages, currentUserId, i
   async function handleLeave() {
     if (!leaving) { setLeaving(true); return; }
     const res = await fetch(`/api/groups/${group.id}/members/${currentUserId}`, { method: "DELETE" });
-    if (res.ok) window.location.href = "/compte/groupes";
+    // Lot 267 — navigation Next (préfixe de langue conservé : un arabophone restait auparavant tributaire du cookie
+    // NEXT_LOCALE pour ne pas atterrir en français), au lieu d'un rechargement complet.
+    if (res.ok) router.push("/compte/groupes");
     else setLeaving(false);
   }
 

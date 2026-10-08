@@ -25,6 +25,11 @@ const goodEnv = {
   TRUSTED_PROXY_HOPS: "1",
   REDIS_URL: "redis://redis.internal:6379",
   S3_BUCKET: "souq-auto-photos",
+  S3_PUBLIC_URL: "https://photos.souqauto.example/souq-auto-photos",
+  S3_ENDPOINT: "https://s3.fr-par.scw.cloud",
+  S3_ACCESS_KEY_ID: "cle-acces-de-test",
+  S3_SECRET_ACCESS_KEY: "secret-de-test",
+  STAFF_ALERT_EMAILS: "moderation@souqauto.example",
   VAPID_PUBLIC_KEY: vapid.publicKey,
   VAPID_PRIVATE_KEY: vapid.privateKey,
   VAPID_SUBJECT: "mailto:contact@souqauto.example",
@@ -170,8 +175,10 @@ describe("evaluateLaunchReadiness — double authentification de l'équipe (Lot 
 });
 
 describe("evaluateLaunchReadiness — alertes techniques (Lot 136)", () => {
-  const { OPS_ALERT_EMAILS, ...withoutAlerts } = goodEnv;
+  // Sans OPS_ALERT_EMAILS NI STAFF_ALERT_EMAILS (le repli) : personne n'est prévenu.
+  const { OPS_ALERT_EMAILS, STAFF_ALERT_EMAILS, ...withoutAlerts } = goodEnv;
   void OPS_ALERT_EMAILS;
+  void STAFF_ALERT_EMAILS;
 
   it("is fine when technical alerts have a recipient, and says how many", () => {
     const results = evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts });
@@ -183,7 +190,8 @@ describe("evaluateLaunchReadiness — alertes techniques (Lot 136)", () => {
     const results = evaluateLaunchReadiness({ env: withoutAlerts, facts: goodFacts });
     expect(level(results, "ops-alerts")).toEqual(["warning"]);
     expect(results.find((r) => r.id === "ops-alerts")?.fix).toContain("OPS_ALERT_EMAILS");
-    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+    // + l'avertissement « alertes de modération » (Lot 267), lui aussi sans destinataire ici.
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 2, ready: true });
   });
 
   it("falls back to the moderation team's addresses, and ignores malformed ones", () => {
@@ -265,6 +273,43 @@ describe("evaluateLaunchReadiness — Search Console (Lot 124)", () => {
   });
 });
 
+describe("evaluateLaunchReadiness — variables oubliées (Lot 267, audit B7)", () => {
+  const without = (...keys: string[]) => Object.fromEntries(Object.entries(goodEnv).filter(([k]) => !keys.includes(k)));
+
+  it("warns when the moderation team has no alert address, even if the technical one is set", () => {
+    const results = evaluateLaunchReadiness({ env: without("STAFF_ALERT_EMAILS"), facts: goodFacts });
+    expect(level(results, "staff-alerts")).toEqual(["warning"]);
+    expect(level(results, "ops-alerts")).toEqual(["ok"]);
+    expect(results.find((r) => r.id === "staff-alerts")?.fix).toContain("STAFF_ALERT_EMAILS");
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+    expect(level(evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts }), "staff-alerts")).toEqual(["ok"]);
+  });
+
+  it("blocks an S3 bucket without public URL (every photo would 404) or without credentials", () => {
+    expect(level(evaluateLaunchReadiness({ env: without("S3_PUBLIC_URL"), facts: goodFacts }), "storage")).toEqual(["error"]);
+    expect(level(evaluateLaunchReadiness({ env: without("S3_SECRET_ACCESS_KEY"), facts: goodFacts }), "storage")).toEqual(["error"]);
+    expect(level(evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts }), "storage")).toEqual(["ok"]);
+  });
+
+  it("only warns about a missing S3 endpoint (AWS works without, other providers do not)", () => {
+    const results = evaluateLaunchReadiness({ env: without("S3_ENDPOINT"), facts: goodFacts });
+    expect(level(results, "storage")).toEqual(["ok"]);
+    expect(level(results, "storage-endpoint")).toEqual(["warning"]);
+  });
+
+  it("warns when a cache is disabled with 0 (reserved for tests)", () => {
+    const results = evaluateLaunchReadiness({ env: { ...goodEnv, RESPONSIVENESS_CACHE_TTL_MS: "0", CATALOGUE_STATS_CACHE_TTL_MS: "0" }, facts: goodFacts });
+    expect(level(results, "cache")).toEqual(["warning", "warning"]);
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, RESPONSIVENESS_CACHE_TTL_MS: "300000" }, facts: goodFacts }), "cache")).toEqual([]);
+  });
+
+  it("warns when the Chargily test base URL is left in a production configuration", () => {
+    const results = evaluateLaunchReadiness({ env: { ...goodEnv, CHARGILY_API_BASE_URL: "http://127.0.0.1:5189" }, facts: goodFacts });
+    expect(level(results, "chargily")).toEqual(["warning"]);
+    expect(results.find((r) => r.id === "chargily")?.fix).toContain("CHARGILY_API_BASE_URL");
+  });
+});
+
 describe("evaluateLaunchReadiness — SMS Twilio et ADMIN_EMAIL (Lot 265, audit A5)", () => {
   const without = (...keys: string[]) => Object.fromEntries(Object.entries(goodEnv).filter(([k]) => !keys.includes(k)));
 
@@ -324,9 +369,10 @@ describe("evaluateLaunchReadiness — paiement en ligne Chargily Pay (Lot 264)",
     expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, CHARGILY_SECRET_KEY: "pk_live_nope" }, facts: goodFacts }), "chargily")).toEqual(["error"]);
   });
 
-  it("ignores the test-only replacement of Chargily's address when judging as production", () => {
+  it("still resolves the live configuration when the test-only address is present (it is ignored in production), but flags it (Lot 267)", () => {
     const results = evaluateLaunchReadiness({ env: { ...goodEnv, CHARGILY_API_BASE_URL: "http://127.0.0.1:5189" }, facts: goodFacts });
-    expect(level(results, "chargily")).toEqual(["ok"]);
+    expect(level(results, "chargily")).toEqual(["warning"]);
+    expect(summarizeChecks(results).ready).toBe(true);
   });
 });
 

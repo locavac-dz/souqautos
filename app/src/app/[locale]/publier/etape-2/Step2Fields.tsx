@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
@@ -25,17 +25,14 @@ const CATEGORY_KEY: Record<ListingCategory, string> = {
 export function Step2Fields({ brands }: { brands: BrandRow[] }) {
   const t = useTranslations("Wizard");
   const { data, setData } = useWizard();
-  const [brandOther, setBrandOther] = useState(data.category === "EQUIPEMENT" || (!data.brandId && Boolean(data.brandFreeText)));
-  const [modelOther, setModelOther] = useState(data.category === "EQUIPEMENT" || (!data.modelId && Boolean(data.modelFreeText)));
+  const [brandOtherChoice, setBrandOther] = useState(!data.brandId && Boolean(data.brandFreeText));
+  const [modelOtherChoice, setModelOther] = useState(!data.modelId && Boolean(data.modelFreeText));
   const [error, setError] = useState<string | null>(null);
-
-  // Quand le draft restaure category=EQUIPEMENT de façon asynchrone, useState ne se réexécute pas.
-  useEffect(() => {
-    if (data.category === "EQUIPEMENT") {
-      setBrandOther(true);
-      setModelOther(true);
-    }
-  }, [data.category]);
+  // Lot 267 (audit B9) — un équipement n'a pas de catalogue : la saisie libre est DÉRIVÉE de la catégorie (y compris
+  // quand le brouillon la restaure après le premier rendu), au lieu d'être recopiée dans l'état par un effet
+  // (règle react-hooks/set-state-in-effect, qui faisait échouer le lint et la CI).
+  const brandOther = data.category === "EQUIPEMENT" || brandOtherChoice;
+  const modelOther = data.category === "EQUIPEMENT" || modelOtherChoice;
 
   // Lot 130 — marques et modèles proposés selon la catégorie choisie (un deux-roues ne propose pas Renault).
   const visibleBrands = useMemo(() => filterCatalogueByCategory(brands, data.category), [brands, data.category]);

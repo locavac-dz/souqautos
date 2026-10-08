@@ -3,15 +3,21 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { publishToGroup } from "@/lib/realtime";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const addSchema = z.object({ email: z.string().email() });
 
+// Lot 267 (audit B6) — 30 ajouts par heure et par compte : la réponse 404 / 409 révèle si une adresse a un compte
+// (nécessaire pour l'administrateur du groupe), le plafond empêche d'en faire un outil d'énumération.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  if (!(await checkRateLimit(`group-add-member:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   const { id } = await params;
 

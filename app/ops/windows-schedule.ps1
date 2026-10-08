@@ -1,7 +1,8 @@
 ﻿<#
 Souq Auto — planification des sauvegardes et de la supervision sous Windows (Planificateur de tâches).
 
-Par défaut, N'INSTALLE RIEN : affiche les trois tâches qui seraient créées.
+Par défaut, N'INSTALLE RIEN : affiche les quatre tâches qui seraient créées (sauvegarde, veilleur, test de restauration,
+balayage nocturne des annonces — ce dernier exige CRON_SECRET dans .env, voir docs/EXPLOITATION.md section 3).
   .\ops\windows-schedule.ps1            aperçu
   .\ops\windows-schedule.ps1 -Apply     crée (ou remplace) les tâches
   .\ops\windows-schedule.ps1 -Remove    supprime les tâches
@@ -24,7 +25,11 @@ $tasks = @(
   @{ Name = 'SouqAuto-Veilleur'; Script = 'ops:check -- --notify'; Log = 'ops-check.log'
      Trigger = { New-ScheduledTaskTrigger -Once -At '00:05' -RepetitionInterval (New-TimeSpan -Hours 1) } },
   @{ Name = 'SouqAuto-TestRestauration'; Script = 'db:restore-check'; Log = 'restore-check.log'
-     Trigger = { New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At '03:30' } }
+     Trigger = { New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At '03:30' } },
+  # Lot 267 — balayage nocturne (expiration, rappels, renouvellement automatique, commandes Chargily en attente) : POST
+  # /api/cron/sweep via CRON_SECRET. Manquait ici alors que crontab.example le planifiait.
+  @{ Name = 'SouqAuto-Balayage'; Script = 'cron:sweep'; Log = 'sweep.log'
+     Trigger = { New-ScheduledTaskTrigger -Daily -At '04:00' } }
 )
 
 foreach ($t in $tasks) {

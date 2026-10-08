@@ -5,6 +5,7 @@ import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import { sweepOldNotifications } from "@/lib/notification-sweep";
 import { sweepOldLoginEvents } from "@/lib/login-event-sweep";
 import { sweepPendingChargilyOrders } from "@/lib/chargily-events";
+import { safeEqual } from "@/lib/google-oauth";
 
 // Called nightly by cron (see ops/crontab.example).
 // Runs the three sweepers directly — bypasses throttledSweep which is designed
@@ -15,8 +16,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
   }
 
-  const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${secret}`) {
+  // Lot 267 (audit F2) — comparaison à temps constant, comme pour les autres secrets (google-oauth, chargily).
+  const auth = req.headers.get("authorization") ?? "";
+  if (!safeEqual(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

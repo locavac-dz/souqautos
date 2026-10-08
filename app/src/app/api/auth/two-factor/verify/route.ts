@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const lockedUntil = lockedUntilForAttempts(failedLoginAttempts, now);
     if (lockedUntil) {
       await prisma.user.update({ where: { id: user.id }, data: { lockedUntil } });
-      console.warn(`[auth] Compte verrouillé après ${failedLoginAttempts} échecs (second facteur) : ${user.email}`);
+      console.warn(`[auth] Compte verrouillé après ${failedLoginAttempts} échecs (second facteur) : utilisateur ${user.id}`);
     }
     return NextResponse.json({ error: "invalid_code" }, { status: 401, headers: NO_STORE });
   }

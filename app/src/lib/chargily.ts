@@ -122,8 +122,9 @@ async function chargilyRequest(config: ChargilyConfig, method: "GET" | "POST", p
     });
     const text = await response.text();
     if (!response.ok) {
-      // Jamais le corps complet dans l'erreur (il peut citer des données de l'acheteur) : code + début.
-      throw new ChargilyApiError(`Chargily ${method} ${path} → HTTP ${response.status} ${text.slice(0, 200)}`, response.status);
+      // Jamais le corps de la réponse dans l'erreur (il peut citer des données de l'acheteur, et finit dans les
+      // journaux) : le code HTTP suffit (Lot 267, audit F3).
+      throw new ChargilyApiError(`Chargily ${method} ${path} → HTTP ${response.status}`, response.status);
     }
     try {
       return JSON.parse(text) as unknown;

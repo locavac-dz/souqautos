@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseChargilyEvent, resolveChargilyConfig, verifyChargilySignature } from "@/lib/chargily";
 import { applyChargilyCheckoutState, checkoutStatusFromEvent } from "@/lib/chargily-events";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
+
+// Lot 267 (audit F1) — un événement Chargily fait quelques Ko ; au-delà, inutile de lire le corps ni de calculer un
+// HMAC dessus (appelant non authentifié). Et au plus 120 appels par minute et par adresse : largement au-dessus
+// du rythme réel des webhooks, mais borné.
+export const MAX_WEBHOOK_BODY_BYTES = 64 * 1024;
 
 // Lot 264 — réception des événements Chargily Pay. Aucune session : l'authenticité vient de la
 // signature HMAC du corps brut avec notre clé secrète. Le corps est lu en texte AVANT tout JSON.parse :
@@ -18,7 +25,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "chargily_not_configured" }, { status: 503 });
   }
 
+  const declaredLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_WEBHOOK_BODY_BYTES) {
+    return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
+  }
+  if (!(await checkRateLimit(`chargily-webhook:${getClientIp(request)}`, { limit: 120, windowMs: 60 * 1000 }))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const rawBody = await request.text();
+  if (rawBody.length > MAX_WEBHOOK_BODY_BYTES) {
+    return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
+  }
   if (!verifyChargilySignature(rawBody, request.headers.get("signature"), resolution.config.secretKey)) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
   }

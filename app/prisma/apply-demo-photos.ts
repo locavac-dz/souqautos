@@ -8,7 +8,7 @@
 // Ne touche qu'aux annonces des comptes de démonstration (adresses @example.dz). Sur une base neuve,
 // `npm run db:seed:demo` pose directement les vraies photos ; ce script sert à mettre à niveau une base existante.
 
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import sharp from "sharp";
 import { PrismaClient } from "@prisma/client";
 import { deleteStoredFile, storeProcessedImage } from "../src/lib/uploads";
@@ -40,7 +40,6 @@ async function generatePlaceholderWithBadge(label1: string, label2: string): Pro
     <text x="600" y="859" font-family="Arial, sans-serif" font-size="26" fill="#ffffff" text-anchor="middle" font-weight="bold" letter-spacing="5">D&#201;MO</text>
   </svg>`;
   const output = await sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toBuffer();
-  const sha256 = createHash("sha256").update(output).digest("hex");
   const filename = `${randomUUID()}.jpg`;
   const storedPath = await storeProcessedImage("listings", filename, output);
   return storedPath;

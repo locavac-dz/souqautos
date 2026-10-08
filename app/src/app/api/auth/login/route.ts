@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
     const lockedUntil = lockedUntilForAttempts(failedLoginAttempts, now);
     if (lockedUntil) {
       await prisma.user.update({ where: { id: user.id }, data: { lockedUntil } });
-      console.warn(`[auth] Compte verrouillé après ${failedLoginAttempts} échecs : ${user.email}`);
+      // Lot 267 (audit B8) — identifiant du compte, jamais l'adresse e-mail, dans les journaux.
+      console.warn(`[auth] Compte verrouillé après ${failedLoginAttempts} échecs : utilisateur ${user.id}`);
     }
     after(() => recordLoginEvent({ userId: user.id, ip, userAgent, method: "password", success: false }));
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });

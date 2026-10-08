@@ -16,10 +16,16 @@ import { POST } from "@/app/api/webhooks/chargily/route";
 const SECRET = "test_sk_abcdefghijklmnopqrstuvwxyz0123456789";
 const sign = (body: string, key = SECRET) => createHmac("sha256", key).update(body).digest("hex");
 
-function request(body: string, signature: string | null): NextRequest {
+function request(body: string, signature: string | null, contentLength?: number): NextRequest {
   return {
     text: async () => body,
-    headers: { get: (name: string) => (name.toLowerCase() === "signature" ? signature : null) },
+    headers: {
+      get: (name: string) => {
+        if (name.toLowerCase() === "signature") return signature;
+        if (name.toLowerCase() === "content-length") return contentLength === undefined ? null : String(contentLength);
+        return null;
+      },
+    },
   } as unknown as NextRequest;
 }
 
@@ -43,6 +49,13 @@ describe("POST /api/webhooks/chargily", () => {
     expect((await POST(request(PAID, null))).status).toBe(401);
     expect((await POST(request(PAID, sign(PAID, "live_sk_other")))).status).toBe(401);
     expect((await POST(request(PAID.replace("1500", "1"), sign(PAID)))).status).toBe(401);
+    expect(applyChargilyCheckoutState).not.toHaveBeenCalled();
+  });
+
+  it("refuses an oversized body before reading or signing it (Lot 267, audit F1)", async () => {
+    expect((await POST(request(PAID, sign(PAID), 10 * 1024 * 1024))).status).toBe(413);
+    const huge = PAID + " ".repeat(70 * 1024);
+    expect((await POST(request(huge, sign(huge)))).status).toBe(413);
     expect(applyChargilyCheckoutState).not.toHaveBeenCalled();
   });
 

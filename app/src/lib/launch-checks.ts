@@ -1,5 +1,5 @@
 import { staffTwoFactorRequired } from "@/lib/staff-two-factor";
-import { resolveOpsRecipients } from "@/lib/alert-recipients";
+import { parseAlertEmails, resolveOpsRecipients } from "@/lib/alert-recipients";
 import { resolveMailConfig, DEFAULT_MAIL_FROM } from "@/lib/mail-config";
 import { parseTrustedProxyHops } from "@/lib/client-ip";
 import { resolvePushConfig, vapidKeysMatch } from "@/lib/push";
@@ -248,6 +248,11 @@ function checkChargily(env: Env): CheckResult {
     return { id: "chargily", level: "warning", message: "Paiement en ligne (Chargily Pay) désactivé : les formules et abonnements ne se paient que par virement, avec rapprochement humain.", fix: "Définir CHARGILY_SECRET_KEY (clé live_sk_… d'un compte Chargily Pay vérifié). Voir .env.example." };
   }
   const site = (env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  if (env.CHARGILY_API_BASE_URL?.trim()) {
+    // Ignorée en production (resolveChargilyConfig), mais sa présence dans un .env de production trahit une configuration
+    // de test copiée telle quelle (Lot 267, audit B7).
+    return { id: "chargily", level: "warning", message: "CHARGILY_API_BASE_URL est défini : cette variable de TEST (faux serveur) est ignorée en production, mais sa présence signale un fichier de configuration copié depuis un poste de développement.", fix: "Retirer CHARGILY_API_BASE_URL de la configuration de production." };
+  }
   return { id: "chargily", level: "ok", message: `Paiement en ligne Chargily Pay configuré (mode live). Webhook appelé par Chargily : ${site}${CHARGILY_WEBHOOK_PATH}` };
 }
 
@@ -306,11 +311,44 @@ function checkInfrastructure(env: Env): CheckResult[] {
 
   if (!env.S3_BUCKET) {
     results.push({ id: "storage", level: "warning", message: "Pas de stockage S3 : les photos sont écrites sur le disque du serveur. À sauvegarder avec la base, et impossible avec plusieurs instances.", fix: "Définir S3_* (voir .env.example) ou prévoir la sauvegarde du dossier public/uploads." });
+  } else if (!env.S3_PUBLIC_URL?.trim()) {
+    // Lot 267 (audit B7) — storage.ts construit l'adresse publique des photos à partir de S3_PUBLIC_URL : sans elle, chaque
+    // photo est enregistrée sous « /<clé> » et répond 404.
+    results.push({ id: "storage", level: "error", message: "S3_BUCKET est défini mais pas S3_PUBLIC_URL : chaque photo envoyée serait enregistrée avec une adresse fausse (404).", fix: "Définir S3_PUBLIC_URL (adresse de base lue par les navigateurs, voir .env.example)." });
+  } else if (!env.S3_ACCESS_KEY_ID?.trim() || !env.S3_SECRET_ACCESS_KEY?.trim()) {
+    results.push({ id: "storage", level: "error", message: "S3_BUCKET est défini sans S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY : les envois de photos échoueraient (repli disque local silencieux).", fix: "Définir les identifiants du compte de stockage (voir .env.example)." });
   } else {
-    results.push({ id: "storage", level: "ok", message: "Stockage S3 configuré." });
+    results.push({ id: "storage", level: "ok", message: `Stockage S3 configuré (${env.S3_BUCKET}).` });
+    if (!env.S3_ENDPOINT?.trim()) {
+      results.push({ id: "storage-endpoint", level: "warning", message: "S3_ENDPOINT n'est pas défini : seul AWS S3 fonctionne sans ; un autre fournisseur (MinIO, OVH, Scaleway…) a besoin de son adresse.", fix: "Définir S3_ENDPOINT, sauf sur AWS." });
+    }
+  }
+
+  // Lot 267 (audit B7) — un cache désactivé (0) est prévu pour les tests, jamais pour la production (mesuré : la recherche
+  // passe de 458 à 1 491 ms à 10 visiteurs sans le cache de réactivité).
+  for (const [name, label] of [["RESPONSIVENESS_CACHE_TTL_MS", "réactivité des vendeurs"], ["CATALOGUE_STATS_CACHE_TTL_MS", "agrégats du catalogue"]] as const) {
+    if (env[name]?.trim() === "0") {
+      results.push({ id: "cache", level: "warning", message: `${name}=0 : le cache des ${label} est désactivé, ce qui multiplie les requêtes sur les pages de résultats.`, fix: `Retirer ${name} (valeur par défaut) ou lui donner une durée en millisecondes.` });
+    }
   }
 
   return results;
+}
+
+// Lot 267 (audit B7) — STAFF_ALERT_EMAILS n'était contrôlé que comme repli des alertes techniques : avec OPS_ALERT_EMAILS
+// défini et STAFF_ALERT_EMAILS absent, launch:check disait « ok » alors que la file de modération (annonces, avis,
+// identités, signalements, paiements à examiner) ne prévenait personne.
+function checkStaffAlerts(env: Env): CheckResult {
+  const recipients = parseAlertEmails(env.STAFF_ALERT_EMAILS);
+  if (recipients.length > 0) {
+    return { id: "staff-alerts", level: "ok", message: `Alertes de modération envoyées à ${recipients.length} adresse(s).` };
+  }
+  return {
+    id: "staff-alerts",
+    level: "warning",
+    message: "STAFF_ALERT_EMAILS n'est pas défini : une annonce, un avis, une demande d'identité, un signalement ou un paiement à examiner ne prévient personne — la file n'est vue qu'en ouvrant le back-office.",
+    fix: "Définir STAFF_ALERT_EMAILS (adresses de l'équipe de modération, séparées par des virgules).",
+  };
 }
 
 function checkFacts(facts: LaunchFacts): CheckResult[] {
@@ -353,6 +391,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkSearchConsole(env),
     checkSecurityPolicy(env),
     checkAlertRecipients(env),
+    checkStaffAlerts(env),
     checkCronSweep(env),
     checkChargily(env),
     ...checkStaffTwoFactor(env, facts),
