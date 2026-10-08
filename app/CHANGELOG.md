@@ -3751,3 +3751,19 @@ Les rubriques Essais et Guides disposaient d'un flux RSS depuis le Lot 111 ; la 
 - `app/[locale]/equipement/[slug]/page.tsx` : `<link rel="alternate" type="application/rss+xml">` ajouté dans `generateMetadata` (via `alternates.types`) ; lien texte visible en pied d'article (`t("rssLink")`).
 - `Equipement.rssLink` ajouté à `messages/fr.json` (`"Flux RSS des articles équipements"`) et `messages/ar.json` (`"خلاصة RSS لمقالات التجهيزات"`).
 - Correction : `SiteHeader.tsx` utilisait `tNav("navEquipement")` (clé inexistante dans le namespace `Nav`) — remplacé par `tNav("equipment")` (clé déjà présente). Tests i18n : 12/12.
+
+## Lot 263 — Badge DÉMO incrusté sur les photos démo + vraies photos des équipements (2026-10-08)
+
+Les annonces de démonstration (vendeurs `@example.dz`) n'étaient pas distinguables d'une vraie annonce sur leurs photos, et les 5 annonces équipements démo n'avaient que des placeholders colorés.
+
+**Livré**
+- `prisma/demo-photo-store.ts` : `storeDemoPhoto` lit la photo Wikimedia, la redimensionne (≤ 1 600 px) et **composite un badge « DÉMO »** semi-transparent (SVG via `sharp.composite`) avant `storeProcessedImage`. Badge **centré en bas** et non dans un coin : les cartes affichent les photos en 4:3 avec `object-cover`, donc un coin d'une photo 16:9 est rogné alors que le centre ne l'est jamais (première version en bas à droite : badge invisible sur les cartes, corrigé).
+- `prisma/seed-demo-listings.ts` : même badge dans le placeholder SVG ; les annonces équipements passent désormais par `storeDemoPhoto` (photo réelle si créditée, placeholder sinon), comme les véhicules.
+- `prisma/apply-demo-photos.ts` : option `--force` (régénère toutes les photos, utile après un changement du badge ou du traitement) ; gère les équipements sans relation catalogue. Clé `CREDITS.json` unifiée : `« Marque Modèle »` du catalogue pour les véhicules, `« brandFreeText modelFreeText »` (`« Équipement »` à défaut de marque) pour les équipements — partagée par le seed et le script de mise à niveau.
+- 5 photos Wikimedia Commons ajoutées à `prisma/demo-photos/` et créditées dans `CREDITS.json` : coffre de toit Thule (CC0), porte-vélos Thule (CC BY-SA 4.0), remorque (CC BY-SA 4.0), booster Noco GB40 (CC BY 2.0), galerie de toit (CC BY 2.0).
+
+**Vérifié**
+- `npx tsx prisma/apply-demo-photos.ts --force` sur la base de dev : 53 photos régénérées, 0 ignorée, 0 sans solution.
+- Les 5 annonces équipements ont une photo avec `creditAuthor`/`creditLicense` renseignés (requête Prisma).
+- Badge centré et lisible, contrôlé visuellement sur deux photos régénérées (coffre de toit 1 600×1 096, remorque 1 277×718).
+- `tsc` sans erreur.
