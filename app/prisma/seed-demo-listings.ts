@@ -62,6 +62,8 @@ async function generatePlaceholderPhoto(brand: string, model: string): Promise<s
     <rect width="100%" height="100%" fill="${color}"/>
     <text x="50%" y="45%" font-family="Arial, sans-serif" font-size="72" fill="#ffffff" text-anchor="middle" font-weight="bold">${escapeXml(brand)}</text>
     <text x="50%" y="58%" font-family="Arial, sans-serif" font-size="44" fill="#e2e8f0" text-anchor="middle">${escapeXml(model)}</text>
+    <rect x="522" y="824" width="156" height="52" rx="8" fill="rgba(0,0,0,0.62)"/>
+    <text x="600" y="859" font-family="Arial, sans-serif" font-size="26" fill="#ffffff" text-anchor="middle" font-weight="bold" letter-spacing="5">D&#201;MO</text>
   </svg>`;
 
   const output = await sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toBuffer();
@@ -350,8 +352,15 @@ async function main() {
       },
     });
 
-    const photoPath = await generatePlaceholderPhoto(item.brandFreeText ?? "Équipement", item.modelFreeText);
-    await prisma.listingPhoto.create({ data: { listingId: listing.id, path: photoPath, position: 0 } });
+    // Clé CREDITS.json : « brandFreeText modelFreeText » (« Équipement » à défaut de marque), même convention qu'apply-demo-photos.ts.
+    const equipLabel1 = item.brandFreeText ?? "Équipement";
+    const realEquipPhoto = await storeDemoPhoto(equipLabel1, item.modelFreeText);
+    if (realEquipPhoto) {
+      await prisma.listingPhoto.create({ data: { listingId: listing.id, position: 0, ...realEquipPhoto } });
+    } else {
+      const photoPath = await generatePlaceholderPhoto(equipLabel1, item.modelFreeText);
+      await prisma.listingPhoto.create({ data: { listingId: listing.id, path: photoPath, position: 0 } });
+    }
 
     createdEquip += 1;
   }
