@@ -162,15 +162,15 @@ export async function POST(request: NextRequest) {
     price: data.price,
     condition: data.condition,
     year: data.year,
-    mileage: data.mileage,
+    mileage: data.mileage ?? null,
   } as const;
   const priceAiParams = {
     brandId: data.brandId ?? null,
     modelId: data.modelId ?? null,
     year: data.year,
-    mileage: data.mileage,
+    mileage: data.mileage ?? null,
     condition: data.condition,
-    fuelType: data.fuelType,
+    fuelType: data.fuelType ?? null,
   } as const;
   after(async () => {
     await notifyStaffOfPending("listing");

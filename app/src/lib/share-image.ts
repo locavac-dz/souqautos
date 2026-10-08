@@ -47,8 +47,8 @@ export type ShareCardInput = {
   brandLabel: string;
   modelLabel: string;
   year: number;
-  mileage: number;
-  fuelType: string;
+  mileage: number | null;
+  fuelType: string | null;
   price: number;
   wilayaNameFr: string;
 };
@@ -66,8 +66,8 @@ export function buildShareCard(input: ShareCardInput): ShareCard {
   const heading = truncateLabel(latinSafe(`${input.brandLabel} ${input.modelLabel}`), SHARE_HEADING_MAX);
   const detailParts = [
     String(input.year),
-    input.mileage > 0 ? formatShareMileage(input.mileage) : "",
-    FUEL_LABEL[input.fuelType] ?? "",
+    input.mileage != null && input.mileage > 0 ? formatShareMileage(input.mileage) : "",
+    FUEL_LABEL[input.fuelType ?? ""] ?? "",
     latinSafe(input.wilayaNameFr),
   ].filter((part) => part !== "");
 

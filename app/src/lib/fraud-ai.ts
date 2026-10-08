@@ -13,7 +13,7 @@ type ListingTextForAi = {
   price: number;
   condition: "NEUF" | "OCCASION";
   year: number;
-  mileage: number;
+  mileage: number | null;
 };
 
 // Retourne une phrase courte (<= 200 car.) si un signal est détecté, null sinon.

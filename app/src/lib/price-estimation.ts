@@ -65,7 +65,7 @@ type ComparableRow = {
   id: string;
   price: number;
   year: number;
-  mileage: number;
+  mileage: number | null;
   wilayaId: number;
   equipmentIds?: number[];
 };
@@ -120,7 +120,7 @@ function matchesTier(
   if (tier.year && query.year !== undefined) {
     if (row.year < query.year - YEAR_WINDOW || row.year > query.year + YEAR_WINDOW) return false;
   }
-  if (tier.mileage && query.mileage !== undefined) {
+  if (tier.mileage && query.mileage !== undefined && row.mileage != null) {
     const lo = query.mileage * (1 - MILEAGE_BAND_RATIO);
     const hi = query.mileage * (1 + MILEAGE_BAND_RATIO);
     if (row.mileage < lo || row.mileage > hi) return false;
@@ -248,7 +248,7 @@ type ListingForBatchEstimate = {
   brandId: number | null;
   modelId: number | null;
   year: number;
-  mileage: number;
+  mileage: number | null;
   wilayaId: number;
   equipmentIds?: number[];
 };
@@ -288,7 +288,7 @@ export async function estimatePricesForListings(
       listing.id,
       estimateFromIndex(index, {
         year: listing.year,
-        mileage: listing.mileage,
+        mileage: listing.mileage ?? undefined,
         wilayaId: listing.wilayaId,
         equipmentIds: listing.equipmentIds,
         excludeListingId: listing.id,

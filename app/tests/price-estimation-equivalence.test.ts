@@ -11,7 +11,7 @@ import { computeEstimateFromPrices, estimateFromIndex, indexComparables, type Es
 // tableau pour l'exclusion, un `filter` complet par palier, et le test d'équipement par Set. Elle ne doit jamais être « améliorée » :
 // c'est son immobilité qui fait la valeur de la comparaison.
 
-type Row = { id: string; price: number; year: number; mileage: number; wilayaId: number; equipmentIds?: number[] };
+type Row = { id: string; price: number; year: number; mileage: number | null; wilayaId: number; equipmentIds?: number[] };
 type Query = { year?: number; mileage?: number; wilayaId?: number; equipmentIds?: number[]; excludeListingId?: string };
 type Tier = { year: boolean; mileage: boolean; wilaya: boolean; equipment: boolean };
 
@@ -48,7 +48,7 @@ function matchesTier(row: Row, query: Query, tier: Tier): boolean {
   if (tier.year && query.year !== undefined) {
     if (row.year < query.year - YEAR_WINDOW || row.year > query.year + YEAR_WINDOW) return false;
   }
-  if (tier.mileage && query.mileage !== undefined) {
+  if (tier.mileage && query.mileage !== undefined && row.mileage != null) {
     const lo = query.mileage * (1 - MILEAGE_BAND_RATIO);
     const hi = query.mileage * (1 + MILEAGE_BAND_RATIO);
     if (row.mileage < lo || row.mileage > hi) return false;
@@ -74,7 +74,7 @@ function referenceEstimate(rows: Row[], query: Query): EstimateResult | null {
 
 let prisma: PrismaClient | null = null;
 let ready = false;
-type Card = { id: string; brandId: number | null; modelId: number | null; year: number; mileage: number; wilayaId: number; price: number; equipmentIds: number[] };
+type Card = { id: string; brandId: number | null; modelId: number | null; year: number; mileage: number | null; wilayaId: number; price: number; equipmentIds: number[] };
 const cards: Card[] = [];
 const rowsByPair = new Map<string, Row[]>();
 
@@ -117,7 +117,7 @@ afterAll(async () => {
   await prisma?.$disconnect();
 });
 
-const queryOf = (card: Card): Query => ({ year: card.year, mileage: card.mileage, wilayaId: card.wilayaId, equipmentIds: card.equipmentIds, excludeListingId: card.id });
+const queryOf = (card: Card): Query => ({ year: card.year, mileage: card.mileage ?? undefined, wilayaId: card.wilayaId, equipmentIds: card.equipmentIds, excludeListingId: card.id });
 
 describe("estimation de prix : le rangement par année ne change AUCUN résultat", () => {
   it("l'échantillon est assez large et varié pour que la comparaison ait du sens", () => {
@@ -155,10 +155,10 @@ describe("estimation de prix : le rangement par année ne change AUCUN résultat
     for (const card of cards.slice(0, 120)) {
       const rows = rowsByPair.get(`${card.brandId}-${card.modelId}`)!;
       const variants: Query[] = [
-        { year: card.year, mileage: card.mileage, wilayaId: card.wilayaId, equipmentIds: card.equipmentIds }, // cote complète
-        { year: card.year, mileage: card.mileage }, // sans wilaya ni équipement
+        { year: card.year, mileage: card.mileage ?? undefined, wilayaId: card.wilayaId, equipmentIds: card.equipmentIds }, // cote complète
+        { year: card.year, mileage: card.mileage ?? undefined }, // sans wilaya ni équipement
         { year: card.year }, // année seule
-        { mileage: card.mileage, wilayaId: card.wilayaId }, // sans année : le rangement par année ne doit pas servir
+        { mileage: card.mileage ?? undefined, wilayaId: card.wilayaId }, // sans année : le rangement par année ne doit pas servir
         {}, // aucun critère : tout le modèle
         { year: card.year + 40 }, // aucune annonce de cette année : le repli doit être identique
         { year: card.year, mileage: 0 }, // kilométrage nul (Boolean(0) === false : palier sans kilométrage)
@@ -178,7 +178,7 @@ describe("estimation de prix : le rangement par année ne change AUCUN résultat
     for (const card of cards.slice(0, 60)) {
       const rows = rowsByPair.get(`${card.brandId}-${card.modelId}`)!;
       for (const year of [card.year - 0.5, card.year + 0.5, card.year + 1.9, card.year - 2.1]) {
-        const query: Query = { year, mileage: card.mileage };
+        const query: Query = { year, mileage: card.mileage ?? undefined };
         const before = referenceEstimate(rows, query);
         const after = estimateFromIndex(indexComparables(rows), query);
         if (JSON.stringify(before) !== JSON.stringify(after)) differences.push(`${card.id} année ${year} : avant ${JSON.stringify(before)} / après ${JSON.stringify(after)}`);

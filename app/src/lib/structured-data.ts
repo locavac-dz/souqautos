@@ -81,9 +81,9 @@ export type VehicleJsonLdInput = {
   brandName?: string;
   modelName?: string;
   year: number;
-  mileage: number;
-  fuelTypeLabel: string;
-  gearboxLabel: string;
+  mileage?: number;
+  fuelTypeLabel?: string;
+  gearboxLabel?: string;
 };
 
 export type ArticleJsonLdInput = {
@@ -164,13 +164,9 @@ export function buildVehicleJsonLd(input: VehicleJsonLdInput) {
     ...(input.brandName ? { brand: { "@type": "Brand", name: input.brandName } } : {}),
     ...(input.modelName ? { model: input.modelName } : {}),
     vehicleModelDate: String(input.year),
-    mileageFromOdometer: {
-      "@type": "QuantitativeValue",
-      value: input.mileage,
-      unitCode: "KMT",
-    },
-    fuelType: input.fuelTypeLabel,
-    vehicleTransmission: input.gearboxLabel,
+    ...(input.mileage != null ? { mileageFromOdometer: { "@type": "QuantitativeValue", value: input.mileage, unitCode: "KMT" } } : {}),
+    ...(input.fuelTypeLabel ? { fuelType: input.fuelTypeLabel } : {}),
+    ...(input.gearboxLabel ? { vehicleTransmission: input.gearboxLabel } : {}),
     offers: {
       "@type": "Offer",
       price: input.price,

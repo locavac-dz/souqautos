@@ -98,12 +98,12 @@ export const NEUF_MAX_AGE_YEARS = 2;
 
 export function detectVehicleInconsistency(
   condition: "NEUF" | "OCCASION",
-  mileage: number,
+  mileage: number | null,
   year: number,
   currentYear: number
 ): boolean {
   if (condition !== "NEUF") return false;
-  if (mileage > NEUF_MAX_PLAUSIBLE_MILEAGE_KM) return true;
+  if (mileage != null && mileage > NEUF_MAX_PLAUSIBLE_MILEAGE_KM) return true;
   if (currentYear - year > NEUF_MAX_AGE_YEARS) return true;
   return false;
 }
@@ -174,7 +174,7 @@ type ListingForFraudSignals = {
   brandId: number | null;
   modelId: number | null;
   year: number;
-  mileage: number;
+  mileage: number | null;
   wilayaId: number;
   condition: "NEUF" | "OCCASION";
   contentHash: string;
@@ -251,7 +251,7 @@ export async function getFraudSignalsForListings(
       const index = indexByPair.get(`${listing.brandId}-${listing.modelId}`);
       const estimate = index === undefined ? null : estimateFromIndex(index, {
         year: listing.year,
-        mileage: listing.mileage,
+        mileage: listing.mileage ?? undefined,
         wilayaId: listing.wilayaId,
         excludeListingId: listing.id,
       });

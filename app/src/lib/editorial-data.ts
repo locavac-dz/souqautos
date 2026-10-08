@@ -39,7 +39,7 @@ export type EditorialReport = {
   modelsWithGuide: number;
 };
 
-const KIND_TO_SECTION: Record<ArticleKind, EditorialSection> = { ARTICLE: "magazine", ESSAI: "roadTests", GUIDE: "guides" };
+const KIND_TO_SECTION: Record<ArticleKind, EditorialSection> = { ARTICLE: "magazine", ESSAI: "roadTests", GUIDE: "guides", EQUIPEMENT: "equipment" };
 const MAX_GAPS = 15;
 // Taille des listes « programmé » et « brouillons » : chaque source en lit autant, donc les LIST_LIMIT
 // premiers de l'ensemble sont exacts.

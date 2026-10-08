@@ -177,9 +177,9 @@ export type ListingForExport = {
   description: string;
   price: number;
   year: number;
-  mileage: number;
-  fuelType: string;
-  gearbox: string;
+  mileage: number | null;
+  fuelType: string | null;
+  gearbox: string | null;
   transmission: string | null;
   color: string | null;
   doors: number | null;
@@ -200,9 +200,9 @@ export function listingToCsvRow(listing: ListingForExport): string[] {
     listing.description,
     String(listing.price),
     String(listing.year),
-    String(listing.mileage),
-    listing.fuelType,
-    listing.gearbox,
+    listing.mileage != null ? String(listing.mileage) : "",
+    listing.fuelType ?? "",
+    listing.gearbox ?? "",
     listing.transmission ?? "",
     listing.color ?? "",
     listing.doors !== null ? String(listing.doors) : "",

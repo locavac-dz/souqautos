@@ -2,7 +2,7 @@ import { algiersDayKey } from "@/lib/pro-stats";
 
 // Lot 127 — suivi du rythme éditorial : logique pure, testée sans base.
 
-export const EDITORIAL_SECTIONS = ["press", "roadTests", "magazine", "guides"] as const;
+export const EDITORIAL_SECTIONS = ["press", "roadTests", "magazine", "guides", "equipment"] as const;
 export type EditorialSection = (typeof EDITORIAL_SECTIONS)[number];
 
 // Objectif de cadence : un nouveau contenu au moins tous les N jours. Valeurs par défaut choisies
@@ -14,6 +14,7 @@ export const TARGET_DAYS: Record<EditorialSection, number> = {
   roadTests: 30,
   magazine: 30,
   guides: 60,
+  equipment: 30,
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;

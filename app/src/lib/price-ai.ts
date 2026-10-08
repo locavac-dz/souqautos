@@ -74,9 +74,9 @@ export async function computeAndStorePriceAiEstimate(
     brandId: number | null;
     modelId: number | null;
     year: number;
-    mileage: number;
+    mileage: number | null;
     condition: string;
-    fuelType: string;
+    fuelType: string | null;
   }
 ): Promise<void> {
   if (!params.brandId || !params.modelId) return;
@@ -85,7 +85,7 @@ export async function computeAndStorePriceAiEstimate(
     brandId: params.brandId,
     modelId: params.modelId,
     year: params.year,
-    mileage: params.mileage,
+    mileage: params.mileage ?? undefined,
   });
 
   if (market && market.sampleSize >= 3) return;
@@ -94,9 +94,9 @@ export async function computeAndStorePriceAiEstimate(
     brandId: params.brandId,
     modelId: params.modelId,
     year: params.year,
-    mileage: params.mileage,
+    mileage: params.mileage ?? undefined,
     condition: params.condition,
-    fuelType: params.fuelType,
+    fuelType: params.fuelType ?? undefined,
   });
   if (!ai) return;
 

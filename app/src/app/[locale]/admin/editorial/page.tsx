@@ -13,6 +13,7 @@ const ADMIN_BASE: Record<EditorialSection, string> = {
   roadTests: "/admin/essais",
   magazine: "/admin/mag",
   guides: "/admin/guides",
+  equipment: "/admin/equipements",
 };
 
 export default async function AdminEditorialPage() {

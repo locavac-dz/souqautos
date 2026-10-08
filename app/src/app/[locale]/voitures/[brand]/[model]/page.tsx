@@ -146,7 +146,7 @@ export default async function ModelPage({
     listings.map((listing) => {
       const estimate = estimateFromIndex(comparableIndex, {
         year: listing.year,
-        mileage: listing.mileage,
+        mileage: listing.mileage ?? undefined,
         wilayaId: listing.wilayaId,
         equipmentIds: listing.equipments.map((e) => e.equipmentId),
         excludeListingId: listing.id,

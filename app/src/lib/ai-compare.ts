@@ -14,7 +14,7 @@ import { callAnthropicMessages } from "./anthropic-client";
 export type ComparableListingFacts = {
   id: string;
   price: number;
-  mileage: number;
+  mileage: number | null;
   year: number;
   powerHp: number | null;
   trustScore: number | null;

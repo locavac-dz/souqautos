@@ -216,7 +216,7 @@ export default async function ListingDetailPage({
           brandId: listing.brandId,
           modelId: listing.modelId,
           year: listing.year,
-          mileage: listing.mileage,
+          mileage: listing.mileage ?? undefined,
           wilayaId: listing.wilayaId,
           equipmentIds: listing.equipments.map((e) => e.equipmentId),
           excludeListingId: listing.id,
