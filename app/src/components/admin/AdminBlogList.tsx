@@ -13,9 +13,11 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
   const locale = await getLocale();
   const isEssai = kind === "ESSAI";
   const isGuide = kind === "GUIDE";
+  const isEquipement = kind === "EQUIPEMENT";
   const t = await getTranslations("AdminBlog");
   const tRt = await getTranslations("AdminRoadTest");
   const tG = await getTranslations("AdminGuide");
+  const tEq = await getTranslations("AdminEquipement");
   const now = new Date();
 
   const articles = await prisma.blogArticle.findMany({
@@ -35,20 +37,20 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
-            {isEssai ? tRt("title") : isGuide ? tG("title") : t("title")}
+            {isEssai ? tRt("title") : isGuide ? tG("title") : isEquipement ? tEq("title") : t("title")}
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{isEssai ? tRt("subtitle") : isGuide ? tG("subtitle") : t("subtitle")}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{isEssai ? tRt("subtitle") : isGuide ? tG("subtitle") : isEquipement ? tEq("subtitle") : t("subtitle")}</p>
         </div>
         <Link
           href={`${base}/nouveau`}
           className="rounded-md bg-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
         >
-          {isEssai ? tRt("newEssai") : isGuide ? tG("newGuide") : t("newArticle")}
+          {isEssai ? tRt("newEssai") : isGuide ? tG("newGuide") : isEquipement ? tEq("newEquipement") : t("newArticle")}
         </Link>
       </div>
 
       {articles.length === 0 ? (
-        <p className="text-slate-500 dark:text-slate-400 text-sm">{isEssai ? tRt("empty") : isGuide ? tG("empty") : t("empty")}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{isEssai ? tRt("empty") : isGuide ? tG("empty") : isEquipement ? tEq("empty") : t("empty")}</p>
       ) : (
         <div className="space-y-3">
           {articles.map((article) => {

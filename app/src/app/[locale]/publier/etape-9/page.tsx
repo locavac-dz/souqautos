@@ -12,6 +12,7 @@ const CATEGORY_KEY: Record<string, string> = {
   POIDS_LOURD: "categoryPoidsLourd",
   DEUX_ROUES: "categoryDeuxRoues",
   AUTRE: "categoryAutre",
+  EQUIPEMENT: "categoryEquipement",
 };
 const FUEL_KEY: Record<string, string> = {
   ESSENCE: "fuelEssence",

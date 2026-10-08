@@ -32,6 +32,7 @@ export async function SiteHeader({
       <NavLink href="/recherche" className={navLinkClass}>{tNav("search")}</NavLink>
       <NavLink href="/cote-souq-auto" className={navLinkClass}>{tNav("estimate")}</NavLink>
       <NavLink href="/essais" className={navLinkClass}>{tNav("roadTests")}</NavLink>
+      <NavLink href="/equipement" className={navLinkClass}>{tNav("equipment")}</NavLink>
       {user ? (
         <>
           <NavLink href="/vendre" className={navLinkClass}>{tNav("sell")}</NavLink>

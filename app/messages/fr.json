@@ -16,6 +16,7 @@
     "notifications": "Notifications",
     "aiAdvisor": "Conseiller IA",
     "roadTests": "Essais",
+    "equipment": "Équipements",
     "groups": "Groupes",
     "logout": "Déconnexion",
     "menu": "Menu",
@@ -144,6 +145,7 @@
     "blog": "Souq Auto Mag",
     "roadTests": "Essais auto",
     "guides": "Guides d'achat",
+    "equipment": "Équipements auto",
     "professionals": "Vendeurs professionnels",
     "professionalsDirectory": "Annuaire des concessionnaires",
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
@@ -233,6 +235,7 @@
     "categoryPoidsLourd": "Poids lourd",
     "categoryDeuxRoues": "Deux-roues",
     "categoryAutre": "Autre",
+    "categoryEquipement": "Équipements & accessoires",
     "brand": "Marque",
     "brandPlaceholder": "Sélectionner une marque",
     "brandOther": "Autre marque (non listée)",
@@ -793,6 +796,7 @@
     "navBlog": "Mag",
     "navRoadTests": "Essais",
     "navGuides": "Guides d'achat",
+    "navEquipement": "Équipements auto",
     "navEditorial": "Rythme éditorial",
     "navPressReviews": "Revue de presse",
     "statisticsTitle": "Statistiques produit",
@@ -1924,6 +1928,22 @@
     "sourceLabel": "Source :",
     "sourceNote": "article rédigé par la rédaction Souq Auto à partir de cette source.",
     "rssLink": "Flux RSS du magazine"
+  },
+  "Equipement": {
+    "breadcrumbHome": "Accueil",
+    "indexTitle": "Équipements auto",
+    "indexSubtitle": "Accessoires et équipements automobiles : remorques, coffres de toit, porte-vélos, galeries, attelages et bien plus.",
+    "empty": "Aucun article publié pour le moment.",
+    "publishedOn": "Publié le {date}",
+    "updatedOn": "Mis à jour le {date}",
+    "byline": "Par {author}"
+  },
+  "AdminEquipement": {
+    "title": "Équipements auto",
+    "subtitle": "Articles sur les accessoires et équipements automobiles (remorques, coffres de toit, porte-vélos, attelages…).",
+    "newEquipement": "Nouvel article",
+    "editEquipement": "Modifier l'article",
+    "empty": "Aucun article pour le moment."
   },
   "AdminBlog": {
     "title": "Souq Auto Mag",

@@ -8,6 +8,7 @@ export const listingCategories = [
   "POIDS_LOURD",
   "DEUX_ROUES",
   "AUTRE",
+  "EQUIPEMENT",
 ] as const;
 
 export const fuelTypes = ["ESSENCE", "DIESEL", "GPL", "HYBRIDE", "ELECTRIQUE"] as const;
@@ -32,9 +33,9 @@ const listingBaseSchema = z.object({
   description: z.string().trim().min(30).max(5000),
   price: z.number().int().positive().max(999_999_999),
   year: z.number().int().min(1970).max(currentYear + 1),
-  mileage: z.number().int().min(0).max(2_000_000),
-  fuelType: z.enum(fuelTypes),
-  gearbox: z.enum(gearboxes),
+  mileage: z.number().int().min(0).max(2_000_000).optional(),
+  fuelType: z.enum(fuelTypes).optional(),
+  gearbox: z.enum(gearboxes).optional(),
   transmission: z.enum(transmissions).optional(),
   color: z.string().trim().max(40).optional(),
   doors: z.number().int().min(1).max(7).optional(),
@@ -60,7 +61,14 @@ const equipmentIdsField = z.array(z.number().int().positive().max(INT4_MAX)).max
 
 export const listingSchema = listingBaseSchema
   .extend({ equipmentIds: equipmentIdsField })
-  .refine((data) => Boolean(data.brandId) || Boolean(data.brandFreeText), {
+  .superRefine((data, ctx) => {
+    if (data.category !== "EQUIPEMENT") {
+      if (!data.fuelType) ctx.addIssue({ code: "custom", path: ["fuelType"], message: "Carburant requis" });
+      if (!data.gearbox) ctx.addIssue({ code: "custom", path: ["gearbox"], message: "Boîte de vitesses requise" });
+      if (data.mileage === undefined) ctx.addIssue({ code: "custom", path: ["mileage"], message: "Kilométrage requis" });
+    }
+  })
+  .refine((data) => data.category === "EQUIPEMENT" || Boolean(data.brandId) || Boolean(data.brandFreeText), {
     message: "Marque requise (catalogue ou texte libre)",
     path: ["brandId"],
   });
@@ -73,7 +81,14 @@ export type ListingInput = z.infer<typeof listingSchema>;
 export const listingEditSchema = listingBaseSchema
   .omit({ price: true, phone: true })
   .extend({ equipmentIds: equipmentIdsField })
-  .refine((data) => Boolean(data.brandId) || Boolean(data.brandFreeText), {
+  .superRefine((data, ctx) => {
+    if (data.category !== "EQUIPEMENT") {
+      if (!data.fuelType) ctx.addIssue({ code: "custom", path: ["fuelType"], message: "Carburant requis" });
+      if (!data.gearbox) ctx.addIssue({ code: "custom", path: ["gearbox"], message: "Boîte de vitesses requise" });
+      if (data.mileage === undefined) ctx.addIssue({ code: "custom", path: ["mileage"], message: "Kilométrage requis" });
+    }
+  })
+  .refine((data) => data.category === "EQUIPEMENT" || Boolean(data.brandId) || Boolean(data.brandFreeText), {
     message: "Marque requise (catalogue ou texte libre)",
     path: ["brandId"],
   });

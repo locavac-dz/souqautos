@@ -3,7 +3,7 @@ import { INT4_MAX } from "./int-bounds";
 import { isValidBulletList, isValidRating } from "@/lib/road-test";
 import { MAX_CHECKLIST_ITEMS, isValidChecklist } from "@/lib/buying-guide";
 
-export const articleKinds = ["ARTICLE", "ESSAI", "GUIDE"] as const;
+export const articleKinds = ["ARTICLE", "ESSAI", "GUIDE", "EQUIPEMENT"] as const;
 
 // Lot 110 — un essai auto est un article enrichi : note, points forts/faibles,
 // verdict, et lien facultatif vers la marque/le modèle du catalogue.
@@ -90,7 +90,7 @@ export const blogArticleSchema = z
     sourceUrl: z.string().max(600).nullish(),
   })
   .superRefine((value, ctx) => {
-    if ((value.sourceName?.trim() || value.sourceUrl?.trim()) && value.kind !== "ARTICLE") {
+    if ((value.sourceName?.trim() || value.sourceUrl?.trim()) && value.kind !== "ARTICLE" && value.kind !== "EQUIPEMENT") {
       ctx.addIssue({ code: "custom", path: ["sourceName"], message: "Un essai ou un guide est rédigé par la rédaction : pas de source externe." });
     }
     if (value.kind === "ESSAI" && !value.roadTest) {

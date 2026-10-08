@@ -50,6 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry("/essais"),
     localizedEntry("/essais/revue-de-presse"),
     localizedEntry("/guides"),
+    localizedEntry("/equipement"),
     localizedEntry("/devenir-professionnel"),
     localizedEntry("/comparateur"),
     localizedEntry("/contact"),

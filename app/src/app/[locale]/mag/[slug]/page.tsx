@@ -71,7 +71,7 @@ export default async function BlogArticlePage({
   const { article, preview } = resolved;
   // Les articles, les essais et les guides partagent le même espace de slugs : un essai (ou un
   // guide) ouvert par son ancienne adresse /mag est renvoyé vers sa rubrique.
-  if (article.kind === "ESSAI" || article.kind === "GUIDE") {
+  if (article.kind === "ESSAI" || article.kind === "GUIDE" || article.kind === "EQUIPEMENT") {
     // Le jeton d'un lien de relecture est CONSERVÉ dans le renvoi : sans lui, un relecteur qui ouvrirait ce lien par /mag perdrait son accès.
     const target = articlePublicPath(article.kind, article.slug);
     redirect({ href: preview?.reviewLink && previewToken ? `${target}?apercu=${encodeURIComponent(previewToken)}` : target, locale });

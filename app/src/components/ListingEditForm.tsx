@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { hasCarBodyFields } from "@/lib/listing-category-fields";
+import { hasCarBodyFields, hasVehicleFields } from "@/lib/listing-category-fields";
 import { filterCatalogueByCategory, LISTING_CATEGORIES, modelInCategory } from "@/lib/vehicle-catalogue";
 import type {
   Listing,
@@ -36,6 +36,7 @@ const CATEGORY_KEY: Record<ListingCategory, string> = {
   POIDS_LOURD: "categoryPoidsLourd",
   DEUX_ROUES: "categoryDeuxRoues",
   AUTRE: "categoryAutre",
+  EQUIPEMENT: "categoryEquipement",
 };
 
 const ERROR_KEY: Record<string, string> = {
@@ -96,9 +97,9 @@ export function ListingEditForm({
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
   const [year, setYear] = useState(listing.year);
-  const [mileage, setMileage] = useState(listing.mileage);
-  const [fuelType, setFuelType] = useState<FuelType>(listing.fuelType);
-  const [gearbox, setGearbox] = useState<Gearbox>(listing.gearbox);
+  const [mileage, setMileage] = useState<number | "">(listing.mileage ?? "");
+  const [fuelType, setFuelType] = useState<FuelType | "">(listing.fuelType ?? "");
+  const [gearbox, setGearbox] = useState<Gearbox | "">(listing.gearbox ?? "");
   const [transmission, setTransmission] = useState<Transmission | "">(listing.transmission ?? "");
   const [color, setColor] = useState(listing.color ?? "");
   const [doors, setDoors] = useState<number | "">(listing.doors ?? "");
@@ -181,9 +182,9 @@ export function ListingEditForm({
         title,
         description,
         year,
-        mileage,
-        fuelType,
-        gearbox,
+        mileage: mileage === "" ? undefined : mileage,
+        fuelType: fuelType || undefined,
+        gearbox: gearbox || undefined,
         transmission: transmission || undefined,
         color: color.trim() || undefined,
         doors: doors === "" ? undefined : doors,
@@ -421,55 +422,59 @@ export function ListingEditForm({
             className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
           />
         </div>
-        <div>
-          <label htmlFor="edit-mileage" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            {tWizard("mileage")}
-          </label>
-          <input
-            id="edit-mileage"
-            type="number"
-          inputMode="numeric"
-            min={0}
-            value={mileage}
-            onChange={(e) => setMileage(Number(e.target.value))}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
-          />
-        </div>
+        {hasVehicleFields(category) && (
+          <div>
+            <label htmlFor="edit-mileage" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {tWizard("mileage")}
+            </label>
+            <input
+              id="edit-mileage"
+              type="number"
+            inputMode="numeric"
+              min={0}
+              value={mileage}
+              onChange={(e) => setMileage(Number(e.target.value))}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
+            />
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="edit-fuel" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            {tWizard("fuelType")}
-          </label>
-          <select
-            id="edit-fuel"
-            value={fuelType}
-            onChange={(e) => setFuelType(e.target.value as FuelType)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
-          >
-            <option value="ESSENCE">{tWizard("fuelEssence")}</option>
-            <option value="DIESEL">{tWizard("fuelDiesel")}</option>
-            <option value="GPL">{tWizard("fuelGpl")}</option>
-            <option value="HYBRIDE">{tWizard("fuelHybride")}</option>
-            <option value="ELECTRIQUE">{tWizard("fuelElectrique")}</option>
-          </select>
+      {hasVehicleFields(category) && (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="edit-fuel" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {tWizard("fuelType")}
+            </label>
+            <select
+              id="edit-fuel"
+              value={fuelType}
+              onChange={(e) => setFuelType(e.target.value as FuelType)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
+            >
+              <option value="ESSENCE">{tWizard("fuelEssence")}</option>
+              <option value="DIESEL">{tWizard("fuelDiesel")}</option>
+              <option value="GPL">{tWizard("fuelGpl")}</option>
+              <option value="HYBRIDE">{tWizard("fuelHybride")}</option>
+              <option value="ELECTRIQUE">{tWizard("fuelElectrique")}</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="edit-gearbox" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {tWizard("gearbox")}
+            </label>
+            <select
+              id="edit-gearbox"
+              value={gearbox}
+              onChange={(e) => setGearbox(e.target.value as Gearbox)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
+            >
+              <option value="MANUELLE">{tWizard("gearboxManuelle")}</option>
+              <option value="AUTOMATIQUE">{tWizard("gearboxAutomatique")}</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label htmlFor="edit-gearbox" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            {tWizard("gearbox")}
-          </label>
-          <select
-            id="edit-gearbox"
-            value={gearbox}
-            onChange={(e) => setGearbox(e.target.value as Gearbox)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200"
-          >
-            <option value="MANUELLE">{tWizard("gearboxManuelle")}</option>
-            <option value="AUTOMATIQUE">{tWizard("gearboxAutomatique")}</option>
-          </select>
-        </div>
-      </div>
+      )}
 
       {hasCarBodyFields(category) && (
         <div>

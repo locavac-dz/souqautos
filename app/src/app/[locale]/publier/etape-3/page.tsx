@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { StepShell } from "@/components/wizard/StepShell";
 import { useWizard } from "@/components/wizard/WizardContext";
-import { hasCarBodyFields } from "@/lib/listing-category-fields";
+import { hasCarBodyFields, hasVehicleFields } from "@/lib/listing-category-fields";
 import type { FuelType, Gearbox, Transmission, BodyType } from "@prisma/client";
 
 const currentYear = new Date().getFullYear();
@@ -15,11 +15,11 @@ export default function Step3Page() {
   const [error, setError] = useState<string | null>(null);
 
   function handleNext() {
-    if (!data.year || !data.mileage || data.mileage < 0 || !data.fuelType || !data.gearbox) {
+    if (!data.year || data.year < 1970 || data.year > currentYear + 1) {
       setError(t("errorValidation"));
       return false;
     }
-    if (data.year < 1970 || data.year > currentYear + 1) {
+    if (hasVehicleFields(data.category) && (data.mileage === undefined || data.mileage < 0 || !data.fuelType || !data.gearbox)) {
       setError(t("errorValidation"));
       return false;
     }
@@ -42,54 +42,58 @@ export default function Step3Page() {
             className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           />
         </label>
-        <label className="block">
-          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("mileage")}</span>
-          <input
-            type="number"
-            min={0}
-            aria-invalid={error ? "true" : undefined}
-            value={data.mileage ?? ""}
-            onChange={(e) => setData({ mileage: e.target.value ? Number(e.target.value) : undefined })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-          />
-        </label>
+        {hasVehicleFields(data.category) && (
+          <label className="block">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("mileage")}</span>
+            <input
+              type="number"
+              min={0}
+              aria-invalid={error ? "true" : undefined}
+              value={data.mileage ?? ""}
+              onChange={(e) => setData({ mileage: e.target.value ? Number(e.target.value) : undefined })}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            />
+          </label>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <label className="block">
-          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("fuelType")}</span>
-          <select
-            aria-invalid={error ? "true" : undefined}
-            value={data.fuelType ?? ""}
-            onChange={(e) => setData({ fuelType: e.target.value as FuelType })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-          >
-            <option value="" disabled>
-              —
-            </option>
-            <option value="ESSENCE">{t("fuelEssence")}</option>
-            <option value="DIESEL">{t("fuelDiesel")}</option>
-            <option value="GPL">{t("fuelGpl")}</option>
-            <option value="HYBRIDE">{t("fuelHybride")}</option>
-            <option value="ELECTRIQUE">{t("fuelElectrique")}</option>
-          </select>
-        </label>
-        <label className="block">
-          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("gearbox")}</span>
-          <select
-            aria-invalid={error ? "true" : undefined}
-            value={data.gearbox ?? ""}
-            onChange={(e) => setData({ gearbox: e.target.value as Gearbox })}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-          >
-            <option value="" disabled>
-              —
-            </option>
-            <option value="MANUELLE">{t("gearboxManuelle")}</option>
-            <option value="AUTOMATIQUE">{t("gearboxAutomatique")}</option>
-          </select>
-        </label>
-      </div>
+      {hasVehicleFields(data.category) && (
+        <div className="grid grid-cols-2 gap-4">
+          <label className="block">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("fuelType")}</span>
+            <select
+              aria-invalid={error ? "true" : undefined}
+              value={data.fuelType ?? ""}
+              onChange={(e) => setData({ fuelType: e.target.value as FuelType })}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <option value="" disabled>
+                —
+              </option>
+              <option value="ESSENCE">{t("fuelEssence")}</option>
+              <option value="DIESEL">{t("fuelDiesel")}</option>
+              <option value="GPL">{t("fuelGpl")}</option>
+              <option value="HYBRIDE">{t("fuelHybride")}</option>
+              <option value="ELECTRIQUE">{t("fuelElectrique")}</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("gearbox")}</span>
+            <select
+              aria-invalid={error ? "true" : undefined}
+              value={data.gearbox ?? ""}
+              onChange={(e) => setData({ gearbox: e.target.value as Gearbox })}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <option value="" disabled>
+                —
+              </option>
+              <option value="MANUELLE">{t("gearboxManuelle")}</option>
+              <option value="AUTOMATIQUE">{t("gearboxAutomatique")}</option>
+            </select>
+          </label>
+        </div>
+      )}
 
       {hasCarBodyFields(data.category) && (
         <label className="block">
@@ -154,50 +158,54 @@ export default function Step3Page() {
         </label>
       )}
 
-      <label className="block">
-        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("powerHp")}</span>
-        <input
-          type="number"
-          min={1}
-          max={2000}
-          value={data.powerHp ?? ""}
-          onChange={(e) => setData({ powerHp: e.target.value ? Number(e.target.value) : undefined })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-        />
-      </label>
+      {hasVehicleFields(data.category) && (
+        <>
+          <label className="block">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("powerHp")}</span>
+            <input
+              type="number"
+              min={1}
+              max={2000}
+              value={data.powerHp ?? ""}
+              onChange={(e) => setData({ powerHp: e.target.value ? Number(e.target.value) : undefined })}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            />
+          </label>
 
-      <label className="block">
-        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("fiscalPower")}</span>
-        <p className="text-xs text-slate-500 mb-1">{t("fiscalPowerHint")}</p>
-        <input
-          type="number"
-          min={1}
-          max={40}
-          value={data.fiscalPower ?? ""}
-          onChange={(e) => setData({ fiscalPower: e.target.value ? Number(e.target.value) : undefined })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-        />
-      </label>
+          <label className="block">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("fiscalPower")}</span>
+            <p className="text-xs text-slate-500 mb-1">{t("fiscalPowerHint")}</p>
+            <input
+              type="number"
+              min={1}
+              max={40}
+              value={data.fiscalPower ?? ""}
+              onChange={(e) => setData({ fiscalPower: e.target.value ? Number(e.target.value) : undefined })}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            />
+          </label>
 
-      <label className="block">
-        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("bodyType")}</span>
-        <select
-          value={data.bodyType ?? ""}
-          onChange={(e) => setData({ bodyType: (e.target.value || undefined) as BodyType | undefined })}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-        >
-          <option value="">{t("bodyTypeNone")}</option>
-          <option value="BERLINE">{t("bodyTypeBerline")}</option>
-          <option value="SUV">{t("bodyTypeSuv")}</option>
-          <option value="BREAK">{t("bodyTypeBreak")}</option>
-          <option value="CITADINE">{t("bodyTypeCitadine")}</option>
-          <option value="COUPE">{t("bodyTypeCoupe")}</option>
-          <option value="CABRIOLET">{t("bodyTypeCabriolet")}</option>
-          <option value="MONOSPACE">{t("bodyTypeMonospace")}</option>
-          <option value="PICKUP">{t("bodyTypePickup")}</option>
-          <option value="FOURGON">{t("bodyTypeFourgon")}</option>
-        </select>
-      </label>
+          <label className="block">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("bodyType")}</span>
+            <select
+              value={data.bodyType ?? ""}
+              onChange={(e) => setData({ bodyType: (e.target.value || undefined) as BodyType | undefined })}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <option value="">{t("bodyTypeNone")}</option>
+              <option value="BERLINE">{t("bodyTypeBerline")}</option>
+              <option value="SUV">{t("bodyTypeSuv")}</option>
+              <option value="BREAK">{t("bodyTypeBreak")}</option>
+              <option value="CITADINE">{t("bodyTypeCitadine")}</option>
+              <option value="COUPE">{t("bodyTypeCoupe")}</option>
+              <option value="CABRIOLET">{t("bodyTypeCabriolet")}</option>
+              <option value="MONOSPACE">{t("bodyTypeMonospace")}</option>
+              <option value="PICKUP">{t("bodyTypePickup")}</option>
+              <option value="FOURGON">{t("bodyTypeFourgon")}</option>
+            </select>
+          </label>
+        </>
+      )}
 
     </StepShell>
   );

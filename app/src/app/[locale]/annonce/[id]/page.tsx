@@ -274,9 +274,9 @@ export default async function ListingDetailPage({
     brandName: listing.brand?.name,
     modelName: listing.model?.name,
     year: listing.year,
-    mileage: listing.mileage,
-    fuelTypeLabel: tWizard(FUEL_KEY[listing.fuelType]),
-    gearboxLabel: tWizard(GEARBOX_KEY[listing.gearbox]),
+    mileage: listing.mileage ?? undefined,
+    fuelTypeLabel: listing.fuelType ? tWizard(FUEL_KEY[listing.fuelType]) : undefined,
+    gearboxLabel: listing.gearbox ? tWizard(GEARBOX_KEY[listing.gearbox]) : undefined,
   });
 
   const breadcrumbItems = [
@@ -448,8 +448,8 @@ export default async function ListingDetailPage({
         <div className="sm:col-span-2">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 text-balance">{listing.title}</h1>
           <p className="mt-1 text-slate-500 dark:text-slate-400">
-            <span lang="fr">{brandLabel} {modelLabel}</span> · {tListing("yearLabel", { value: listing.year })} ·{" "}
-            {tListing("mileageUnit", { value: formatNumber(listing.mileage, locale) })}
+            <span lang="fr">{brandLabel} {modelLabel}</span> · {tListing("yearLabel", { value: listing.year })}
+            {listing.mileage !== null && <>{" "}· {tListing("mileageUnit", { value: formatNumber(listing.mileage, locale) })}</>}
           </p>
 
           {modelGuide && (
@@ -476,8 +476,8 @@ export default async function ListingDetailPage({
                   value={`${listing.generation.name} (${listing.generation.yearStart}–${listing.generation.yearEnd ?? tWizard("generationOngoing")})`}
                 />
               )}
-              <DetailRow label={tWizard("fuelType")} value={tWizard(FUEL_KEY[listing.fuelType])} />
-              <DetailRow label={tWizard("gearbox")} value={tWizard(GEARBOX_KEY[listing.gearbox])} />
+              {listing.fuelType && <DetailRow label={tWizard("fuelType")} value={tWizard(FUEL_KEY[listing.fuelType])} />}
+              {listing.gearbox && <DetailRow label={tWizard("gearbox")} value={tWizard(GEARBOX_KEY[listing.gearbox])} />}
               <DetailRow
                 label={tWizard("condition")}
                 value={listing.condition === "NEUF" ? tListing("conditionNeuf") : tListing("conditionOccasion")}

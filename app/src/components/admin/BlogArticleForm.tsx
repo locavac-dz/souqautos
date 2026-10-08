@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 
-type ArticleKind = "ARTICLE" | "ESSAI" | "GUIDE";
+type ArticleKind = "ARTICLE" | "ESSAI" | "GUIDE" | "EQUIPEMENT";
 
 type ExistingGuide = {
   brandId: number | null;
@@ -244,7 +244,7 @@ export function BlogArticleForm({
 
     setPending(false);
     if (res.ok) {
-      router.push(isEssai ? "/admin/essais" : isGuide ? "/admin/guides" : "/admin/mag");
+      router.push(isEssai ? "/admin/essais" : isGuide ? "/admin/guides" : kind === "EQUIPEMENT" ? "/admin/equipement" : "/admin/mag");
       router.refresh();
       return;
     }
@@ -313,7 +313,7 @@ export function BlogArticleForm({
         </div>
       </div>
 
-      {(isEssai || isGuide || kind === "ARTICLE") && (
+      {(isEssai || isGuide || kind === "ARTICLE" || kind === "EQUIPEMENT") && (
         <fieldset className="space-y-2 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
           <legend className="px-1 text-sm font-medium text-slate-900 dark:text-slate-100">{tRt("coverTitle")}</legend>
           <div className="flex items-center gap-4">

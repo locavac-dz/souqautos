@@ -48,6 +48,7 @@ const CATEGORY_KEY: Record<string, string> = {
   POIDS_LOURD: "categoryPoidsLourd",
   DEUX_ROUES: "categoryDeuxRoues",
   AUTRE: "categoryAutre",
+  EQUIPEMENT: "categoryEquipement",
 };
 
 // Au niveau du module (et non dans le rendu) : un composant ne doit pas lire

@@ -5,7 +5,7 @@ import type { ListingCategory } from "@prisma/client";
 export const CATALOGUE_CATEGORIES = ["VOITURE", "UTILITAIRE", "POIDS_LOURD", "DEUX_ROUES"] as const satisfies readonly ListingCategory[];
 export type CatalogueCategory = (typeof CATALOGUE_CATEGORIES)[number];
 
-export const LISTING_CATEGORIES: readonly ListingCategory[] = [...CATALOGUE_CATEGORIES, "AUTRE"];
+export const LISTING_CATEGORIES: readonly ListingCategory[] = [...CATALOGUE_CATEGORIES, "AUTRE", "EQUIPEMENT"];
 
 export function isCatalogueCategory(value: unknown): value is CatalogueCategory {
   return typeof value === "string" && (CATALOGUE_CATEGORIES as readonly string[]).includes(value);

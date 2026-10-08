@@ -16,6 +16,7 @@
     "notifications": "الإشعارات",
     "aiAdvisor": "المستشار الذكي",
     "roadTests": "التجارب",
+    "equipment": "التجهيزات",
     "groups": "المجموعات",
     "logout": "تسجيل الخروج",
     "menu": "القائمة",
@@ -144,6 +145,7 @@
     "blog": "مجلة سوق أوتو",
     "roadTests": "تجارب السيارات",
     "guides": "أدلة الشراء",
+    "equipment": "تجهيزات السيارة",
     "professionals": "البائعون المحترفون",
     "professionalsDirectory": "دليل الوكلاء والمعارض",
     "brands": "AL HANDASSA · SOUQ AUTO · LOCAVAC · SOUQONLINE",
@@ -233,6 +235,7 @@
     "categoryPoidsLourd": "شاحنة ثقيلة",
     "categoryDeuxRoues": "دراجة نارية",
     "categoryAutre": "أخرى",
+    "categoryEquipement": "تجهيزات ولوازم",
     "brand": "الماركة",
     "brandPlaceholder": "اختر ماركة",
     "brandOther": "ماركة أخرى (غير مدرجة)",
@@ -793,6 +796,7 @@
     "navBlog": "المجلة",
     "navRoadTests": "التجارب",
     "navGuides": "أدلة الشراء",
+    "navEquipement": "تجهيزات السيارة",
     "navEditorial": "الإيقاع التحريري",
     "navPressReviews": "قراءة في الصحافة",
     "statisticsTitle": "إحصائيات المنتج",
@@ -1924,6 +1928,22 @@
     "sourceLabel": "المصدر:",
     "sourceNote": "مقال حرّرته هيئة تحرير سوق أوتو انطلاقًا من هذا المصدر.",
     "rssLink": "خلاصة RSS للمجلة"
+  },
+  "Equipement": {
+    "breadcrumbHome": "الرئيسية",
+    "indexTitle": "تجهيزات السيارة",
+    "indexSubtitle": "ملحقات ومعدات السيارة: مقطورات، صناديق السقف، حوامل الدراجات، الرفوف، الوصلات وأكثر.",
+    "empty": "لا توجد مقالات منشورة حالياً.",
+    "publishedOn": "نُشر في {date}",
+    "updatedOn": "حُدِّث في {date}",
+    "byline": "بقلم {author}"
+  },
+  "AdminEquipement": {
+    "title": "تجهيزات السيارة",
+    "subtitle": "مقالات عن الملحقات والتجهيزات السيارة (مقطورات، صناديق السقف، حوامل الدراجات، الوصلات…).",
+    "newEquipement": "مقال جديد",
+    "editEquipement": "تعديل المقال",
+    "empty": "لا توجد مقالات حالياً."
   },
   "AdminBlog": {
     "title": "مجلة سوق أوتو",

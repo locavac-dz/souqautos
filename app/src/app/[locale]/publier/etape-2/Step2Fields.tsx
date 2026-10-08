@@ -19,6 +19,7 @@ const CATEGORY_KEY: Record<ListingCategory, string> = {
   POIDS_LOURD: "categoryPoidsLourd",
   DEUX_ROUES: "categoryDeuxRoues",
   AUTRE: "categoryAutre",
+  EQUIPEMENT: "categoryEquipement",
 };
 
 export function Step2Fields({ brands }: { brands: BrandRow[] }) {
@@ -48,7 +49,8 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
       setError(t("errorValidation"));
       return false;
     }
-    if (!data.brandId && !(brandOther && data.brandFreeText?.trim())) {
+    // La marque est facultative pour les équipements (remorque sans marque connue…)
+    if (data.category !== "EQUIPEMENT" && !data.brandId && !(brandOther && data.brandFreeText?.trim())) {
       setError(t("errorValidation"));
       return false;
     }
@@ -65,6 +67,13 @@ export function Step2Fields({ brands }: { brands: BrandRow[] }) {
           value={data.category ?? ""}
           onChange={(e) => {
             const category = e.target.value as ListingCategory;
+            // Pour les équipements : pas de catalogue marque/modèle, on force le texte libre.
+            if (category === "EQUIPEMENT") {
+              setBrandOther(true);
+              setModelOther(true);
+              setData({ category, brandId: undefined, brandName: undefined, modelId: undefined, modelName: undefined, generationId: undefined, generationName: undefined });
+              return;
+            }
             // Un choix devenu impossible dans la nouvelle catégorie est effacé, jamais conservé en silence.
             const brand = brands.find((b) => b.id === data.brandId);
             const brandFits = !brand || filterCatalogueByCategory([brand], category).length > 0;
