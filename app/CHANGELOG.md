@@ -3861,3 +3861,28 @@ Aussi : `POST /api/payments/chargily/refresh` (vendeur) réécrit sur `refreshCh
 - `prisma generate` a exigé l'arrêt temporaire du serveur de dev (verrou du moteur sous Windows) — à savoir pour les prochaines migrations.
 
 **Limites** : une relecture qui ne change rien (« ignoré ») n'écrit pas d'événement (pas de bruit) ; le balayage ne traite pas les virements en attente (rapprochement humain par nature) ; les textes arabes (16 libellés) sont à faire relire.
+
+## Lot 267 — Préparation à la production (audit B6-B9, F1-F3, doc cron) (2026-10-08)
+
+Troisième lot de l'audit du 2026-10-08 : ce qui aurait fait mal à la mise en ligne sans toucher à l'argent.
+
+**B6 — Surfaces sans authentification ni limite.** `src/lib/price-estimate-action.ts`, seule action serveur (`"use server"`) du projet, échappait au modèle « session + limite de débit + Zod » des routes API : n'importe quel script pouvait déclencher des requêtes et des appels IA payants. Désormais : session exigée, **30 estimations par heure et par compte**, entrée validée (identifiants entiers positifs, année 1950-2100, kilométrage borné, 60 équipements max) ; un refus répond `null`, comme une estimation indisponible, ce que l'écran gère déjà. `POST /api/users/lookup-by-emails` (49 adresses par appel) limité à **20/h par compte** ; `POST /api/groups/[id]/members` à **30/h** — la réponse 404/409 reste (l'administrateur du groupe doit savoir si l'adresse a un compte), mais ne peut plus servir d'outil d'énumération.
+
+**B7 — Variables de `.env.example` que `launch:check` ignorait.** `STAFF_ALERT_EMAILS` absent → avertissement dédié (`staff-alerts`), même quand `OPS_ALERT_EMAILS` est défini : la file de modération (annonces, avis, identités, signalements, paiements à examiner) ne prévenait personne sans que rien ne le dise. `S3_BUCKET` défini sans `S3_PUBLIC_URL` → **erreur** (`storage.ts` enregistrait chaque photo sous `/<clé>`, donc 404) ; sans `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` → erreur ; sans `S3_ENDPOINT` → avertissement (seul AWS s'en passe). `RESPONSIVENESS_CACHE_TTL_MS` ou `CATALOGUE_STATS_CACHE_TTL_MS` à `0` → avertissement (réservé aux tests). `CHARGILY_API_BASE_URL` présent → avertissement (ignorée en production, mais trahit une configuration copiée depuis un poste de développement).
+
+**B8 — Données personnelles dans les journaux.** Le verrouillage d'un compte (mot de passe faux, second facteur faux) est journalisé par identifiant utilisateur, plus par adresse e-mail — en cohérence avec EXPLOITATION § 3 (SMS déjà masqués au Lot 265).
+
+**B9 — Lint rouge, donc `npm run verify` et la CI rouges.** `Step2Fields.tsx` : la saisie libre marque/modèle est **dérivée** de la catégorie (`brandOther = category === "EQUIPEMENT" || choix`) au lieu d'être recopiée dans l'état par un `useEffect` (règle `react-hooks/set-state-in-effect`) — le brouillon restauré après le premier rendu est couvert sans effet. Avertissements nettoyés : import inutilisé (`equipement/page.tsx`), variable morte (`e2e/pro-features.spec.ts`), `sha256` calculé pour rien (`apply-demo-photos.ts`), `window.location.href` → `router.push` de `@/i18n/navigation` dans `GroupConversationView` (le préfixe de langue est conservé : un arabophone dépendait du cookie `NEXT_LOCALE`). **`eslint .` : 0 problème.**
+
+**F1 — Webhook Chargily non borné.** 413 `payload_too_large` au-delà de 64 Ko, jugé sur `content-length` avant de lire le corps, puis sur le corps lu avant de calculer le HMAC ; 120 appels par minute et par adresse (`chargily-webhook:<ip>`).
+
+**F2 / F3.** `POST /api/cron/sweep` compare `CRON_SECRET` à temps constant (`safeEqual`, comme Google et Chargily) ; les erreurs `ChargilyApiError` ne citent plus les 200 premiers caractères de la réponse (pouvaient contenir des données d'acheteur et finissaient dans les journaux) — code HTTP seulement.
+
+**Documentation et planification.** `docs/EXPLOITATION.md` : § 1 liste désormais tous les contrôles de `launch:check` (SMS, `ADMIN_EMAIL`, Google, CSP, alertes de modération, `CRON_SECRET`, Chargily, 2FA, S3, caches…) ; § 2 et § 3 décrivent le **balayage nocturne** (`cron:sweep`, `CRON_SECRET`, relecture Chargily, 04h00, journal `backups/sweep.log`) qui n'apparaissait nulle part dans la doc. `ops/windows-schedule.ps1` : quatrième tâche `SouqAuto-Balayage` (quotidienne 04h00), absente alors que `crontab.example` la planifiait.
+
+**Vérifié**
+- `tsc` 0 erreur ; **`eslint .` 0 problème** (était 1 erreur, 4 avertissements) ; **2 329 tests / 201 fichiers** verts : 10 nouveaux (`tests/price-estimate-action.test.ts` — anonyme refusé sans requête, limite atteinte sans appel IA, entrées invalides, repli IA avec champs validés, repli marché quand l'IA est en panne ; `tests/lookup-by-emails-route.test.ts` — 401, 429 avant toute requête, résolution dédoublonnée en minuscules, validation 1-49), 413 du webhook (`content-length` et corps réel), 6 cas `launch-checks` (alertes de modération, S3 sans URL / sans identifiants / sans endpoint, caches à 0, URL de test Chargily).
+- `launch:check` sur la configuration de développement affiche les nouveaux contrôles (SMS et `ADMIN_EMAIL` bloquants, `STAFF_ALERT_EMAILS` en attention, stockage S3 cohérent ✓).
+- Navigateur : étape 2 du wizard avec un brouillon Équipement restauré → « Autre marque » et champ libre affichés d'emblée (le cas que l'effet supprimé traitait).
+
+**Limites** : l'énumération par `groups/[id]/members` reste possible à 30 adresses par heure (compromis assumé pour l'ergonomie de l'admin de groupe) ; `windows-schedule.ps1` et `crontab.example` restent des modèles non essayés sur un vrai serveur.
