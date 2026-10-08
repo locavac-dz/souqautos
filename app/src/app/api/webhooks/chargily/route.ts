@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   const now = new Date();
   const state = checkoutStatusFromEvent(event.type, event.data);
-  const outcome = await applyChargilyCheckoutState(event.data, state, now, `chargily:${event.type}`);
+  const outcome = await applyChargilyCheckoutState(event.data, state, now, `chargily:${event.type}`, { source: "WEBHOOK", providerEventId: event.id ?? null });
   console.log(`[chargily] webhook ${event.type} checkout=${event.data.id} → ${outcome}`);
   return NextResponse.json({ received: true, outcome });
 }

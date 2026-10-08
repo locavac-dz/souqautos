@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const counts = { listing: vi.fn(), ownerReview: vi.fn(), identity: vi.fn(), report: vi.fn() };
+const counts = { listing: vi.fn(), ownerReview: vi.fn(), identity: vi.fn(), report: vi.fn(), paymentOrder: vi.fn(), proSubscriptionOrder: vi.fn() };
 const checkRateLimit = vi.fn();
 const sendEmail = vi.fn();
 
@@ -10,6 +10,9 @@ vi.mock("@/lib/prisma", () => ({
     ownerReview: { count: (...a: unknown[]) => counts.ownerReview(...a) },
     identityVerificationRequest: { count: (...a: unknown[]) => counts.identity(...a) },
     report: { count: (...a: unknown[]) => counts.report(...a) },
+    // Lot 266 — commandes de paiement EN_ATTENTE annotées par un automate.
+    paymentOrder: { count: (...a: unknown[]) => counts.paymentOrder(...a) },
+    proSubscriptionOrder: { count: (...a: unknown[]) => counts.proSubscriptionOrder(...a) },
   },
 }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: (...a: unknown[]) => checkRateLimit(...a) }));
@@ -102,6 +105,8 @@ describe("notifyStaffOfPending", () => {
     counts.ownerReview.mockResolvedValue(0);
     counts.identity.mockResolvedValue(0);
     counts.report.mockResolvedValue(1);
+    counts.paymentOrder.mockResolvedValue(0);
+    counts.proSubscriptionOrder.mockResolvedValue(0);
   });
 
   it("does nothing, and does not even touch the database, when no recipient is configured", async () => {
@@ -117,6 +122,19 @@ describe("notifyStaffOfPending", () => {
     expect(sendEmail).toHaveBeenCalledTimes(2);
     expect(sendEmail.mock.calls.map((c) => (c[0] as { to: string }).to).sort()).toEqual(["a@souqauto.example", "b@souqauto.example"]);
     expect((sendEmail.mock.calls[0][0] as { subject: string }).subject).toContain("3 éléments en attente");
+  });
+
+  it("counts annotated pending payment orders of both kinds and links to /admin/paiements (Lot 266)", async () => {
+    process.env.STAFF_ALERT_EMAILS = "a@souqauto.example";
+    counts.paymentOrder.mockResolvedValue(1);
+    counts.proSubscriptionOrder.mockResolvedValue(1);
+    await notifyStaffOfPending("payment");
+    expect(counts.paymentOrder).toHaveBeenCalledWith({ where: { status: "EN_ATTENTE", reviewNote: { not: null } } });
+    const { subject, html } = sendEmail.mock.calls[0][0] as { subject: string; html: string };
+    expect(subject).toContain("paiement à examiner");
+    expect(subject).toContain("5 éléments en attente");
+    expect(html).toContain("/fr/admin/paiements");
+    expect(html).toContain("Paiements en attente à examiner</a> : <strong>2</strong>");
   });
 
   it("sends at most one alert per kind per window", async () => {

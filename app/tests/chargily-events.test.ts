@@ -5,13 +5,19 @@ const findUniqueProOrder = vi.fn();
 const fulfillListing = vi.fn();
 const fulfillPro = vi.fn();
 const cancelProviderOrder = vi.fn();
+const updateManyPaymentOrder = vi.fn();
+const updateManyProOrder = vi.fn();
+const recordPaymentEvent = vi.fn();
+const notifyStaffOfPending = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    paymentOrder: { findUnique: (...a: unknown[]) => findUniquePaymentOrder(...a) },
-    proSubscriptionOrder: { findUnique: (...a: unknown[]) => findUniqueProOrder(...a) },
+    paymentOrder: { findUnique: (...a: unknown[]) => findUniquePaymentOrder(...a), updateMany: (...a: unknown[]) => updateManyPaymentOrder(...a) },
+    proSubscriptionOrder: { findUnique: (...a: unknown[]) => findUniqueProOrder(...a), updateMany: (...a: unknown[]) => updateManyProOrder(...a) },
   },
 }));
+vi.mock("@/lib/payment-events", () => ({ recordPaymentEvent: (...a: unknown[]) => recordPaymentEvent(...a) }));
+vi.mock("@/lib/staff-alerts", () => ({ notifyStaffOfPending: (...a: unknown[]) => notifyStaffOfPending(...a) }));
 vi.mock("@/lib/payment-fulfillment", () => ({
   fulfillListingFormulaOrderFromProvider: (...a: unknown[]) => fulfillListing(...a),
   fulfillProSubscriptionOrderFromProvider: (...a: unknown[]) => fulfillPro(...a),
@@ -28,6 +34,10 @@ beforeEach(() => {
   fulfillListing.mockReset().mockResolvedValue("confirmed");
   fulfillPro.mockReset().mockResolvedValue("confirmed");
   cancelProviderOrder.mockReset().mockResolvedValue(true);
+  updateManyPaymentOrder.mockReset().mockResolvedValue({ count: 1 });
+  updateManyProOrder.mockReset().mockResolvedValue({ count: 1 });
+  recordPaymentEvent.mockReset().mockResolvedValue(undefined);
+  notifyStaffOfPending.mockReset().mockResolvedValue(undefined);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 
@@ -76,11 +86,30 @@ describe("applyChargilyCheckoutState", () => {
     expect(fulfillPro).toHaveBeenCalledWith("pro-1", NOW);
   });
 
-  it("refuses to activate when the amount or the currency does not match the order (left for a human)", async () => {
+  it("refuses to activate when the amount or the currency does not match the order (left for a human), annotates it and alerts the staff (Lot 266)", async () => {
     findUniquePaymentOrder.mockResolvedValue({ id: "order-1", amountDzd: 1500 });
-    expect(await applyChargilyCheckoutState({ id: "c1", status: "paid", amount: 100 }, "paid", NOW, "r")).toBe("amount_mismatch");
+    expect(await applyChargilyCheckoutState({ id: "c1", status: "paid", amount: 100, currency: "dzd" }, "paid", NOW, "r")).toBe("amount_mismatch");
     expect(await applyChargilyCheckoutState({ id: "c1", status: "paid", amount: 1500, currency: "eur" }, "paid", NOW, "r")).toBe("amount_mismatch");
     expect(fulfillListing).not.toHaveBeenCalled();
+    expect(updateManyPaymentOrder).toHaveBeenCalledWith({ where: { id: "order-1", status: "EN_ATTENTE" }, data: { reviewNote: "chargily:amount_mismatch 100 dzd" } });
+    expect(notifyStaffOfPending).toHaveBeenCalledWith("payment");
+    expect(recordPaymentEvent).toHaveBeenCalledTimes(2);
+    expect(recordPaymentEvent.mock.calls[0][0]).toMatchObject({ orderKind: "listing_formula", orderId: "order-1", source: "WEBHOOK", outcome: "amount_mismatch", amount: 100 });
+  });
+
+  it("records a payment event with the source and the provider event id (Lot 266)", async () => {
+    findUniquePaymentOrder.mockResolvedValue({ id: "order-1", amountDzd: 1500 });
+    await applyChargilyCheckoutState({ id: "c1", status: "paid", amount: 1500, currency: "dzd" }, "paid", NOW, "r", { source: "REFRESH_ADMIN", actorUserId: "admin-1", providerEventId: "evt-9" });
+    expect(recordPaymentEvent).toHaveBeenCalledWith({
+      orderKind: "listing_formula", orderId: "order-1", source: "REFRESH_ADMIN", outcome: "confirmed",
+      providerEventId: "evt-9", providerStatus: "paid", amount: 1500, currency: "dzd", actorUserId: "admin-1",
+    });
+  });
+
+  it("records nothing for an ignored state or an unknown checkout (no order to attach it to)", async () => {
+    await applyChargilyCheckoutState({ id: "c1" }, "ignored", NOW, "r");
+    await applyChargilyCheckoutState({ id: "c1", status: "paid" }, "paid", NOW, "r");
+    expect(recordPaymentEvent).not.toHaveBeenCalled();
   });
 
   it("relays the idempotent outcome of the fulfilment (a replayed webhook changes nothing)", async () => {

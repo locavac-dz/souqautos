@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import type { ListingFormula, ListingStatus, ProSubscriptionTier } from "@prisma/client";
+import type { ListingFormula, ListingStatus, PaymentOrderStatus, ProSubscriptionTier } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formulaValidityDays, isListingUpgradable, UPGRADABLE_STATUSES } from "@/lib/payment-orders";
 import { SUBSCRIPTION_VALIDITY_DAYS } from "@/lib/pro-subscription";
@@ -33,6 +33,11 @@ export type ConfirmOutcome = "confirmed" | "already_decided" | "not_found" | "li
 export type FulfillmentOutcome = ConfirmOutcome;
 
 const NOT_UPGRADABLE_NOTE = "listing_not_upgradable";
+
+// Statuts depuis lesquels une preuve de paiement confirme la commande. ANNULEE en fait partie (Lot 266, audit
+// B2) : un checkout déclaré échoué puis finalement payé par le prestataire doit activer — l'argent est
+// encaissé. Jamais depuis CONFIRMEE (déjà appliquée) ni REJETEE (décision humaine).
+const CONFIRMABLE: PaymentOrderStatus[] = ["EN_ATTENTE", "ANNULEE"];
 
 class ListingNotUpgradableError extends Error {
   constructor(readonly listingStatus: ListingStatus) {
@@ -133,15 +138,15 @@ export async function confirmListingFormulaOrder(orderId: string, now: Date, act
     done = await prisma.$transaction(async (tx): Promise<Done> => {
       const order = await tx.paymentOrder.findUnique({ where: { id: orderId }, include: { listing: true, user: true } });
       if (!order) return { outcome: "not_found" };
-      if (order.status !== "EN_ATTENTE") return { outcome: "already_decided" };
+      if (!CONFIRMABLE.includes(order.status)) return { outcome: "already_decided" };
       if (!isListingUpgradable(order.listing.status)) {
         await tx.paymentOrder.updateMany({
-          where: { id: orderId, status: "EN_ATTENTE" },
+          where: { id: orderId, status: { in: CONFIRMABLE } },
           data: { reviewNote: `${NOT_UPGRADABLE_NOTE}:${order.listing.status}` },
         });
         return { outcome: "listing_not_upgradable" };
       }
-      const { count } = await tx.paymentOrder.updateMany({ where: { id: orderId, status: "EN_ATTENTE" }, data: confirmationData(actor, now) });
+      const { count } = await tx.paymentOrder.updateMany({ where: { id: orderId, status: { in: CONFIRMABLE } }, data: confirmationData(actor, now) });
       if (count === 0) return { outcome: "already_decided" };
       if (!(await activateListingFormula(tx, order.listing, order.formula, now))) {
         throw new ListingNotUpgradableError(order.listing.status);
@@ -155,7 +160,7 @@ export async function confirmListingFormulaOrder(orderId: string, now: Date, act
     if (err instanceof ListingNotUpgradableError) {
       // La transaction a été annulée : la commande est toujours EN_ATTENTE ; on l'annote pour l'admin.
       await prisma.paymentOrder.updateMany({
-        where: { id: orderId, status: "EN_ATTENTE" },
+        where: { id: orderId, status: { in: CONFIRMABLE } },
         data: { reviewNote: `${NOT_UPGRADABLE_NOTE}:${err.listingStatus}` },
       });
       return "listing_not_upgradable";
@@ -173,8 +178,8 @@ export async function confirmProSubscriptionOrder(orderId: string, now: Date, ac
   const done = await prisma.$transaction(async (tx): Promise<Done> => {
     const order = await tx.proSubscriptionOrder.findUnique({ where: { id: orderId }, include: { professionalAccount: true, user: true } });
     if (!order) return { outcome: "not_found" };
-    if (order.status !== "EN_ATTENTE") return { outcome: "already_decided" };
-    const { count } = await tx.proSubscriptionOrder.updateMany({ where: { id: orderId, status: "EN_ATTENTE" }, data: confirmationData(actor, now) });
+    if (!CONFIRMABLE.includes(order.status)) return { outcome: "already_decided" };
+    const { count } = await tx.proSubscriptionOrder.updateMany({ where: { id: orderId, status: { in: CONFIRMABLE } }, data: confirmationData(actor, now) });
     if (count === 0) return { outcome: "already_decided" };
     await activateProSubscription(tx, order.professionalAccountId, order.tier, now);
     return {

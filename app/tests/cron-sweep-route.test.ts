@@ -6,7 +6,9 @@ const sweepExpiringListingsForReminders = vi.fn();
 const sweepExpiredListings = vi.fn();
 const sweepOldNotifications = vi.fn();
 const sweepOldLoginEvents = vi.fn();
+const sweepPendingChargilyOrders = vi.fn();
 
+vi.mock("@/lib/chargily-events", () => ({ sweepPendingChargilyOrders: (...a: unknown[]) => sweepPendingChargilyOrders(...a) }));
 vi.mock("@/lib/listing-auto-renew-sweep", () => ({ sweepAutoRenewals: (...a: unknown[]) => sweepAutoRenewals(...a) }));
 vi.mock("@/lib/listing-expiry-reminder-sweep", () => ({ sweepExpiringListingsForReminders: (...a: unknown[]) => sweepExpiringListingsForReminders(...a) }));
 vi.mock("@/lib/listing-expiry-sweep", () => ({ sweepExpiredListings: (...a: unknown[]) => sweepExpiredListings(...a) }));
@@ -27,6 +29,7 @@ beforeEach(() => {
   sweepExpiredListings.mockReset().mockResolvedValue(undefined);
   sweepOldNotifications.mockReset().mockResolvedValue(undefined);
   sweepOldLoginEvents.mockReset().mockResolvedValue(undefined);
+  sweepPendingChargilyOrders.mockReset().mockResolvedValue({ checked: 0, outcomes: {}, stoppedEarly: false });
   vi.stubEnv("CRON_SECRET", "test-secret-value");
 });
 
@@ -42,6 +45,9 @@ describe("POST /api/cron/sweep", () => {
     expect(sweepExpiredListings).toHaveBeenCalledOnce();
     expect(sweepOldNotifications).toHaveBeenCalledOnce();
     expect(sweepOldLoginEvents).toHaveBeenCalledOnce();
+    // Lot 266 — commandes Chargily en attente relues chez le prestataire, résultat renvoyé au cron.
+    expect(sweepPendingChargilyOrders).toHaveBeenCalledWith(expect.any(Date));
+    expect(body.pendingPayments).toEqual({ checked: 0, outcomes: {}, stoppedEarly: false });
   });
 
   it("runs sweepers with the same timestamp for consistency", async () => {

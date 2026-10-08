@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 import { confirmProSubscriptionOrder, sendProSubscriptionDecisionEmail } from "@/lib/payment-fulfillment";
+import { checkProviderBeforeDecision } from "@/lib/admin-payment-decision";
+import { recordPaymentEvent } from "@/lib/payment-events";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -47,6 +49,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const isApproval = parsed.data.action === "approve";
   const reason = parsed.data.reason?.trim() || null;
 
+  // Lot 266 — relecture chez Chargily avant la décision (voir payment-orders/[id]/review).
+  const providerCheck = await checkProviderBeforeDecision(order, parsed.data.action);
+  if (!providerCheck.ok) {
+    return NextResponse.json({ error: providerCheck.error, providerStatus: providerCheck.providerStatus }, { status: providerCheck.httpStatus });
+  }
+
   if (isApproval) {
     const outcome = await confirmProSubscriptionOrder(id, now, { kind: "admin", adminId: user.id, note: reason });
     if (outcome === "not_found") return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -62,6 +70,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     await sendProSubscriptionDecisionEmail(order.user, order.professionalAccount, order.tier, { approved: false, reason: reason ?? "" });
   }
+
+  await recordPaymentEvent({
+    orderKind: "pro_subscription",
+    orderId: id,
+    source: "ADMIN",
+    outcome: isApproval ? "confirmed" : "rejected",
+    providerStatus: providerCheck.providerStatus,
+    actorUserId: user.id,
+  });
 
   await writeAuditLog({
     adminId: user.id,

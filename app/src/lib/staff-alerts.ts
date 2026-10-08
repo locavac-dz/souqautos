@@ -16,7 +16,9 @@ import { MAX_ALERT_RECIPIENTS, parseAlertEmails } from "@/lib/alert-recipients";
 // Destinataires : STAFF_ALERT_EMAILS (adresses séparées par des virgules) ;
 // non défini = aucune alerte (comportement d'avant ce lot).
 
-export type StaffAlertKind = "listing" | "ownerReview" | "identity" | "report";
+// Lot 266 — « payment » : une commande de paiement EN_ATTENTE qu'un automate a annotée (montant inattendu chez
+// Chargily, annonce plus publiable à l'activation) et qu'un humain doit examiner dans /admin/paiements.
+export type StaffAlertKind = "listing" | "ownerReview" | "identity" | "report" | "payment";
 
 export const STAFF_ALERT_WINDOW_MS = 30 * 60 * 1000;
 export const MAX_STAFF_RECIPIENTS = MAX_ALERT_RECIPIENTS;
@@ -26,13 +28,15 @@ export type PendingCounts = {
   ownerReviews: number;
   identityRequests: number;
   reports: number;
+  // Commandes de paiement en attente annotées par un automate (facultatif pour les appelants antérieurs au Lot 266).
+  payments?: number;
 };
 
 // Lot 136 : l'analyse des adresses vit dans un module léger partagé avec les alertes techniques (alert-recipients.ts).
 export const parseStaffEmails = parseAlertEmails;
 
 export function totalPending(counts: PendingCounts): number {
-  return counts.listings + counts.ownerReviews + counts.identityRequests + counts.reports;
+  return counts.listings + counts.ownerReviews + counts.identityRequests + counts.reports + (counts.payments ?? 0);
 }
 
 // Groupe nominal complet, accordé : « nouvel avis », « nouveau signalement »…
@@ -41,6 +45,7 @@ const NEW_ITEM_LABEL: Record<StaffAlertKind, string> = {
   ownerReview: "nouvel avis de propriétaire",
   identity: "nouvelle demande de vérification d'identité",
   report: "nouveau signalement",
+  payment: "paiement à examiner",
 };
 
 // Lignes de la file, chacune avec son lien : la file entière est rappelée, la
@@ -60,6 +65,7 @@ export function buildStaffAlertEmail({
     { key: "ownerReview", label: "Avis de propriétaires à valider", count: counts.ownerReviews, path: "/fr/admin/avis-proprietaires" },
     { key: "identity", label: "Vérifications d'identité en attente", count: counts.identityRequests, path: "/fr/admin/identite" },
     { key: "report", label: "Signalements ouverts", count: counts.reports, path: "/fr/admin/signalements" },
+    { key: "payment", label: "Paiements en attente à examiner", count: counts.payments ?? 0, path: "/fr/admin/paiements" },
   ];
   rows.sort((a, b) => Number(b.key === kind) - Number(a.key === kind));
 
@@ -78,13 +84,16 @@ export function buildStaffAlertEmail({
 }
 
 async function readPendingCounts(): Promise<PendingCounts> {
-  const [listings, ownerReviews, identityRequests, reports] = await Promise.all([
+  const annotated = { status: "EN_ATTENTE" as const, reviewNote: { not: null } };
+  const [listings, ownerReviews, identityRequests, reports, paymentOrders, subscriptionOrders] = await Promise.all([
     prisma.listing.count({ where: { status: "EN_ATTENTE" } }),
     prisma.ownerReview.count({ where: { status: "EN_ATTENTE" } }),
     prisma.identityVerificationRequest.count({ where: { status: "EN_ATTENTE" } }),
     prisma.report.count({ where: { status: "OUVERT" } }),
+    prisma.paymentOrder.count({ where: annotated }),
+    prisma.proSubscriptionOrder.count({ where: annotated }),
   ]);
-  return { listings, ownerReviews, identityRequests, reports };
+  return { listings, ownerReviews, identityRequests, reports, payments: paymentOrders + subscriptionOrders };
 }
 
 // À appeler APRÈS la réponse (avec `after()` de Next) : n'allonge pas la requête de

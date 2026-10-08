@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { computePaymentOrderStats } from "@/lib/payment-orders";
 import { PaymentOrderReviewActions } from "@/components/admin/PaymentOrderReviewActions";
+import { AdminChargilyRefresh } from "@/components/admin/AdminChargilyRefresh";
+import type { PaymentEvent } from "@prisma/client";
 
 // Réservé à ADMIN — un virement bancaire révèle une référence de transaction
 // et un montant réel, plus sensible que la modération courante (ouverte à
@@ -33,6 +35,46 @@ export default async function AdminPaymentOrdersPage() {
     }),
   ]);
   const stats = computePaymentOrderStats(allOrdersForStats);
+
+  // Lot 266 — historique des décisions (webhook, relectures, balayage, admin) des commandes en attente : trois
+  // dernières par commande, pour qu'un humain voie ce que les automates ont déjà tenté.
+  const pendingIds = [...orders.map((o) => o.id), ...subscriptionOrders.map((o) => o.id)];
+  const events = pendingIds.length
+    ? await prisma.paymentEvent.findMany({ where: { orderId: { in: pendingIds } }, orderBy: { createdAt: "desc" }, take: 200 })
+    : [];
+  const eventsByOrder = new Map<string, PaymentEvent[]>();
+  for (const event of events) {
+    const list = eventsByOrder.get(event.orderId) ?? [];
+    if (list.length < 3) list.push(event);
+    eventsByOrder.set(event.orderId, list);
+  }
+  const EVENT_SOURCE_KEY = { WEBHOOK: "eventWEBHOOK", REFRESH_USER: "eventREFRESH_USER", REFRESH_ADMIN: "eventREFRESH_ADMIN", SWEEP: "eventSWEEP", ADMIN: "eventADMIN" } as const;
+  const renderAutomation = (order: { id: string; provider: string; reviewNote: string | null }, kind: "listing_formula" | "pro_subscription") => {
+    const history = eventsByOrder.get(order.id) ?? [];
+    return (
+      <>
+        {order.reviewNote && (
+          <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+            {t("noteLabel")} : <span className="font-mono" dir="ltr">{order.reviewNote}</span>
+          </p>
+        )}
+        {history.length > 0 && (
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="font-medium">{t("eventsTitle")}</p>
+            <ul className="mt-0.5 space-y-0.5">
+              {history.map((event) => (
+                <li key={event.id}>
+                  {dateFormatter.format(event.createdAt)} · {t(EVENT_SOURCE_KEY[event.source])} → <span className="font-mono" dir="ltr">{event.outcome}</span>
+                  {event.providerStatus ? <span className="font-mono" dir="ltr"> ({event.providerStatus})</span> : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {order.provider === "CHARGILY" && <AdminChargilyRefresh kind={kind} orderId={order.id} />}
+      </>
+    );
+  };
 
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
     dateStyle: "medium",
@@ -104,6 +146,7 @@ export default async function AdminPaymentOrdersPage() {
                     {order.provider === "CHARGILY" ? order.providerCheckoutId ?? order.reference : order.reference}
                   </span>
                 </p>
+                {renderAutomation(order, "listing_formula")}
               </div>
               <div className="sm:w-56 sm:shrink-0">
                 <PaymentOrderReviewActions orderId={order.id} />
@@ -150,6 +193,7 @@ export default async function AdminPaymentOrdersPage() {
                     {order.provider === "CHARGILY" ? order.providerCheckoutId ?? order.reference : order.reference}
                   </span>
                 </p>
+                {renderAutomation(order, "pro_subscription")}
               </div>
               <div className="sm:w-56 sm:shrink-0">
                 <PaymentOrderReviewActions

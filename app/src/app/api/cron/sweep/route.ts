@@ -4,6 +4,7 @@ import { sweepExpiringListingsForReminders } from "@/lib/listing-expiry-reminder
 import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import { sweepOldNotifications } from "@/lib/notification-sweep";
 import { sweepOldLoginEvents } from "@/lib/login-event-sweep";
+import { sweepPendingChargilyOrders } from "@/lib/chargily-events";
 
 // Called nightly by cron (see ops/crontab.example).
 // Runs the three sweepers directly — bypasses throttledSweep which is designed
@@ -25,6 +26,8 @@ export async function POST(req: NextRequest) {
   await sweepExpiredListings(now);
   await sweepOldNotifications(now);
   await sweepOldLoginEvents(now);
+  // Lot 266 — commandes Chargily restées EN_ATTENTE (webhook perdu) : relues chez le prestataire.
+  const pendingPayments = await sweepPendingChargilyOrders(now);
 
-  return NextResponse.json({ ok: true, sweptAt: now.toISOString() });
+  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments });
 }

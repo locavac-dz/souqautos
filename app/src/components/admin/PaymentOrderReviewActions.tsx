@@ -33,7 +33,16 @@ export function PaymentOrderReviewActions({ orderId, reviewUrl }: { orderId: str
     }
 
     const body = await res.json().catch(() => null);
-    setError(body?.error === "reason_required" ? t("reasonRequired") : t("actionError"));
+    // Lot 265/266 — codes renvoyés par les routes de revue : annonce plus publiable, prestataire en désaccord.
+    const KEY_BY_ERROR: Record<string, string> = {
+      reason_required: "reasonRequired",
+      listing_not_upgradable: "paymentListingNotUpgradable",
+      paid_at_provider: "paymentPaidAtProvider",
+      not_paid_at_provider: "paymentNotPaidAtProvider",
+      provider_unavailable: "paymentProviderUnavailable",
+      chargily_not_configured: "paymentProviderUnavailable",
+    };
+    setError(t(KEY_BY_ERROR[body?.error as string] ?? "actionError"));
   }
 
   return (

@@ -1602,3 +1602,31 @@ model GroupMessage {
   @@index([groupId])
   @@index([groupId, createdAt])
 }
+
+// Lot 266 (audit B2) — journal des décisions de paiement : qui a confirmé ou annulé quoi, par quel canal
+// (webhook Chargily, relecture par le vendeur ou par un admin, balayage nocturne, décision admin), avec le
+// statut et le montant relus chez le prestataire. AuditLog exige un admin ; ici l'acteur est souvent le
+// système. `orderId` n'est pas une relation : un événement survit à la commande et sert aux deux tables.
+enum PaymentEventSource {
+  WEBHOOK
+  REFRESH_USER
+  REFRESH_ADMIN
+  SWEEP
+  ADMIN
+}
+
+model PaymentEvent {
+  id              String             @id @default(cuid())
+  orderKind       String // "listing_formula" | "pro_subscription"
+  orderId         String
+  source          PaymentEventSource
+  outcome         String // confirmed | already_decided | canceled | amount_mismatch | listing_not_upgradable | rejected | …
+  providerEventId String?
+  providerStatus  String?
+  amount          Int?
+  currency        String?
+  actorUserId     String?
+  createdAt       DateTime           @default(now())
+
+  @@index([orderKind, orderId, createdAt(sort: Desc)])
+}

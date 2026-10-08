@@ -60,7 +60,7 @@ describe("confirmListingFormulaOrder", () => {
     expect(await confirmListingFormulaOrder("o1", NOW, { kind: "provider" })).toBe("confirmed");
     expect($transaction).toHaveBeenCalledOnce();
     expect(updateManyOrder).toHaveBeenCalledWith({
-      where: { id: "o1", status: "EN_ATTENTE" },
+      where: { id: "o1", status: { in: ["EN_ATTENTE", "ANNULEE"] } },
       data: { status: "CONFIRMEE", paidAt: NOW, reviewedAt: NOW, reviewedById: null, reviewNote: null },
     });
     const activation = updateManyListing.mock.calls[0][0];
@@ -103,7 +103,7 @@ describe("confirmListingFormulaOrder", () => {
     findUniqueOrder.mockResolvedValue({ ...ORDER, listing: { ...LISTING, status: "SUSPENDUE" } });
     expect(await confirmListingFormulaOrder("o1", NOW, { kind: "provider" })).toBe("listing_not_upgradable");
     expect(updateManyOrder).toHaveBeenCalledOnce();
-    expect(updateManyOrder.mock.calls[0][0]).toEqual({ where: { id: "o1", status: "EN_ATTENTE" }, data: { reviewNote: "listing_not_upgradable:SUSPENDUE" } });
+    expect(updateManyOrder.mock.calls[0][0]).toEqual({ where: { id: "o1", status: { in: ["EN_ATTENTE", "ANNULEE"] } }, data: { reviewNote: "listing_not_upgradable:SUSPENDUE" } });
     expect(updateManyListing).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
   });
@@ -114,7 +114,7 @@ describe("confirmListingFormulaOrder", () => {
     // La transaction a été rejetée (exception), puis la commande toujours EN_ATTENTE est annotée hors transaction.
     await expect($transaction.mock.results[0].value).rejects.toThrow("listing_not_upgradable");
     const last = updateManyOrder.mock.calls.at(-1)![0];
-    expect(last).toEqual({ where: { id: "o1", status: "EN_ATTENTE" }, data: { reviewNote: "listing_not_upgradable:PUBLIEE" } });
+    expect(last).toEqual({ where: { id: "o1", status: { in: ["EN_ATTENTE", "ANNULEE"] } }, data: { reviewNote: "listing_not_upgradable:PUBLIEE" } });
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
@@ -144,11 +144,18 @@ describe("confirmProSubscriptionOrder", () => {
     expect(sendEmail.mock.calls[0][0].html).toContain("subscriptionApprovedBody");
   });
 
-  it("is idempotent on a decided order", async () => {
-    findUniqueProOrder.mockResolvedValue({ ...PRO_ORDER, status: "ANNULEE" });
+  it("is idempotent on a decided order (CONFIRMEE or REJETEE)", async () => {
+    findUniqueProOrder.mockResolvedValue({ ...PRO_ORDER, status: "REJETEE" });
     expect(await confirmProSubscriptionOrder("p1", NOW, { kind: "provider" })).toBe("already_decided");
     expect(upsertSubscription).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("still activates an ANNULEE order when the provider finally reports it paid (Lot 266, audit B2)", async () => {
+    findUniqueProOrder.mockResolvedValue({ ...PRO_ORDER, status: "ANNULEE" });
+    expect(await confirmProSubscriptionOrder("p1", NOW, { kind: "provider" })).toBe("confirmed");
+    expect(updateManyProOrder.mock.calls[0][0].where).toEqual({ id: "p1", status: { in: ["EN_ATTENTE", "ANNULEE"] } });
+    expect(upsertSubscription).toHaveBeenCalledOnce();
   });
 });
 
