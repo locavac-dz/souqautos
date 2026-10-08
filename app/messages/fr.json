@@ -1936,7 +1936,8 @@
     "empty": "Aucun article publié pour le moment.",
     "publishedOn": "Publié le {date}",
     "updatedOn": "Mis à jour le {date}",
-    "byline": "Par {author}"
+    "byline": "Par {author}",
+    "rssLink": "Flux RSS des articles équipements"
   },
   "EquipementSearch": {
     "pageTitle": "Équipements auto",

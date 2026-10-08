@@ -47,7 +47,7 @@ export async function generateMetadata({
   return {
     title: `${title} — Souq Auto`,
     description: excerpt,
-    alternates: localizedAlternates(canonical),
+    alternates: { ...localizedAlternates(canonical), types: { "application/rss+xml": `${SITE_URL}/${locale}/equipement/feed.xml` } },
     openGraph: {
       title,
       description: excerpt,
@@ -154,6 +154,12 @@ export default async function EquipementArticlePage({
           )}
         </p>
       )}
+
+      <p className="mt-6 text-xs text-slate-500 dark:text-slate-400">
+        <a href={`/${locale}/equipement/feed.xml`} className="underline hover:text-slate-900 dark:hover:text-slate-200">
+          {t("rssLink")}
+        </a>
+      </p>
     </div>
   );
 }

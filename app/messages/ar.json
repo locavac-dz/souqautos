@@ -1936,7 +1936,8 @@
     "empty": "لا توجد مقالات منشورة حالياً.",
     "publishedOn": "نُشر في {date}",
     "updatedOn": "حُدِّث في {date}",
-    "byline": "بقلم {author}"
+    "byline": "بقلم {author}",
+    "rssLink": "خلاصة RSS لمقالات التجهيزات"
   },
   "EquipementSearch": {
     "pageTitle": "تجهيزات السيارة",
