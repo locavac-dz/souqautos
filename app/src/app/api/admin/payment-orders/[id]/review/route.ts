@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
-import { formulaValidityDays } from "@/lib/payment-orders";
-import { computeExpiryDate } from "@/lib/listing-lifecycle";
 import { writeAuditLog } from "@/lib/audit-log";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
-import { SITE_URL } from "@/lib/site";
+import { activateListingFormula, sendListingFormulaDecisionEmail } from "@/lib/payment-fulfillment";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -20,6 +16,8 @@ const bodySchema = z.object({
 // fournie par le vendeur avec le relevé réel, même logique de confirmation
 // humaine que la vérification d'identité (Lot 14). Plus sensible qu'une
 // action de modération courante (argent réel), donc pas ouvert à MODERATEUR.
+// Lot 264 : une commande Chargily EN_ATTENTE (webhook jamais arrivé) peut aussi être tranchée ici,
+// après vérification dans le tableau de bord Chargily — l'activation est la même (payment-fulfillment).
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user || !isAdmin(user.role)) {
@@ -71,18 +69,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   if (isApproval) {
-    const newExpiresAt = computeExpiryDate(now, formulaValidityDays(order.formula));
-    await prisma.listing.update({
-      where: { id: order.listingId },
-      data: {
-        formula: order.formula,
-        status: "PUBLIEE",
-        expiresAt: newExpiresAt,
-        publishedAt: order.listing.status === "EXPIREE" ? now : order.listing.publishedAt,
-        // Nouveau cycle d'expiration (même principe que le renouvellement, Lot 48).
-        expiryReminderSentAt: null,
-      },
-    });
+    await activateListingFormula(order.listing, order.formula, now);
   }
 
   await writeAuditLog({
@@ -94,34 +81,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       listingId: order.listingId,
       formula: order.formula,
       amountDzd: order.amountDzd,
+      provider: order.provider,
       reference: order.reference,
       reason: parsed.data.reason ?? null,
     },
   });
 
-  // Même famille de notification que les Lots 62-64 : l'auteur de la demande
-  // ne doit pas avoir à revisiter lui-même « Mes annonces » pour savoir si
-  // son virement a été validé.
-  const t = await getTranslations({ locale: order.user.locale, namespace: "Notifications" });
-  const listingLink = `${SITE_URL}/${order.user.locale}/annonce/${order.listingId}`;
-  const manageLink = `${SITE_URL}/${order.user.locale}/compte/mes-annonces`;
-  const title = escapeHtml(order.listing.title);
-
-  const subject = isApproval ? t("paymentApprovedSubject") : t("paymentRejectedSubject");
-  const html = isApproval
-    ? `<p>${t("greeting")}</p><p>${t("paymentApprovedBody", { title })}</p><p><a href="${listingLink}">${t("paymentApprovedLink")}</a></p>`
-    : `<p>${t("greeting")}</p><p>${t("paymentRejectedBody", {
-        title,
-        reason: escapeHtml(parsed.data.reason?.trim() ?? ""),
-      })}</p><p><a href="${manageLink}">${t("paymentRejectedLink")}</a></p>`;
-
-  const emailResult = await sendEmail({ to: order.user.email, subject, html }).catch((err) => {
-    console.error(`[EMAIL commande de paiement] échec envoi: ${(err as Error).message}`);
-    return null;
-  });
-  if (emailResult?.previewUrl) {
-    console.log(`[EMAIL commande de paiement] ${emailResult.previewUrl}`);
-  }
+  await sendListingFormulaDecisionEmail(
+    order.user,
+    order.listing,
+    isApproval
+      ? { approved: true, source: order.provider === "CHARGILY" ? "chargily" : "virement" }
+      : { approved: false, reason: parsed.data.reason?.trim() ?? "" }
+  );
 
   return NextResponse.json({ status: isApproval ? "CONFIRMEE" : "REJETEE" });
 }

@@ -7,11 +7,18 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { canManageListing } from "@/lib/listing-access";
 import { checkFormulaUpgradeEligible, priceForFormula } from "@/lib/payment-orders";
 import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
+import { CHARGILY_WEBHOOK_PATH, ChargilyApiError, createChargilyCheckout, resolveChargilyConfig } from "@/lib/chargily";
+import { SITE_URL } from "@/lib/site";
 
-const bodySchema = z.object({
-  formula: z.enum(["PREMIUM", "PREMIUM_PLUS"]),
-  reference: z.string().trim().min(2).max(80),
-});
+// Lot 264 — deux moyens de paiement : « virement » (référence fournie par le vendeur, rapprochement
+// humain, Lot 66) ou « chargily » (paiement en ligne CIB / Edahabia, confirmation par webhook).
+const bodySchema = z
+  .object({
+    formula: z.enum(["PREMIUM", "PREMIUM_PLUS"]),
+    method: z.enum(["virement", "chargily"]).default("virement"),
+    reference: z.string().trim().min(2).max(80).optional(),
+  })
+  .refine((b) => b.method !== "virement" || Boolean(b.reference), { message: "reference_required", path: ["reference"] });
 
 // Un collaborateur gererAnnonces peut passer une annonce du compte pro en
 // formule payante — même règle que gérer/renouveler/tarifer une annonce
@@ -42,8 +49,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const settings = await getPaymentSettings();
-  if (!isBankDetailsComplete(settings)) {
+  const chargily = resolveChargilyConfig(process.env);
+  if (parsed.data.method === "virement" && !isBankDetailsComplete(settings)) {
     return NextResponse.json({ error: "bank_details_missing" }, { status: 400 });
+  }
+  if (parsed.data.method === "chargily" && chargily.mode !== "enabled") {
+    return NextResponse.json({ error: "online_payment_unavailable" }, { status: 400 });
   }
 
   const pendingOrder = await prisma.paymentOrder.findFirst({
@@ -61,6 +72,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const amountDzd = priceForFormula(parsed.data.formula, settings);
+  const isChargily = parsed.data.method === "chargily";
 
   // Le `findFirst` ci-dessus ne suffit pas seul contre un double-clic/retry
   // réseau (TOCTOU) — l'index unique filtré `PaymentOrder_pending_unique`
@@ -74,7 +86,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         listingId: id,
         formula: parsed.data.formula,
         amountDzd,
-        reference: parsed.data.reference,
+        provider: isChargily ? "CHARGILY" : "VIREMENT",
+        // Pour Chargily, la référence est posée après création (identifiant de la commande) : le
+        // vendeur n'a rien à saisir.
+        reference: isChargily ? "CHARGILY" : parsed.data.reference!,
       },
     });
   } catch (err) {
@@ -84,5 +99,32 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     throw err;
   }
 
-  return NextResponse.json({ order }, { status: 201 });
+  if (!isChargily || chargily.mode !== "enabled") {
+    return NextResponse.json({ order }, { status: 201 });
+  }
+
+  // La commande existe AVANT le checkout (son identifiant sert de référence) ; si Chargily ne répond
+  // pas, elle est supprimée : jamais une commande EN_ATTENTE sans checkout qui bloquerait l'annonce.
+  const locale = user.locale === "ar" ? "ar" : "fr";
+  const returnBase = `${SITE_URL}/${locale}/compte/mes-annonces`;
+  try {
+    const checkout = await createChargilyCheckout(chargily.config, {
+      amountDzd,
+      successUrl: `${returnBase}?paiement=ok`,
+      failureUrl: `${returnBase}?paiement=echec`,
+      webhookEndpoint: `${SITE_URL}${CHARGILY_WEBHOOK_PATH}`,
+      description: `Souq Auto — formule ${parsed.data.formula} — annonce ${id} — commande ${order.id}`,
+      locale,
+    });
+    order = await prisma.paymentOrder.update({
+      where: { id: order.id },
+      data: { reference: order.id, providerCheckoutId: checkout.id },
+    });
+    return NextResponse.json({ order, checkoutUrl: checkout.checkoutUrl }, { status: 201 });
+  } catch (err) {
+    await prisma.paymentOrder.delete({ where: { id: order.id } }).catch(() => undefined);
+    const message = err instanceof ChargilyApiError ? err.message : (err as Error).message;
+    console.error(`[chargily] création de checkout impossible (annonce ${id}) : ${message}`);
+    return NextResponse.json({ error: "provider_unavailable" }, { status: 502 });
+  }
 }

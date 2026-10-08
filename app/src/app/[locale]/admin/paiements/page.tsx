@@ -63,6 +63,8 @@ export default async function AdminPaymentOrdersPage() {
           premium: numberFormatter.format(stats.premiumRevenueDzd),
           premiumPlus: numberFormatter.format(stats.premiumPlusRevenueDzd),
         })}
+        {" · "}
+        {t("statCanceledCount", { count: stats.canceledCount })}
       </p>
 
       <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
@@ -94,9 +96,12 @@ export default async function AdminPaymentOrdersPage() {
                   {t("formulaLabel")} : <strong>{order.formula}</strong> — {numberFormatter.format(order.amountDzd)} DA
                 </p>
                 <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
-                  {t("referenceLabel")} :{" "}
+                  {t("providerLabel")} : {order.provider === "CHARGILY" ? t("providerChargily") : t("providerVirement")}
+                </p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+                  {order.provider === "CHARGILY" ? t("checkoutIdLabel") : t("referenceLabel")} :{" "}
                   <span className="font-mono" dir="ltr">
-                    {order.reference}
+                    {order.provider === "CHARGILY" ? order.providerCheckoutId ?? order.reference : order.reference}
                   </span>
                 </p>
               </div>
@@ -137,9 +142,12 @@ export default async function AdminPaymentOrdersPage() {
                   {t("tierLabel")} : <strong>{order.tier}</strong> — {numberFormatter.format(order.amountDzd)} DA
                 </p>
                 <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
-                  {t("referenceLabel")} :{" "}
+                  {t("providerLabel")} : {order.provider === "CHARGILY" ? t("providerChargily") : t("providerVirement")}
+                </p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+                  {order.provider === "CHARGILY" ? t("checkoutIdLabel") : t("referenceLabel")} :{" "}
                   <span className="font-mono" dir="ltr">
-                    {order.reference}
+                    {order.provider === "CHARGILY" ? order.providerCheckoutId ?? order.reference : order.reference}
                   </span>
                 </p>
               </div>

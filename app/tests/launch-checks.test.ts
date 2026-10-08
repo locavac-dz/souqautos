@@ -33,6 +33,7 @@ const goodEnv = {
   GOOGLE_CLIENT_SECRET: "secret-de-test",
   OPS_ALERT_EMAILS: "technique@souqauto.example",
   CRON_SECRET: "un-secret-de-cron-suffisamment-long",
+  CHARGILY_SECRET_KEY: "live_sk_abcdefghijklmnopqrstuvwxyz0123456789",
 };
 
 const level = (results: ReturnType<typeof evaluateLaunchReadiness>, id: string) => results.filter((r) => r.id === id).map((r) => r.level);
@@ -257,6 +258,39 @@ describe("evaluateLaunchReadiness — Search Console (Lot 124)", () => {
       const results = evaluateLaunchReadiness({ env: { ...goodEnv, GOOGLE_OAUTH_TEST_BASE_URL: "http://localhost:5187" }, facts: goodFacts });
       expect(level(results, "google-login")).toEqual(["ok"]);
     });
+  });
+});
+
+describe("evaluateLaunchReadiness — paiement en ligne Chargily Pay (Lot 264)", () => {
+  const withoutChargily = () => {
+    const { CHARGILY_SECRET_KEY, ...rest } = goodEnv;
+    void CHARGILY_SECRET_KEY;
+    return rest;
+  };
+
+  it("is fine with a live key, and shows the webhook address Chargily will call", () => {
+    const results = evaluateLaunchReadiness({ env: goodEnv, facts: goodFacts });
+    expect(level(results, "chargily")).toEqual(["ok"]);
+    expect(results.find((r) => r.id === "chargily")?.message).toContain("https://souqauto.example/api/webhooks/chargily");
+  });
+
+  it("only warns when online payment is left off (bank transfer still works)", () => {
+    const results = evaluateLaunchReadiness({ env: withoutChargily(), facts: goodFacts });
+    expect(level(results, "chargily")).toEqual(["warning"]);
+    expect(results.find((r) => r.id === "chargily")?.fix).toContain("CHARGILY_SECRET_KEY");
+    expect(summarizeChecks(results)).toMatchObject({ errors: 0, warnings: 1, ready: true });
+  });
+
+  it("blocks on a TEST key (the site would offer online payment and cash nothing) or a malformed key", () => {
+    const test = evaluateLaunchReadiness({ env: { ...goodEnv, CHARGILY_SECRET_KEY: "test_sk_abcdefghijklmnopqrstuvwxyz0123456789" }, facts: goodFacts });
+    expect(level(test, "chargily")).toEqual(["error"]);
+    expect(summarizeChecks(test).ready).toBe(false);
+    expect(level(evaluateLaunchReadiness({ env: { ...goodEnv, CHARGILY_SECRET_KEY: "pk_live_nope" }, facts: goodFacts }), "chargily")).toEqual(["error"]);
+  });
+
+  it("ignores the test-only replacement of Chargily's address when judging as production", () => {
+    const results = evaluateLaunchReadiness({ env: { ...goodEnv, CHARGILY_API_BASE_URL: "http://127.0.0.1:5189" }, facts: goodFacts });
+    expect(level(results, "chargily")).toEqual(["ok"]);
   });
 });
 

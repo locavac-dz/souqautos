@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
-import { SUBSCRIPTION_VALIDITY_DAYS } from "@/lib/pro-subscription";
-import { computeExpiryDate } from "@/lib/listing-lifecycle";
 import { writeAuditLog } from "@/lib/audit-log";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
-import { SITE_URL } from "@/lib/site";
+import { activateProSubscription, sendProSubscriptionDecisionEmail } from "@/lib/payment-fulfillment";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -17,6 +13,7 @@ const bodySchema = z.object({
 
 // Réservé à ADMIN, même sensibilité que la revue des virements de formule
 // d'annonce (Lot 66/69) — argent réel, jamais ouvert à MODERATEUR.
+// Lot 264 : activation et courriel partagés avec le webhook Chargily (payment-fulfillment).
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user || !isAdmin(user.role)) {
@@ -64,12 +61,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   if (isApproval) {
-    const newExpiresAt = computeExpiryDate(now, SUBSCRIPTION_VALIDITY_DAYS);
-    await prisma.proSubscription.upsert({
-      where: { professionalAccountId: order.professionalAccountId },
-      create: { professionalAccountId: order.professionalAccountId, tier: order.tier, expiresAt: newExpiresAt },
-      update: { tier: order.tier, expiresAt: newExpiresAt },
-    });
+    await activateProSubscription(order.professionalAccountId, order.tier, now);
   }
 
   await writeAuditLog({
@@ -81,30 +73,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       professionalAccountId: order.professionalAccountId,
       tier: order.tier,
       amountDzd: order.amountDzd,
+      provider: order.provider,
       reference: order.reference,
       reason: parsed.data.reason ?? null,
     },
   });
 
-  const t = await getTranslations({ locale: order.user.locale, namespace: "Notifications" });
-  const dashboardLink = `${SITE_URL}/${order.user.locale}/pro/tableau-de-bord`;
-  const accountName = escapeHtml(order.professionalAccount.nomCommercial);
-
-  const subject = isApproval ? t("subscriptionApprovedSubject") : t("subscriptionRejectedSubject");
-  const html = isApproval
-    ? `<p>${t("greeting")}</p><p>${t("subscriptionApprovedBody", { accountName, tier: order.tier })}</p><p><a href="${dashboardLink}">${t("subscriptionApprovedLink")}</a></p>`
-    : `<p>${t("greeting")}</p><p>${t("subscriptionRejectedBody", {
-        accountName,
-        reason: escapeHtml(parsed.data.reason?.trim() ?? ""),
-      })}</p><p><a href="${dashboardLink}">${t("subscriptionRejectedLink")}</a></p>`;
-
-  const emailResult = await sendEmail({ to: order.user.email, subject, html }).catch((err) => {
-    console.error(`[EMAIL abonnement pro] échec envoi: ${(err as Error).message}`);
-    return null;
-  });
-  if (emailResult?.previewUrl) {
-    console.log(`[EMAIL abonnement pro] ${emailResult.previewUrl}`);
-  }
+  await sendProSubscriptionDecisionEmail(
+    order.user,
+    order.professionalAccount,
+    order.tier,
+    isApproval
+      ? { approved: true, source: order.provider === "CHARGILY" ? "chargily" : "virement" }
+      : { approved: false, reason: parsed.data.reason?.trim() ?? "" }
+  );
 
   return NextResponse.json({ status: isApproval ? "CONFIRMEE" : "REJETEE" });
 }

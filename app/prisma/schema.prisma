@@ -558,10 +558,21 @@ model PaymentSettings {
   updatedAt           DateTime @updatedAt
 }
 
+// ANNULEE (Lot 264) : paiement en ligne échoué, annulé ou expiré côté prestataire — ni confirmé, ni
+// refusé par un humain. Libère la place « une seule commande EN_ATTENTE » pour une nouvelle tentative.
 enum PaymentOrderStatus {
   EN_ATTENTE
   CONFIRMEE
   REJETEE
+  ANNULEE
+}
+
+// Lot 264 — qui encaisse. VIREMENT : rapprochement humain (Lot 66). CHARGILY : Chargily Pay
+// (CIB / Edahabia), confirmé par webhook signé ou relecture du statut chez le prestataire —
+// jamais sur la seule URL de retour du navigateur, que l'acheteur peut forger ou ne jamais ouvrir.
+enum PaymentProvider {
+  VIREMENT
+  CHARGILY
 }
 
 // Une commande = une demande de passage en formule payante (PREMIUM ou
@@ -569,22 +580,27 @@ enum PaymentOrderStatus {
 // virement fourni par le vendeur pour permettre à l'admin de rapprocher le
 // virement reçu sur le relevé bancaire — jamais vérifié automatiquement
 // (aucune API bancaire, confirmation humaine uniquement, cf. même principe
-// que la vérification d'identité, Lot 14).
+// que la vérification d'identité, Lot 14). Pour CHARGILY, `reference` est
+// l'identifiant de la commande elle-même et `providerCheckoutId` l'identifiant
+// du checkout Chargily (unique : c'est par lui qu'un webhook retrouve la commande).
 model PaymentOrder {
-  id           String             @id @default(cuid())
-  userId       String
-  user         User               @relation("PaymentOrderAuthor", fields: [userId], references: [id], onDelete: Cascade)
-  listingId    String
-  listing      Listing            @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  formula      ListingFormula
-  amountDzd    Int
-  reference    String
-  status       PaymentOrderStatus @default(EN_ATTENTE)
-  reviewedById String?
-  reviewedBy   User?              @relation("PaymentOrderReviewer", fields: [reviewedById], references: [id])
-  reviewNote   String?
-  createdAt    DateTime           @default(now())
-  reviewedAt   DateTime?
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation("PaymentOrderAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  listingId          String
+  listing            Listing            @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  formula            ListingFormula
+  amountDzd          Int
+  reference          String
+  provider           PaymentProvider    @default(VIREMENT)
+  providerCheckoutId String?            @unique
+  paidAt             DateTime?
+  status             PaymentOrderStatus @default(EN_ATTENTE)
+  reviewedById       String?
+  reviewedBy         User?              @relation("PaymentOrderReviewer", fields: [reviewedById], references: [id])
+  reviewNote         String?
+  createdAt          DateTime           @default(now())
+  reviewedAt         DateTime?
 
   @@index([status])
   @@index([userId])
@@ -928,6 +944,9 @@ model ProSubscriptionOrder {
   tier                  ProSubscriptionTier
   amountDzd             Int
   reference             String
+  provider              PaymentProvider     @default(VIREMENT)
+  providerCheckoutId    String?             @unique
+  paidAt                DateTime?
   status                PaymentOrderStatus  @default(EN_ATTENTE)
   reviewedById          String?
   reviewedBy            User?               @relation("ProSubscriptionOrderReviewer", fields: [reviewedById], references: [id])

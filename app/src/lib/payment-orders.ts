@@ -87,10 +87,13 @@ export type PaymentOrderStatsInput = {
   amountDzd: number;
 };
 
+// Lot 264 — ANNULEE (paiement en ligne échoué/annulé par l'acheteur) n'est ni une confirmation ni un
+// refus humain : comptée à part, hors du taux de confirmation.
 export type PaymentOrderStats = {
   confirmedCount: number;
   rejectedCount: number;
   pendingCount: number;
+  canceledCount: number;
   confirmationRate: number | null;
   totalRevenueDzd: number;
   premiumRevenueDzd: number;
@@ -101,6 +104,7 @@ export function computePaymentOrderStats(orders: PaymentOrderStatsInput[]): Paym
   let confirmedCount = 0;
   let rejectedCount = 0;
   let pendingCount = 0;
+  let canceledCount = 0;
   let totalRevenueDzd = 0;
   let premiumRevenueDzd = 0;
   let premiumPlusRevenueDzd = 0;
@@ -112,6 +116,10 @@ export function computePaymentOrderStats(orders: PaymentOrderStatsInput[]): Paym
     }
     if (order.status === "REJETEE") {
       rejectedCount += 1;
+      continue;
+    }
+    if (order.status === "ANNULEE") {
+      canceledCount += 1;
       continue;
     }
     confirmedCount += 1;
@@ -130,6 +138,7 @@ export function computePaymentOrderStats(orders: PaymentOrderStatsInput[]): Paym
     confirmedCount,
     rejectedCount,
     pendingCount,
+    canceledCount,
     confirmationRate,
     totalRevenueDzd,
     premiumRevenueDzd,

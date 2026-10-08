@@ -23,6 +23,9 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ListingLifecycleActions } from "@/components/ListingLifecycleActions";
 import { ListingPriceEditor } from "@/components/ListingPriceEditor";
 import { ListingFormulaUpgrade } from "@/components/ListingFormulaUpgrade";
+import { ChargilyPendingOrder } from "@/components/ChargilyPendingOrder";
+import { PaymentReturnBanner } from "@/components/PaymentReturnBanner";
+import { resolveChargilyConfig } from "@/lib/chargily";
 import { ListingAutoRenewToggle } from "@/components/ListingAutoRenewToggle";
 import { formatNumber } from "@/lib/format";
 
@@ -45,8 +48,9 @@ function distinctPhotoQualityFlags(photos: { qualityFlags: string }[]): PhotoQua
   return [...flags];
 }
 
-export default async function MyListingsPage() {
+export default async function MyListingsPage({ searchParams }: { searchParams: Promise<{ paiement?: string }> }) {
   const locale = await getLocale();
+  const { paiement } = await searchParams;
   const user = await getCurrentUser();
   if (!user) {
     redirect({ href: "/connexion", locale });
@@ -118,10 +122,13 @@ export default async function MyListingsPage() {
         bankAccountHolder: paymentSettings.bankAccountHolder!,
       }
     : null;
+  // Lot 264 — paiement en ligne proposé seulement si Chargily Pay est réellement configuré.
+  const onlinePayment = resolveChargilyConfig(process.env).mode === "enabled";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("title")}</h1>
+      <PaymentReturnBanner outcome={paiement} />
 
       {listings.length === 0 ? (
         <div className="text-center py-12">
@@ -255,21 +262,27 @@ export default async function MyListingsPage() {
                 {canManage && checkListingRenewable(listing.status).ok && (
                   <div className="flex flex-wrap items-center gap-3">
                     {listing.paymentOrders.length > 0 ? (
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {t("upgradePending", {
-                          formula:
-                            listing.paymentOrders[0].formula === "PREMIUM"
-                              ? t("formulaPremium")
-                              : t("formulaPremiumPlus"),
-                        })}
-                      </p>
-                    ) : !bankDetailsComplete ? null : (
+                      (() => {
+                        const pendingOrder = listing.paymentOrders[0];
+                        const formulaLabel = pendingOrder.formula === "PREMIUM" ? t("formulaPremium") : t("formulaPremiumPlus");
+                        return pendingOrder.provider === "CHARGILY" ? (
+                          <ChargilyPendingOrder
+                            kind="listing_formula"
+                            orderId={pendingOrder.id}
+                            pendingLabel={t("upgradePendingOnline", { formula: formulaLabel })}
+                          />
+                        ) : (
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{t("upgradePending", { formula: formulaLabel })}</p>
+                        );
+                      })()
+                    ) : !bankDetailsComplete && !onlinePayment ? null : (
                       <>
                         {formulaRank(listing.formula) < formulaRank("PREMIUM") && (
                           <ListingFormulaUpgrade
                             listingId={listing.id}
                             formula="PREMIUM"
-                            bankDetails={bankDetails!}
+                            bankDetails={bankDetails}
+                            onlinePayment={onlinePayment}
                             premiumPriceDzd={paymentSettings.premiumPriceDzd}
                             premiumPlusPriceDzd={paymentSettings.premiumPlusPriceDzd}
                           />
@@ -278,7 +291,8 @@ export default async function MyListingsPage() {
                           <ListingFormulaUpgrade
                             listingId={listing.id}
                             formula="PREMIUM_PLUS"
-                            bankDetails={bankDetails!}
+                            bankDetails={bankDetails}
+                            onlinePayment={onlinePayment}
                             premiumPriceDzd={paymentSettings.premiumPriceDzd}
                             premiumPlusPriceDzd={paymentSettings.premiumPlusPriceDzd}
                           />

@@ -11,10 +11,14 @@ import { ProSubscriptionUpgrade } from "@/components/ProSubscriptionUpgrade";
 import { hasAdvancedProTools, getSubscriptionStatus, priceForTier } from "@/lib/pro-subscription";
 import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
 import { getPaymentSettings, isBankDetailsComplete } from "@/lib/payment-settings";
+import { resolveChargilyConfig } from "@/lib/chargily";
+import { ChargilyPendingOrder } from "@/components/ChargilyPendingOrder";
+import { PaymentReturnBanner } from "@/components/PaymentReturnBanner";
 import type { ProSubscriptionTier } from "@prisma/client";
 
-export default async function ProDashboardPage() {
+export default async function ProDashboardPage({ searchParams }: { searchParams: Promise<{ paiement?: string }> }) {
   const locale = await getLocale();
+  const { paiement } = await searchParams;
   const user = await getCurrentUser();
   if (!user) {
     redirect({ href: "/connexion", locale });
@@ -58,7 +62,7 @@ export default async function ProDashboardPage() {
     );
   }
 
-  const [listingCount, viewsAgg, conversationCount, collaborators, subscriptionStatus, paymentSettings, subscriptionSettings, wilayas] =
+  const [listingCount, viewsAgg, conversationCount, collaborators, subscriptionStatus, paymentSettings, subscriptionSettings, wilayas, pendingSubscriptionOrder] =
     await Promise.all([
       prisma.listing.count({ where: { sellerId: account.userId, status: "PUBLIEE" } }),
       prisma.listing.aggregate({ where: { sellerId: account.userId }, _sum: { views: true } }),
@@ -75,6 +79,13 @@ export default async function ProDashboardPage() {
       isOwner
         ? prisma.wilaya.findMany({ orderBy: { id: "asc" }, select: { id: true, nomFr: true, nomAr: true } })
         : Promise.resolve([]),
+      // Lot 264 — commande d'abonnement en attente (virement à rapprocher ou paiement en ligne à confirmer).
+      isOwner
+        ? prisma.proSubscriptionOrder.findFirst({
+            where: { professionalAccountId: account.id, status: "EN_ATTENTE" },
+            select: { id: true, tier: true, provider: true },
+          })
+        : Promise.resolve(null),
     ]);
 
   // Lot 79 — palier supérieurs proposés à l'upgrade : tous les paliers payants
@@ -85,9 +96,14 @@ export default async function ProDashboardPage() {
   const currentTierIndex = allTiers.indexOf(currentTier);
   const upgradableTiers = allTiers.slice(currentTierIndex + 1) as Exclude<ProSubscriptionTier, "STARTER">[];
   const bankReady = isBankDetailsComplete(paymentSettings);
+  const onlinePayment = resolveChargilyConfig(process.env).mode === "enabled";
+  const bankDetails = bankReady
+    ? { bankName: paymentSettings.bankName!, bankRib: paymentSettings.bankRib!, bankAccountHolder: paymentSettings.bankAccountHolder! }
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
+      <PaymentReturnBanner outcome={paiement} />
       <div className="flex items-center gap-2">
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{account.nomCommercial}</h1>
         {account.badgeVerifie && <span className="text-emerald-700 text-sm">{t("verifiedBadge")}</span>}
@@ -175,9 +191,24 @@ export default async function ProDashboardPage() {
           {!hasAdvancedProTools(subscriptionStatus.tier) && (
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("subscriptionAdvancedToolsLocked")}</p>
           )}
-          {isOwner && upgradableTiers.length > 0 && (
+          {isOwner && pendingSubscriptionOrder && (
+            <div className="mt-3">
+              {pendingSubscriptionOrder.provider === "CHARGILY" ? (
+                <ChargilyPendingOrder
+                  kind="pro_subscription"
+                  orderId={pendingSubscriptionOrder.id}
+                  pendingLabel={t("subscriptionPendingOnline", { tier: t(`subscriptionTier${pendingSubscriptionOrder.tier}`) })}
+                />
+              ) : (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t("subscriptionPendingTransfer", { tier: t(`subscriptionTier${pendingSubscriptionOrder.tier}`) })}
+                </p>
+              )}
+            </div>
+          )}
+          {isOwner && !pendingSubscriptionOrder && upgradableTiers.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {!bankReady ? (
+              {!bankReady && !onlinePayment ? (
                 <p className="text-xs text-amber-700">{t("subscriptionBankDetailsMissing")}</p>
               ) : (
                 upgradableTiers.map((tier) => (
@@ -186,11 +217,8 @@ export default async function ProDashboardPage() {
                     accountId={account.id}
                     targetTier={tier}
                     priceDzd={priceForTier(tier, subscriptionSettings)}
-                    bankDetails={{
-                      bankName: paymentSettings.bankName ?? "",
-                      bankRib: paymentSettings.bankRib ?? "",
-                      bankAccountHolder: paymentSettings.bankAccountHolder ?? "",
-                    }}
+                    bankDetails={bankDetails}
+                    onlinePayment={onlinePayment}
                   />
                 ))
               )}

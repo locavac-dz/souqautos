@@ -5,6 +5,7 @@ import { parseTrustedProxyHops } from "@/lib/client-ip";
 import { resolvePushConfig, vapidKeysMatch } from "@/lib/push";
 import { resolveGoogleConfig } from "@/lib/google-oauth";
 import { verificationStatus } from "@/lib/seo-verification";
+import { CHARGILY_WEBHOOK_PATH, resolveChargilyConfig } from "@/lib/chargily";
 
 // Lot 117 — contrôle de préparation à la mise en ligne (`npm run launch:check`).
 //
@@ -198,6 +199,22 @@ function checkCronSweep(env: Env): CheckResult {
   };
 }
 
+// Lot 264 — paiement en ligne (Chargily Pay, CIB / Edahabia), facultatif : sans clé, seuls les virements
+// manuels sont proposés. Une clé de TEST en production est une erreur (le site proposerait « payer en
+// ligne » sans jamais rien encaisser). Le webhook est déclaré par checkout (pas dans le tableau de bord
+// Chargily), mais l'adresse doit être joignable depuis Internet.
+function checkChargily(env: Env): CheckResult {
+  const resolution = resolveChargilyConfig({ ...env, NODE_ENV: "production" });
+  if (resolution.mode === "error") {
+    return { id: "chargily", level: "error", message: `Paiement en ligne (Chargily Pay) : ${resolution.reason}`, fix: "Copier la clé secrète LIVE (live_sk_…) depuis le tableau de bord Chargily Pay, ou retirer CHARGILY_SECRET_KEY." };
+  }
+  if (resolution.mode === "disabled") {
+    return { id: "chargily", level: "warning", message: "Paiement en ligne (Chargily Pay) désactivé : les formules et abonnements ne se paient que par virement, avec rapprochement humain.", fix: "Définir CHARGILY_SECRET_KEY (clé live_sk_… d'un compte Chargily Pay vérifié). Voir .env.example." };
+  }
+  const site = (env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  return { id: "chargily", level: "ok", message: `Paiement en ligne Chargily Pay configuré (mode live). Webhook appelé par Chargily : ${site}${CHARGILY_WEBHOOK_PATH}` };
+}
+
 // Lot 136 — sans destinataire, les alertes techniques (sauvegarde en retard ou en échec, erreurs du serveur) ne partent nulle
 // part : les problèmes ne sont alors vus que si quelqu'un lit les journaux. Non bloquant, mais c'est ce qui transforme
 // « on l'a découvert au jour du sinistre » en « on a été prévenu la nuit même ».
@@ -299,6 +316,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkSecurityPolicy(env),
     checkAlertRecipients(env),
     checkCronSweep(env),
+    checkChargily(env),
     ...checkStaffTwoFactor(env, facts),
     ...checkInfrastructure(env),
     ...checkFacts(facts),

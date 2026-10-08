@@ -127,12 +127,26 @@ describe("computePaymentOrderStats", () => {
     expect(stats.totalRevenueDzd).toBe(7500);
   });
 
+  it("counts a canceled online payment apart, outside the confirmation rate (Lot 264)", () => {
+    const stats = computePaymentOrderStats([
+      { status: "CONFIRMEE", formula: "PREMIUM", amountDzd: 1500 },
+      { status: "ANNULEE", formula: "PREMIUM", amountDzd: 1500 },
+      { status: "ANNULEE", formula: "PREMIUM_PLUS", amountDzd: 3000 },
+    ]);
+    expect(stats.canceledCount).toBe(2);
+    expect(stats.confirmedCount).toBe(1);
+    expect(stats.rejectedCount).toBe(0);
+    expect(stats.confirmationRate).toBe(1);
+    expect(stats.totalRevenueDzd).toBe(1500);
+  });
+
   it("returns all zeros/null on an empty list", () => {
     const stats = computePaymentOrderStats([]);
     expect(stats).toEqual({
       confirmedCount: 0,
       rejectedCount: 0,
       pendingCount: 0,
+      canceledCount: 0,
       confirmationRate: null,
       totalRevenueDzd: 0,
       premiumRevenueDzd: 0,
