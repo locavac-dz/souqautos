@@ -3838,3 +3838,26 @@ Rapport consolidé dans `docs/AUDIT-2026-10-08.md` : cinq relectures indépendan
 - `db:backfill-expiry` en simulation : 0 annonce concernée en dev.
 
 **Limites** : `launch:check` est désormais plus exigeant (Twilio et `ADMIN_EMAIL` bloquants) — à prévoir dans la configuration de production. Les points P1 de l'audit (commandes Chargily en attente jamais expirées, relecture Chargily avant décision admin, `amount_mismatch` tracé, journal d'audit système) restent à traiter.
+
+## Lot 266 — Commandes Chargily en attente, relecture avant décision admin, journal des paiements (audit B1-B2) (2026-10-08)
+
+Deuxième lot de l'audit du 2026-10-08 : les angles morts « argent » restés après le Lot 265.
+
+**B1 — Commandes Chargily `EN_ATTENTE` jamais expirées.** Si le webhook n'arrivait pas et que le vendeur ne cliquait pas « Vérifier le paiement », la commande bloquait toute nouvelle demande sur l'annonce (y compris par virement), et l'admin ne pouvait que trancher à l'aveugle. `src/lib/chargily-events.ts` : `refreshChargilyOrder` (relecture unifiée : vendeur avec contrôle d'appartenance, admin, balayage — tracée par sa source) et `sweepPendingChargilyOrders`, appelé par `POST /api/cron/sweep` : relit chez Chargily les commandes `EN_ATTENTE` de plus d'une heure (50 max par passe, deux tables) — payé → activation, échoué/expiré → `ANNULEE`, encore en cours → rien ; la passe s'arrête dès que Chargily est injoignable. Nouvelle route `POST /api/admin/payments/chargily/refresh` (ADMIN) et bouton **« Relire chez Chargily »** sous chaque commande Chargily en attente (`AdminChargilyRefresh`).
+
+**B2 — Un admin pouvait refuser une commande réellement payée** (webhook en retard) : l'argent restait encaissé, rien activé. `src/lib/admin-payment-decision.ts` — `checkProviderBeforeDecision` : avant toute décision sur une commande `CHARGILY`, le checkout est relu chez Chargily ; déclaré payé → **refus interdit** (409 `paid_at_provider`) ; non payé → **approbation interdite** (409 `not_paid_at_provider`) ; Chargily injoignable → 502 ; non configuré → 503. Un virement n'interroge personne. `PaymentOrderReviewActions` affiche des messages explicites FR/AR pour ces cas et pour `listing_not_upgradable` (Lot 265).
+
+**B2 — `amount_mismatch` sans trace ni alerte.** La commande est annotée `chargily:amount_mismatch <montant> <devise>` (toujours `EN_ATTENTE`), l'équipe est prévenue (`staff-alerts` : nouveau type `payment`, qui compte les commandes `EN_ATTENTE` annotées des deux tables et renvoie vers `/admin/paiements`), et la note est affichée en ambre dans la page admin — comme `listing_not_upgradable`.
+
+**B2 — Aucun journal pour les décisions système.** Nouvelle table **`PaymentEvent`** (migration `20261008040000_lot_266_payment_events`) : `orderKind`, `orderId`, `source` (`WEBHOOK` / `REFRESH_USER` / `REFRESH_ADMIN` / `SWEEP` / `ADMIN`), `outcome`, `providerEventId`, `providerStatus`, `amount`, `currency`, `actorUserId`. Écrite par `applyChargilyCheckoutState` (toute issue sauf « ignoré » / checkout inconnu, qui n'ont pas de commande) et par les routes de revue admin ; jamais bloquante. Les trois derniers événements sont affichés sous chaque commande en attente (« Historique des décisions »). `AuditLog` exige un admin : les décisions système n'y entraient pas.
+
+**B2 (« à confirmer » en live) — checkout échoué puis finalement payé.** `payment-fulfillment` confirme désormais aussi depuis `ANNULEE` (jamais depuis `CONFIRMEE` ni `REJETEE`) : si Chargily autorise un second essai sur un checkout déclaré échoué, l'argent encaissé active bien la formule. La relecture accepte les commandes `ANNULEE` pour la même raison.
+
+Aussi : `POST /api/payments/chargily/refresh` (vendeur) réécrit sur `refreshChargilyOrder` ; `docs/EXPLOITATION.md` § 5 quaterdecies mis à jour (balayage, relecture admin, historique, contrôle avant décision, notes automatiques).
+
+**Vérifié**
+- `tsc` 0 erreur ; **2 313 tests / 199 fichiers** verts : 18 nouveaux (`tests/chargily-refresh-sweep.test.ts` — relecture vendeur/admin, `ANNULEE` relue mais pas `REJETEE`, Chargily injoignable sans toucher la commande, non configuré, expiré → annulée / en cours → inchangée ; balayage ignoré sans configuration, deux tables et âge minimum, arrêt anticipé ; contrôle avant décision : virement, payé-refus, non-payé-approbation, injoignable, non configuré) + événements et alerte dans `chargily-events`, `staff-alerts` (type `payment`), `payment-fulfillment` (`ANNULEE` → confirmée), `cron-sweep`.
+- **Bac à sable officiel** : commande créée et laissée impayée → balayage (`minAgeMs: 0`) : 1 relue, Chargily `pending`, laissée en attente ; admin « Approuver » → **409** et message « Chargily Pay n'indique pas ce paiement comme payé » ; « Relire chez Chargily » → « Chargily : pending — commande : EN_ATTENTE » ; « Refuser » avec motif → `REJETEE`, événement `ADMIN / rejected / pending` avec l'acteur.
+- `prisma generate` a exigé l'arrêt temporaire du serveur de dev (verrou du moteur sous Windows) — à savoir pour les prochaines migrations.
+
+**Limites** : une relecture qui ne change rien (« ignoré ») n'écrit pas d'événement (pas de bruit) ; le balayage ne traite pas les virements en attente (rapprochement humain par nature) ; les textes arabes (16 libellés) sont à faire relire.
