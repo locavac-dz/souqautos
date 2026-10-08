@@ -3738,6 +3738,16 @@ Page dédiée aux annonces de catégorie EQUIPEMENT, distincte de `/recherche`.
 
 ## Fix — réintégrer le lien Équipements dans le header et le footer (2026-10-08)
 
-`SiteHeader.tsx` : ajout de `<NavLink href="/equipement">{tNav("navEquipement")}</NavLink>` dans `publicLinks`, après le lien Essais — visible en desktop et dans le menu mobile.
+`SiteHeader.tsx` : ajout de `<NavLink href="/equipement">{tNav("equipment")}</NavLink>` dans `publicLinks`, après le lien Essais — visible en desktop et dans le menu mobile. Clé `Nav.equipment` (déjà présente).
 
 `SiteFooter.tsx` : ajout de `<Link href="/equipement">{t("equipment")}</Link>` dans la première colonne de la grille, après Guides — clé `"equipment"` déjà présente dans le namespace `Footer`.
+
+## Lot 262 — Flux RSS des articles équipements (2026-10-08)
+
+Les rubriques Essais et Guides disposaient d'un flux RSS depuis le Lot 111 ; la rubrique Équipements en était dépourvue.
+
+**Livré**
+- `app/[locale]/equipement/feed.xml/route.ts` : GET `force-dynamic` ; retourne un flux RSS 2.0 des 30 derniers articles `kind: EQUIPEMENT` publiés (`publishedNow` — brouillons et articles programmés exclus). Même structure que les flux essais/guides.
+- `app/[locale]/equipement/[slug]/page.tsx` : `<link rel="alternate" type="application/rss+xml">` ajouté dans `generateMetadata` (via `alternates.types`) ; lien texte visible en pied d'article (`t("rssLink")`).
+- `Equipement.rssLink` ajouté à `messages/fr.json` (`"Flux RSS des articles équipements"`) et `messages/ar.json` (`"خلاصة RSS لمقالات التجهيزات"`).
+- Correction : `SiteHeader.tsx` utilisait `tNav("navEquipement")` (clé inexistante dans le namespace `Nav`) — remplacé par `tNav("equipment")` (clé déjà présente). Tests i18n : 12/12.
