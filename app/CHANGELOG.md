@@ -3668,6 +3668,25 @@ Les liens utilisateur (mes annonces, messages, groupes, favoris, alertes, notifi
 
 `SiteHeader` : `desktopNav` compact transmis au `<nav hidden sm:flex>` ; `mobileNav` (liste plate complète) transmis à `MobileMenuToggle` — les deux états d'affichage restent indépendants.
 
+## Lot 260 — Correctifs tests + seed démo EQUIPEMENT (2026-10-08)
+
+**Tests (4 corrections)** — résultat : 2218/2221 (les 3 échecs restants sont `backup-chain`, environnement PostgreSQL sans `CREATEDB`, pas du code) :
+
+- `vehicle-catalogue.test.ts` : `LISTING_CATEGORIES` inclut désormais `EQUIPEMENT` depuis le Lot 258 — le test attendait `[...CATALOGUE_CATEGORIES, "AUTRE"]`, mis à jour en `[..., "AUTRE", "EQUIPEMENT"]` ; assertion `isCatalogueCategory("EQUIPEMENT") === false` ajoutée.
+- `admin-user-role.test.ts` : `vi.mock("@/lib/auth-server/roles")` n'exportait pas `isSuperAdmin` (ajouté au Lot SUPER_ADMIN) — la route `/api/admin/users/[id]/role` appelle désormais `isSuperAdmin` et le mock échouait avec « No isSuperAdmin export is defined ». Ajout de `isSuperAdmin: (role) => role === "SUPER_ADMIN"` dans le mock.
+- `uploads-serve.test.ts` : `voice-messages` ajouté à `UPLOAD_SUBDIRS` dans `uploads.ts` (Lot antérieur) sans mise à jour du test `toEqual` — corrigé.
+- `deployment-artifacts.test.ts` : `client_max_body_size` Nginx = 10 MB et `MAX_*_BYTES` = 10 MB — égalité correcte (la limite couvre exactement le plus gros envoi), `toBeGreaterThan` → `toBeGreaterThanOrEqual`.
+
+**Seed démo — 5 annonces EQUIPEMENT** (`prisma/seed-demo-listings.ts`) : type `DemoEquipementListing` et boucle de création séparée (pas de résolution catalogue marque/modèle). Chaque annonce utilise un vendeur démo existant, génère un placeholder photo, et est publiée avec `status: PUBLIEE`.
+
+| Produit | Vendeur | Prix | État |
+|---|---|---|---|
+| Coffre de toit Thule 400 L | Karim — Oran | 65 000 DA | Occasion |
+| Porte-vélos attelage 3 vélos Thule | Yasmine — Alger | 28 000 DA | Occasion |
+| Remorque benne 750 kg | Riad — Constantine | 95 000 DA | Occasion |
+| Booster Noco Boost Plus 1200A | Sofiane — Sétif | 12 000 DA | Neuf |
+| Galerie de toit acier 120×80 cm | Nadia — Annaba | 8 500 DA | Occasion |
+
 ## Fix — bouton langue toujours visible dans le header (2026-10-08)
 
 `SiteHeader.tsx` : `ThemeToggle` et `LocaleSwitcher` se trouvaient en fin de `navContent`, à l'intérieur du `<nav>` en `overflow-hidden`. Avec de nombreux liens (utilisateur connecté + admin), ils étaient poussés hors de l'écran visible.
