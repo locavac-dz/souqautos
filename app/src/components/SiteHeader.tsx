@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { AccountDropdown } from "./AccountDropdown";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { LogoutButton } from "./LogoutButton";
 import { MobileMenuToggle } from "./MobileMenuToggle";
@@ -27,12 +28,50 @@ export async function SiteHeader({
 
   const navLinkClass = "text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100";
 
-  const navContent = (
+  // Liens publics communs desktop + mobile.
+  const publicLinks = (
     <>
       <NavLink href="/recherche" className={navLinkClass}>{tNav("search")}</NavLink>
       <NavLink href="/cote-souq-auto" className={navLinkClass}>{tNav("estimate")}</NavLink>
       <NavLink href="/essais" className={navLinkClass}>{tNav("roadTests")}</NavLink>
       <NavLink href="/equipement" className={navLinkClass}>{tNav("equipment")}</NavLink>
+    </>
+  );
+
+  // Desktop : liens compte regroupés dans un dropdown ; mobile : liste plate complète.
+  const desktopNav = (
+    <>
+      {publicLinks}
+      {user ? (
+        <>
+          <NavLink href="/vendre" className={navLinkClass}>{tNav("sell")}</NavLink>
+          <AccountDropdown
+            displayName={user.displayName}
+            email={user.email}
+            unreadMessagesCount={unreadMessagesCount}
+            unreadNotificationsCount={unreadNotificationsCount}
+            unreadGroupsCount={unreadGroupsCount}
+            staff={isStaff(user.role)}
+          />
+        </>
+      ) : (
+        <>
+          <NavLink href="/connexion" className={navLinkClass}>{tNav("login")}</NavLink>
+          <NavLink
+            href="/inscription"
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+          >
+            {tNav("register")}
+          </NavLink>
+        </>
+      )}
+    </>
+  );
+
+  // Mobile : liste plate avec tous les liens visibles.
+  const mobileNav = (
+    <>
+      {publicLinks}
       {user ? (
         <>
           <NavLink href="/vendre" className={navLinkClass}>{tNav("sell")}</NavLink>
@@ -40,17 +79,13 @@ export async function SiteHeader({
           <NavLink href="/compte/messages" className={`relative ${navLinkClass}`}>
             {tMessages("navLabel")}
             {unreadMessagesCount > 0 && (
-              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">
-                {unreadMessagesCount}
-              </span>
+              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadMessagesCount}</span>
             )}
           </NavLink>
           <NavLink href="/compte/groupes" className={`relative ${navLinkClass}`}>
             {tNav("groups")}
             {unreadGroupsCount > 0 && (
-              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">
-                {unreadGroupsCount}
-              </span>
+              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadGroupsCount}</span>
             )}
           </NavLink>
           <NavLink href="/compte/favoris" className={navLinkClass}>{tNav("favorites")}</NavLink>
@@ -58,9 +93,7 @@ export async function SiteHeader({
           <NavLink href="/compte/notifications" className={`relative ${navLinkClass}`}>
             {tNav("notifications")}
             {unreadNotificationsCount > 0 && (
-              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">
-                {unreadNotificationsCount}
-              </span>
+              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadNotificationsCount}</span>
             )}
           </NavLink>
           <NavLink href="/compte/assistant-achat" className={navLinkClass}>{tNav("aiAdvisor")}</NavLink>
@@ -93,9 +126,9 @@ export async function SiteHeader({
           <SiteWordMark className="text-2xl" />
         </Link>
 
-        <nav aria-label={tNav("main")} className="hidden sm:flex items-center gap-4 text-sm flex-1 min-w-0 overflow-hidden">{navContent}</nav>
+        <nav aria-label={tNav("main")} className="hidden sm:flex items-center gap-4 text-sm flex-1 min-w-0 overflow-hidden">{desktopNav}</nav>
 
-        <MobileMenuToggle menuLabel={tNav("menu")}>{navContent}</MobileMenuToggle>
+        <MobileMenuToggle menuLabel={tNav("menu")}>{mobileNav}</MobileMenuToggle>
 
         <div className="flex items-center gap-2 shrink-0 ltr:ml-auto rtl:mr-auto">
           <ThemeToggle />
