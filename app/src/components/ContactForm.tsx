@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CONTACT_SUBJECTS } from "@/lib/validation/contact";
 
 export function ContactForm() {
   const t = useTranslations("Contact");
+  const locale = useLocale();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState<typeof CONTACT_SUBJECTS[number]>("general");
   const [message, setMessage] = useState("");
   const [honeypot, setHoneypot] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  // Lot 273 — référence renvoyée par le serveur, citée dans l'accusé de réception et dans les échanges.
+  const [reference, setReference] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
@@ -23,10 +25,11 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, subject, message, honeypot }),
+        body: JSON.stringify({ name, email, subject, message, honeypot, locale }),
       });
       if (res.ok) {
-        setSuccess(true);
+        const data = await res.json().catch(() => null);
+        setReference(typeof data?.reference === "string" ? data.reference : null);
       } else {
         const data = await res.json().catch(() => null);
         if (data?.error === "rate_limited") setError(t("errorRateLimit"));
@@ -40,11 +43,15 @@ export function ContactForm() {
     }
   }
 
-  if (success) {
+  if (reference) {
     return (
       <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 p-6 text-center space-y-2">
         <p className="text-lg font-semibold text-emerald-800 dark:text-emerald-200">{t("successTitle")}</p>
         <p className="text-sm text-emerald-700 dark:text-emerald-300">{t("successBody")}</p>
+        <p className="text-sm text-emerald-700 dark:text-emerald-300">
+          {t("successReference")} <span className="font-mono font-semibold">{reference}</span>
+        </p>
+        <p className="text-xs text-emerald-700/80 dark:text-emerald-300/80">{t("successAck", { email })}</p>
       </div>
     );
   }

@@ -1,10 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { parseJsonBody } from "@/lib/api-route";
 import { contactSchema } from "@/lib/validation/contact";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { sendEmail, sendEmailBestEffort } from "@/lib/mailer";
 import { DEV_ADMIN_EMAIL } from "@/lib/admin-bootstrap";
+import { prisma } from "@/lib/prisma";
+import { SITE_URL } from "@/lib/site";
+import { isUniqueViolation } from "@/lib/prisma-errors";
+import {
+  CONTACT_SUBJECT_ENUM,
+  buildContactAcknowledgement,
+  buildTeamContactEmail,
+  generateContactReference,
+  resolveContactRecipients,
+} from "@/lib/contact-messages";
+
+// Lot 273 — un message de contact n'est plus un simple courriel : il est enregistré (file /admin/contact), routé
+// vers la bonne boîte selon le motif, et le client reçoit un accusé de réception avec sa référence.
+const bodySchema = contactSchema.extend({ locale: z.enum(["fr", "ar"]).default("fr") });
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
@@ -12,35 +28,65 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await parseJsonBody(request, contactSchema, { issues: "full" });
+  const body = await parseJsonBody(request, bodySchema, { issues: "full" });
   if (body instanceof NextResponse) return body;
 
-  const { name, email, subject, message } = body;
+  const { name, email, subject, message, locale } = body;
   // Lot 265 (audit, constat A5) — en production, pas de repli sur l'adresse de développement : sans ADMIN_EMAIL,
   // le message serait parti vers un domaine non maîtrisé sans que personne ne le sache. `launch:check` l'exige.
-  const to = process.env.ADMIN_EMAIL?.trim() || (process.env.NODE_ENV !== "production" ? DEV_ADMIN_EMAIL : null);
-  if (!to) {
-    console.error("[contact] ADMIN_EMAIL non défini : message de contact refusé");
+  const recipients = resolveContactRecipients(subject, process.env, DEV_ADMIN_EMAIL);
+  if (recipients.length === 0) {
+    console.error("[contact] ADMIN_EMAIL et STAFF_ALERT_EMAILS non définis : message de contact refusé");
     return NextResponse.json({ error: "contact_unavailable" }, { status: 503 });
   }
 
-  const html = `
-    <p><strong>Nom :</strong> ${escapeHtml(name)}</p>
-    <p><strong>Email :</strong> ${escapeHtml(email)}</p>
-    <p><strong>Sujet :</strong> ${escapeHtml(subject)}</p>
-    <hr />
-    <p style="white-space:pre-wrap">${escapeHtml(message)}</p>
-  `;
-
-  try {
-    const result = await sendEmail({ to, subject: `[Contact] ${name} — ${subject}`, html });
-    if (result.previewUrl) {
-      console.log(`[DEV contact] Aperçu : ${result.previewUrl}`);
+  // Référence unique : trois tirages suffisent largement (31^6 combinaisons).
+  let stored: { id: string; reference: string } | null = null;
+  for (let attempt = 0; attempt < 3 && !stored; attempt++) {
+    try {
+      stored = await prisma.contactMessage.create({
+        data: {
+          reference: generateContactReference(),
+          name,
+          email,
+          subject: CONTACT_SUBJECT_ENUM[subject],
+          message,
+          locale,
+          routedTo: recipients.join(", "),
+        },
+        select: { id: true, reference: true },
+      });
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
     }
-  } catch (err) {
-    console.error(`[contact] Envoi impossible : ${(err as Error).message}`);
+  }
+  if (!stored) {
     return NextResponse.json({ error: "send_failed" }, { status: 500 });
   }
+  const { id, reference } = stored;
 
-  return NextResponse.json({ ok: true }, { status: 200 });
+  // Courriel à l'équipe, Reply-To = le client. Un échec ici n'est pas une perte : le message est dans la file.
+  const team = buildTeamContactEmail({ reference, name, email, subject, message, locale, siteUrl: SITE_URL });
+  await Promise.all(
+    recipients.map(async (to) => {
+      try {
+        const result = await sendEmail({ to, subject: team.subject, html: team.html, replyTo: email });
+        if (result.previewUrl) console.log(`[contact ${reference}] Aperçu équipe : ${result.previewUrl}`);
+      } catch (err) {
+        console.error(`[contact ${reference}] courriel équipe vers ${to} impossible : ${(err as Error).message}`);
+      }
+    })
+  );
+
+  // Accusé de réception au client, après la réponse HTTP, au mieux.
+  after(async () => {
+    const t = await getTranslations({ locale, namespace: "ContactEmails" });
+    const ack = buildContactAcknowledgement(t, { reference, name, subject, siteUrl: SITE_URL, locale });
+    const result = await sendEmailBestEffort(`contact ${reference} accusé`, { to: email, subject: ack.subject, html: ack.html });
+    if (result) {
+      await prisma.contactMessage.update({ where: { id }, data: { ackSentAt: new Date() } }).catch(() => null);
+    }
+  });
+
+  return NextResponse.json({ ok: true, reference }, { status: 201 });
 }

@@ -118,6 +118,7 @@ describe("clés utilisées par le code", () => {
     /^MarketStats\.badge_/, // t(`badge_${badge}`) dans un composant dont `t` vient d'un Promise.all
     /^Pro\.(logo|banner)(SectionTitle|ChangeAction|RemoveAction|Uploading)$/, // ProBrandingUpload : `${kind}SectionTitle`
     /^BulkImport\.error_/, // BulkImportForm : `error_${r.error}` filtré par KNOWN_ERRORS
+    /^ContactEmails\.faq[QA][1-5]$/, // contact-messages.ts : `faqQ${i}` / `faqA${i}` sur FAQ_ITEMS (Lot 273)
   ];
 
   it("has no orphan message key (one that no screen asks for), except the known indirect families", () => {

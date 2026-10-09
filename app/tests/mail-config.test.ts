@@ -52,3 +52,23 @@ describe("resolveMailConfig", () => {
     expect(config.mode === "smtp" && config.from).toBe("Souq Auto <contact@souqauto.example>");
   });
 });
+
+// Lot 273 — adresse de réponse des courriels sortants.
+import { resolveReplyTo } from "@/lib/mail-config";
+
+describe("resolveReplyTo", () => {
+  it("prend MAIL_REPLY_TO en priorité", () => {
+    expect(resolveReplyTo({ MAIL_REPLY_TO: " contact@souqauto.dz ", STAFF_ALERT_EMAILS: "equipe@souqauto.dz", ADMIN_EMAIL: "pdg@souqauto.dz" })).toBe("contact@souqauto.dz");
+  });
+
+  it("se rabat sur la première adresse d'alerte de l'équipe, puis sur ADMIN_EMAIL", () => {
+    expect(resolveReplyTo({ STAFF_ALERT_EMAILS: "equipe@souqauto.dz, support@souqauto.dz", ADMIN_EMAIL: "pdg@souqauto.dz" })).toBe("equipe@souqauto.dz");
+    expect(resolveReplyTo({ ADMIN_EMAIL: "pdg@souqauto.dz" })).toBe("pdg@souqauto.dz");
+  });
+
+  it("ne renvoie rien sans aucune adresse (pas d'en-tête, comme avant)", () => {
+    expect(resolveReplyTo({})).toBeUndefined();
+    expect(resolveMailConfig({ NODE_ENV: "development" })).toMatchObject({ mode: "test", replyTo: undefined });
+    expect(resolveMailConfig({ SMTP_HOST: "smtp.example", ADMIN_EMAIL: "pdg@souqauto.dz" })).toMatchObject({ mode: "smtp", replyTo: "pdg@souqauto.dz" });
+  });
+});

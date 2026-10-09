@@ -83,6 +83,7 @@ model User {
   totpEnabledAt           DateTime?
   totpLastStep            Int?
   twoFactorRecoveryCodes  TwoFactorRecoveryCode[]
+  handledContactMessages  ContactMessage[]
   emailChangeRequests     EmailChangeRequest[]
   phoneVerificationCodes  PhoneVerificationCode[]
   professionalAccount     ProfessionalAccount?
@@ -1643,4 +1644,41 @@ model PaymentEvent {
   createdAt       DateTime           @default(now())
 
   @@index([orderKind, orderId, createdAt(sort: Desc)])
+}
+
+// Lot 273 — messages du formulaire de contact : file de traitement dans /admin/contact (plus jamais un simple
+// courriel qui se perd dans une boîte), accusé de réception au client, référence citée dans les échanges.
+enum ContactSubject {
+  GENERAL
+  TECHNICAL
+  PRO
+  PARTNERSHIP
+  OTHER
+}
+
+enum ContactStatus {
+  NOUVEAU
+  PRIS_EN_CHARGE
+  REPONDU
+}
+
+model ContactMessage {
+  id          String         @id @default(cuid())
+  reference   String         @unique // ex. SA-7K3M9Q, citée dans l'accusé de réception et l'objet des courriels
+  name        String
+  email       String
+  subject     ContactSubject
+  message     String
+  locale      String         @default("fr")
+  routedTo    String // adresses de l'équipe destinataires, séparées par des virgules (trace)
+  ackSentAt   DateTime?
+  status      ContactStatus  @default(NOUVEAU)
+  handledById String?
+  handledBy   User?          @relation(fields: [handledById], references: [id])
+  note        String?
+  answeredAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([status, createdAt])
 }

@@ -12,6 +12,7 @@ export default async function AdminDashboardPage() {
     unverifiedProCount,
     pendingIdentityCount,
     pendingOwnerReviewsCount,
+    newContactCount,
   ] = await Promise.all([
       prisma.listing.count({ where: { status: "EN_ATTENTE" } }),
       prisma.listing.count({ where: { status: "PUBLIEE" } }),
@@ -20,12 +21,14 @@ export default async function AdminDashboardPage() {
       prisma.professionalAccount.count({ where: { badgeVerifie: false } }),
       prisma.identityVerificationRequest.count({ where: { status: "EN_ATTENTE" } }),
       prisma.ownerReview.count({ where: { status: "EN_ATTENTE" } }),
+      prisma.contactMessage.count({ where: { status: "NOUVEAU" } }),
     ]);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("dashboardTitle")}</h1>
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+        <StatCard label={t("newContactMessages")} value={newContactCount} highlight={newContactCount > 0} />
         <StatCard label={t("pendingListings")} value={pendingCount} highlight={pendingCount > 0} />
         <StatCard label={t("publishedListings")} value={publishedCount} />
         <StatCard label={t("totalUsers")} value={userCount} />

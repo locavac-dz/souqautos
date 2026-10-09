@@ -1,6 +1,6 @@
 import { staffTwoFactorRequired } from "@/lib/staff-two-factor";
 import { parseAlertEmails, resolveOpsRecipients } from "@/lib/alert-recipients";
-import { resolveMailConfig, DEFAULT_MAIL_FROM } from "@/lib/mail-config";
+import { resolveMailConfig, resolveReplyTo, DEFAULT_MAIL_FROM } from "@/lib/mail-config";
 import { parseTrustedProxyHops } from "@/lib/client-ip";
 import { resolvePushConfig, vapidKeysMatch } from "@/lib/push";
 import { resolveGoogleConfig } from "@/lib/google-oauth";
@@ -338,6 +338,20 @@ function checkInfrastructure(env: Env): CheckResult[] {
 // Lot 267 (audit B7) — STAFF_ALERT_EMAILS n'était contrôlé que comme repli des alertes techniques : avec OPS_ALERT_EMAILS
 // défini et STAFF_ALERT_EMAILS absent, launch:check disait « ok » alors que la file de modération (annonces, avis,
 // identités, signalements, paiements à examiner) ne prévenait personne.
+// Lot 273 — sans adresse de réponse, les réponses des clients aux notifications partent vers l'expéditeur technique.
+function checkReplyTo(env: Env): CheckResult {
+  const replyTo = resolveReplyTo(env);
+  if (replyTo) {
+    return { id: "mail-reply-to", level: "ok", message: `Adresse de réponse des courriels : .` };
+  }
+  return {
+    id: "mail-reply-to",
+    level: "warning",
+    message: "Aucune adresse de réponse (MAIL_REPLY_TO, STAFF_ALERT_EMAILS ou ADMIN_EMAIL) : un client qui répond à un courriel du site écrit dans le vide.",
+    fix: "Définir MAIL_REPLY_TO (boîte lue par l'équipe).",
+  };
+}
+
 function checkStaffAlerts(env: Env): CheckResult {
   const recipients = parseAlertEmails(env.STAFF_ALERT_EMAILS);
   if (recipients.length > 0) {
@@ -392,6 +406,7 @@ export function evaluateLaunchReadiness({ env, facts }: { env: Env; facts: Launc
     checkSecurityPolicy(env),
     checkAlertRecipients(env),
     checkStaffAlerts(env),
+    checkReplyTo(env),
     checkCronSweep(env),
     checkChargily(env),
     ...checkStaffTwoFactor(env, facts),

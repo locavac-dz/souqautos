@@ -22,6 +22,7 @@ async function createTransporter() {
   if (config.mode === "smtp") {
     return {
       from: config.from,
+      replyTo: config.replyTo,
       transport: nodemailer.createTransport({
         host: config.host,
         port: config.port,
@@ -38,6 +39,7 @@ async function createTransporter() {
   const account = await nodemailer.createTestAccount();
   return {
     from: config.from,
+    replyTo: config.replyTo,
     transport: nodemailer.createTransport({
       host: account.smtp.host,
       port: account.smtp.port,
@@ -75,7 +77,16 @@ export function escapeHtml(value: string): string {
 // Lot 269 (audit E3) — envoi « au mieux » : un échec est journalisé avec son étiquette (jamais avalé en silence,
 // comme le faisaient les `.catch(() => null)` des offres) et n'interrompt jamais l'action principale. À utiliser
 // dans `after()` ou là où la réponse ne dépend pas de l'envoi.
-export async function sendEmailBestEffort(tag: string, args: { to: string; subject: string; html: string }): Promise<{ previewUrl?: string } | null> {
+export type SendEmailArgs = {
+  to: string;
+  subject: string;
+  html: string;
+  // Lot 273 — adresse de réponse propre à ce courriel (ex. l'expéditeur d'un message de contact transmis à
+  // l'équipe) ; sinon l'adresse de réponse globale (resolveReplyTo), sinon aucune.
+  replyTo?: string;
+};
+
+export async function sendEmailBestEffort(tag: string, args: SendEmailArgs): Promise<{ previewUrl?: string } | null> {
   const result = await sendEmail(args).catch((err) => {
     console.error(`[EMAIL ${tag}] échec envoi: ${(err as Error).message}`);
     return null;
@@ -84,21 +95,14 @@ export async function sendEmailBestEffort(tag: string, args: { to: string; subje
   return result;
 }
 
-export async function sendEmail({
-  to,
-  subject,
-  html,
-}: {
-  to: string;
-  subject: string;
-  html: string;
-}): Promise<{ previewUrl?: string }> {
-  const { transport, from } = await getTransporter();
+export async function sendEmail({ to, subject, html, replyTo }: SendEmailArgs): Promise<{ previewUrl?: string }> {
+  const { transport, from, replyTo: defaultReplyTo } = await getTransporter();
   const info = await transport.sendMail({
     from,
     to,
     subject,
     html,
+    ...(replyTo ?? defaultReplyTo ? { replyTo: replyTo ?? defaultReplyTo } : {}),
   });
   const previewUrl = process.env.NODE_ENV !== "production" ? nodemailer.getTestMessageUrl(info) : false;
   return { previewUrl: previewUrl || undefined };
