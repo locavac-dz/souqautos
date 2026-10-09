@@ -4057,3 +4057,23 @@ Deuxième lot issu du document « Équipe de lancement » : au lancement, le com
 **Mise en service** : rien à planifier de plus (même balayage nocturne, `CRON_SECRET`) ; renseigner les coordonnées bancaires dans `/admin/parametres` pour que la relance de virement affiche le RIB.
 
 **Limites** : une seule relance de virement (pas de seconde à J+7, ni d'annulation automatique de la commande) ; pas d'export CSV de la liste de prospection ni de suivi « déjà contacté » ; les textes arabes sont à faire relire.
+
+## Lot 275 — Rapport hebdomadaire automatique (2026-10-09)
+
+Troisième lot du document « Équipe de lancement » : les chiffres du point du lundi arrivent seuls, dans la boîte de l'équipe.
+
+**Ce qui part, et quand** (`src/lib/weekly-report.ts`). Chaque **semaine complète** — du lundi 00:00 au lundi 00:00 suivant, heure du serveur — produit un rapport envoyé **une seule fois** (table `WeeklyReport`, une ligne par période) par le balayage nocturne `/api/cron/sweep`, donc à la passe du lundi, à `STAFF_ALERT_EMAILS` + `ADMIN_EMAIL` sans doublon. Sans destinataire configuré, rien n'est envoyé ni enregistré ; une erreur est journalisée et n'interrompt jamais le balayage.
+
+**Contenu**, en français (document interne), deux tableaux :
+- **Activité de la semaine**, chaque ligne avec « cette semaine · semaine précédente · évolution » (`+30 %`, `−5 %`, `=`, `nouveau`) : annonces soumises, publiées (dont publiées automatiquement), refusées ; nouveaux comptes, nouveaux comptes pro ; paiements confirmés et montant encaissé ; offres de prix, conversations, messages ; signalements reçus et traités ; messages de contact reçus et répondus ; vues d'annonces, pages vues.
+- **État au lundi matin** : annonces en attente et âge de la plus ancienne ; délai médian de validation humaine ; signalements ouverts ; messages de contact à traiter ; abonnements pro payants actifs (dont expirant sous 15 jours) ; virements en attente (nombre, montant). Liens vers le back-office, la prospection et les rapports précédents.
+
+**Back-office** `/admin/rapports` (ADMIN) : historique des rapports envoyés (période, publiées / auto, en attente, paiements, contacts, date, destinataires) et bouton « Envoyer le rapport de la semaine dernière maintenant » (`POST /api/admin/reports/weekly`, envoi forcé, journalisé `weekly_report.send`). La bibliothèque n'utilise pas next-intl : le rapport se produit aussi depuis un script d'exploitation.
+
+**Migration `20261009150000_lot_275_weekly_report`** : création de la table seulement (vérifié : aucun `DROP`). `docs/EXPLOITATION.md` complété ; clés FR / AR de l'écran admin.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 417 tests / 213 fichiers** verts — 10 nouveaux (`tests/weekly-report.test.ts` : semaine complète quel que soit le jour, évolution, courriel avec deltas et état du lundi, destinataires, envoi unique / forcé / sans destinataire / erreur avalée ; `tests/admin-weekly-report-route.test.ts` : 200 / 409 / 403).
+- Réel : envoi par script vers deux adresses de test → deux courriels sur Ethereal, rapport « du 28 septembre au 4 octobre 2026 » avec les vrais chiffres de la base de démonstration (13 annonces publiées contre 10, +30 % ; 24 pages vues ; 1 abonnement payant actif) ; ligne visible dans `/admin/rapports` ; bouton d'envoi dans le navigateur → « Aucun destinataire : définissez STAFF_ALERT_EMAILS ou ADMIN_EMAIL » (attendu en local). Ligne de test supprimée.
+
+**Limites** : semaine calée sur l'heure du serveur ; vues issues des compteurs journaliers existants (pas de visiteurs uniques) ; pas de graphique, pas de version arabe (courriel interne).
