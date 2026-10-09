@@ -4035,3 +4035,25 @@ Jusqu'ici, le formulaire de contact envoyait un courriel à `ADMIN_EMAIL` et rie
 **Mise en service** : renseigner `STAFF_ALERT_EMAILS` (boîte lue par l'équipe) et, si elle diffère, `MAIL_REPLY_TO`.
 
 **Limites** : la réponse au client se fait depuis la boîte de l'équipe (pas d'envoi depuis le back-office) ; pas de réponse générée par IA (étape 5, à décider après un mois de messages réels) ; textes arabes à faire relire par un locuteur natif.
+
+## Lot 274 — Relances commerciales automatiques (2026-10-09)
+
+Deuxième lot issu du document « Équipe de lancement » : au lancement, le commercial, c'est le PDG — l'administratif des relances doit donc tourner seul.
+
+**Virement attendu** (`src/lib/commercial-reminders.ts`, balayage nocturne `/api/cron/sweep`). Une commande par virement — formule d'annonce (`PaymentOrder`) ou palier pro (`ProSubscriptionOrder`) — encore `EN_ATTENTE` **deux jours** après sa création reçoit **une seule** relance dans la langue du client : formule ou palier, titre de l'annonce ou nom du compte, référence, montant, date de la demande, coordonnées bancaires et titulaire (si renseignés dans `/admin/parametres`, sinon la ligne est omise), et « si vous avez déjà effectué le virement, ignorez ce message ». Marquage atomique (`reminderSentAt`) avant l'envoi, 50 par passe, plus anciennes d'abord.
+
+**Abonnement pro qui expire.** Rappel à **15 jours** puis à **3 jours** de l'expiration d'un palier payant : courriel + notification in-app (nouveau type `SUBSCRIPTION_EXPIRING`, « Abonnement bientôt expiré ») avec lien vers le tableau de bord pro ; le texte rappelle qu'à défaut le compte retombe sur Starter sans perdre ses annonces. Un rappel à 15 j manqué ne double pas celui à 3 j (le balayage marque alors les deux) ; un abonnement déjà expiré n'est pas rappelé ; chaque activation (`payment-fulfillment`) remet `reminder15SentAt` / `reminder3SentAt` à zéro pour le cycle suivant.
+
+**Liste de prospection** `/admin/prospection` (`src/lib/prospection.ts`, MODERATEUR et plus), générée à chaque ouverture : **particuliers à 5 annonces et plus** (concessionnaires qui s'ignorent — nom, email, téléphone, wilaya, nombre et date de la dernière annonce), **abonnements qui expirent sous 15 jours**, **comptes pro sans abonnement payant** (Starter ou expiré). Téléphones lus directement sur `User` (seule lecture déchiffrée), réservés à l'équipe. FR / AR.
+
+**Schéma + migration `20261009140000_lot_274_commercial_reminders`** : `PaymentOrder.reminderSentAt`, `ProSubscriptionOrder.reminderSentAt`, `ProSubscription.reminder15SentAt` / `reminder3SentAt`, `NotificationKind.SUBSCRIPTION_EXPIRING`. `docs/EXPLOITATION.md` : description du balayage nocturne complétée.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 407 tests / 211 fichiers** verts — 12 nouveaux (`tests/commercial-reminders.test.ts` : règles J+2 et 15 / 3 j, balayages avec course perdue et RIB absent ; `tests/prospection.test.ts` : classement des comptes pro, assemblage des listes, wilayas en arabe).
+- Réel : données temporaires (virement vieux de 3 jours, abonnement à 10 jours de l'expiration) puis `POST /api/cron/sweep` avec un secret temporaire → `transferReminders: 1`, `subscriptionReminders.first: 1`, les deux courriels reçus sur Ethereal, marqueurs écrits, notification in-app créée ; page de prospection : 6 particuliers, 1 abonnement expirant. Données de test et secret supprimés ensuite.
+
+**Incident de développement, corrigé** : une substitution dans le schéma a d'abord effacé `ProSubscription.expiresAt`, et la migration appliquée a supprimé cette colonne de la base de développement. Colonne recréée, migration corrigée (aucun `DROP` dans celle qui est commitée, empreinte mise à jour, `migrate status` propre) ; la seule valeur perdue (abonnement de démonstration) a été recalculée à activation + 30 jours. Sans effet sur la production, qui n'a jamais reçu cette migration.
+
+**Mise en service** : rien à planifier de plus (même balayage nocturne, `CRON_SECRET`) ; renseigner les coordonnées bancaires dans `/admin/parametres` pour que la relance de virement affiche le RIB.
+
+**Limites** : une seule relance de virement (pas de seconde à J+7, ni d'annulation automatique de la commande) ; pas d'export CSV de la liste de prospection ni de suivi « déjà contacté » ; les textes arabes sont à faire relire.
