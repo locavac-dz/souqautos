@@ -74,7 +74,7 @@ export default async function AdminAuditLogPage({
                   <td className="py-2 pr-4 whitespace-nowrap text-slate-500 dark:text-slate-400">
                     {dateFormatter.format(entry.createdAt)}
                   </td>
-                  <td className="py-2 pr-4 whitespace-nowrap">{entry.admin.email}</td>
+                  <td className="py-2 pr-4 whitespace-nowrap">{entry.admin?.email ?? t("systemActor")}</td>
                   <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-slate-700 dark:text-slate-300">
                     {entry.action}
                   </td>

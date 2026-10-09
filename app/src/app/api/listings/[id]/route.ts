@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { requireUser } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +7,10 @@ import { checkListingContentEditable } from "@/lib/listing-lifecycle";
 import { canManageListing } from "@/lib/listing-access";
 import { listingEditSchema } from "@/lib/validation/listing";
 import { savePhoto, deleteStoredFile, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
-import { computeListingContentHash } from "@/lib/fraud-signals";
+import { computeListingContentHash, refreshListingFraudScore } from "@/lib/fraud-signals";
+import { analyzeAndStoreListingFraud } from "@/lib/fraud-ai";
+import { notifyStaffOfPending } from "@/lib/staff-alerts";
+import { tryAutoPublish } from "@/lib/auto-publish";
 import { validateCatalogueRefs } from "@/lib/listing-catalogue-refs";
 
 const MIN_PHOTOS = 1;
@@ -166,6 +169,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // Après la transaction seulement — jamais avant : un échec de suppression
   // de fichier ne doit jamais annuler une mutation déjà appliquée en base.
   await Promise.all(photosToDelete.map((p) => deleteStoredFile(p.path)));
+
+  // Lot 272 — une annonce modifiée revient dans la file : l'équipe est prévenue, le score anti-fraude et l'analyse IA
+  // sont recalculés sur le NOUVEAU contenu (ils ne l'étaient pas : l'ancien score restait affiché), puis la
+  // publication automatique s'applique aux mêmes conditions qu'à la soumission.
+  after(async () => {
+    await notifyStaffOfPending("listing");
+    await refreshListingFraudScore(id);
+    await analyzeAndStoreListingFraud(id, {
+      title: data.title,
+      description: data.description,
+      price: listing.price,
+      condition: data.condition,
+      year: data.year,
+      mileage: data.mileage ?? null,
+    });
+    await tryAutoPublish(id);
+  });
 
   return NextResponse.json({ status: "EN_ATTENTE" });
 }

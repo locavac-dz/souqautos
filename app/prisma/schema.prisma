@@ -407,6 +407,8 @@ model Listing {
   // l'expiration elle-même (aucun scheduler dans cette application). Remis à
   // null à chaque renouvellement (nouveau cycle d'expiration, cf. route renew).
   expiryReminderSentAt DateTime?
+  // Lot 272 — renseigné quand la publication a été décidée par la règle automatique, jamais par un modérateur.
+  autoPublishedAt      DateTime?
   // Lot 82 — renouvellement automatique (§4-B, "outils avancés" Pro/Premium).
   // Préférence par annonce, jamais activée d'office même pour un compte
   // éligible — l'éligibilité réelle du vendeur (palier effectif au moment du
@@ -541,6 +543,10 @@ model ModerationSettings {
   id                          String   @id @default("singleton")
   autoSuspendListingThreshold Int      @default(3)
   autoSuspendUserThreshold    Int      @default(3)
+  // Lot 272 — modération à deux vitesses : publication automatique des annonces sans aucun signal, pour les vendeurs
+  // déjà approuvés au moins N fois par un humain et sans incident. Désactivée par défaut : c'est une décision du PDG.
+  autoPublishEnabled             Boolean  @default(false)
+  autoPublishMinApprovedListings Int      @default(1)
   updatedAt                   DateTime @updatedAt
 }
 
@@ -618,8 +624,9 @@ model PaymentOrder {
 
 model AuditLog {
   id         String   @id @default(cuid())
-  adminId    String
-  admin      User     @relation(fields: [adminId], references: [id])
+  // Lot 272 — null pour une action du système (publication automatique) : le journal affiche « Système ».
+  adminId    String?
+  admin      User?    @relation(fields: [adminId], references: [id])
   action     String // ex: "listing.approve", "listing.reject", "listing.suspend", "user.role_change"
   targetType String // "Listing" | "User"
   targetId   String

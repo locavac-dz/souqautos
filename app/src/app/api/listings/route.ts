@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { requireUser } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
+import { tryAutoPublish } from "@/lib/auto-publish";
 import { prisma } from "@/lib/prisma";
 import { listingSchema } from "@/lib/validation/listing";
 import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
@@ -174,6 +175,8 @@ export async function POST(request: NextRequest) {
     await notifyStaffOfPending("listing");
     await refreshListingFraudScore(listingId);
     await analyzeAndStoreListingFraud(listingId, listingForAi);
+    // Lot 272 — après les deux contrôles ci-dessus : publication automatique si aucun signal et vendeur de confiance.
+    await tryAutoPublish(listingId);
     await analyzeListingPhotos(listingPhotos);
     await computeAndStorePriceAiEstimate(listingId, priceAiParams);
   });

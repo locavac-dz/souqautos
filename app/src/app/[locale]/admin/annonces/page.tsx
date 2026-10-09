@@ -190,6 +190,11 @@ export default async function AdminListingsPage() {
                     {listing.title}
                   </Link>
                   <p className="text-sm text-slate-500 dark:text-slate-400">{formatNumber(listing.price, locale)} DA</p>
+                  {listing.autoPublishedAt && (
+                    <span className="inline-block rounded bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+                      {t("autoPublishedBadge")}
+                    </span>
+                  )}
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email}
                   </p>

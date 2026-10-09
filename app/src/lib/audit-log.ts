@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
+// Lot 272 — `adminId: null` = action du système (publication automatique), affichée « Système » dans le journal.
 export async function writeAuditLog(entry: {
-  adminId: string;
+  adminId: string | null;
   action: string;
   targetType: string;
   targetId: string;

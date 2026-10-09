@@ -23,7 +23,13 @@ vi.mock("@/lib/prisma", () => ({
 }));
 vi.mock("@/lib/search-alerts", () => ({ notifyMatchingSearchAlerts: (...a: unknown[]) => notifyMatchingSearchAlerts(...a) }));
 vi.mock("@/lib/pro-follow", () => ({ notifyProFollowers: (...a: unknown[]) => notifyProFollowers(...a) }));
-vi.mock("@/lib/mailer", () => ({ sendEmail: (...a: unknown[]) => sendEmail(...a), escapeHtml: (s: string) => s }));
+vi.mock("@/lib/mailer", () => ({
+  sendEmail: (...a: unknown[]) => sendEmail(...a),
+  // Lot 272 — le vendeur est notifié via notifyUser → sendEmailBestEffort : délègue au même espion.
+  sendEmailBestEffort: (_tag: string, args: unknown) => Promise.resolve(sendEmail(args)).catch(() => null),
+  escapeHtml: (s: string) => s,
+}));
+vi.mock("@/lib/notification-service", () => ({ createNotification: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/audit-log", () => ({ writeAuditLog: (...a: unknown[]) => writeAuditLog(...a) }));
 vi.mock("@/lib/site", () => ({ SITE_URL: "https://souqauto.example" }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));

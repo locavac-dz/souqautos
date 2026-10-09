@@ -28,3 +28,22 @@ describe("validateThreshold", () => {
     expect(validateThreshold(3.5)).toEqual({ ok: false, error: "invalid_threshold" });
   });
 });
+
+// Lot 272 — minimum d'annonces approuvées par un humain avant la publication automatique.
+import { validateMinApprovedListings } from "@/lib/moderation-settings";
+
+describe("validateMinApprovedListings", () => {
+  it("accepte les bornes 1 et 20", () => {
+    expect(validateMinApprovedListings(1)).toEqual({ ok: true });
+    expect(validateMinApprovedListings(20)).toEqual({ ok: true });
+  });
+
+  it("refuse 0 : la première annonce d'un compte passe toujours devant un modérateur", () => {
+    expect(validateMinApprovedListings(0)).toEqual({ ok: false, error: "invalid_min_approved" });
+  });
+
+  it("refuse au-delà de 20 et les non-entiers", () => {
+    expect(validateMinApprovedListings(21)).toEqual({ ok: false, error: "invalid_min_approved" });
+    expect(validateMinApprovedListings(2.5)).toEqual({ ok: false, error: "invalid_min_approved" });
+  });
+});

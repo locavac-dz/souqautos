@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
-import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { isStaff } from "@/lib/auth-server/roles";
 import { computeModerationTransition, type ModerationAction } from "@/lib/moderation";
 import { writeAuditLog } from "@/lib/audit-log";
-import { notifyMatchingSearchAlerts } from "@/lib/search-alerts";
-import { notifyProFollowers } from "@/lib/pro-follow";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
-import { SITE_URL } from "@/lib/site";
-import { createNotification } from "@/lib/notification-service";
-import { computeExpiryDate } from "@/lib/listing-lifecycle";
-import { formulaValidityDays } from "@/lib/payment-orders";
 import { cancelPendingOrdersForListing } from "@/lib/payment-fulfillment";
+import { broadcastPublication, notifySellerOfModeration, publicationData } from "@/lib/listing-publication";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject", "suspend"]),
@@ -41,15 +34,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const now = new Date();
   const isApproval = action === "approve";
-  const moderationNote = isApproval ? null : (body.reason?.trim() ?? null);
-  const firstPublication = isApproval && !listing.publishedAt;
-  const publishedAt = firstPublication ? now : listing.publishedAt;
-  // Lot 265 (audit 2026-10-08, constat A2) — la première publication fixe la date d'expiration (publishedAt +
-  // durée de la formule, cf. schema.prisma) : sans elle, l'annonce n'expirait jamais, sans rappel ni
-  // renouvellement automatique. Une ré-approbation après modification garde le cycle en cours.
-  const expiry = firstPublication
-    ? { expiresAt: computeExpiryDate(now, formulaValidityDays(listing.formula)), expiryReminderSentAt: null }
-    : {};
+  // Lot 272 — les champs d'une publication (expiration à la première publication, trace humaine/automatique)
+  // viennent de listing-publication.ts, partagé avec la publication automatique.
+  const data = isApproval
+    ? publicationData(listing, now, { auto: false })
+    : { status: transition.newStatus, moderationNote: body.reason?.trim() ?? null };
 
   // Deux membres du staff pourraient modérer la même annonce en même temps
   // (deux onglets, double-clic) : `findUnique` ci-dessus ne protège pas
@@ -57,14 +46,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // statut fixe : approve part d'EN_ATTENTE ou SUSPENDUE, suspend part de
   // PUBLIEE) est atomique — si `count` vaut 0, une autre requête a déjà
   // tranché entre-temps. Même correctif que sur PaymentOrder (Lot 69).
-  const { count } = await prisma.listing.updateMany({
-    where: { id, status: listing.status },
-    data: { status: transition.newStatus, moderationNote, publishedAt, ...expiry },
-  });
+  const { count } = await prisma.listing.updateMany({ where: { id, status: listing.status }, data });
   if (count === 0) {
     return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
   }
-  const updatedListing = { ...listing, status: transition.newStatus, moderationNote, publishedAt, ...expiry };
+  const updatedListing = { ...listing, ...data };
 
   // Lot 265 — une annonce refusée ou suspendue ne doit pas être republiée par un paiement qui arriverait
   // ensuite : ses commandes EN_ATTENTE sont annulées (place libérée pour une nouvelle demande plus tard).
@@ -75,55 +61,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (isApproval) {
     // Lot 268 (audit B5) — une requête par alerte de recherche et un envoi par abonné : exécutés APRÈS la réponse à
     // l'admin, jamais dans sa requête (une base à quelques milliers d'alertes la faisait attendre plusieurs secondes).
-    const approved = { id: updatedListing.id, title: updatedListing.title, sellerId: updatedListing.sellerId };
-    after(async () => {
-      await notifyMatchingSearchAlerts(updatedListing).catch((err) => console.error(`[alertes recherche] ${(err as Error).message}`));
-      await notifyProFollowers(approved);
-    });
+    after(() => broadcastPublication(updatedListing));
   }
 
   // Écart trouvé en explorant le code (même famille que le Lot 62) : le
   // vendeur n'était jamais informé de l'issue de la modération — il ne
   // pouvait le découvrir qu'en revisitant lui-même « Mes annonces ».
-  const seller = await prisma.user.findUnique({ where: { id: listing.sellerId } });
-  if (seller) {
-    const t = await getTranslations({ locale: seller.locale, namespace: "Notifications" });
-    const title = escapeHtml(listing.title);
-    const reason = escapeHtml(body.reason?.trim() ?? "");
-
-    let subject: string;
-    let html: string;
-    if (action === "approve") {
-      subject = t("listingApprovedSubject");
-      html = `<p>${t("greeting")}</p><p>${t("listingApprovedBody", { title })}</p><p><a href="${SITE_URL}/${seller.locale}/annonce/${id}">${t("listingApprovedLink")}</a></p>`;
-    } else if (action === "reject") {
-      subject = t("listingRejectedSubject");
-      html = `<p>${t("greeting")}</p><p>${t("listingRejectedBody", { title, reason })}</p><p><a href="${SITE_URL}/${seller.locale}/compte/mes-annonces">${t("listingRejectedLink")}</a></p>`;
-    } else {
-      subject = t("listingSuspendedSubject");
-      html = `<p>${t("greeting")}</p><p>${t("listingSuspendedBody", { title, reason })}</p><p><a href="${SITE_URL}/${seller.locale}/compte/mes-annonces">${t("listingSuspendedLink")}</a></p>`;
-    }
-
-    const emailResult = await sendEmail({ to: seller.email, subject, html }).catch((err) => {
-      console.error(`[EMAIL modération annonce] échec envoi: ${(err as Error).message}`);
-      return null;
-    });
-    if (emailResult?.previewUrl) {
-      console.log(`[EMAIL modération annonce] ${emailResult.previewUrl}`);
-    }
-
-    const notifKind =
-      action === "approve" ? "LISTING_APPROVED" :
-      action === "reject"  ? "LISTING_REJECTED" :
-                             "LISTING_SUSPENDED";
-    const notifUrl = action === "approve"
-      ? `/${seller.locale}/annonce/${id}`
-      : `/${seller.locale}/compte/mes-annonces`;
-    await createNotification(listing.sellerId, notifKind, {
-      url: notifUrl,
-      body: listing.title,
-    });
-  }
+  await notifySellerOfModeration({ listing, outcome: action, reason: body.reason });
 
   await writeAuditLog({
     adminId: user.id,
