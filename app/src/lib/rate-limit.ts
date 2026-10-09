@@ -19,11 +19,30 @@ return count
 // seulement lui faire perdre le partage du compteur entre instances.
 const attempts = new Map<string, { count: number; resetAt: number }>();
 
+// Lot 268 (audit C9) — une entrée expirée n'était remplacée que si la même clé revenait, jamais supprimée sinon :
+// avec des clés par adresse IP (audience, suggestions, connexion…), la carte grossissait indéfiniment. Purge
+// opportuniste toutes les 1 000 insertions : coût amorti nul, mémoire bornée par le trafic d'une fenêtre.
+const PRUNE_EVERY_INSERTS = 1_000;
+let insertsSincePrune = 0;
+
+export function pruneExpiredRateLimits(now: number = Date.now()): number {
+  let removed = 0;
+  for (const [key, entry] of attempts) {
+    if (now > entry.resetAt) {
+      attempts.delete(key);
+      removed += 1;
+    }
+  }
+  insertsSincePrune = 0;
+  return removed;
+}
+
 function checkRateLimitInMemory(key: string, { limit, windowMs }: { limit: number; windowMs: number }): boolean {
   const now = Date.now();
   const entry = attempts.get(key);
 
   if (!entry || now > entry.resetAt) {
+    if (!entry && ++insertsSincePrune >= PRUNE_EVERY_INSERTS) pruneExpiredRateLimits(now);
     attempts.set(key, { count: 1, resetAt: now + windowMs });
     return true;
   }

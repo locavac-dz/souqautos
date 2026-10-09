@@ -28,6 +28,13 @@ vi.mock("@/lib/audit-log", () => ({ writeAuditLog: (...a: unknown[]) => writeAud
 vi.mock("@/lib/site", () => ({ SITE_URL: "https://souqauto.example" }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 
+// Lot 268 — les notifications partent dans `after()` (après la réponse) : exécuté immédiatement ici pour garder
+// les assertions « notifié une fois ».
+vi.mock("next/server", async () => {
+  const actual = await vi.importActual<typeof import("next/server")>("next/server");
+  return { ...actual, after: (fn: () => unknown) => { void fn(); } };
+});
+
 import { POST } from "@/app/api/admin/listings/[id]/moderate/route";
 
 const STAFF_USER = { id: "staff-1", role: "ADMIN" };

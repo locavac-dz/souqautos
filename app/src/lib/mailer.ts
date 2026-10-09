@@ -27,6 +27,11 @@ async function createTransporter() {
         port: config.port,
         secure: config.secure,
         auth: config.auth,
+        // Lot 268 (audit C5) — sans ces bornes, nodemailer attend jusqu'à 2 min la connexion et 10 min une réponse :
+        // un serveur SMTP lent retenait d'autant les routes qui attendent un envoi.
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 20_000,
       }),
     };
   }

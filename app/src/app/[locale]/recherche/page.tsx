@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
@@ -71,11 +72,9 @@ export default async function SearchPage({
   const t = await getTranslations("Search");
 
   // Lot 215 — throttle 30 s pour ne pas relancer les sweepers à chaque recherche
-  await Promise.all([
-    throttledSweep("auto-renewals", sweepAutoRenewals),
-    throttledSweep("expired-listings", sweepExpiredListings),
-    throttledSweep("expiry-reminders", sweepExpiringListingsForReminders),
-  ]);
+  // Lot 268 (audit B3) — seule l'expiration est attendue ; rappels et renouvellements (courriels) partent après la réponse.
+  await throttledSweep("expired-listings", sweepExpiredListings);
+  after(() => Promise.all([throttledSweep("auto-renewals", sweepAutoRenewals), throttledSweep("expiry-reminders", sweepExpiringListingsForReminders)]));
 
   const where = await resolveListingWhere(params); // Lot 139 : mot cherché d'abord dans le catalogue (en cache), puis requête sans jointure
   const orderBy = buildListingOrderBy(params.sort);

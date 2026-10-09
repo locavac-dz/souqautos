@@ -1,9 +1,14 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromCookies } from "./session";
 import { isSessionRevoked } from "./session-revocation";
 import { effectiveRole, staffTwoFactorRequired } from "@/lib/staff-two-factor";
 
-export async function getCurrentUser() {
+// Lot 268 (audit C6) — mémoïsé par requête avec `cache()` de React : la mise en page ET la page (et parfois
+// `generateMetadata`) appellent cette fonction pour le même visiteur ; chaque appel coûtait une lecture `User`
+// (avec profil et compte pro) et une consultation de la liste de révocation. Hors d'un rendu React (scripts,
+// tests), `cache()` est transparent : la fonction s'exécute à chaque appel.
+export const getCurrentUser = cache(async function getCurrentUser() {
   const session = await getSessionFromCookies();
   if (!session) return null;
 
@@ -36,4 +41,4 @@ export async function getCurrentUser() {
   }
 
   return user;
-}
+});

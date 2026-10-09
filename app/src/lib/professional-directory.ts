@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { cachedReference } from "@/lib/reference-data";
 import { computeAverageRating } from "@/lib/reviews";
 import { numeric } from "@/lib/validation/search";
 import { PRO_CATEGORIES, type ProCategory } from "@/lib/validation/pro-account";
@@ -99,7 +100,17 @@ export { paginate } from "@/lib/pagination";
 // Requêtes batchées (jamais une par compte). Volontairement sans `include:
 // { user }` : le téléphone est chiffré en base et n'a rien à faire dans le HTML
 // d'une page publique.
-export async function getDirectoryEntries(): Promise<DirectoryEntry[]> {
+// Lot 268 (audit C11) — l'annuaire complet (tous les comptes pro, leurs annonces actives et tous leurs avis) est
+// recalculé au plus toutes les 5 minutes : il est lu par /concessionnaires ET par le plan du site. Même cache
+// que le référentiel (borné, invalidé avec lui) ; une vérification de badge ou un nouvel avis apparaissent avec
+// au plus cinq minutes de retard.
+const DIRECTORY_TTL_MS = 5 * 60 * 1000;
+
+export function getDirectoryEntries(): Promise<DirectoryEntry[]> {
+  return cachedReference("directory-entries", loadDirectoryEntries, { ttlMs: DIRECTORY_TTL_MS });
+}
+
+async function loadDirectoryEntries(): Promise<DirectoryEntry[]> {
   const accounts = await prisma.professionalAccount.findMany({
     select: { id: true, userId: true, nomCommercial: true, logoUrl: true, badgeVerifie: true, wilayaId: true, categoryPro: true },
   });

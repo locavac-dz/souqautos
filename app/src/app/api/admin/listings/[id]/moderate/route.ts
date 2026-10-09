@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
@@ -78,8 +78,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   if (isApproval) {
-    await notifyMatchingSearchAlerts(updatedListing);
-    await notifyProFollowers({ id: updatedListing.id, title: updatedListing.title, sellerId: updatedListing.sellerId });
+    // Lot 268 (audit B5) — une requête par alerte de recherche et un envoi par abonné : exécutés APRÈS la réponse à
+    // l'admin, jamais dans sa requête (une base à quelques milliers d'alertes la faisait attendre plusieurs secondes).
+    const approved = { id: updatedListing.id, title: updatedListing.title, sellerId: updatedListing.sellerId };
+    after(async () => {
+      await notifyMatchingSearchAlerts(updatedListing).catch((err) => console.error(`[alertes recherche] ${(err as Error).message}`));
+      await notifyProFollowers(approved);
+    });
   }
 
   // Écart trouvé en explorant le code (même famille que le Lot 62) : le

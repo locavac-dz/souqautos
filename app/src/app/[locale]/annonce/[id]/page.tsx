@@ -122,12 +122,12 @@ export default async function ListingDetailPage({
   const tWizard = await getTranslations("Wizard");
   const tEstimate = await getTranslations("Estimate");
 
-  // Lot 213 — throttle 30 s : évite de relancer les sweepers à chaque vue
-  await Promise.all([
-    throttledSweep("auto-renewals", sweepAutoRenewals),
-    throttledSweep("expired-listings", sweepExpiredListings),
-    throttledSweep("expiry-reminders", sweepExpiringListingsForReminders),
-  ]);
+  // Lot 213 — throttle 30 s : évite de relancer les sweepers à chaque vue.
+  // Lot 268 (audit B3) — seule l'expiration (un `updateMany`) est attendue : les rappels et renouvellements envoient
+  // des courriels un par un et ne doivent pas retarder la page ; ils partent après la réponse. Le cron nocturne
+  // reste la garantie qu'ils tournent même sans visiteur.
+  await throttledSweep("expired-listings", sweepExpiredListings);
+  after(() => Promise.all([throttledSweep("auto-renewals", sweepAutoRenewals), throttledSweep("expiry-reminders", sweepExpiringListingsForReminders)]));
 
   const [listing, currentUser] = await Promise.all([
     prisma.listing.findUnique({
@@ -164,55 +164,46 @@ export default async function ListingDetailPage({
   // d'occasion »), s'il en existe un de paru : la plupart des modèles n'auront jamais de guide propre, et l'acheteur qui hésite devant
   // une annonce est précisément celui à qui il sert. Le guide du modèle passe toujours avant.
   const guideSelect = { slug: true, titleFr: true, titleAr: true } as const;
-  const modelGuide =
-    (listing.modelId
-      ? await prisma.blogArticle.findFirst({
-          where: { kind: "GUIDE", ...publishedNow(new Date()), guide: { modelId: listing.modelId } },
-          orderBy: { publishedAt: "desc" },
-          select: guideSelect,
-        })
-      : null) ??
-    (await prisma.blogArticle.findFirst({
-      where: { kind: "GUIDE", ...publishedNow(new Date()), guide: { modelId: null } },
-      orderBy: { publishedAt: "desc" },
-      select: guideSelect,
-    }));
-
-  const [similarListings, alternativeListings] = await Promise.all([
-    getSimilarListings({
-      excludeId: listing.id,
-      brandId: listing.brandId,
-      modelId: listing.modelId,
-      price: listing.price,
-    }),
-    // Lot 250 — recommandations inter-marques via Claude (même segment, autre marque).
-    // Silencieux si ANTHROPIC_API_KEY absent ou Claude indisponible.
-    getAlternativeListings({
-      excludeId: listing.id,
-      brandId: listing.brandId,
-      modelId: listing.modelId,
-      price: listing.price,
-    }),
-  ]);
-
+  const now = new Date();
   // Lot 158 — encart pro : statut ouverture + compteur stock actif
   const proAccount = listing.seller.professionalAccount;
   const proSchedule = proAccount ? parseHorairesSemaine(proAccount.horairesSemaine) : null;
   const proOpenNow = proSchedule ? isOpenNow(proSchedule) : null;
-  const proActiveListingCount = proAccount
-    ? await prisma.listing.count({ where: { sellerId: listing.sellerId, status: "PUBLIEE" } })
-    : 0;
 
-  const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
-  const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
-  const wilayaLabel = locale === "ar" ? listing.wilaya.nomAr : listing.wilaya.nomFr;
-  const communeLabel = listing.commune ? (locale === "ar" ? listing.commune.nomAr : listing.commune.nomFr) : null;
-  const locationLabel = communeLabel ? `${communeLabel}, ${wilayaLabel}` : wilayaLabel;
-
-  const tPriceBadge = await getTranslations("PriceBadge");
-  const estimate =
+  // Lot 268 (audit C1) — ces lectures sont indépendantes les unes des autres : lancées ensemble (une dizaine de
+  // requêtes auparavant enchaînées, soit autant d'allers-retours vers la base ajoutés bout à bout).
+  const [
+    modelGuideOwn,
+    generalGuide,
+    similarListings,
+    alternativeListings,
+    proActiveListingCount,
+    estimate,
+    favoriteRow,
+    reportRow,
+    pendingOfferRow,
+    sellerReviews,
+    sellerResponsiveness,
+  ] = await Promise.all([
+    listing.modelId
+      ? prisma.blogArticle.findFirst({
+          where: { kind: "GUIDE", ...publishedNow(now), guide: { modelId: listing.modelId } },
+          orderBy: { publishedAt: "desc" },
+          select: guideSelect,
+        })
+      : null,
+    prisma.blogArticle.findFirst({
+      where: { kind: "GUIDE", ...publishedNow(now), guide: { modelId: null } },
+      orderBy: { publishedAt: "desc" },
+      select: guideSelect,
+    }),
+    getSimilarListings({ excludeId: listing.id, brandId: listing.brandId, modelId: listing.modelId, price: listing.price }),
+    // Lot 250 — recommandations inter-marques via Claude (même segment, autre marque).
+    // Silencieux si ANTHROPIC_API_KEY absent ou Claude indisponible (3 s maximum, Lot 268).
+    getAlternativeListings({ excludeId: listing.id, brandId: listing.brandId, modelId: listing.modelId, price: listing.price }),
+    proAccount ? prisma.listing.count({ where: { sellerId: listing.sellerId, status: "PUBLIEE" } }) : 0,
     listing.brandId && listing.modelId
-      ? await estimatePrice({
+      ? estimatePrice({
           brandId: listing.brandId,
           modelId: listing.modelId,
           year: listing.year,
@@ -221,7 +212,30 @@ export default async function ListingDetailPage({
           equipmentIds: listing.equipments.map((e) => e.equipmentId),
           excludeListingId: listing.id,
         })
-      : null;
+      : null,
+    currentUser
+      ? prisma.favorite.findUnique({ where: { userId_listingId: { userId: currentUser.id, listingId: listing.id } }, select: { userId: true } })
+      : null,
+    currentUser
+      ? prisma.report.findUnique({ where: { listingId_authorId: { listingId: listing.id, authorId: currentUser.id } }, select: { id: true } })
+      : null,
+    currentUser && !isOwner
+      ? prisma.offer.findFirst({ where: { listingId: listing.id, buyerId: currentUser.id, status: "PENDING" }, select: { id: true } })
+      : null,
+    prisma.review.findMany({ where: { sellerId: listing.sellerId, status: "APPROVED" }, select: { rating: true } }),
+    // Lot 141 — les signaux de confiance, ici, à l'endroit exact où l'acheteur décide de contacter.
+    getSellerResponsiveness(listing.sellerId),
+  ]);
+  // Lot 126/144 — guide du modèle s'il existe, sinon le guide général.
+  const modelGuide = modelGuideOwn ?? generalGuide;
+
+  const brandLabel = listing.brand?.name ?? listing.brandFreeText ?? "";
+  const modelLabel = listing.model?.name ?? listing.modelFreeText ?? "";
+  const wilayaLabel = locale === "ar" ? listing.wilaya.nomAr : listing.wilaya.nomFr;
+  const communeLabel = listing.commune ? (locale === "ar" ? listing.commune.nomAr : listing.commune.nomFr) : null;
+  const locationLabel = communeLabel ? `${communeLabel}, ${wilayaLabel}` : wilayaLabel;
+
+  const tPriceBadge = await getTranslations("PriceBadge");
   const priceBadge = estimate
     ? computePriceBadge(listing.price, estimate.mid, estimate.sampleSize)
     : null;
@@ -229,40 +243,13 @@ export default async function ListingDetailPage({
   const tFavorites = await getTranslations("Favorites");
   const tCompare = await getTranslations("Compare");
   const tCatalogue = await getTranslations("Catalogue");
-  const isFavorited = currentUser
-    ? Boolean(
-        await prisma.favorite.findUnique({
-          where: { userId_listingId: { userId: currentUser.id, listingId: listing.id } },
-        })
-      )
-    : false;
-  const alreadyReported = currentUser
-    ? Boolean(
-        await prisma.report.findUnique({
-          where: { listingId_authorId: { listingId: listing.id, authorId: currentUser.id } },
-        })
-      )
-    : false;
-
-  const hasPendingOffer =
-    currentUser && !isOwner
-      ? Boolean(
-          await prisma.offer.findFirst({
-            where: { listingId: listing.id, buyerId: currentUser.id, status: "PENDING" },
-            select: { id: true },
-          })
-        )
-      : false;
+  const isFavorited = Boolean(favoriteRow);
+  const alreadyReported = Boolean(reportRow);
+  const hasPendingOffer = Boolean(pendingOfferRow);
 
   const tReview = await getTranslations("Review");
   const tPro = await getTranslations("Pro");
-  const sellerReviews = await prisma.review.findMany({
-    where: { sellerId: listing.sellerId, status: "APPROVED" },
-    select: { rating: true },
-  });
   const sellerRating = computeAverageRating(sellerReviews.map((r) => r.rating));
-  // Lot 141 — les signaux de confiance, ici, à l'endroit exact où l'acheteur décide de contacter.
-  const sellerResponsiveness = await getSellerResponsiveness(listing.sellerId);
 
   const listingUrl = `${SITE_URL}/${locale}/annonce/${listing.id}`;
   const vehicleJsonLd = buildVehicleJsonLd({

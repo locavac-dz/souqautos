@@ -34,6 +34,12 @@ vi.mock("@/lib/mailer", () => ({
   escapeHtml:  (s: string) => s,
 }));
 
+// Lot 268 — les courriels aux favoris partent dans `after()` : exécuté immédiatement ici.
+vi.mock("next/server", async () => {
+  const actual = await vi.importActual<typeof import("next/server")>("next/server");
+  return { ...actual, after: (fn: () => unknown) => { void fn(); } };
+});
+
 import { POST } from "@/app/api/listings/[id]/update-price/route";
 
 const USER    = { id: "user1" };

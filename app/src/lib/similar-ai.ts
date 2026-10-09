@@ -15,6 +15,11 @@ const MAX_TOTAL = 6;
 
 type AltModel = { brand: string; model: string };
 
+// Lot 268 (audit B4) — dans le chemin de rendu de la fiche annonce : 3 s maximum. Une indisponibilité de Claude
+// est signalée par une exception (jamais un `[]` que `cachedReference` garderait une heure) : la fiche se rend
+// sans alternatives et le prochain visiteur retente.
+const PAGE_PATH_TIMEOUT_MS = 3_000;
+
 async function fetchSegmentAlternatives(brandName: string, modelName: string): Promise<AltModel[]> {
   if (!process.env.ANTHROPIC_API_KEY) return [];
 
@@ -31,8 +36,9 @@ async function fetchSegmentAlternatives(brandName: string, modelName: string): P
       },
     ],
     maxTokens: 150,
+    timeoutMs: PAGE_PATH_TIMEOUT_MS,
   });
-  if (!text) return [];
+  if (!text) throw new Error("anthropic_unavailable");
 
   try {
     const match = text.match(/\[[\s\S]*\]/);
@@ -73,11 +79,16 @@ export async function getAlternativeListings({
   ]);
   if (!brand || !model) return [];
 
-  const alts = await cachedReference(
-    `segment-alts:${brandId}-${modelId}`,
-    () => fetchSegmentAlternatives(brand.name, model.name),
-    { ttlMs: ALT_MODELS_TTL_MS }
-  );
+  let alts: AltModel[];
+  try {
+    alts = await cachedReference(
+      `segment-alts:${brandId}-${modelId}`,
+      () => fetchSegmentAlternatives(brand.name, model.name),
+      { ttlMs: ALT_MODELS_TTL_MS }
+    );
+  } catch {
+    return []; // Claude indisponible ou trop lent : pas d'alternatives cette fois, rien mis en cache
+  }
   if (alts.length === 0) return [];
 
   const batches = await Promise.all(

@@ -10,7 +10,11 @@ import { listingBudget, sitemapTruncationWarning } from "@/lib/sitemap-limits";
 // Lot 110 — sans cette ligne Next fige le sitemap au moment du build (rien ne
 // lui indique que la base est lue) : un essai programmé n'y apparaîtrait jamais
 // une fois sa date atteinte, et une nouvelle annonce non plus.
-export const dynamic = "force-dynamic";
+// Lot 268 (audit C11) — recalculé au plus une fois par heure au lieu d'à chaque requête : un robot qui le relit
+// toutes les dix minutes coûtait six requêtes (dont jusqu'à 50 000 identifiants d'annonces et tout l'annuaire pro)
+// à chaque passage. Une heure de retard sur le plan du site est sans effet sur l'indexation ; les pages elles-mêmes
+// restent servies à jour.
+export const revalidate = 3600;
 
 function localizedEntry(path: string, lastModified?: Date) {
   const [defaultLocale] = routing.locales;

@@ -97,5 +97,11 @@ export async function notifyMatchingSearchAlerts(listing: Listing): Promise<void
   // (Lot 99, audit qualité), une seule échouant (email/DB) n'affecte jamais
   // les autres grâce au .catch() sur sendEmail et à la propagation normale
   // d'erreur Prisma pour le reste.
-  await Promise.all(alerts.map((alert) => notifyOneSearchAlert(alert, listing)));
+  // Lot 268 (audit B5) — par lots de 10 : « toutes en parallèle » saturait le pool de connexions Prisma
+  // (une requête par alerte) au détriment des visiteurs pendant quelques secondes.
+  for (let i = 0; i < alerts.length; i += SEARCH_ALERT_CONCURRENCY) {
+    await Promise.all(alerts.slice(i, i + SEARCH_ALERT_CONCURRENCY).map((alert) => notifyOneSearchAlert(alert, listing)));
+  }
 }
+
+export const SEARCH_ALERT_CONCURRENCY = 10;

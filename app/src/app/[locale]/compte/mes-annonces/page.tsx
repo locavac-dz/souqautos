@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { after } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
@@ -60,11 +61,9 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
   const t = await getTranslations("MyListings");
   const tListing = await getTranslations("Listing");
 
-  await Promise.all([
-    throttledSweep("auto-renewals", sweepAutoRenewals),
-    throttledSweep("expired-listings", sweepExpiredListings),
-    throttledSweep("expiry-reminders", sweepExpiringListingsForReminders),
-  ]);
+  // Lot 268 (audit B3) — seule l'expiration est attendue ; rappels et renouvellements (courriels) partent après la réponse.
+  await throttledSweep("expired-listings", sweepExpiredListings);
+  after(() => Promise.all([throttledSweep("auto-renewals", sweepAutoRenewals), throttledSweep("expiry-reminders", sweepExpiringListingsForReminders)]));
 
   // Lot 43 — comble l'écart signalé au Lot 41 : les annonces d'un compte
   // professionnel appartiennent toujours à sellerId = ProfessionalAccount.userId,

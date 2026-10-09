@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
@@ -60,22 +60,32 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // au mieux (best effort) : un échec d'email individuel n'annule jamais la
   // mise à jour de prix elle-même, ni les envois aux autres favoris.
   if (isPriceDrop(oldPrice, newPrice)) {
-    const favorites = await prisma.favorite.findMany({
-      where: { listingId: id },
-      include: { user: true },
-    });
+    // Lot 268 (audit C5) — APRÈS la réponse au vendeur et par lots de 20 : une annonce à 500 favoris ouvrait
+    // 500 envois SMTP simultanés avant de répondre (et pouvait dépasser la limite d'envoi du fournisseur).
+    after(() => notifyFavoritesOfPriceDrop(id, listing.title, oldPrice, newPrice));
+  }
 
-    // Envoyés en parallèle plutôt que séquentiellement (Lot 99, audit
-    // qualité) — chaque envoi est déjà indépendant et au mieux (.catch()
-    // propre), aucune raison d'attendre l'un avant de commencer le suivant.
+  return NextResponse.json({ price: newPrice });
+}
+
+const PRICE_DROP_EMAIL_BATCH = 20;
+
+async function notifyFavoritesOfPriceDrop(listingId: string, title: string, oldPrice: number, newPrice: number): Promise<void> {
+  const favorites = await prisma.favorite.findMany({
+    where: { listingId },
+    include: { user: true },
+  });
+
+  for (let i = 0; i < favorites.length; i += PRICE_DROP_EMAIL_BATCH) {
+    // Chaque envoi est indépendant et au mieux (.catch() propre) : un échec n'arrête jamais les autres.
     await Promise.all(
-      favorites.map(async (favorite) => {
+      favorites.slice(i, i + PRICE_DROP_EMAIL_BATCH).map(async (favorite) => {
         const t = await getTranslations({ locale: favorite.user.locale, namespace: "Notifications" });
         const emailResult = await sendEmail({
           to: favorite.user.email,
           subject: t("priceDropSubject"),
           html: `<p>${t("greeting")}</p><p>${t("priceDropBody", {
-            title: escapeHtml(listing.title),
+            title: escapeHtml(title),
             oldPrice: oldPrice.toLocaleString(),
             newPrice: newPrice.toLocaleString(),
           })}</p>`,
@@ -89,6 +99,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       })
     );
   }
-
-  return NextResponse.json({ price: newPrice });
 }

@@ -446,6 +446,10 @@ model Listing {
   @@index([status, createdAt(sort: Desc)])
   @@index([status, publishedAt(sort: Desc)])
   @@index([status, brandId, modelId])
+  // Lot 268 (audit C10) — filtre par wilaya seule (page wilaya, recherche sans catégorie) : wilayaId était la 3e
+  // colonne de [status, category, wilayaId], inutilisable sans category. Tri par prix : aucun index ne le couvrait.
+  @@index([status, wilayaId, publishedAt(sort: Desc)])
+  @@index([status, price])
 
   @@index([sellerId])
   @@index([status, expiresAt])
@@ -677,6 +681,9 @@ model Message {
   deletedAt      DateTime?
 
   @@index([conversationId])
+  // Lot 268 (audit C10) — pagination curseur des messages (Lot 257 : conversationId + createdAt < curseur, tri desc),
+  // comme GroupMessage a déjà [groupId, createdAt].
+  @@index([conversationId, createdAt(sort: Desc)])
   // Comptage des messages non lus (badge du header, boîte de réception) —
   // filtré sur conversationId+readAt à chaque chargement de page, cf. audit
   // sécurité/perf.
