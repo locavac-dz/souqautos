@@ -4095,3 +4095,17 @@ Dernier lot du document « Équipe de lancement » : le rédacteur à la pige en
 - Réel, avec un compte de démonstration passé temporairement en `EDITEUR` : dans le navigateur, `/admin`, `/admin/annonces` et `/admin/paiements` renvoient tous sur `/admin/mag`, la navigation se réduit à Mag · Essais · Guides · Rythme éditorial · Revue de presse ; par API, modération, changement de rôle et rapport hebdomadaire → 403, création d'article → 400 (validation : la porte est bien ouverte). Rôle restauré ensuite ; l'option apparaît dans le menu des rôles en tant qu'admin.
 
 **Limites** : pas de relecture obligatoire avant publication par un rédacteur (il peut publier directement — relire sa première parution) ; `/admin/equipement` reste réservé aux ADMIN.
+
+## Lot 277 — Affectation dans la file de modération (2026-10-09)
+
+Prévu « dès le deuxième modérateur » dans le document « Équipe de lancement » : deux personnes ne doivent pas traiter le même élément, et le PDG doit voir qui a fait quoi.
+
+**Prise en charge** (`src/lib/moderation-assignment.ts`). Sur les files des **annonces** (`/admin/annonces`) et des **signalements** (`/admin/signalements`) : bouton « Prendre en charge » sur un élément libre, badge « Pris en charge par vous / par *email* depuis le … », bouton « Libérer » pour la personne elle-même ou un ADMIN. Champs `assignedToId` / `assignedAt` sur `Listing` et `Report` (migration `20261009170000_lot_277_moderation_assignment`, ajouts seulement). La prise est atomique (`updateMany` filtré sur « encore libre ») : deux collègues ne peuvent jamais tenir le même élément. **Toute décision** (approuver, refuser, suspendre, traiter, rejeter) efface l'affectation ; prises et libérations sont journalisées (`listing.assign` / `release`, `report.assign` / `release`). Routes `POST /api/admin/listings/[id]/assign` et `POST /api/admin/reports/[id]/assign` (toute l'équipe), réponses 409 si déjà pris ou course perdue, 403 pour libérer l'élément d'un collègue.
+
+**Activité de l'équipe — 7 derniers jours**, en tête de la file des annonces : par membre, annonces traitées, signalements traités, délai moyen entre dépôt et décision, éléments en cours. Calculé depuis le **journal d'audit** (les décisions réelles), jamais depuis les affectations. Composants `AssignmentControls` et `TeamActivityTable`, FR / AR.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 428 tests / 215 fichiers** verts — 8 nouveaux (`tests/moderation-assignment.test.ts` : prise, refus si déjà pris, libération par soi ou ADMIN seulement, écriture atomique et course perdue, signalements, agrégation par membre avec délai moyen et en-cours, route 200 / 409 / 403).
+- Réel, dans le navigateur en admin : annonce de test déposée → « Annonces en attente (1) », tableau d'équipe vide → Prendre en charge → badge « Pris en charge par vous depuis le 9 oct. 2026, 7:40 PM », Libérer, « En cours : 1 » → Approuver → annonce publiée, affectation effacée en base, tableau « admin@souqauto.dz · 1 annonce traitée · 0 h », journal `listing.assign` puis `listing.approve`. Annonce, photo et téléphone de test nettoyés.
+
+**Limites** : pas de filtre « mes éléments » ni de réaffectation directe à un collègue (on libère, l'autre prend) ; délai moyen calculé sur les annonces seulement ; le tableau d'équipe n'apparaît que sur la file des annonces.
