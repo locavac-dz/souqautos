@@ -3973,3 +3973,45 @@ Le badge du Lot 263 (texte de 26 px sur une photo de 1 600 px) devenait illisibl
 **Vérifié** : `npx tsx prisma/apply-demo-photos.ts --force` — 53 photos régénérées, 0 ignorée ; `tsc` 0 ; `eslint` 0 ; `tests/demo-photos.test.ts` 63/63 ; navigateur : DÉMO lisible sur chaque carte de `/fr/recherche` (y compris les annonces en avant) et sur les cinq équipements.
 
 **Note** : la régénération supprime les anciens fichiers ; un navigateur qui en gardait le chemin (section « récemment consultés », `localStorage`) voit un 400 sur `/_next/image` jusqu'à l'expiration de cette liste — sans effet sur les autres visiteurs.
+
+## Lot 271 — Factorisations requireUser / parseJsonBody / notifyUser (audit E1) (2026-10-09)
+
+Trois répétitions relevées par l'audit : la garde d'authentification (une centaine de fois), la lecture d'un corps JSON (`request.json().catch` + `safeParse` + 400, plus de 80 fois) et le triplet courriel / push / notification in-app.
+
+**`src/lib/api-route.ts`.** `requireUser()` (401 `unauthenticated`), `requireRole(isAdmin | isStaff | isModerator)` (403 `forbidden`, anonyme compris comme avant), `parseJsonBody(request, schema, { headers?, issues?: "full" | "paths" })` (400 `validation`, JSON illisible compris) et la constante `NO_STORE`, redéfinie jusque-là dans 11 routes. Convention sans wrapper ni exception : la valeur est soit la donnée, soit une `NextResponse` à renvoyer telle quelle (`if (user instanceof NextResponse) return user;`).
+
+**`src/lib/notify-user.ts`.** `notifyUser({ userId, kind, url, body, title?, email?, push? })` — courriel au mieux (`sendEmailBestEffort`, échec journalisé), push et notification in-app en un appel, URL commune aux deux derniers.
+
+**Application.** 82 `requireUser`, 36 `requireRole`, 73 `parseJsonBody` dans 99 routes (réécriture par script pour le motif commun, à la main pour les variantes : `issues` complètes pour connexion, inscription, contact et rappels, chemins pour les avis propriétaires, `requireAdmin` local de `preview-links` supprimé) ; 8 `notifyUser` (offre reçue / acceptée / refusée / contre-offre, nouveau message, alertes de recherche, abonnés d'un pro) ; les routes d'avis vendeur et pro passent à `sendEmailBestEffort`.
+
+**Effet de bord assumé (E4 partiel)** : les 7 routes qui répondaient `"unauthorized"` répondent `"unauthenticated"` comme les 73 autres — aucun client ni test ne lisait cette chaîne.
+
+**Laissé tel quel** : six gardes qui ne sont pas un rôle (`professionalAccount.id === id` pour logo / bannière / compte pro, visiteur facultatif sur `contact`, flux SSE en réponse texte) et deux lectures JSON particulières (`two-factor/setup` accepte un corps vide, `listings/draft` lit `body.data` sans schéma).
+
+**Vérifié**
+- `tsc` 0 erreur ; `eslint .` 0 problème ; **2 345 tests / 204 fichiers** verts — 16 nouveaux (`tests/api-route.test.ts` : 401 / 403 / 400, en-têtes, issues ; `tests/notify-user.test.ts` : trois canaux, canaux facultatifs, ordre) ; deux tests d'alertes adaptés (leur mock de `mailer` expose `sendEmailBestEffort`).
+- Serveur réel : anonyme → `/api/notifications` 401, `/api/admin/brands` 403, `/api/push/subscribe` 401 avec `cache-control: no-store` ; `/api/contact` et `/api/auth/login` avec JSON cassé → 400 + issues ; connecté → `/api/auth/me` 200, `/api/profile` JSON cassé → 400, même nom → 200.
+
+**Bilan** : 113 fichiers, −386 lignes nettes.
+
+## Lot 272 — Modération à deux vitesses (publication automatique) (2026-10-09)
+
+Premier lot issu de la réflexion sur l'organisation de l'équipe : la file humaine ne reçoit plus que ce qui mérite un regard.
+
+**La règle (`src/lib/auto-publish.ts`).** Une annonce est publiée sans modérateur **seulement si tout est vrai** : réglage activé ; statut `EN_ATTENTE` ; score anti-fraude calculé **et** nul (pas de doublon de texte ou de photo, pas de prix anormal, pas d'incohérence véhicule) ; analyse IA passée **et** sans soupçon (exigée seulement si une clé Anthropic est configurée) ; aucune photo signalée (sombre, surexposée, basse résolution, aplat) ; vendeur avec **au moins N annonces publiées par un humain** (N réglable, 1 par défaut — les annonces auto-publiées ne comptent jamais, pas d'effet boule de neige) ; **zéro incident** (aucune annonce refusée ou suspendue, aucun signalement confirmé contre lui ou ses annonces). `decideAutoPublish` est pure et liste **tous** les motifs d'un refus (journaux serveur `[auto-publish]`) ; `tryAutoPublish` s'exécute dans la même chaîne `after()` que le score et l'IA, à la soumission **et** à la modification, avec un `updateMany` filtré sur `EN_ATTENTE` contre une course avec un modérateur, et ne lève jamais (un échec laisse l'annonce dans la file).
+
+**Effets partagés (`src/lib/listing-publication.ts`).** Extraits de la route admin : `publicationData` (expiration à la première publication, trace `autoPublishedAt` — une ré-approbation humaine l'efface), `buildModerationEmail`, `notifySellerOfModeration` (courriel + in-app via `notifyUser`), `broadcastPublication` (alertes de recherche, abonnés pro). La règle automatique et le modérateur produisent exactement les mêmes effets ; la route `moderate` passe de 150 à 85 lignes.
+
+**Schéma + migration `20261009110000_lot_272_auto_publish`** : `ModerationSettings.autoPublishEnabled` (défaut **false**) et `autoPublishMinApprovedListings` (1 à 20) ; `Listing.autoPublishedAt` ; `AuditLog.adminId` nullable — le journal affiche « **Système** » pour `listing.auto_publish`.
+
+**Back-office.** Bloc « Publication automatique (modération à deux vitesses) » dans `/admin/parametres` (ADMIN seulement, texte d'aide explicite), badge « Publiée automatiquement » dans `/admin/annonces`, FR / AR.
+
+**Écart corrigé au passage.** Une annonce **modifiée** ne recalculait ni son score anti-fraude ni l'analyse IA (l'ancien score restait affiché dans la file) et ne prévenait pas l'équipe.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 369 tests / 206 fichiers** verts — 24 nouveaux (`tests/auto-publish.test.ts` : décision motif par motif, orchestration contre base simulée — course avec un modérateur, erreur de base, comptage « humain uniquement » — ; `tests/listing-publication.test.ts` ; bornes du réglage).
+- **Scénario réel** : l'admin active le réglage (PATCH 200) ; un vendeur de démonstration à 7 annonces validées et sans incident dépose une annonce avec une photo neuve → **publiée en 1,5 s** (`autoPublishedAt`, expiration J+30, score 0) ; journal « Système · listing.auto_publish · humanApprovedCount: 7 » ; notification in-app au vendeur ; badge dans `/admin/annonces`. Nettoyé ensuite (annonce, photo, téléphone du vendeur), réglage **redésactivé**.
+
+**Mise en service.** Le réglage est désactivé par défaut : à activer dans `/admin/parametres` par un ADMIN. Recommandation : commencer à « 2 annonces approuvées par un humain », suivre le journal pendant une à deux semaines, puis descendre à 1.
+
+**Limites** : un vendeur refusé une fois reste à vie dans la file humaine (pas de fenêtre de pardon — choix strict, modifiable) ; pas de compteur « publiées automatiquement cette semaine » dans les statistiques ; la règle ne s'applique pas aux imports CSV tant que le pro n'a pas soumis chaque brouillon (comportement existant).
