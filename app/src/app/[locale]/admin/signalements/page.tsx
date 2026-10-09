@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import { ReportActions } from "@/components/admin/ReportActions";
+import { AssignmentControls } from "@/components/admin/AssignmentControls";
+import { isAdmin } from "@/lib/auth-server/roles";
 
 const REASON_KEY: Record<string, string> = {
   PRIX_SUSPECT: "reasonPrixSuspect",
@@ -37,6 +39,7 @@ export default async function AdminReportsPage() {
       reportedUser: { include: { profile: true } },
       ownerReview: { include: { model: { include: { brand: true } } } },
       author: { include: { profile: true } },
+      assignedTo: { select: { id: true, email: true } },
     },
   });
 
@@ -98,6 +101,15 @@ export default async function AdminReportsPage() {
                     }).format(report.createdAt),
                   })}
                 </p>
+                {/* Lot 277 — prise en charge */}
+                <AssignmentControls
+                  kind="reports"
+                  id={report.id}
+                  assignee={report.assignedTo}
+                  assignedAt={report.assignedAt?.toISOString() ?? null}
+                  currentUserId={viewer.id}
+                  canRelease={isAdmin(viewer.role)}
+                />
               </div>
               <div className="w-56 shrink-0">
                 <ReportActions reportId={report.id} />

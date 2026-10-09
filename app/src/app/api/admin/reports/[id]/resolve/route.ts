@@ -11,6 +11,7 @@ import {
   type ReportModerationAction,
 } from "@/lib/reports";
 import { writeAuditLog } from "@/lib/audit-log";
+import { CLEAR_ASSIGNMENT } from "@/lib/moderation-assignment";
 import { sendEmail, escapeHtml } from "@/lib/mailer";
 import { sendAccountSuspendedEmail } from "@/lib/account-suspension-email";
 import { getModerationSettings } from "@/lib/moderation-settings";
@@ -50,6 +51,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       status: transition.newStatus,
       resolutionNote: body.note?.trim() || null,
       resolvedAt: new Date(),
+      // Lot 277 — la décision efface la prise en charge.
+      ...CLEAR_ASSIGNMENT,
     },
   });
 

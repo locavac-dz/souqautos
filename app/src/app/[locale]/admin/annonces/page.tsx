@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import { ModerationActions } from "@/components/admin/ModerationActions";
+import { AssignmentControls } from "@/components/admin/AssignmentControls";
+import { TeamActivityTable } from "@/components/admin/TeamActivityTable";
+import { isAdmin } from "@/lib/auth-server/roles";
 import { getFraudSignalsForListings } from "@/lib/fraud-signals";
 import type { PhotoAiTag } from "@/lib/photo-ai";
 
@@ -27,6 +30,7 @@ export default async function AdminListingsPage() {
       include: {
         photos: { orderBy: { position: "asc" }, select: { path: true, sha256: true, aiTags: true } },
         seller: { include: { profile: true } },
+        assignedTo: { select: { id: true, email: true } },
       },
     }),
     prisma.listing.findMany({
@@ -59,6 +63,8 @@ export default async function AdminListingsPage() {
 
   return (
     <div className="space-y-10">
+      {/* Lot 277 — activité de l'équipe */}
+      <TeamActivityTable />
       <section>
         <h1 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
           {t("pendingListings")} ({pending.length})
@@ -89,6 +95,15 @@ export default async function AdminListingsPage() {
                           }).format(listing.createdAt),
                         })}
                       </p>
+                      {/* Lot 277 — prise en charge */}
+                      <AssignmentControls
+                        kind="listings"
+                        id={listing.id}
+                        assignee={listing.assignedTo}
+                        assignedAt={listing.assignedAt?.toISOString() ?? null}
+                        currentUserId={viewer.id}
+                        canRelease={isAdmin(viewer.role)}
+                      />
                       {/* Lot 246 — score composite + note IA */}
                       {listing.fraudCheckedAt && listing.fraudScore > 0 && (
                         <span

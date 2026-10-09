@@ -7,6 +7,7 @@ import { computeModerationTransition, type ModerationAction } from "@/lib/modera
 import { writeAuditLog } from "@/lib/audit-log";
 import { cancelPendingOrdersForListing } from "@/lib/payment-fulfillment";
 import { broadcastPublication, notifySellerOfModeration, publicationData } from "@/lib/listing-publication";
+import { CLEAR_ASSIGNMENT } from "@/lib/moderation-assignment";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject", "suspend"]),
@@ -36,9 +37,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const isApproval = action === "approve";
   // Lot 272 — les champs d'une publication (expiration à la première publication, trace humaine/automatique)
   // viennent de listing-publication.ts, partagé avec la publication automatique.
+  // Lot 277 — toute décision efface la prise en charge : l'annonce quitte la file.
   const data = isApproval
-    ? publicationData(listing, now, { auto: false })
-    : { status: transition.newStatus, moderationNote: body.reason?.trim() ?? null };
+    ? { ...publicationData(listing, now, { auto: false }), ...CLEAR_ASSIGNMENT }
+    : { status: transition.newStatus, moderationNote: body.reason?.trim() ?? null, ...CLEAR_ASSIGNMENT };
 
   // Deux membres du staff pourraient modérer la même annonce en même temps
   // (deux onglets, double-clic) : `findUnique` ci-dessus ne protège pas

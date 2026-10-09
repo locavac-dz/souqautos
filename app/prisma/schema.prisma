@@ -66,6 +66,8 @@ model User {
   blocksReceived        Block[]        @relation("BlockedRelation")
   reports               Report[]       @relation("ReportAuthor")
   reportsReceived       Report[]       @relation("ReportedUser")
+  assignedListings      Listing[]      @relation("AssignedListings")
+  assignedReports       Report[]       @relation("AssignedReports")
   reviewsReceived       Review[]       @relation("SellerReviews")
   reviewsWritten        Review[]       @relation("AuthorReviews")
   emailVerificationTokens EmailVerificationToken[]
@@ -411,6 +413,10 @@ model Listing {
   expiryReminderSentAt DateTime?
   // Lot 272 — renseigné quand la publication a été décidée par la règle automatique, jamais par un modérateur.
   autoPublishedAt      DateTime?
+  // Lot 277 — prise en charge dans la file de modération (« pris en charge par X »), effacée à la décision.
+  assignedToId         String?
+  assignedTo           User?            @relation("AssignedListings", fields: [assignedToId], references: [id])
+  assignedAt           DateTime?
   // Lot 82 — renouvellement automatique (§4-B, "outils avancés" Pro/Premium).
   // Préférence par annonce, jamais activée d'office même pour un compte
   // éligible — l'éligibilité réelle du vendeur (palier effectif au moment du
@@ -761,6 +767,10 @@ model Report {
   status         ReportStatus @default(OUVERT)
   // Note interne du modérateur qui traite/rejette (jamais visible par l'auteur du signalement).
   resolutionNote String?
+  // Lot 277 — prise en charge dans la file des signalements, effacée à la décision.
+  assignedToId   String?
+  assignedTo     User?        @relation("AssignedReports", fields: [assignedToId], references: [id])
+  assignedAt     DateTime?
   createdAt      DateTime     @default(now())
   resolvedAt     DateTime?
 
