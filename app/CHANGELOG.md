@@ -3886,3 +3886,34 @@ Troisième lot de l'audit du 2026-10-08 : ce qui aurait fait mal à la mise en l
 - Navigateur : étape 2 du wizard avec un brouillon Équipement restauré → « Autre marque » et champ libre affichés d'emblée (le cas que l'effet supprimé traitait).
 
 **Limites** : l'énumération par `groups/[id]/members` reste possible à 30 adresses par heure (compromis assumé pour l'ergonomie de l'admin de groupe) ; `windows-schedule.ps1` et `crontab.example` restent des modèles non essayés sur un vrai serveur.
+
+## Lot 268 — Performance (audit B3-B5, C1, C5, C6, C9-C11) (2026-10-09)
+
+Quatrième lot de l'audit du 2026-10-08 : ce qui faisait attendre les visiteurs ou saturait la base sans raison. Audit statique à la base (pas de mesure p95 sous charge) ; les gains sont ceux des allers-retours supprimés, pas des chiffres mesurés.
+
+**B3 — Balayages avec envois SMTP dans le chemin des pages les plus visitées.** `recherche`, `annonce/[id]` et `compte/mes-annonces` attendaient les trois balayages (expiration, rappels d'expiration, renouvellement automatique) — les deux derniers envoient jusqu'à 50 courriels **un par un**, sans timeout SMTP court : le premier visiteur de la fenêtre de 30 s pouvait attendre des dizaines de secondes. Seule l'expiration (un `updateMany`) reste attendue ; rappels et renouvellements partent **après la réponse** (`after()` de Next). Le cron nocturne (Lot 236) reste la garantie qu'ils tournent sans visiteur.
+
+**B4 — Appel Anthropic sans délai maximal dans le rendu de la fiche annonce.** `src/lib/anthropic-client.ts` : `timeoutMs` (`AbortSignal.timeout`, 20 s par défaut, **3 s** pour les alternatives inter-marques de la fiche) ; délai dépassé, erreur réseau ou réponse en erreur → `null`, journalisé. `src/lib/similar-ai.ts` : une indisponibilité de Claude **lève** au lieu de renvoyer `[]` — `cachedReference` ne mémoïse que les succès, donc un échec n'est plus gardé une heure pour tout un modèle ; la fiche se rend sans alternatives et le visiteur suivant retente.
+
+**B5 — Approbation d'une annonce : une requête par alerte de recherche, toutes en parallèle, dans la requête de l'admin.** Les notifications (alertes de recherche puis abonnés du compte pro) s'exécutent **après la réponse** (`after()`), et les alertes sont traitées **par lots de 10** (`SEARCH_ALERT_CONCURRENCY`) au lieu de `Promise.all` sur toutes : plus de saturation du pool Prisma à chaque clic « Approuver ».
+
+**C1 — Fiche annonce : lectures enchaînées.** Guide du modèle, guide général, annonces similaires, alternatives, stock du compte pro, estimation de prix, favori, signalement, offre en cours, avis du vendeur et réactivité étaient `await` l'un après l'autre (une dizaine d'allers-retours bout à bout). Un seul `Promise.all`.
+
+**C5 — SMTP sans borne, et un envoi par favori avant de répondre.** `src/lib/mailer.ts` : `connectionTimeout` 10 s, `greetingTimeout` 10 s, `socketTimeout` 20 s (défauts nodemailer : 2 min, 30 s, 10 min). `listings/[id]/update-price` : les courriels de baisse de prix aux favoris partent après la réponse, **par lots de 20** (une annonce à 500 favoris ouvrait 500 envois simultanés).
+
+**C6 — `getCurrentUser()` lu deux fois par requête** (mise en page + page, parfois `generateMetadata`) : mémoïsé par requête avec `cache()` de React — une lecture `User` (profil, compte pro) et une consultation de la liste de révocation en moins par page authentifiée. Transparent hors d'un rendu (scripts, tests).
+
+**C9 — Limiteur de débit en mémoire sans purge.** Une fenêtre expirée n'était supprimée que si la même clé revenait ; avec des clés par adresse IP, la carte grossissait sans fin. Purge opportuniste toutes les 1 000 insertions (`pruneExpiredRateLimits`).
+
+**C10 — Index manquants** (migration `20261009000000_lot_268_indexes`) : `Listing [status, wilayaId, publishedAt desc]` (page wilaya, recherche par wilaya sans catégorie — `wilayaId` n'était atteignable que derrière `category`), `Listing [status, price]` (tris par prix), `Message [conversationId, createdAt desc]` (pagination curseur du Lot 257, comme `GroupMessage`). `migrate diff` vide pour le schéma ; les index non modélisés (uniques partiels, trigrammes) restent hors schéma comme avant.
+
+**C11 — Sitemap et annuaire recalculés à chaque requête.** `sitemap.ts` : `revalidate = 3600` au lieu de `force-dynamic` (un robot qui le relisait toutes les dix minutes coûtait six requêtes, dont jusqu'à 50 000 identifiants et tout l'annuaire, à chaque passage ; une heure de retard sur le plan du site est sans effet). `getDirectoryEntries` (tous les comptes pro, leurs annonces actives et tous leurs avis) en cache **5 minutes** via `cachedReference`, partagé par `/concessionnaires` et le plan du site.
+
+**Non traités dans ce lot** (plus lourds, côté interface) : C2 pagination de la boîte de réception, C3 photos et indicateurs de « Mes annonces », C4 statistiques admin en agrégats SQL, C7 catalogue i18n limité aux espaces de noms des composants client, C8 communes chargées à la demande, C12 score de confiance en agrégats, C13 comparables de la file de modération en cache.
+
+**Vérifié**
+- `tsc` 0 erreur ; `eslint .` 0 problème ; **2 334 tests / 202 fichiers** verts : 5 nouveaux (`tests/anthropic-client.test.ts` — signal d'abandon transmis, abandon en moins de 2 s sur un appel bloqué, `null` sur HTTP 529 et sur erreur réseau, appel vision ; `tests/rate-limit.test.ts` — purge des fenêtres expirées, fenêtres actives conservées) ; tests de modération et de baisse de prix adaptés à `after()` (exécuté immédiatement dans les tests).
+- Navigateur : recherche `?q=clio`, fiche annonce (guide, financement, caractéristiques) et `/sitemap.xml` rendus sans erreur serveur.
+- Constat utile : la migration conditionnelle du Lot 265 a **créé les trois index trigramme sur la base de développement** — `pg_trgm` se charge finalement sur ce PostgreSQL (l'échec `58P01` du 27 septembre venait d'une autre installation) ; la recherche par mot y est donc indexée.
+
+**Limites** : `after()` exige d'être dans une requête — les tests le remplacent par un appel immédiat ; les gains ne sont pas mesurés (pas d'EXPLAIN ni de test de charge rejoué) ; le cache de l'annuaire retarde de cinq minutes au plus l'apparition d'un badge vérifié ou d'un nouvel avis dans `/concessionnaires`.
