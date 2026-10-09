@@ -5,6 +5,7 @@ import { sweepAutoRenewals } from "@/lib/listing-auto-renew-sweep";
 import { sweepOldNotifications } from "@/lib/notification-sweep";
 import { sweepOldLoginEvents } from "@/lib/login-event-sweep";
 import { sweepPendingChargilyOrders } from "@/lib/chargily-events";
+import { sweepPendingTransferReminders, sweepSubscriptionExpiryReminders } from "@/lib/commercial-reminders";
 import { safeEqual } from "@/lib/google-oauth";
 
 // Called nightly by cron (see ops/crontab.example).
@@ -30,6 +31,9 @@ export async function POST(req: NextRequest) {
   await sweepOldLoginEvents(now);
   // Lot 266 — commandes Chargily restées EN_ATTENTE (webhook perdu) : relues chez le prestataire.
   const pendingPayments = await sweepPendingChargilyOrders(now);
+  // Lot 274 — relances commerciales : virements attendus (J+2) et abonnements pro qui expirent (15 j / 3 j).
+  const transferReminders = await sweepPendingTransferReminders(now);
+  const subscriptionReminders = await sweepSubscriptionExpiryReminders(now);
 
-  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments });
+  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders });
 }

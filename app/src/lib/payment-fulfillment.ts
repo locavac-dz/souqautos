@@ -69,10 +69,11 @@ async function activateListingFormula(
 
 async function activateProSubscription(tx: Tx, professionalAccountId: string, tier: ProSubscriptionTier, now: Date): Promise<void> {
   const newExpiresAt = computeExpiryDate(now, SUBSCRIPTION_VALIDITY_DAYS);
+  // Lot 274 — nouveau cycle : les rappels d'expiration (15 j / 3 j) repartent de zéro.
   await tx.proSubscription.upsert({
     where: { professionalAccountId },
     create: { professionalAccountId, tier, expiresAt: newExpiresAt },
-    update: { tier, expiresAt: newExpiresAt },
+    update: { tier, expiresAt: newExpiresAt, reminder15SentAt: null, reminder3SentAt: null },
   });
 }
 

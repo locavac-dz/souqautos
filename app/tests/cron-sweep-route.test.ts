@@ -14,6 +14,10 @@ vi.mock("@/lib/listing-expiry-reminder-sweep", () => ({ sweepExpiringListingsFor
 vi.mock("@/lib/listing-expiry-sweep", () => ({ sweepExpiredListings: (...a: unknown[]) => sweepExpiredListings(...a) }));
 vi.mock("@/lib/notification-sweep", () => ({ sweepOldNotifications: (...a: unknown[]) => sweepOldNotifications(...a) }));
 vi.mock("@/lib/login-event-sweep", () => ({ sweepOldLoginEvents: (...a: unknown[]) => sweepOldLoginEvents(...a) }));
+vi.mock("@/lib/commercial-reminders", () => ({
+  sweepPendingTransferReminders: vi.fn().mockResolvedValue({ listingOrders: 0, subscriptionOrders: 0 }),
+  sweepSubscriptionExpiryReminders: vi.fn().mockResolvedValue({ first: 0, last: 0 }),
+}));
 
 import { POST } from "@/app/api/cron/sweep/route";
 

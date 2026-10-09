@@ -606,6 +606,8 @@ model PaymentOrder {
   provider           PaymentProvider    @default(VIREMENT)
   providerCheckoutId String?            @unique
   paidAt             DateTime?
+  // Lot 274 — relance du virement attendu (une seule, à J+2).
+  reminderSentAt     DateTime?
   status             PaymentOrderStatus @default(EN_ATTENTE)
   reviewedById       String?
   reviewedBy         User?              @relation("PaymentOrderReviewer", fields: [reviewedById], references: [id])
@@ -946,6 +948,9 @@ model ProSubscription {
   // d'approbation + durée de validité pour un palier payant (même principe
   // que Listing.expiresAt pour les formules d'annonce, Lot 66).
   expiresAt             DateTime?
+  // Lot 274 — rappels d'expiration de l'abonnement (15 j puis 3 j), remis à null à chaque activation.
+  reminder15SentAt      DateTime?
+  reminder3SentAt       DateTime?
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 }
@@ -962,6 +967,8 @@ model ProSubscriptionOrder {
   provider              PaymentProvider     @default(VIREMENT)
   providerCheckoutId    String?             @unique
   paidAt                DateTime?
+  // Lot 274 — relance du virement attendu (une seule, à J+2).
+  reminderSentAt        DateTime?
   status                PaymentOrderStatus  @default(EN_ATTENTE)
   reviewedById          String?
   reviewedBy            User?               @relation("ProSubscriptionOrderReviewer", fields: [reviewedById], references: [id])
@@ -1518,6 +1525,7 @@ enum NotificationKind {
   OFFER_COUNTERED
   SEARCH_ALERT_MATCH
   PRO_FOLLOWER_LISTING
+  SUBSCRIPTION_EXPIRING
 }
 
 model UserNotification {
