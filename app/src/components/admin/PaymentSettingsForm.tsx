@@ -10,6 +10,7 @@ type Settings = {
   bankAccountHolder: string | null;
   premiumPriceDzd: number;
   premiumPlusPriceDzd: number;
+  dualApprovalThresholdDzd: number | null;
 };
 
 export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings; canEdit: boolean }) {
@@ -20,6 +21,8 @@ export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings;
   const [bankAccountHolder, setBankAccountHolder] = useState(settings.bankAccountHolder ?? "");
   const [premiumPrice, setPremiumPrice] = useState(String(settings.premiumPriceDzd));
   const [premiumPlusPrice, setPremiumPlusPrice] = useState(String(settings.premiumPlusPriceDzd));
+  // Lot 278 — vide = double validation désactivée.
+  const [dualThreshold, setDualThreshold] = useState(settings.dualApprovalThresholdDzd === null ? "" : String(settings.dualApprovalThresholdDzd));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -39,6 +42,7 @@ export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings;
         bankAccountHolder,
         premiumPriceDzd: Number(premiumPrice),
         premiumPlusPriceDzd: Number(premiumPlusPrice),
+        dualApprovalThresholdDzd: dualThreshold.trim() === "" ? null : Number(dualThreshold),
       }),
     });
 
@@ -111,6 +115,21 @@ export function PaymentSettingsForm({ settings, canEdit }: { settings: Settings;
           value={premiumPlusPrice}
           onChange={(e) => setPremiumPlusPrice(e.target.value)}
           disabled={!canEdit}
+          className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+        />
+      </label>
+
+      <label className="block">
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("dualApprovalLabel")}</span>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{t("dualApprovalHelp")}</p>
+        <input
+          type="number"
+          min={1}
+          max={100000000}
+          value={dualThreshold}
+          onChange={(e) => setDualThreshold(e.target.value)}
+          disabled={!canEdit}
+          placeholder={t("dualApprovalDisabled")}
           className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
         />
       </label>

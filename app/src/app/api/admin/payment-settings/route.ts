@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { getPaymentSettings, validatePriceDzd } from "@/lib/payment-settings";
+import { validateDualApprovalThreshold } from "@/lib/dual-approval";
 import { writeAuditLog } from "@/lib/audit-log";
 
 const bodySchema = z.object({
@@ -12,6 +13,8 @@ const bodySchema = z.object({
   bankAccountHolder: z.string().trim().max(120),
   premiumPriceDzd: z.number(),
   premiumPlusPriceDzd: z.number(),
+  // Lot 278 — facultatif : un client qui ne l'envoie pas ne touche pas au seuil ; null = désactivé.
+  dualApprovalThresholdDzd: z.number().nullable().optional(),
 });
 
 // Réservé à ADMIN, jamais MODERATEUR — mêmes coordonnées bancaires réelles de
@@ -28,6 +31,12 @@ export async function PATCH(request: NextRequest) {
   if (!premiumCheck.ok || !premiumPlusCheck.ok) {
     return NextResponse.json({ error: "invalid_price" }, { status: 400 });
   }
+  if (body.dualApprovalThresholdDzd !== undefined) {
+    const thresholdCheck = validateDualApprovalThreshold(body.dualApprovalThresholdDzd);
+    if (!thresholdCheck.ok) {
+      return NextResponse.json({ error: thresholdCheck.error }, { status: 400 });
+    }
+  }
 
   const before = await getPaymentSettings();
 
@@ -37,6 +46,7 @@ export async function PATCH(request: NextRequest) {
     bankAccountHolder: body.bankAccountHolder || null,
     premiumPriceDzd: body.premiumPriceDzd,
     premiumPlusPriceDzd: body.premiumPlusPriceDzd,
+    dualApprovalThresholdDzd: body.dualApprovalThresholdDzd === undefined ? before.dualApprovalThresholdDzd : body.dualApprovalThresholdDzd,
   };
 
   const settings = await prisma.paymentSettings.upsert({
@@ -59,6 +69,7 @@ export async function PATCH(request: NextRequest) {
         bankAccountHolder: settings.bankAccountHolder,
         premiumPriceDzd: settings.premiumPriceDzd,
         premiumPlusPriceDzd: settings.premiumPlusPriceDzd,
+        dualApprovalThresholdDzd: settings.dualApprovalThresholdDzd,
       },
     },
   });

@@ -10,6 +10,7 @@ describe("isBankDetailsComplete", () => {
         bankAccountHolder: null,
         premiumPriceDzd: 1000,
         premiumPlusPriceDzd: 2000,
+        dualApprovalThresholdDzd: null,
       })
     ).toBe(false);
   });
@@ -22,6 +23,7 @@ describe("isBankDetailsComplete", () => {
         bankAccountHolder: "EURL INGENICA CIVIL",
         premiumPriceDzd: 1000,
         premiumPlusPriceDzd: 2000,
+        dualApprovalThresholdDzd: null,
       })
     ).toBe(false);
   });
@@ -34,6 +36,7 @@ describe("isBankDetailsComplete", () => {
         bankAccountHolder: "EURL INGENICA CIVIL",
         premiumPriceDzd: 1000,
         premiumPlusPriceDzd: 2000,
+        dualApprovalThresholdDzd: null,
       })
     ).toBe(true);
   });

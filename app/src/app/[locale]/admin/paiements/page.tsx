@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { computePaymentOrderStats } from "@/lib/payment-orders";
+import { getPaymentSettings } from "@/lib/payment-settings";
+import { dualApprovalBlocksAlone, requiresDualApproval } from "@/lib/dual-approval";
 import { PaymentOrderReviewActions } from "@/components/admin/PaymentOrderReviewActions";
 import { AdminChargilyRefresh } from "@/components/admin/AdminChargilyRefresh";
 import type { PaymentEvent } from "@prisma/client";
@@ -25,16 +27,29 @@ export default async function AdminPaymentOrdersPage() {
     prisma.paymentOrder.findMany({
       where: { status: "EN_ATTENTE" },
       orderBy: { createdAt: "asc" },
-      include: { user: { include: { profile: true } }, listing: { select: { id: true, title: true } } },
+      include: { user: { include: { profile: true } }, listing: { select: { id: true, title: true } }, firstApprovedBy: { select: { email: true } } },
     }),
     prisma.paymentOrder.findMany({ select: { status: true, formula: true, amountDzd: true } }),
     prisma.proSubscriptionOrder.findMany({
       where: { status: "EN_ATTENTE" },
       orderBy: { createdAt: "asc" },
-      include: { user: { include: { profile: true } }, professionalAccount: { select: { id: true, nomCommercial: true } } },
+      include: { user: { include: { profile: true } }, professionalAccount: { select: { id: true, nomCommercial: true } }, firstApprovedBy: { select: { email: true } } },
     }),
   ]);
   const stats = computePaymentOrderStats(allOrdersForStats);
+
+  // Lot 278 — double validation des gros virements : seuil, et alerte si l'équipe n'a qu'un seul administrateur.
+  const [paymentSettings, adminCount] = await Promise.all([
+    getPaymentSettings(),
+    prisma.user.count({ where: { role: { in: ["ADMIN", "SUPER_ADMIN"] }, suspendedAt: null, deletedAt: null } }),
+  ]);
+  const threshold = paymentSettings.dualApprovalThresholdDzd;
+  const dualApprovalFor = (order: { amountDzd: number; provider: "VIREMENT" | "CHARGILY"; firstApprovedById: string | null; firstApprovedAt: Date | null; firstApprovedBy: { email: string } | null }) => ({
+    required: requiresDualApproval({ amountDzd: order.amountDzd, provider: order.provider, thresholdDzd: threshold }),
+    firstApprovedByEmail: order.firstApprovedBy?.email ?? null,
+    firstApprovedAt: order.firstApprovedAt ? dateFormatter.format(order.firstApprovedAt) : null,
+    firstApprovedByMe: order.firstApprovedById === user.id,
+  });
 
   // Lot 266 — historique des décisions (webhook, relectures, balayage, admin) des commandes en attente : trois
   // dernières par commande, pour qu'un humain voie ce que les automates ont déjà tenté.
@@ -90,6 +105,12 @@ export default async function AdminPaymentOrdersPage() {
     <div>
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("title")}</h1>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("subtitle")}</p>
+      {/* Lot 278 — avertissement : seuil de double validation avec un seul administrateur. */}
+      {dualApprovalBlocksAlone({ thresholdDzd: threshold, adminCount }) && (
+        <p role="alert" className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          {t("dualApprovalAdminsWarning", { amount: numberFormatter.format(threshold ?? 0) })}
+        </p>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-2">
         <StatCard label={t("statRevenueTotal")} value={`${numberFormatter.format(stats.totalRevenueDzd)} DA`} />
@@ -149,7 +170,7 @@ export default async function AdminPaymentOrdersPage() {
                 {renderAutomation(order, "listing_formula")}
               </div>
               <div className="sm:w-56 sm:shrink-0">
-                <PaymentOrderReviewActions orderId={order.id} />
+                <PaymentOrderReviewActions orderId={order.id} dualApproval={dualApprovalFor(order)} />
               </div>
             </div>
           ))}
@@ -198,7 +219,8 @@ export default async function AdminPaymentOrdersPage() {
               <div className="sm:w-56 sm:shrink-0">
                 <PaymentOrderReviewActions
                   orderId={order.id}
-                  reviewUrl={`/api/admin/pro-subscription-orders/${order.id}/review`}
+                  reviewUrl={`/api/admin/pro-subscription-orders//review`}
+                  dualApproval={dualApprovalFor(order)}
                 />
               </div>
             </div>

@@ -101,6 +101,8 @@ model User {
   paymentOrdersReviewed        PaymentOrder[] @relation("PaymentOrderReviewer")
   proSubscriptionOrders         ProSubscriptionOrder[] @relation("ProSubscriptionOrderAuthor")
   proSubscriptionOrdersReviewed ProSubscriptionOrder[] @relation("ProSubscriptionOrderReviewer")
+  paymentOrdersFirstApproved        PaymentOrder[]         @relation("PaymentOrderFirstApprover")
+  proSubscriptionOrdersFirstApproved ProSubscriptionOrder[] @relation("ProSubscriptionOrderFirstApprover")
   ownerReviews                  OwnerReview[]
   // Lot 119 — le vendeur peut désactiver WhatsApp s'il ne souhaite pas être contacté
   // ainsi ; activé par défaut car c'est le canal dominant en Algérie.
@@ -573,6 +575,8 @@ model PaymentSettings {
   bankAccountHolder   String?
   premiumPriceDzd     Int      @default(1000)
   premiumPlusPriceDzd Int      @default(2000)
+  // Lot 278 — au-dessus de ce montant, un virement exige deux administrateurs différents (null = désactivé).
+  dualApprovalThresholdDzd Int?
   updatedAt           DateTime @updatedAt
 }
 
@@ -619,6 +623,10 @@ model PaymentOrder {
   reviewedById       String?
   reviewedBy         User?              @relation("PaymentOrderReviewer", fields: [reviewedById], references: [id])
   reviewNote         String?
+  // Lot 278 — première validation (double validation des gros virements) ; la seconde confirme.
+  firstApprovedById  String?
+  firstApprovedBy    User?              @relation("PaymentOrderFirstApprover", fields: [firstApprovedById], references: [id])
+  firstApprovedAt    DateTime?
   createdAt          DateTime           @default(now())
   reviewedAt         DateTime?
 
@@ -984,6 +992,10 @@ model ProSubscriptionOrder {
   reviewedById          String?
   reviewedBy            User?               @relation("ProSubscriptionOrderReviewer", fields: [reviewedById], references: [id])
   reviewNote            String?
+  // Lot 278 — première validation (double validation des gros virements) ; la seconde confirme.
+  firstApprovedById     String?
+  firstApprovedBy       User?               @relation("ProSubscriptionOrderFirstApprover", fields: [firstApprovedById], references: [id])
+  firstApprovedAt       DateTime?
   createdAt             DateTime            @default(now())
   reviewedAt            DateTime?
 

@@ -13,6 +13,8 @@ export type PaymentSettingsValues = {
   bankAccountHolder: string | null;
   premiumPriceDzd: number;
   premiumPlusPriceDzd: number;
+  // Lot 278 — au-dessus de ce montant, un virement exige deux administrateurs différents (null = désactivé).
+  dualApprovalThresholdDzd: number | null;
 };
 
 export async function getPaymentSettings(): Promise<PaymentSettingsValues> {
@@ -23,6 +25,7 @@ export async function getPaymentSettings(): Promise<PaymentSettingsValues> {
     bankAccountHolder: settings?.bankAccountHolder ?? null,
     premiumPriceDzd: settings?.premiumPriceDzd ?? DEFAULT_PREMIUM_PRICE_DZD,
     premiumPlusPriceDzd: settings?.premiumPlusPriceDzd ?? DEFAULT_PREMIUM_PLUS_PRICE_DZD,
+    dualApprovalThresholdDzd: settings?.dualApprovalThresholdDzd ?? null,
   };
 }
 

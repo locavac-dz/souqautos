@@ -7,6 +7,8 @@ import { writeAuditLog } from "@/lib/audit-log";
 import { confirmListingFormulaOrder, sendListingFormulaDecisionEmail } from "@/lib/payment-fulfillment";
 import { checkProviderBeforeDecision } from "@/lib/admin-payment-decision";
 import { recordPaymentEvent } from "@/lib/payment-events";
+import { getPaymentSettings } from "@/lib/payment-settings";
+import { decideApprovalStep, requiresDualApproval } from "@/lib/dual-approval";
 
 const bodySchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -54,6 +56,32 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const providerCheck = await checkProviderBeforeDecision(order, body.action);
   if (!providerCheck.ok) {
     return NextResponse.json({ error: providerCheck.error, providerStatus: providerCheck.providerStatus }, { status: providerCheck.httpStatus });
+  }
+
+  // Lot 278 — au-dessus du seuil, un virement exige deux administrateurs différents : la première approbation
+  // est enregistrée et la commande reste EN_ATTENTE ; seule la seconde, par une AUTRE personne, active.
+  if (isApproval) {
+    const settings = await getPaymentSettings();
+    const step = decideApprovalStep({
+      requiresDual: requiresDualApproval({ amountDzd: order.amountDzd, provider: order.provider, thresholdDzd: settings.dualApprovalThresholdDzd }),
+      firstApprovedById: order.firstApprovedById,
+      userId: user.id,
+    });
+    if (step === "same_approver") {
+      return NextResponse.json({ error: "second_approver_required" }, { status: 409 });
+    }
+    if (step === "first_approval") {
+      const { count } = await prisma.paymentOrder.updateMany({
+        where: { id, status: "EN_ATTENTE", firstApprovedById: null },
+        data: { firstApprovedById: user.id, firstApprovedAt: now },
+      });
+      if (count === 0) {
+        return NextResponse.json({ error: "invalid_transition" }, { status: 400 });
+      }
+      await recordPaymentEvent({ orderKind: "listing_formula", orderId: id, source: "ADMIN", outcome: "first_approval", providerStatus: providerCheck.providerStatus, actorUserId: user.id });
+      await writeAuditLog({ adminId: user.id, action: "payment_order.first_approve", targetType: "PaymentOrder", targetId: id, details: { amountDzd: order.amountDzd, provider: order.provider, reference: order.reference } });
+      return NextResponse.json({ status: "EN_ATTENTE", awaitingSecondApproval: true });
+    }
   }
 
   if (isApproval) {
