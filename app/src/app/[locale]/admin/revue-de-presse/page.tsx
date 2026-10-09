@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { articleStatus } from "@/lib/blog-publication";
 import { hostLabel } from "@/lib/press-review";
 import { DeletePressReviewButton } from "@/components/admin/DeletePressReviewButton";
@@ -11,7 +11,7 @@ import { DeletePressReviewButton } from "@/components/admin/DeletePressReviewBut
 export default async function AdminPressReviewsPage() {
   const locale = await getLocale();
   const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
+  if (!user || !isEditor(user.role)) {
     redirect({ href: "/admin", locale });
     return null;
   }

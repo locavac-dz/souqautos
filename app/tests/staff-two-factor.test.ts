@@ -34,6 +34,9 @@ describe("effectiveRole", () => {
     expect(effectiveRole({ role: "ADMIN", totpEnabledAt: null }, true)).toBe("PARTICULIER");
     expect(effectiveRole({ role: "MODERATEUR", totpEnabledAt: null }, true)).toBe("PARTICULIER");
     expect(effectiveRole({ role: "SUPPORT", totpEnabledAt: null }, true)).toBe("PARTICULIER");
+    // Lot 276 — un rédacteur publie sur le site : même exigence.
+    expect(effectiveRole({ role: "EDITEUR", totpEnabledAt: null }, true)).toBe("PARTICULIER");
+    expect(isStaffRole("EDITEUR")).toBe(true);
   });
   it("garde son rôle avec la double authentification, ou quand elle n'est pas exigée", () => {
     expect(effectiveRole({ role: "ADMIN", totpEnabledAt: enabled }, true)).toBe("ADMIN");

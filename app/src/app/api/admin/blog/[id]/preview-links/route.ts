@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { NO_STORE, parseJsonBody, requireRole } from "@/lib/api-route";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 import { articlePublicPath } from "@/lib/blog";
 import { articleStatus } from "@/lib/blog-publication";
@@ -13,7 +13,7 @@ import { TooManyPreviewLinksError, createPreviewLink, listPreviewLinks, parsePre
 const bodySchema = z.object({ days: z.number() });
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await requireRole(isAdmin);
+  const admin = await requireRole(isEditor);
   if (admin instanceof NextResponse) return admin;
   const { id } = await params;
   if (!(await prisma.blogArticle.findUnique({ where: { id }, select: { id: true } }))) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -32,7 +32,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await requireRole(isAdmin);
+  const admin = await requireRole(isEditor);
   if (admin instanceof NextResponse) return admin;
   const { id } = await params;
 

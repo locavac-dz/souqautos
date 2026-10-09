@@ -1,7 +1,16 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isStaff } from "@/lib/auth-server/roles";
 
 export default async function AdminDashboardPage() {
+  // Lot 276 — un rédacteur (EDITEUR) n'a rien à faire des compteurs de modération : il arrive sur le magazine.
+  const user = await getCurrentUser();
+  if (user && !isStaff(user.role)) {
+    redirect({ href: "/admin/mag", locale: await getLocale() });
+    return null;
+  }
   const t = await getTranslations("Admin");
 
   const [

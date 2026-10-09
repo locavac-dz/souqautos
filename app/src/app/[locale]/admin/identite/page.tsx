@@ -1,9 +1,18 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isStaff } from "@/lib/auth-server/roles";
 import { IdentityReviewActions } from "@/components/admin/IdentityReviewActions";
 
 export default async function AdminIdentityRequestsPage() {
   const locale = await getLocale();
+  // Lot 276 — réservé à l’équipe de modération : un rédacteur (EDITEUR) entre dans /admin mais pas ici.
+  const viewer = await getCurrentUser();
+  if (!viewer || !isStaff(viewer.role)) {
+    redirect({ href: "/admin/mag", locale });
+    return null;
+  }
   const t = await getTranslations("Admin");
 
   const requests = await prisma.identityVerificationRequest.findMany({

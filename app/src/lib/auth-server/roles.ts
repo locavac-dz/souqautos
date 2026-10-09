@@ -25,3 +25,15 @@ export function isAdmin(role: Role): boolean {
 export function isModerator(role: Role): boolean {
   return role === "SUPER_ADMIN" || role === "ADMIN" || role === "MODERATEUR";
 }
+
+// Lot 276 — EDITEUR : rédacteur (magazine, essais, guides, rythme éditorial, revue de presse) SANS aucun droit de
+// modération, de paiement ni de paramétrage. Pas membre de l'équipe de modération (isStaff) : les files, les
+// utilisateurs et les signalements lui restent fermés. ADMIN et SUPER_ADMIN gardent l'accès éditorial.
+export function isEditor(role: Role): boolean {
+  return role === "SUPER_ADMIN" || role === "ADMIN" || role === "EDITEUR";
+}
+
+// Qui peut entrer dans /admin : l'équipe de modération ou un rédacteur (chacun n'y voit que ses sections).
+export function hasBackOfficeAccess(role: Role): boolean {
+  return isStaff(role) || role === "EDITEUR";
+}

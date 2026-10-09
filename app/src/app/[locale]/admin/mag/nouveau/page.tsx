@@ -1,13 +1,13 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { BlogArticleForm } from "@/components/admin/BlogArticleForm";
 
 export default async function NewBlogArticlePage() {
   const locale = await getLocale();
   const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
+  if (!user || !isEditor(user.role)) {
     redirect({ href: "/admin", locale });
     return null;
   }

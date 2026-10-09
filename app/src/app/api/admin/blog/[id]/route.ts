@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
 import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
 import { toRoadTestData } from "@/lib/road-test-data";
@@ -25,7 +25,7 @@ async function deleteCoverIfUnused(url: string | null | undefined, exceptArticle
 // Le slug n'est jamais recalculé à l'édition — une fois publié, son URL doit
 // rester stable (référencement, liens déjà partagés), même si le titre change.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await requireRole(isAdmin);
+  const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
   const { id } = await params;
@@ -134,7 +134,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await requireRole(isAdmin);
+  const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
   const { id } = await params;

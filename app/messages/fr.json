@@ -715,6 +715,7 @@
     "roleOptionProfessionnel": "Professionnel",
     "roleOptionModerateur": "Modérateur",
     "roleOptionSupport": "Support",
+    "roleOptionEditeur": "Éditeur (rédaction seule)",
     "roleOptionAdmin": "Administrateur",
     "roleOptionSuperAdmin": "Super administrateur",
     "roleSelectLabel": "Rôle de {name}",

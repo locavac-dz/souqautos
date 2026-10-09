@@ -715,6 +715,7 @@
     "roleOptionProfessionnel": "محترف",
     "roleOptionModerateur": "مراقب",
     "roleOptionSupport": "دعم",
+    "roleOptionEditeur": "محرر (تحرير فقط)",
     "roleOptionAdmin": "مدير",
     "roleOptionSuperAdmin": "مدير عام",
     "roleSelectLabel": "دور {name}",

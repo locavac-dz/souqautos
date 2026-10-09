@@ -1,11 +1,19 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isStaff } from "@/lib/auth-server/roles";
 import { DeleteReviewButton } from "@/components/admin/DeleteReviewButton";
 import { ModerateReviewButton } from "@/components/admin/ModerateReviewButton";
 
 export default async function AdminReviewsPage() {
   const locale = await getLocale();
+  // Lot 276 — réservé à l’équipe de modération : un rédacteur (EDITEUR) entre dans /admin mais pas ici.
+  const viewer = await getCurrentUser();
+  if (!viewer || !isStaff(viewer.role)) {
+    redirect({ href: "/admin/mag", locale });
+    return null;
+  }
   const t = await getTranslations("Admin");
   const tReview = await getTranslations("Review");
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "medium" });

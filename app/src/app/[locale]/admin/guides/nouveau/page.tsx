@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { BlogArticleForm } from "@/components/admin/BlogArticleForm";
 import { getCatalogueForRoadTests } from "@/lib/road-test-catalogue";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +10,7 @@ import { parseModelParam } from "@/lib/editorial";
 export default async function NewGuidePage({ searchParams }: { searchParams: Promise<{ modele?: string | string[] }> }) {
   const locale = await getLocale();
   const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
+  if (!user || !isEditor(user.role)) {
     redirect({ href: "/admin", locale });
     return null;
   }

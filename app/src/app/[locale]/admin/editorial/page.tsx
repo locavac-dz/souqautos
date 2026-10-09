@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { loadEditorial, type SectionSummary } from "@/lib/editorial-data";
 import { coveragePercent, type EditorialSection } from "@/lib/editorial";
 import { DailyBars } from "@/components/DailyBars";
@@ -19,7 +19,7 @@ const ADMIN_BASE: Record<EditorialSection, string> = {
 export default async function AdminEditorialPage() {
   const locale = await getLocale();
   const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
+  if (!user || !isEditor(user.role)) {
     redirect({ href: "/admin", locale });
     return null;
   }

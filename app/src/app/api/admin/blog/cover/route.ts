@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/api-route";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { saveBlogCover, PhotoValidationError } from "@/lib/uploads";
 
@@ -11,7 +11,7 @@ import { saveBlogCover, PhotoValidationError } from "@/lib/uploads";
 // (revalidée alors par `isBlogCoverUrl`). Un envoi jamais rattaché à un article
 // laisse un fichier orphelin : défaut mineur, volontairement toléré.
 export async function POST(request: NextRequest) {
-  const user = await requireRole(isAdmin);
+  const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`upload-blog-cover:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {

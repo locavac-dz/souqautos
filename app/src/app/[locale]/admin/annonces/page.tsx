@@ -1,14 +1,22 @@
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { formatNumber } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isStaff } from "@/lib/auth-server/roles";
 import { ModerationActions } from "@/components/admin/ModerationActions";
 import { getFraudSignalsForListings } from "@/lib/fraud-signals";
 import type { PhotoAiTag } from "@/lib/photo-ai";
 
 export default async function AdminListingsPage() {
   const locale = await getLocale();
+  // Lot 276 — réservé à l’équipe de modération : un rédacteur (EDITEUR) entre dans /admin mais pas ici.
+  const viewer = await getCurrentUser();
+  if (!viewer || !isStaff(viewer.role)) {
+    redirect({ href: "/admin/mag", locale });
+    return null;
+  }
   const t = await getTranslations("Admin");
 
   const [pending, published] = await Promise.all([

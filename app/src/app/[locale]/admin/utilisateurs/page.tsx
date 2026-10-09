@@ -14,6 +14,7 @@ const ROLE_KEY: Record<string, string> = {
   PROFESSIONNEL: "roleOptionProfessionnel",
   MODERATEUR: "roleOptionModerateur",
   SUPPORT: "roleOptionSupport",
+  EDITEUR: "roleOptionEditeur",
   ADMIN: "roleOptionAdmin",
   SUPER_ADMIN: "roleOptionSuperAdmin",
 };

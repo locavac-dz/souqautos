@@ -1,5 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isStaff } from "@/lib/auth-server/roles";
 import { ContactMessageActions } from "@/components/admin/ContactMessageActions";
 import { CONTACT_SUBJECT_KEY } from "@/lib/contact-messages";
 import type { ContactMessage, ContactStatus } from "@prisma/client";
@@ -18,6 +21,12 @@ type Row = ContactMessage & { handledBy: { email: string } | null };
 
 export default async function AdminContactPage() {
   const locale = await getLocale();
+  // Lot 276 — réservé à l’équipe de modération : un rédacteur (EDITEUR) entre dans /admin mais pas ici.
+  const viewer = await getCurrentUser();
+  if (!viewer || !isStaff(viewer.role)) {
+    redirect({ href: "/admin/mag", locale });
+    return null;
+  }
   const t = await getTranslations("Admin");
   const tContact = await getTranslations("Contact");
 

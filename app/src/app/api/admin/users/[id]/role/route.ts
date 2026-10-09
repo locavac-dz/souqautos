@@ -6,7 +6,7 @@ import { isAdmin, isSuperAdmin } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 
 const bodySchema = z.object({
-  role: z.enum(["PARTICULIER", "PROFESSIONNEL", "MODERATEUR", "SUPPORT", "ADMIN", "SUPER_ADMIN"]),
+  role: z.enum(["PARTICULIER", "PROFESSIONNEL", "MODERATEUR", "SUPPORT", "EDITEUR", "ADMIN", "SUPER_ADMIN"]),
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

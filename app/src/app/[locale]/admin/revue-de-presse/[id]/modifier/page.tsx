@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { PressReviewForm } from "@/components/admin/PressReviewForm";
 import { getCatalogueForRoadTests } from "@/lib/road-test-catalogue";
 
@@ -15,7 +15,7 @@ export default async function EditPressReviewPage({
   const { id } = await params;
   const locale = await getLocale();
   const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
+  if (!user || !isEditor(user.role)) {
     redirect({ href: "/admin", locale });
     return null;
   }

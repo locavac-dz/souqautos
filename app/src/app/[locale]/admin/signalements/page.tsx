@@ -1,7 +1,9 @@
 import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isStaff } from "@/lib/auth-server/roles";
 import { ReportActions } from "@/components/admin/ReportActions";
 
 const REASON_KEY: Record<string, string> = {
@@ -18,6 +20,12 @@ const REASON_KEY: Record<string, string> = {
 
 export default async function AdminReportsPage() {
   const locale = await getLocale();
+  // Lot 276 — réservé à l’équipe de modération : un rédacteur (EDITEUR) entre dans /admin mais pas ici.
+  const viewer = await getCurrentUser();
+  if (!viewer || !isStaff(viewer.role)) {
+    redirect({ href: "/admin/mag", locale });
+    return null;
+  }
   const t = await getTranslations("Admin");
   const tReport = await getTranslations("Report");
 

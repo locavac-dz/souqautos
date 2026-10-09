@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
 import { slugify } from "@/lib/slugify";
 import { generateUniqueSlug, RESERVED_SLUGS } from "@/lib/blog";
@@ -18,7 +18,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 // marque, pas une action de modération courante — même seuil que la gestion
 // du référentiel marques/modèles.
 export async function POST(request: NextRequest) {
-  const user = await requireRole(isAdmin);
+  const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
   const body = await parseJsonBody(request, blogArticleSchema);

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
-import { isStaff, isAdmin, isModerator } from "@/lib/auth-server/roles";
+import { isStaff, isAdmin, isModerator, isEditor, hasBackOfficeAccess } from "@/lib/auth-server/roles";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
@@ -13,7 +13,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect({ href: "/connexion", locale });
     return null;
   }
-  if (!isStaff(user.role)) {
+  // Lot 276 — l'équipe de modération ET les rédacteurs (EDITEUR) entrent ; chacun ne voit que ses sections.
+  if (!hasBackOfficeAccess(user.role)) {
     redirect({ href: "/", locale });
     return null;
   }
@@ -26,26 +27,36 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin" className="font-medium text-slate-900 dark:text-slate-100">
           {t("dashboardTitle")}
         </Link>
-        <Link href="/admin/annonces" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navListings")}
-        </Link>
+        {isStaff(user.role) && (
+          <Link href="/admin/annonces" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navListings")}
+          </Link>
+        )}
         {isModerator(user.role) && (
           <Link href="/admin/utilisateurs" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navUsers")}
           </Link>
         )}
-        <Link href="/admin/signalements" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navReports")}
-        </Link>
-        <Link href="/admin/contact" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navContact")}
-        </Link>
-        <Link href="/admin/avis" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navReviews")}
-        </Link>
-        <Link href="/admin/avis-proprietaires" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navOwnerReviews")}
-        </Link>
+        {isStaff(user.role) && (
+          <Link href="/admin/signalements" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navReports")}
+          </Link>
+        )}
+        {isStaff(user.role) && (
+          <Link href="/admin/contact" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navContact")}
+          </Link>
+        )}
+        {isStaff(user.role) && (
+          <Link href="/admin/avis" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navReviews")}
+          </Link>
+        )}
+        {isStaff(user.role) && (
+          <Link href="/admin/avis-proprietaires" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navOwnerReviews")}
+          </Link>
+        )}
         {isModerator(user.role) && (
           <Link href="/admin/pro" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navPro")}
@@ -56,12 +67,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             {t("navProspection")}
           </Link>
         )}
-        <Link href="/admin/identite" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navIdentity")}
-        </Link>
-        <Link href="/admin/referentiels" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
-          {t("navCatalogue")}
-        </Link>
+        {isStaff(user.role) && (
+          <Link href="/admin/identite" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navIdentity")}
+          </Link>
+        )}
+        {isStaff(user.role) && (
+          <Link href="/admin/referentiels" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
+            {t("navCatalogue")}
+          </Link>
+        )}
         {isModerator(user.role) && (
           <Link href="/admin/statistiques" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navStatistics")}
@@ -92,17 +107,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             {t("navPayments")}
           </Link>
         )}
-        {isAdmin(user.role) && (
+        {isEditor(user.role) && (
           <Link href="/admin/mag" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navBlog")}
           </Link>
         )}
-        {isAdmin(user.role) && (
+        {isEditor(user.role) && (
           <Link href="/admin/essais" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navRoadTests")}
           </Link>
         )}
-        {isAdmin(user.role) && (
+        {isEditor(user.role) && (
           <Link href="/admin/guides" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navGuides")}
           </Link>
@@ -112,12 +127,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             {t("navEquipement")}
           </Link>
         )}
-        {isAdmin(user.role) && (
+        {isEditor(user.role) && (
           <Link href="/admin/editorial" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navEditorial")}
           </Link>
         )}
-        {isAdmin(user.role) && (
+        {isEditor(user.role) && (
           <Link href="/admin/revue-de-presse" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100">
             {t("navPressReviews")}
           </Link>

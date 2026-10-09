@@ -1,12 +1,20 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { isStaff } from "@/lib/auth-server/roles";
 import { OwnerReviewModerationActions } from "@/components/admin/OwnerReviewModerationActions";
 
 // Lot 116 — file de validation des avis de propriétaires (MODERATEUR et ADMIN :
 // l'accès est déjà limité au personnel par le layout de /admin).
 export default async function AdminOwnerReviewsPage() {
   const locale = await getLocale();
+  // Lot 276 — réservé à l’équipe de modération : un rédacteur (EDITEUR) entre dans /admin mais pas ici.
+  const viewer = await getCurrentUser();
+  if (!viewer || !isStaff(viewer.role)) {
+    redirect({ href: "/admin/mag", locale });
+    return null;
+  }
   const t = await getTranslations("AdminOwnerReview");
 
   const reviews = await prisma.ownerReview.findMany({

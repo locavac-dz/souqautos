@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { isAdmin } from "@/lib/auth-server/roles";
+import { isEditor } from "@/lib/auth-server/roles";
 import { pressReviewSchema } from "@/lib/validation/press-review";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
 import { resolvePublishedAt } from "@/lib/blog-publication";
@@ -9,7 +9,7 @@ import { isUniqueViolation } from "@/lib/prisma-errors";
 import { writeAuditLog } from "@/lib/audit-log";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await requireRole(isAdmin);
+  const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
   const { id } = await params;
@@ -70,7 +70,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await requireRole(isAdmin);
+  const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
   const { id } = await params;
