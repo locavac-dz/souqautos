@@ -3917,3 +3917,37 @@ Quatrième lot de l'audit du 2026-10-08 : ce qui faisait attendre les visiteurs 
 - Constat utile : la migration conditionnelle du Lot 265 a **créé les trois index trigramme sur la base de développement** — `pg_trgm` se charge finalement sur ce PostgreSQL (l'échec `58P01` du 27 septembre venait d'une autre installation) ; la recherche par mot y est donc indexée.
 
 **Limites** : `after()` exige d'être dans une requête — les tests le remplacent par un appel immédiat ; les gains ne sont pas mesurés (pas d'EXPLAIN ni de test de charge rejoué) ; le cache de l'annuaire retarde de cinq minutes au plus l'apparition d'un badge vérifié ou d'un nouvel avis dans `/concessionnaires`.
+
+## Lot 269 — i18n, accessibilité, qualité (audit D1-D6, E1-E3, E5, B10) (2026-10-09)
+
+Cinquième et dernier lot du plan de l'audit du 2026-10-08.
+
+**D1 — Nombres formatés sans locale.** `toLocaleString()` sans argument dépendait de l'ICU du serveur (composants serveur : même rendu en français et en arabe) ou du navigateur (composants client). Partout `formatNumber(n, locale)` (`src/lib/format.ts`) : `ListingCard` (kilométrage, prix), `AiAdvisorChat`, `RecentlyViewedSection`, `MakeOfferButton`, les panneaux d'upgrade, et le courriel de baisse de prix (locale du destinataire). `fr-DZ` figé même en arabe remplacé dans `MarketStatsWidget` (`getLocale`), `PriceRangeHint` (`useLocale`) et l'étape 9 du wizard (dates de contrôle technique / assurance).
+
+**D2 — Transactionnels en français seul.** Le SMS du code de vérification et le courriel de confirmation de changement d'adresse parlent la langue du compte (`user.locale` ; 3 clés `Notifications` FR/AR : `emailChangeSubject` / `Body` / `Expiry`). Le manifeste PWA, unique par construction, devient bilingue (description et raccourcis « Rechercher · بحث »…). Les courriels de double authentification étaient déjà bilingues (faux positif de l'audit).
+
+**D3 — Champs sans libellé.** `EquipementFilters` : `useId` + `htmlFor`/`id` sur prix min/max, état, wilaya ; `type="search"` et `aria-label` sur la recherche. Un lecteur d'écran annonce désormais « Prix min (DA) » au lieu d'un champ sans nom.
+
+**D4 — Mode sombre : contrastes.** Variantes `dark:` sur les pastilles CT / assurance / négociable et les signaux de confiance de `ListingCard` (texte -700/-800 sur fond -50 tombait sous 2:1), sur les badges de prix (`price-badge-style.ts`), sur les erreurs des composants de paiement et sur `global-error`.
+
+**D5 — RTL.** Classes logiques (`ms-`, `ps-`, `border-s`) ou `ltr:`/`rtl:` dans le header (compteurs), le fil de groupe, le gestionnaire de catalogue, l'éditeur d'annonce ; `PhotoGallery` : fermeture, précédent et suivant placés selon la direction, chevrons retournés (`rtl:rotate-180`).
+
+**D6 — Images et chargement.** `alt` descriptif (titre de l'article, nom commercial) sur les couvertures d'articles, le logo et la bannière pro. Neuf `loading.tsx` (nouveau `PageSkeleton`, variantes article / grille) pour la fiche annonce, équipements, essais, guides (index et article), marques et wilayas.
+
+**E2 — Code mort et clés orphelines.** `src/lib/credit-calculator.ts` (jamais importé : l'écran utilise `islamic-financing.ts`), son test et le namespace `CreditCalculator` (11 clés) supprimés ; `roles.ts : isSupport` supprimé ; **20 clés i18n orphelines** retirées de FR et AR (`Listing.notFound/backHome/viewListing`, `Admin.roleLabel/changeRole/…`, `Footer.brands`…). `src/lib/i18n-audit.ts` : `unusedMessageKeys` (balayage inverse : littéraux, clés calculées, segments cités dans une table de correspondance) + test dans `i18n-messages.test.ts` qui **échoue sur toute future clé orpheline**, avec trois familles d'exceptions justifiées (`MarketStats.badge_*`, `Pro.logo*/banner*`, `BulkImport.error_*`) et le contrôle que chaque exception sert encore.
+
+**E3 — Échecs d'envoi avalés.** `mailer.ts : sendEmailBestEffort(tag, args)` journalise `[EMAIL tag] échec envoi : …` et ne lève jamais ; les quatre envois du parcours des offres (`offers/[id]`) l'utilisent au lieu de `.catch(() => null)`.
+
+**E5 — Documentation.** `docs/ARCHITECTURE.md` : bandeau « document historique » en tête, listant les écarts réels (pas de NestJS/PostGIS/Meilisearch/BullMQ, bcrypt + JWT, FR/AR, paiement virement + Chargily sans `PaymentProvider` ni remboursement). `app/README.md` : notes obsolètes corrigées (limites de débit Redis, stockage S3, webpack, tests qui créent une base, Git Bash pour `npm test`, `prisma generate` serveur arrêté).
+
+**B10 — Uploads sans test.** `tests/uploads.test.ts` (`sharp`, stockage, disque et analyse de qualité simulés, `file-type` réel) : un vrai PNG de 1×1 accepté malgré un nom `../../etc/passwd.exe` et un type `application/octet-stream`, re-encodé et stocké sous un nom UUID ; PDF et SVG-avec-script refusés sur leurs octets (`photo_invalid_type`) sans toucher `sharp` ; 8 Mo / 4 Mo refusés avant lecture ; cadrage avatar 400×400 ; S3 quand configuré, repli disque si S3 échoue ; `storeProcessedImage` écrit exactement les octets donnés.
+
+**E1 — Duplication.** `PaymentUpgradePanel` (un seul panneau « payer en ligne / ou par virement ») ; `ListingFormulaUpgrade` et `ProSubscriptionUpgrade` deviennent des enveloppes de libellés (~200 lignes dupliquées en moins). Les 30 clés i18n doublées restent (chaque enveloppe garde son espace de noms).
+
+**Non traités** (hors de ce lot, notés) : factorisations `requireUser` / `parseJsonBody` / `notifyUser` (31 et 82 répétitions), unification des codes HTTP (`unauthorized` vs `unauthenticated`, 400 vs 409), `apiHandler` commun, et les points de performance côté interface (C2 pagination de la boîte de réception, C3 photos de « Mes annonces », C4 statistiques admin, C7 espaces de noms i18n, C8 communes à la demande).
+
+**Vérifié**
+- `tsc` 0 erreur ; `eslint .` 0 problème ; **2 329 tests / 202 fichiers** verts (uploads : 6 nouveaux ; clés orphelines : 1 nouveau ; 3 tests du module mort retirés).
+- Navigateur : `/ar/recherche` en mode sombre — cartes en RTL, pastilles lisibles, montants en format `ar-DZ` ; `/fr/equipement` — champs nommés par leur libellé.
+
+**Limites** : les textes arabes ajoutés (SMS, courriel de changement d'adresse, manifeste) sont à faire relire par un locuteur natif ; le balayage des clés orphelines ne voit pas une clé construite par concaténation (`"error_" + code`) — d'où la liste d'exceptions ; les squelettes de chargement sont génériques (pas la forme exacte de chaque page).
