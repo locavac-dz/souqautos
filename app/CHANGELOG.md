@@ -4015,3 +4015,23 @@ Premier lot issu de la réflexion sur l'organisation de l'équipe : la file huma
 **Mise en service.** Le réglage est désactivé par défaut : à activer dans `/admin/parametres` par un ADMIN. Recommandation : commencer à « 2 annonces approuvées par un humain », suivre le journal pendant une à deux semaines, puis descendre à 1.
 
 **Limites** : un vendeur refusé une fois reste à vie dans la file humaine (pas de fenêtre de pardon — choix strict, modifiable) ; pas de compteur « publiées automatiquement cette semaine » dans les statistiques ; la règle ne s'applique pas aux imports CSV tant que le pro n'a pas soumis chaque brouillon (comportement existant).
+
+## Lot 273 — Messages de contact : accusé de réception, FAQ, file de traitement, Reply-To (2026-10-09)
+
+Jusqu'ici, le formulaire de contact envoyait un courriel à `ADMIN_EMAIL` et rien d'autre : pas d'accusé de réception, pas de trace, et les réponses des clients aux notifications du site partaient vers l'expéditeur technique « no-reply ». Quatre étapes, du sûr vers le plus utile.
+
+**1. Accusé de réception.** Dès l'envoi, le client reçoit dans sa langue (FR / AR) « Nous avons bien reçu votre message (réf. SA-XXXXXX) » avec le délai annoncé par motif : problème technique 24 h ouvrées, renseignement pro 1 jour ouvré, question générale et autre 2 jours ouvrés, partenariat 3 jours ouvrés. La référence (six caractères sans 0/O/1/I/L, lisible au téléphone) s'affiche aussi à l'écran après l'envoi.
+
+**2. FAQ jointe** aux motifs « question générale » et « problème technique » : cinq réponses rédigées (publier une annonce, annonce « en attente » — avec la publication automatique du Lot 272 —, mot de passe oublié, paiement CIB / Edahabia / virement, modifier ou retirer une annonce), FR et AR, suivies de « si ces réponses ne couvrent pas votre demande, vous n'avez rien à faire : un membre de l'équipe vous répond ». Aucun texte généré.
+
+**3. Tri et file de traitement** (`src/lib/contact-messages.ts`, pur et testé). Routage : pro et partenariat → `ADMIN_EMAIL` (le PDG), le reste → `STAFF_ALERT_EMAILS` (boîte de l'équipe), repli sur `ADMIN_EMAIL`, adresse de développement hors production seulement. Chaque message est enregistré (`ContactMessage`, migration `20261009130000_lot_273_contact_messages`) et apparaît dans **`/admin/contact`**, ouvert à toute l'équipe (`SUPPORT` compris) : référence, statut **Nouveau / Pris en charge / Répondu**, motif, langue, lien « Répondre par courriel » pré-adressé avec `Re: [SA-…]`, note interne, « pris en charge par … », mention si l'accusé n'a pas pu partir ; compteur « Messages de contact nouveaux » sur le tableau de bord ; actions journalisées (`contact.take`, `contact.answered`, `contact.reopen`), avec la même garde de course que la modération. Le courriel transmis à l'équipe porte **`Reply-To` = le client** ; s'il échoue, le message reste dans la file (plus jamais perdu).
+
+**4. `Reply-To` sur tous les courriels sortants** (`resolveReplyTo`) : `MAIL_REPLY_TO` (nouvelle variable, documentée dans `.env.example`), sinon la première adresse de `STAFF_ALERT_EMAILS`, sinon `ADMIN_EMAIL` ; sans rien, pas d'en-tête comme avant. `launch:check` avertit (`mail-reply-to`) quand aucune n'est définie. `sendEmail` accepte un `replyTo` propre à un envoi.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 395 tests / 209 fichiers** verts — 26 nouveaux (`tests/contact-messages.test.ts` : référence, routage, accusé, courriel équipe, transitions ; `tests/contact-form-route.test.ts` : enregistrement, Reply-To client, routage pro, accusé après la réponse, échec SMTP non bloquant, collision de référence, 503 sans destinataire, 400 / 429 ; `tests/admin-contact-status-route.test.ts` ; `resolveReplyTo`). Exception d'audit i18n ajoutée pour `ContactEmails.faqQ1…faqA5` (clés construites).
+- Réel : formulaire soumis dans le navigateur → 201 avec la référence affichée ; sur Ethereal, le courriel à l'équipe montre `Reply To: <client>` et l'accusé est parti au client ; `/admin/contact` : Nouveau → Pris en charge (par admin@souqauto.dz) → Répondu ; journal avec les deux actions ; compteur sur le tableau de bord. Message de test supprimé ensuite.
+
+**Mise en service** : renseigner `STAFF_ALERT_EMAILS` (boîte lue par l'équipe) et, si elle diffère, `MAIL_REPLY_TO`.
+
+**Limites** : la réponse au client se fait depuis la boîte de l'équipe (pas d'envoi depuis le back-office) ; pas de réponse générée par IA (étape 5, à décider après un mois de messages réels) ; textes arabes à faire relire par un locuteur natif.
