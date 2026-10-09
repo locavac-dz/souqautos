@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { respondOfferSchema, updateOfferSchema } from "@/lib/validation/offer";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { sendEmailBestEffort, escapeHtml } from "@/lib/mailer";
 import { sendPushToUser } from "@/lib/push-send";
 import { SITE_URL } from "@/lib/site";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -97,14 +97,14 @@ export async function PATCH(
     const fmt = (n: number, l: string) => n.toLocaleString(l === "ar" ? "ar-DZ" : "fr-DZ");
 
     if (action === "ACCEPTED") {
-      await sendEmail({
+      await sendEmailBestEffort("offre", {
         to: offer.buyer.email,
         subject: tBuyer("offerAcceptedSubject", { title: offer.listing.title }),
         html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("offerAcceptedBody", {
           title: escapeHtml(offer.listing.title),
           amount: fmt(offer.amount, buyerLocale),
         })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("offerAcceptedLink")}</a></p>`,
-      }).catch(() => null);
+      });
       await sendPushToUser(offer.buyerId, {
         title: tBuyer("pushOfferAcceptedTitle"),
         body:  tBuyer("pushOfferAcceptedBody", { title: offer.listing.title }),
@@ -119,14 +119,14 @@ export async function PATCH(
     } else if (action === "DECLINED") {
       const recipient = offer.status === "COUNTERED" ? "seller" : "buyer";
       if (recipient === "buyer") {
-        await sendEmail({
+        await sendEmailBestEffort("offre", {
           to: offer.buyer.email,
           subject: tBuyer("offerDeclinedSubject", { title: offer.listing.title }),
           html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("offerDeclinedBody", {
             title: escapeHtml(offer.listing.title),
             amount: fmt(offer.amount, buyerLocale),
           })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("offerDeclinedLink")}</a></p>`,
-        }).catch(() => null);
+        });
         await sendPushToUser(offer.buyerId, {
           title: tBuyer("pushOfferDeclinedTitle"),
           body:  tBuyer("pushOfferDeclinedBody", { title: offer.listing.title }),
@@ -141,23 +141,23 @@ export async function PATCH(
       }
       // Si c'est l'acheteur qui refuse une contre-offre, notifier le vendeur
       if (recipient === "seller") {
-        await sendEmail({
+        await sendEmailBestEffort("offre", {
           to: offer.seller.email,
           subject: tSeller("counterDeclinedSubject", { title: offer.listing.title }),
           html: `<p>${tSeller("greeting")}</p><p>${tSeller("counterDeclinedBody", {
             title: escapeHtml(offer.listing.title),
           })}</p><p><a href="${offersUrl(sellerLocale)}">${tSeller("counterDeclinedLink")}</a></p>`,
-        }).catch(() => null);
+        });
       }
     } else if (action === "COUNTERED" && counterAmount) {
-      await sendEmail({
+      await sendEmailBestEffort("offre", {
         to: offer.buyer.email,
         subject: tBuyer("counterOfferSubject", { title: offer.listing.title }),
         html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("counterOfferBody", {
           title:   escapeHtml(offer.listing.title),
           amount:  fmt(counterAmount, buyerLocale),
         })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("counterOfferLink")}</a></p>`,
-      }).catch(() => null);
+      });
       await sendPushToUser(offer.buyerId, {
         title: tBuyer("pushCounterOfferTitle"),
         body:  tBuyer("pushCounterOfferBody", { title: offer.listing.title, amount: fmt(counterAmount, buyerLocale) }),

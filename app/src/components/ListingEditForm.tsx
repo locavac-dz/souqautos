@@ -710,7 +710,7 @@ export function ListingEditForm({
               <button
                 type="button"
                 onClick={() => removeNewPhoto(i)}
-                className="absolute top-1 right-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white opacity-0 group-hover:opacity-100"
+                className="absolute top-1 ltr:right-1 rtl:left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white opacity-0 group-hover:opacity-100"
               >
                 {tWizard("photosRemove")}
               </button>

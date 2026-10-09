@@ -132,7 +132,7 @@ export function GroupMessageThread({ groupId, onSent }: Props) {
         <div className="relative w-20 h-20">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={imagePreview} alt={t("attachmentAlt")} className="w-20 h-20 object-cover rounded" />
-          <button type="button" onClick={removeImage} className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-800 text-white text-xs flex items-center justify-center">×</button>
+          <button type="button" onClick={removeImage} aria-label={t("attachmentAlt")} className="absolute -top-1 ltr:-right-1 rtl:-left-1 w-5 h-5 rounded-full bg-slate-800 text-white text-xs flex items-center justify-center">×</button>
         </div>
       )}
 
@@ -147,7 +147,7 @@ export function GroupMessageThread({ groupId, onSent }: Props) {
         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
           <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           <span>{fmt(recordingSeconds)}</span>
-          <button type="button" onClick={stopRecording} className="ml-2 text-xs underline">{t("voiceStop")}</button>
+          <button type="button" onClick={stopRecording} className="ms-2 text-xs underline">{t("voiceStop")}</button>
         </div>
       )}
 

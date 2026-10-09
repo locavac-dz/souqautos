@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatNumber } from "@/lib/format";
 import { useRouter } from "@/i18n/navigation";
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 
 export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendingOffer }: Props) {
   const t = useTranslations("Offer");
+  const locale = useLocale();
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
@@ -101,7 +103,7 @@ export function MakeOfferButton({ listingId, listingPrice, isLoggedIn, hasPendin
         ) : (
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              {t("priceHint", { price: listingPrice.toLocaleString() })}
+              {t("priceHint", { price: formatNumber(listingPrice, locale) })}
             </p>
 
             <div>

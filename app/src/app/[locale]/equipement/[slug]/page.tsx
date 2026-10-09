@@ -132,7 +132,7 @@ export default async function EquipementArticlePage({
         <div className="relative mt-6 aspect-video w-full overflow-hidden rounded-lg">
           <Image
             src={resolveAbsolutePhotoUrl(article.coverImageUrl)}
-            alt=""
+            alt={title}
             fill
             sizes="(max-width: 768px) 100vw, 768px"
             className="object-cover"

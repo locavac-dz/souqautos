@@ -79,13 +79,13 @@ export async function SiteHeader({
           <NavLink href="/compte/messages" className={`relative ${navLinkClass}`}>
             {tMessages("navLabel")}
             {unreadMessagesCount > 0 && (
-              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadMessagesCount}</span>
+              <span className="ms-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadMessagesCount}</span>
             )}
           </NavLink>
           <NavLink href="/compte/groupes" className={`relative ${navLinkClass}`}>
             {tNav("groups")}
             {unreadGroupsCount > 0 && (
-              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadGroupsCount}</span>
+              <span className="ms-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadGroupsCount}</span>
             )}
           </NavLink>
           <NavLink href="/compte/favoris" className={navLinkClass}>{tNav("favorites")}</NavLink>
@@ -93,7 +93,7 @@ export async function SiteHeader({
           <NavLink href="/compte/notifications" className={`relative ${navLinkClass}`}>
             {tNav("notifications")}
             {unreadNotificationsCount > 0 && (
-              <span className="ml-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadNotificationsCount}</span>
+              <span className="ms-1 rounded-full bg-red-600 text-white text-xs px-1.5 py-0.5">{unreadNotificationsCount}</span>
             )}
           </NavLink>
           <NavLink href="/compte/assistant-achat" className={navLinkClass}>{tNav("aiAdvisor")}</NavLink>

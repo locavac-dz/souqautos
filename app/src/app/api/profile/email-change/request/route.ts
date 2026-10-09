@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { verifyPassword } from "@/lib/auth-server/password";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getTranslations } from "next-intl/server";
 import { sendEmail } from "@/lib/mailer";
 import { generateExpiry } from "@/lib/verification";
 import { SITE_URL } from "@/lib/site";
@@ -55,10 +56,12 @@ export async function POST(request: NextRequest) {
   // Le lien part vers la NOUVELLE adresse — jamais l'ancienne — seule la
   // preuve de réception à la nouvelle adresse justifie le changement.
   const link = `${SITE_URL}/${user.locale}/confirmer-email/${token}`;
+  // Lot 269 (audit D2) — courriel dans la langue du compte (il partait en français à tout le monde).
+  const t = await getTranslations({ locale: user.locale, namespace: "Notifications" });
   const emailResult = await sendEmail({
     to: newEmail,
-    subject: "Confirmez votre nouvelle adresse email — Souq Auto",
-    html: `<p>Bonjour,</p><p>Cliquez sur ce lien pour confirmer que cette adresse est bien la vôtre et l'utiliser pour vous connecter à Souq Auto :</p><p><a href="${link}">${link}</a></p><p>Ce lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>`,
+    subject: t("emailChangeSubject"),
+    html: `<p>${t("greeting")}</p><p>${t("emailChangeBody")}</p><p><a href="${link}">${link}</a></p><p>${t("emailChangeExpiry")}</p>`,
   }).catch((err) => {
     console.error(`[EMAIL confirmation changement email] échec envoi: ${(err as Error).message}`);
     return null;

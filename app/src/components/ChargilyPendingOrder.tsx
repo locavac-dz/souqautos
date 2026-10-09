@@ -52,8 +52,8 @@ export function ChargilyPendingOrder({
         {state === "checking" ? t("checking") : t("checkPayment")}
       </button>
       {state === "still_pending" && <span>{t("stillPending")}</span>}
-      {state === "canceled" && <span className="text-amber-700">{t("canceled")}</span>}
-      {state === "error" && <span role="alert" className="text-red-600">{t("checkError")}</span>}
+      {state === "canceled" && <span className="text-amber-700 dark:text-amber-300">{t("canceled")}</span>}
+      {state === "error" && <span role="alert" className="text-red-600 dark:text-red-400">{t("checkError")}</span>}
     </div>
   );
 }

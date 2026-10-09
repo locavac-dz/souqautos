@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { resolveListingLabels } from "@/lib/site";
+import { formatNumber } from "@/lib/format";
 
 type Role = "user" | "assistant";
 
@@ -146,7 +147,7 @@ function AdvisorListingCard({ listing, locale }: { listing: AdvisorListing; loca
         <p className="text-xs text-slate-500 dark:text-slate-400">
           <span lang="fr">{brandLabel} {modelLabel}</span> · {wilayaLabel}
         </p>
-        <p className="mt-0.5 text-xs font-medium text-slate-900 dark:text-slate-100">{listing.price.toLocaleString()} DA</p>
+        <p className="mt-0.5 text-xs font-medium text-slate-900 dark:text-slate-100">{formatNumber(listing.price, locale)} DA</p>
       </div>
     </Link>
   );

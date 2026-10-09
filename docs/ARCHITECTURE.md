@@ -2,6 +2,8 @@
 **Lot 0 — Document de cadrage (avant tout développement)**
 Propriété : INGENICA CIVIL EURL — famille de marques : AL HANDASSA, LOCAVAC, SOUQONLINE, SOUQ AUTO
 
+> **Document historique (cadrage, septembre 2026).** Il décrit la cible imaginée avant le premier lot, pas ce qui a été construit. L'état réel est dans `app/README.md` (démarrage), `docs/EXPLOITATION.md` (mise en production, exploitation) et `app/CHANGELOG.md` (chaque lot livré). Écarts notables, relevés à l'audit du 2026-10-08 : pas de NestJS ni de PostGIS (API routes Next + Prisma), pas de Meilisearch (recherche PostgreSQL avec index trigramme), pas de BullMQ (balayages via `/api/cron/sweep`), bcrypt + JWT `jose` sans refresh token (Argon2 prévu), locales `fr`/`ar` seulement, et le paiement n'est pas une interface `PaymentProvider` unique mais le virement manuel (Lot 66) + Chargily Pay (Lot 264, `src/lib/chargily*.ts`, `payment-fulfillment.ts`), sans remboursement depuis le site.
+
 > Ce document répond au « Point 60 — Première mission » du master prompt. Il ne contient aucun code.
 > **Aucun développement ne démarre avant validation explicite de ce document par le porteur du projet.**
 

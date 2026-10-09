@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { formatNumber } from "@/lib/format";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
@@ -86,8 +87,8 @@ async function notifyFavoritesOfPriceDrop(listingId: string, title: string, oldP
           subject: t("priceDropSubject"),
           html: `<p>${t("greeting")}</p><p>${t("priceDropBody", {
             title: escapeHtml(title),
-            oldPrice: oldPrice.toLocaleString(),
-            newPrice: newPrice.toLocaleString(),
+            oldPrice: formatNumber(oldPrice, favorite.user.locale),
+            newPrice: formatNumber(newPrice, favorite.user.locale),
           })}</p>`,
         }).catch((err) => {
           console.error(`[EMAIL notification baisse de prix] échec envoi: ${(err as Error).message}`);

@@ -94,7 +94,7 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
             type="button"
             onClick={close}
             aria-label={t("close")}
-            className="absolute top-3 right-3 rounded-full bg-white/10 p-2 text-white hover:bg-white/25"
+            className="absolute top-3 ltr:right-3 rtl:left-3 rounded-full bg-white/10 p-2 text-white hover:bg-white/25"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
               <path d="M6 18 18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
@@ -134,9 +134,10 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
                 type="button"
                 onClick={(e) => { e.stopPropagation(); prev(); }}
                 aria-label={t("prevPhoto")}
-                className="absolute left-2 rounded-full bg-white/10 p-3 text-white hover:bg-white/25"
+                className="absolute ltr:left-2 rtl:right-2 rounded-full bg-white/10 p-3 text-white hover:bg-white/25"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5">
+                {/* Lot 269 (audit D5) — « précédent » à gauche en LTR, à droite en RTL, chevron retourné. */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5 rtl:rotate-180">
                   <path d="m15 18-6-6 6-6" />
                 </svg>
               </button>
@@ -144,9 +145,9 @@ export function PhotoGallery({ photos, alt }: { photos: Photo[]; alt: string }) 
                 type="button"
                 onClick={(e) => { e.stopPropagation(); next(); }}
                 aria-label={t("nextPhoto")}
-                className="absolute right-2 rounded-full bg-white/10 p-3 text-white hover:bg-white/25"
+                className="absolute ltr:right-2 rtl:left-2 rounded-full bg-white/10 p-3 text-white hover:bg-white/25"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5 rtl:rotate-180">
                   <path d="m9 18 6-6-6-6" />
                 </svg>
               </button>

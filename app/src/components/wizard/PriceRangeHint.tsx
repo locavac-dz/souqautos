@@ -6,8 +6,9 @@
 
 import { useEffect, useMemo, useTransition } from "react";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { computePriceBadge } from "@/lib/price-badge";
+import { formatNumber } from "@/lib/format";
 import { PRICE_BADGE_KEY, PRICE_BADGE_STYLE } from "@/lib/price-badge-style";
 import { getPriceEstimate, type PriceEstimateResponse } from "@/lib/price-estimate-action";
 import type { WizardData } from "./types";
@@ -22,6 +23,7 @@ export function barPosition(price: number, low: number, high: number): number {
 export function PriceRangeHint({ data, price }: { data: WizardData; price?: number }) {
   const t = useTranslations("Wizard");
   const tBadge = useTranslations("PriceBadge");
+  const locale = useLocale();
   const [estimate, setEstimate] = useState<PriceEstimateResponse | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -69,7 +71,7 @@ export function PriceRangeHint({ data, price }: { data: WizardData; price?: numb
   const priceBadge = price && price > 0 ? computePriceBadge(price, mid, sampleSize) : null;
   const markerPos = price && price > 0 ? barPosition(price, low, high) : null;
 
-  const fmt = (n: number) => n.toLocaleString("fr-DZ");
+  const fmt = (n: number) => formatNumber(n, locale);
 
   return (
     <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm">

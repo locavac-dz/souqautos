@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 
@@ -56,6 +56,8 @@ export function EquipementFilters({
   const inputClass =
     "w-full rounded-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm bg-white dark:bg-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500";
   const labelClass = "block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1";
+  // Lot 269 (audit D3) — chaque champ a un libellé associé (htmlFor/id) : un lecteur d'écran annonçait des champs sans nom.
+  const ids = { search: useId(), priceMin: useId(), priceMax: useId(), condition: useId(), wilaya: useId() };
 
   return (
     <form onSubmit={apply} className="space-y-4">
@@ -64,10 +66,12 @@ export function EquipementFilters({
       {/* Recherche texte */}
       <div>
         <input
-          type="text"
+          id={ids.search}
+          type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
           className={inputClass}
         />
       </div>
@@ -75,8 +79,9 @@ export function EquipementFilters({
       {/* Prix */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className={labelClass}>{t("priceMin")}</label>
+          <label htmlFor={ids.priceMin} className={labelClass}>{t("priceMin")}</label>
           <input
+            id={ids.priceMin}
             type="number"
             min={0}
             value={priceMin}
@@ -85,8 +90,9 @@ export function EquipementFilters({
           />
         </div>
         <div>
-          <label className={labelClass}>{t("priceMax")}</label>
+          <label htmlFor={ids.priceMax} className={labelClass}>{t("priceMax")}</label>
           <input
+            id={ids.priceMax}
             type="number"
             min={0}
             value={priceMax}
@@ -98,8 +104,9 @@ export function EquipementFilters({
 
       {/* État */}
       <div>
-        <label className={labelClass}>{t("conditionLabel")}</label>
+        <label htmlFor={ids.condition} className={labelClass}>{t("conditionLabel")}</label>
         <select
+          id={ids.condition}
           value={condition}
           onChange={(e) => setCondition(e.target.value)}
           className={inputClass}
@@ -112,8 +119,9 @@ export function EquipementFilters({
 
       {/* Wilaya */}
       <div>
-        <label className={labelClass}>{t("wilayaLabel")}</label>
+        <label htmlFor={ids.wilaya} className={labelClass}>{t("wilayaLabel")}</label>
         <select
+          id={ids.wilaya}
           value={wilayaId}
           onChange={(e) => setWilayaId(e.target.value)}
           className={inputClass}

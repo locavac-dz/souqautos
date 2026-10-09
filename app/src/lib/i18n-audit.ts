@@ -135,6 +135,49 @@ export function scanTranslationCalls(source: string, keys: ReadonlySet<string>):
   return scan;
 }
 
+// Lot 269 (audit E2) — balayage INVERSE : une clé des fichiers de messages que le code ne demande jamais. Une clé est
+// tenue pour utilisée si (a) un appel littéral la demande, (b) un appel calculé (`status${x}`) peut la produire, ou
+// (c) son dernier segment apparaît entre guillemets quelque part dans le code (tables de correspondance du type
+// `ESSENCE: "fuelEssence"`, puis `t(FUEL_KEY[x])`). Ce qui reste est orphelin — ou consommé d'une façon que ce
+// balayage ne voit pas : le test tient une liste d'exceptions explicite, courte, à justifier.
+export function unusedMessageKeys(messages: Record<string, string>, sources: string[]): string[] {
+  const keys = new Set(Object.keys(messages));
+  const literal = new Set<string>();
+  const patterns: RegExp[] = [];
+  const quotedSegments = new Set<string>();
+  for (const source of sources) {
+    const scan = scanTranslationCalls(source, keys);
+    for (const key of scanLiteralKeys(source)) literal.add(key);
+    for (const { key } of scan.dynamic) patterns.push(new RegExp("^" + escapeRegex(key).replace(/\\\$\\\{[^}]*\\\}/g, ".+") + "$"));
+    for (const m of source.matchAll(/["'`]([A-Za-z][\w]*)["'`]/g)) quotedSegments.add(m[1]);
+  }
+  return [...keys].filter((key) => {
+    if (literal.has(key)) return false;
+    if (patterns.some((p) => p.test(key))) return false;
+    const segment = key.slice(key.lastIndexOf(".") + 1);
+    return !quotedSegments.has(segment);
+  });
+}
+
+// Clés complètes demandées littéralement (même détection que scanTranslationCalls, sans jugement d'existence).
+function scanLiteralKeys(source: string): string[] {
+  const declaration = /(?:const|let)\s+(\w+)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*(?:"([\w.]+)"|\{[^}]*namespace:\s*"([\w.]+)"[^}]*\})?\s*\)/g;
+  const found: string[] = [];
+  let match: RegExpExecArray | null;
+  const variables: { name: string; namespace: string }[] = [];
+  while ((match = declaration.exec(source))) variables.push({ name: match[1], namespace: match[2] ?? match[3] ?? "" });
+  for (const { name, namespace } of variables) {
+    const call = new RegExp(`\\b${name}(?:\\.rich|\\.raw|\\.markup|\\.has)?\\(\\s*(["\`])((?:\\\\.|(?!\\1)[^\\\\])*)\\1`, "g");
+    let c: RegExpExecArray | null;
+    while ((c = call.exec(source))) {
+      const [, quote, key] = c;
+      if (quote === "`" && key.includes("${")) continue;
+      found.push(namespace ? `${namespace}.${key}` : key);
+    }
+  }
+  return found;
+}
+
 // --- Aide à la relecture ------------------------------------------------------------------------------------------------------------
 
 // Familles de mots à harmoniser : pour chaque notion, les variantes arabes qu'on rencontre. Sert

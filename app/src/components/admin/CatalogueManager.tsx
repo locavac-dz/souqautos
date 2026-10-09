@@ -251,7 +251,7 @@ function BrandCard({ brand, canEdit }: { brand: BrandRow; canEdit: boolean }) {
       </div>
       {error && <p role="alert" className="mt-1 text-xs text-red-600">{error}</p>}
 
-      <div className="mt-3 pl-4 border-l border-slate-100 dark:border-slate-700 space-y-2">
+      <div className="mt-3 ps-4 border-s border-slate-100 dark:border-slate-700 space-y-2">
         {brand.models.map((model) => (
           <ModelRowItem key={model.id} model={model} canEdit={canEdit} />
         ))}
@@ -373,7 +373,7 @@ function ModelRowItem({ model, canEdit }: { model: ModelRow; canEdit: boolean })
       ) : (
         <div>
           <span className="text-slate-800 dark:text-slate-100">{model.name}</span>
-          <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+          <span className="ms-2 text-xs text-slate-500 dark:text-slate-400">
             {model.slug} · {asCategories(model.categories).map((c) => t(CATEGORY_LABEL[c])).join(", ")} · {t("listingCount", { count: model.listingCount })}
           </span>
         </div>

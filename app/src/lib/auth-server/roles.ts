@@ -25,7 +25,3 @@ export function isAdmin(role: Role): boolean {
 export function isModerator(role: Role): boolean {
   return role === "SUPER_ADMIN" || role === "ADMIN" || role === "MODERATEUR";
 }
-
-export function isSupport(role: Role): boolean {
-  return role === "SUPPORT";
-}

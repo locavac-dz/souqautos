@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { getRecentlyViewed, type RecentlyViewedEntry } from "@/lib/recently-viewed";
+import { formatNumber } from "@/lib/format";
 
 export function RecentlyViewedSection({ excludeId }: { excludeId?: string }) {
   const t = useTranslations("RecentlyViewed");
@@ -52,7 +53,7 @@ export function RecentlyViewedSection({ excludeId }: { excludeId?: string }) {
                 {entry.year} · {locale === "ar" ? entry.wilayaNomAr : entry.wilayaNomFr}
               </p>
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-1">
-                {entry.price.toLocaleString()} DA
+                {formatNumber(entry.price, locale)} DA
               </p>
             </div>
           </Link>

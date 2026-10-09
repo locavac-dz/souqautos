@@ -47,7 +47,7 @@ Ensuite `DATABASE_URL` / `E2E_DATABASE_URL` pointent sur `localhost:5433`. Ce se
 ## Tests
 
 ```bash
-npm test            # tests unitaires (aucun n'accède à la base)
+npm test            # tests unitaires (trois fichiers créent une base temporaire s'ils le peuvent, et se sautent sinon : backup-chain, search-equivalence, price-estimation-equivalence)
 npm run test:e2e    # tests de bout en bout Playwright, sur la base E2E_DATABASE_URL (vidée à chaque exécution)
 npm run test:e2e:pwa # application installable : service worker et mode hors connexion, sur une version de PRODUCTION (compile puis démarre sur le port 5186)
 npm run verify      # équivalent local de la chaîne d'intégration (types, lint, tests, écart schéma/migrations) ; `-- --e2e` ajoute les tests de bout en bout
@@ -80,9 +80,9 @@ Ne jamais réutiliser la base de développement : elle contient des comptes et d
 
 - `.env` contient un `JWT_SECRET` de dev généré aléatoirement — à régénérer en production (`openssl rand -base64 48`).
 - Base PostgreSQL, migrations dans `prisma/migrations/` (une baseline unique depuis le Lot 109 ; l'historique SQLite antérieur reste dans git). En production, créer la base avec une **collation française/Unicode** (par ex. `fr_FR.UTF-8`) et non la collation `C`, qui trie les noms accentués (Aïn Defla, Béjaïa…) après « Z ». PostGIS, prévu à l'origine, n'est pas utilisé.
-- Rate limiting des endpoints d'auth actuellement en mémoire (mono-instance) — à remplacer par Redis dès le passage multi-instance.
-- Schéma Lot 1 volontairement minimal (`User`, `Profile`, `Wilaya`) — `communes` et les autres tables du cahier d'architecture arriveront avec les modules qui en ont besoin.
-- Photos d'annonces stockées localement sous `public/uploads/` (gitignoré) — à migrer vers un stockage S3-compatible en staging/prod (cf. docs/ARCHITECTURE.md §06).
-- Si `next build` a été lancé, vider `.next` avant de relancer `npm run dev` (les caches de build et de dev de Turbopack ne sont pas interchangeables).
+- Limites de débit : Redis dès que `REDIS_URL` est défini (partagé entre instances), sinon repli en mémoire par instance (purgé périodiquement) — suffisant pour un seul serveur ; `launch:check` le rappelle.
+- Photos (annonces, avatars, pièces jointes, logos, couvertures) : stockage S3-compatible dès que `S3_*` est défini (`src/lib/storage.ts`), sinon disque local sous `public/uploads/` (gitignoré) — à sauvegarder avec la base dans ce cas (`npm run db:backup -- --with-uploads`).
+- Si `next build` a été lancé, vider `.next` avant de relancer `npm run dev` (les caches de build et de dev ne sont pas interchangeables ; le serveur de dev tourne avec `--webpack`).
+- Sous Windows, lancer `npm test` depuis Git Bash plutôt que PowerShell : `tests/backup-chain.test.ts` appelle `tar` et le `tar` Windows ne comprend pas les chemins `/c/…` (trois faux échecs sinon). `npx prisma generate` exige que le serveur de dev soit arrêté (verrou du moteur de requêtes).
 - Compte admin de dev créé par `npm run db:seed` : `admin@souqauto.dz` / `AdminSouqAuto2026!` (convention groupe : `admin@<nom-court>.dz`). **En production**, ce compte n'est jamais créé : `ADMIN_EMAIL` et `ADMIN_PASSWORD` sont obligatoires (Lot 117).
 - Depuis le Lot 7, toute nouvelle annonce est créée en statut `EN_ATTENTE` et doit être approuvée dans `/admin/annonces` avant d'apparaître dans la recherche.

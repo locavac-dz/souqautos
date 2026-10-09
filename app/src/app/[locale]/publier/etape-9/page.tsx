@@ -87,13 +87,13 @@ export default function Step9Page() {
         {data.controltechniqueExpiry && (
           <Row
             label={t("controltechniqueExpiry")}
-            value={new Date(data.controltechniqueExpiry + "T00:00:00").toLocaleDateString("fr-DZ", { dateStyle: "long" })}
+            value={new Date(data.controltechniqueExpiry + "T00:00:00").toLocaleDateString(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "long" })}
           />
         )}
         {data.assuranceExpiry && (
           <Row
             label={t("assuranceExpiry")}
-            value={new Date(data.assuranceExpiry + "T00:00:00").toLocaleDateString("fr-DZ", { dateStyle: "long" })}
+            value={new Date(data.assuranceExpiry + "T00:00:00").toLocaleDateString(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "long" })}
           />
         )}
         <Row label={t("price")} value={data.price ? `${formatNumber(data.price, locale)} DA` : undefined} />

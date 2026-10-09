@@ -5,12 +5,14 @@ import type { MetadataRoute } from "next";
 // Un seul manifeste pour les deux langues : `start_url: "/"` laisse le site choisir la langue
 // du visiteur (comme à l'ouverture normale), et les raccourcis pointent vers des adresses sans
 // préfixe de langue pour la même raison. Le nom reste « Souq Auto » dans les deux langues.
+// Lot 269 (audit D2) — un manifeste ne peut pas être localisé par visiteur (Next n'en sert qu'un) : la description
+// et les raccourcis sont bilingues, pour qu'un arabophone qui installe l'application ne lise pas que du français.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
     name: "Souq Auto",
     short_name: "Souq Auto",
-    description: "Le premier moteur de recherche automobile pensé pour l'Algérie.",
+    description: "Le premier moteur de recherche automobile pensé pour l'Algérie · أول محرك بحث عن السيارات مصمّم للجزائر",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -25,9 +27,9 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     shortcuts: [
-      { name: "Rechercher une voiture", short_name: "Rechercher", url: "/recherche" },
-      { name: "Vendre mon véhicule", short_name: "Vendre", url: "/vendre" },
-      { name: "Essais auto", short_name: "Essais", url: "/essais" },
+      { name: "Rechercher une voiture · البحث عن سيارة", short_name: "Rechercher · بحث", url: "/recherche" },
+      { name: "Vendre mon véhicule · بيع مركبتي", short_name: "Vendre · بيع", url: "/vendre" },
+      { name: "Essais auto · تجارب السيارات", short_name: "Essais · تجارب", url: "/essais" },
     ],
   };
 }

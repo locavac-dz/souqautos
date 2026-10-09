@@ -21,7 +21,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
 
   return (
     <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"}>
-      <body className="min-h-screen bg-white text-slate-900 antialiased">
+      <body className="min-h-screen bg-white text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100">
         <main className="mx-auto max-w-2xl px-4 py-16 text-center">
           <h1 className="text-2xl font-semibold">{t.title}</h1>
           <p className="mt-3 text-slate-600">{t.message}</p>

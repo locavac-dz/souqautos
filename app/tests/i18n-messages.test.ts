@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { compareLocales, flattenMessages, scanTranslationCalls, type Messages } from "@/lib/i18n-audit";
+import { compareLocales, flattenMessages, scanTranslationCalls, unusedMessageKeys, type Messages } from "@/lib/i18n-audit";
 
 // Lot 128 — les VRAIS fichiers de messages et le VRAI code source. Ces tests ne jugent pas la qualité de
 // l'arabe (seul un locuteur natif le peut : voir `npm run i18n:review`) ; ils empêchent qu'un texte
@@ -52,7 +52,6 @@ describe("messages FR / AR", () => {
 // en arabe, fait échouer le test : soit c'est une traduction oubliée, soit il faut l'ajouter ici en
 // connaissance de cause.
 const SAME_IN_BOTH = new Set([
-  "Footer.brands",
   "Legal.publisherName",
   "Legal.publisherLegalForm",
   "MyListings.formulaPremium",
@@ -110,6 +109,23 @@ describe("clés utilisées par le code", () => {
   it("finds every literal key the code asks for, in the message files", () => {
     const missing = scans.flatMap(({ file, scan }) => scan.missing.map((key) => `${key}  ←  ${file}`));
     expect(missing).toEqual([]);
+  });
+
+  // Lot 269 (audit E2) — le balayage inverse : une clé que plus aucun écran ne demande est du poids mort (et de
+  // l'arabe à relire pour rien). Les familles ci-dessous sont consommées d'une façon que le balayage ne voit pas
+  // (clé construite dans une variable avant l'appel) : à justifier une par une, jamais allongée par confort.
+  const CONSUMED_INDIRECTLY = [
+    /^MarketStats\.badge_/, // t(`badge_${badge}`) dans un composant dont `t` vient d'un Promise.all
+    /^Pro\.(logo|banner)(SectionTitle|ChangeAction|RemoveAction|Uploading)$/, // ProBrandingUpload : `${kind}SectionTitle`
+    /^BulkImport\.error_/, // BulkImportForm : `error_${r.error}` filtré par KNOWN_ERRORS
+  ];
+
+  it("has no orphan message key (one that no screen asks for), except the known indirect families", () => {
+    const sources = sourceFiles(path.join(ROOT, "src")).map((f) => readFileSync(f, "utf8"));
+    const unused = unusedMessageKeys(fr, sources).filter((key) => !CONSUMED_INDIRECTLY.some((p) => p.test(key)));
+    expect(unused).toEqual([]);
+    // Et l'inverse : chaque exception doit encore servir à quelque chose.
+    for (const pattern of CONSUMED_INDIRECTLY) expect(Object.keys(fr).some((k) => pattern.test(k)), String(pattern)).toBe(true);
   });
 
   it("finds at least one message for every computed key (`status${x}`)", () => {

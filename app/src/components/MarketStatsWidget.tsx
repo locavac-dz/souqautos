@@ -1,5 +1,6 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { formatNumber } from "@/lib/format";
 import { getModelYearStats } from "@/lib/catalogue-stats";
 
 interface Props {
@@ -33,7 +34,8 @@ export async function MarketStatsWidget({
 
   if (stats.p25 === null || stats.p75 === null) return null;
 
-  const fmt = (n: number) => n.toLocaleString("fr-DZ");
+  const locale = await getLocale();
+  const fmt = (n: number) => formatNumber(n, locale);
 
   let badge: "below" | "within" | "above";
   if (listingPrice < stats.p25) badge = "below";

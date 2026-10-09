@@ -274,7 +274,7 @@ export default async function ProShowcasePage({
     <div>
       {account.bannerUrl && (
         <div className="relative h-40 sm:h-56 w-full">
-          <Image src={account.bannerUrl} alt="" fill sizes="100vw" className="object-cover" loading="eager" fetchPriority="high" />
+          <Image src={account.bannerUrl} alt={account.nomCommercial} fill sizes="100vw" className="object-cover" loading="eager" fetchPriority="high" />
         </div>
       )}
       <div className="mx-auto max-w-4xl px-4 py-10">
@@ -292,7 +292,7 @@ export default async function ProShowcasePage({
           <div className="relative h-14 w-14 shrink-0">
             <Image
               src={account.logoUrl}
-              alt=""
+              alt={account.nomCommercial}
               fill
               sizes="56px"
               className="rounded-full object-cover border border-slate-200 dark:border-slate-700"
