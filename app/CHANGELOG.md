@@ -4077,3 +4077,21 @@ Troisième lot du document « Équipe de lancement » : les chiffres du point du
 - Réel : envoi par script vers deux adresses de test → deux courriels sur Ethereal, rapport « du 28 septembre au 4 octobre 2026 » avec les vrais chiffres de la base de démonstration (13 annonces publiées contre 10, +30 % ; 24 pages vues ; 1 abonnement payant actif) ; ligne visible dans `/admin/rapports` ; bouton d'envoi dans le navigateur → « Aucun destinataire : définissez STAFF_ALERT_EMAILS ou ADMIN_EMAIL » (attendu en local). Ligne de test supprimée.
 
 **Limites** : semaine calée sur l'heure du serveur ; vues issues des compteurs journaliers existants (pas de visiteurs uniques) ; pas de graphique, pas de version arabe (courriel interne).
+
+## Lot 276 — Rôle EDITEUR, rédaction seule (2026-10-09)
+
+Dernier lot du document « Équipe de lancement » : le rédacteur à la pige entre dans le back-office sans recevoir le rôle `ADMIN` (qui lui ouvrait paiements, paramètres et utilisateurs).
+
+**Le rôle** (`prisma/schema.prisma`, migration `20261009160000_lot_276_role_editeur` : une valeur d'énumération, aucun `DROP`). `src/lib/auth-server/roles.ts` : `isEditor` (SUPER_ADMIN, ADMIN, EDITEUR) et `hasBackOfficeAccess` (équipe de modération ou rédacteur). `isStaff`, `isModerator`, `isAdmin` et `isSuperAdmin` ne changent pas : un rédacteur n'est membre d'aucune de ces familles.
+
+**Périmètre.** Les quatorze pages éditoriales (magazine, essais, guides — index, nouveau, modifier —, rythme éditorial, revue de presse) et les sept routes API correspondantes (articles, couverture, liens de relecture, revue de presse) passent de `isAdmin` à `isEditor`. Tout le reste reste fermé au rédacteur : modération, signalements, contact, identité, avis, utilisateurs, paiements, paramètres, journal, rapports, prospection, équipements.
+
+**Back-office.** Le layout `/admin` admet l'équipe **et** les rédacteurs ; la navigation ne montre à un rédacteur que ses cinq sections ; `/admin` le renvoie sur le magazine. Au passage, six pages de modération (annonces, signalements, contact, avis, avis propriétaires, identité) ne s'appuyaient que sur la garde `isStaff` du layout : elles ont maintenant **leur propre garde** — sans elle, un rédacteur aurait pu les ouvrir.
+
+**Attribution et sécurité.** `EDITEUR` dans le menu des rôles de `/admin/utilisateurs` (« Éditeur (rédaction seule) », FR / AR) et dans la route de changement de rôle ; **double authentification exigée** comme pour l'équipe (`isStaffRole` l'inclut : il publie sur le site public).
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 420 tests / 214 fichiers** verts (`tests/roles.test.ts` : accès éditorial, exclusion des familles de modération, entrée dans `/admin` ; cas EDITEUR dans `tests/staff-two-factor.test.ts`).
+- Réel, avec un compte de démonstration passé temporairement en `EDITEUR` : dans le navigateur, `/admin`, `/admin/annonces` et `/admin/paiements` renvoient tous sur `/admin/mag`, la navigation se réduit à Mag · Essais · Guides · Rythme éditorial · Revue de presse ; par API, modération, changement de rôle et rapport hebdomadaire → 403, création d'article → 400 (validation : la porte est bien ouverte). Rôle restauré ensuite ; l'option apparaît dans le menu des rôles en tant qu'admin.
+
+**Limites** : pas de relecture obligatoire avant publication par un rédacteur (il peut publier directement — relire sa première parution) ; `/admin/equipement` reste réservé aux ADMIN.
