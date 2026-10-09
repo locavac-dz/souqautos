@@ -3951,3 +3951,25 @@ Cinquième et dernier lot du plan de l'audit du 2026-10-08.
 - Navigateur : `/ar/recherche` en mode sombre — cartes en RTL, pastilles lisibles, montants en format `ar-DZ` ; `/fr/equipement` — champs nommés par leur libellé.
 
 **Limites** : les textes arabes ajoutés (SMS, courriel de changement d'adresse, manifeste) sont à faire relire par un locuteur natif ; le balayage des clés orphelines ne voit pas une clé construite par concaténation (`"error_" + code`) — d'où la liste d'exceptions ; les squelettes de chargement sont génériques (pas la forme exacte de chaque page).
+
+## Lot 270 — Pagination de la boîte de réception et de « Mes annonces » (audit C2-C3) (2026-10-09)
+
+Deux points de performance côté interface laissés de côté par le Lot 268.
+
+**Boîte de réception (`/compte/messages`).** La page chargeait **toutes** les conversations du compte (annonce + photo, profils acheteur et vendeur, dernier message), puis un `IN` de tous leurs identifiants pour les non-lus : un concessionnaire à trois mille conversations payait tout cela à chaque ouverture. Désormais `count` + `pageWindow` (`src/lib/pagination.ts`), **30 conversations par page**, `skip`/`take`, `select` restreints (titre et première photo de l'annonce, e-mail et `displayName` des deux profils, contenu / pièce jointe / `deletedAt` du dernier message), `groupBy` des non-lus limité aux conversations de la page, composant `Pagination` (`basePath="/compte/messages"`).
+
+**Mes annonces (`/compte/mes-annonces`).** Même mécanique : **20 annonces par page**, une seule photo par annonce (`take: 1`), indicateurs de qualité des photos chargés en **une** requête `listingPhoto.findMany` pour les annonces de la page seulement (puis `distinctPhotoQualityFlags` par annonce), composant `Pagination` sous la liste ; le filtre `?paiement=` existant est conservé.
+
+**Vérifié**
+- `tsc` 0 erreur ; `eslint .` 0 problème ; **2 329 tests / 202 fichiers** verts.
+- Navigateur : `/fr/compte/messages` et `/fr/compte/mes-annonces` avec le compte de démonstration (une page), `?page=2` et `?page=abc` ramenés à la première page sans erreur.
+
+**Limites** : pas de tri ni de filtre de la boîte de réception (toujours par date de création) ; un compte sous le seuil ne voit aucun changement.
+
+## Badge « DÉMO » proportionnel à la photo (2026-10-09)
+
+Le badge du Lot 263 (texte de 26 px sur une photo de 1 600 px) devenait illisible sur une carte réduite à 300 px : une annonce de démonstration pouvait être prise pour une vraie. `demoBadgeSvg` (`prisma/demo-photo-store.ts`) calcule désormais le texte à ≈ 6,5 % de la largeur de la photo (104 px sur 1 600 px, soit quatre fois plus grand), cartouche ≈ 460 × 190 px, fond `rgba(0,0,0,0.68)`, toujours centré en bas pour ne jamais être rogné par le cadrage 4:3 des cartes. Les deux placeholders SVG (`seed-demo-listings.ts`, `apply-demo-photos.ts`) réutilisent ce générateur au lieu d'un badge codé en dur.
+
+**Vérifié** : `npx tsx prisma/apply-demo-photos.ts --force` — 53 photos régénérées, 0 ignorée ; `tsc` 0 ; `eslint` 0 ; `tests/demo-photos.test.ts` 63/63 ; navigateur : DÉMO lisible sur chaque carte de `/fr/recherche` (y compris les annonces en avant) et sur les cinq équipements.
+
+**Note** : la régénération supprime les anciens fichiers ; un navigateur qui en gardait le chemin (section « récemment consultés », `localStorage`) voit un 400 sur `/_next/image` jusqu'à l'expiration de cette liste — sans effet sur les autres visiteurs.
