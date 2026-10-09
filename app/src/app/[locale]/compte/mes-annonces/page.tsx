@@ -28,6 +28,8 @@ import { ChargilyPendingOrder } from "@/components/ChargilyPendingOrder";
 import { PaymentReturnBanner } from "@/components/PaymentReturnBanner";
 import { resolveChargilyConfig } from "@/lib/chargily";
 import { ListingAutoRenewToggle } from "@/components/ListingAutoRenewToggle";
+import { Pagination } from "@/components/search/Pagination";
+import { pageWindow, parseRequestedPage } from "@/lib/pagination";
 import { formatNumber } from "@/lib/format";
 
 const PHOTO_QUALITY_FLAG_KEY: Record<PhotoQualityFlag, string> = {
@@ -49,9 +51,14 @@ function distinctPhotoQualityFlags(photos: { qualityFlags: string }[]): PhotoQua
   return [...flags];
 }
 
-export default async function MyListingsPage({ searchParams }: { searchParams: Promise<{ paiement?: string }> }) {
+// Lot 270 (audit C3) — 20 annonces par page, une seule photo (son chemin) par annonce et les indicateurs de qualité
+// en requête légère : la page chargeait toutes les annonces du vendeur avec TOUTES leurs photos (champs d'analyse
+// compris) pour afficher une vignette et un conseil.
+const MY_LISTINGS_PAGE_SIZE = 20;
+
+export default async function MyListingsPage({ searchParams }: { searchParams: Promise<{ paiement?: string; page?: string }> }) {
   const locale = await getLocale();
-  const { paiement } = await searchParams;
+  const { paiement, page: rawPage } = await searchParams;
   const user = await getCurrentUser();
   if (!user) {
     redirect({ href: "/connexion", locale });
@@ -91,14 +98,25 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
 
   const sellerIds = [user.id, ...proAccountBySellerId.keys()];
 
+  const where = { sellerId: { in: sellerIds } };
+  const totalCount = await prisma.listing.count({ where });
+  const { page, totalPages, skip } = pageWindow(totalCount, parseRequestedPage(rawPage), MY_LISTINGS_PAGE_SIZE);
   const listings = await prisma.listing.findMany({
-    where: { sellerId: { in: sellerIds } },
+    where,
     include: {
-      photos: { orderBy: { position: "asc" } },
+      photos: { orderBy: { position: "asc" }, take: 1, select: { path: true } },
       paymentOrders: { where: { status: "EN_ATTENTE" } },
     },
     orderBy: { createdAt: "desc" },
+    skip,
+    take: MY_LISTINGS_PAGE_SIZE,
   });
+  // Indicateurs de qualité de toutes les photos des annonces de la page, sans leurs autres champs.
+  const qualityRows = listings.length
+    ? await prisma.listingPhoto.findMany({ where: { listingId: { in: listings.map((l) => l.id) } }, select: { listingId: true, qualityFlags: true } })
+    : [];
+  const qualityByListing = new Map<string, { qualityFlags: string }[]>();
+  for (const row of qualityRows) qualityByListing.set(row.listingId, [...(qualityByListing.get(row.listingId) ?? []), row]);
 
   // Lot 82 — le renouvellement automatique n'est proposé que si le vendeur
   // (compte propre ou compte pro géré) a le palier requis — jamais pour un
@@ -145,7 +163,7 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
             const isOwnListing = listing.sellerId === user.id;
             const proAccount = isOwnListing ? null : proAccountBySellerId.get(listing.sellerId);
             const canManage = isOwnListing || Boolean(proAccount?.canManage);
-            const photoQualityFlags = distinctPhotoQualityFlags(listing.photos);
+            const photoQualityFlags = distinctPhotoQualityFlags(qualityByListing.get(listing.id) ?? []);
 
             return (
               <div
@@ -303,6 +321,7 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
               </div>
             );
           })}
+          <Pagination page={page} totalPages={totalPages} searchParams={{}} basePath="/compte/mes-annonces" />
         </div>
       )}
     </div>
