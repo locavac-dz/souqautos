@@ -24,7 +24,7 @@ import { computeExpiryDate } from "../src/lib/listing-lifecycle";
 import { formulaValidityDays } from "../src/lib/payment-orders";
 import { storeProcessedImage } from "../src/lib/uploads";
 import { slugify } from "./catalogue-data";
-import { storeDemoPhoto } from "./demo-photo-store";
+import { demoBadgeSvg, storeDemoPhoto } from "./demo-photo-store";
 
 const prisma = new PrismaClient();
 
@@ -62,11 +62,13 @@ async function generatePlaceholderPhoto(brand: string, model: string): Promise<s
     <rect width="100%" height="100%" fill="${color}"/>
     <text x="50%" y="45%" font-family="Arial, sans-serif" font-size="72" fill="#ffffff" text-anchor="middle" font-weight="bold">${escapeXml(brand)}</text>
     <text x="50%" y="58%" font-family="Arial, sans-serif" font-size="44" fill="#e2e8f0" text-anchor="middle">${escapeXml(model)}</text>
-    <rect x="522" y="824" width="156" height="52" rx="8" fill="rgba(0,0,0,0.62)"/>
-    <text x="600" y="859" font-family="Arial, sans-serif" font-size="26" fill="#ffffff" text-anchor="middle" font-weight="bold" letter-spacing="5">D&#201;MO</text>
   </svg>`;
 
-  const output = await sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toBuffer();
+  // Badge DÉMO : même générateur que les vraies photos (taille proportionnelle, centré en bas).
+  const output = await sharp(Buffer.from(svg))
+    .composite([{ input: demoBadgeSvg(1200, 900), blend: "over" }])
+    .jpeg({ quality: 82 })
+    .toBuffer();
   const filename = `${randomUUID()}.jpg`;
   // Même point d'écriture que les vrais uploads (src/lib/uploads.ts) : va
   // vers S3 si configuré, repli disque local sinon — les photos de

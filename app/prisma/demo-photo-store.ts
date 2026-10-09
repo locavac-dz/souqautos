@@ -46,17 +46,21 @@ export type StoredDemoPhoto = {
 
 // Badge SVG « DÉMO » centré en bas de l'image (dimensions en px).
 // Centré horizontalement pour ne jamais être rogné par object-cover quelle que soit la largeur de l'image.
-function demoBadgeSvg(w: number, h: number): Buffer {
-  const bw = 160;
-  const bh = 52;
-  const margin = 24;
+// Taille PROPORTIONNELLE à la photo (≈ 6,5 % de sa largeur pour le texte) : un badge de 26 px sur une photo de
+// 1 600 px devenait illisible une fois la carte réduite à 300 px — le porteur de projet veut qu'on ne puisse pas
+// confondre une annonce de démonstration avec une vraie.
+export function demoBadgeSvg(w: number, h: number): Buffer {
+  const font = Math.max(26, Math.round(w * 0.065));
+  const bw = Math.round(font * 4.4);
+  const bh = Math.round(font * 1.8);
+  const margin = Math.round(w * 0.03);
   const x = Math.round((w - bw) / 2);
   const y = h - bh - margin;
   const cx = w / 2;
-  const cy = y + bh / 2 + 9;
+  const cy = y + bh / 2 + Math.round(font * 0.36);
   const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
-    <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="8" fill="rgba(0,0,0,0.62)"/>
-    <text x="${cx}" y="${cy}" font-family="Arial, sans-serif" font-size="26" fill="#ffffff" text-anchor="middle" font-weight="bold" letter-spacing="5">DÉMO</text>
+    <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="${Math.round(font * 0.3)}" fill="rgba(0,0,0,0.68)"/>
+    <text x="${cx}" y="${cy}" font-family="Arial, sans-serif" font-size="${font}" fill="#ffffff" text-anchor="middle" font-weight="bold" letter-spacing="${Math.round(font * 0.18)}">DÉMO</text>
   </svg>`;
   return Buffer.from(svg);
 }
