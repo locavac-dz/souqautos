@@ -6,6 +6,7 @@ import { sweepOldNotifications } from "@/lib/notification-sweep";
 import { sweepOldLoginEvents } from "@/lib/login-event-sweep";
 import { sweepPendingChargilyOrders } from "@/lib/chargily-events";
 import { sweepPendingTransferReminders, sweepSubscriptionExpiryReminders } from "@/lib/commercial-reminders";
+import { sendWeeklyReportIfDue } from "@/lib/weekly-report";
 import { safeEqual } from "@/lib/google-oauth";
 
 // Called nightly by cron (see ops/crontab.example).
@@ -34,6 +35,8 @@ export async function POST(req: NextRequest) {
   // Lot 274 — relances commerciales : virements attendus (J+2) et abonnements pro qui expirent (15 j / 3 j).
   const transferReminders = await sweepPendingTransferReminders(now);
   const subscriptionReminders = await sweepSubscriptionExpiryReminders(now);
+  // Lot 275 — rapport hebdomadaire à l'équipe, une fois par semaine complète (part donc le lundi).
+  const weeklyReport = await sendWeeklyReportIfDue(now);
 
-  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders });
+  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport });
 }

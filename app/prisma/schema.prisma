@@ -1690,3 +1690,15 @@ model ContactMessage {
 
   @@index([status, createdAt])
 }
+
+// Lot 275 — rapport hebdomadaire envoyé à l'équipe le lundi par le balayage nocturne : une ligne par semaine
+// (jamais deux envois pour la même période), les chiffres conservés pour relecture dans /admin/rapports.
+model WeeklyReport {
+  id          String   @id @default(cuid())
+  periodStart DateTime @unique
+  periodEnd   DateTime
+  sentAt      DateTime
+  recipients  String // adresses séparées par des virgules
+  payload     Json // WeeklyMetrics de la semaine et de la précédente
+  createdAt   DateTime @default(now())
+}
