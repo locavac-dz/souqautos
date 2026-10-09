@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isModerator } from "@/lib/auth-server/roles";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkCanSubmitIdentityRequest } from "@/lib/identity-verification";
 import { saveIdentityDocument, DocumentValidationError } from "@/lib/identity-uploads";
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   // Lot 168 — vérification d'identité réservée aux comptes professionnels.
   // Lot 265 — rôles d'équipe lus depuis roles.ts (SUPER_ADMIN était oublié par la comparaison manuelle).

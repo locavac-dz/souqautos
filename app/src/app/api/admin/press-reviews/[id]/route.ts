@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { pressReviewSchema } from "@/lib/validation/press-review";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
@@ -9,18 +9,13 @@ import { isUniqueViolation } from "@/lib/prisma-errors";
 import { writeAuditLog } from "@/lib/audit-log";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = pressReviewSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
-  const data = parsed.data;
+  const body = await parseJsonBody(request, pressReviewSchema);
+  if (body instanceof NextResponse) return body;
+  const data = body;
 
   const existing = await prisma.pressReview.findUnique({ where: { id } });
   if (!existing) {
@@ -75,10 +70,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
   const existing = await prisma.pressReview.findUnique({ where: { id } });

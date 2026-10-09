@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 import { confirmProSubscriptionOrder, sendProSubscriptionDecisionEmail } from "@/lib/payment-fulfillment";
@@ -18,19 +18,14 @@ const bodySchema = z.object({
 // Lot 264/265 : approbation via `confirmProSubscriptionOrder` (transaction, activation, courriel),
 // partagée avec le webhook Chargily.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
-  if (parsed.data.action === "reject" && !parsed.data.reason?.trim()) {
+  if (body.action === "reject" && !body.reason?.trim()) {
     return NextResponse.json({ error: "reason_required" }, { status: 400 });
   }
 
@@ -46,11 +41,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const now = new Date();
-  const isApproval = parsed.data.action === "approve";
-  const reason = parsed.data.reason?.trim() || null;
+  const isApproval = body.action === "approve";
+  const reason = body.reason?.trim() || null;
 
   // Lot 266 — relecture chez Chargily avant la décision (voir payment-orders/[id]/review).
-  const providerCheck = await checkProviderBeforeDecision(order, parsed.data.action);
+  const providerCheck = await checkProviderBeforeDecision(order, body.action);
   if (!providerCheck.ok) {
     return NextResponse.json({ error: providerCheck.error, providerStatus: providerCheck.providerStatus }, { status: providerCheck.httpStatus });
   }
@@ -82,7 +77,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   await writeAuditLog({
     adminId: user.id,
-    action: `pro_subscription_order.${parsed.data.action}`,
+    action: `pro_subscription_order.${body.action}`,
     targetType: "ProSubscriptionOrder",
     targetId: id,
     details: {
@@ -91,7 +86,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       amountDzd: order.amountDzd,
       provider: order.provider,
       reference: order.reference,
-      reason: parsed.data.reason ?? null,
+      reason: body.reason ?? null,
     },
   });
 

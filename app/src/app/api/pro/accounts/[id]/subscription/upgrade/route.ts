@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkSubscriptionUpgradeEligible, priceForTier } from "@/lib/pro-subscription";
 import { getProSubscriptionSettings } from "@/lib/pro-subscription-settings";
@@ -23,21 +23,16 @@ const bodySchema = z
 // gererAnnonces : décision financière engageant l'entreprise, même sensibilité
 // que la gestion des collaborateurs (src/lib/pro-account.ts, canManageCollaborators).
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`subscription-upgrade:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const account = await prisma.professionalAccount.findUnique({
     where: { id },
@@ -52,10 +47,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const paymentSettings = await getPaymentSettings();
   const chargily = resolveChargilyConfig(process.env);
-  if (parsed.data.method === "virement" && !isBankDetailsComplete(paymentSettings)) {
+  if (body.method === "virement" && !isBankDetailsComplete(paymentSettings)) {
     return NextResponse.json({ error: "bank_details_missing" }, { status: 400 });
   }
-  if (parsed.data.method === "chargily" && chargily.mode !== "enabled") {
+  if (body.method === "chargily" && chargily.mode !== "enabled") {
     return NextResponse.json({ error: "online_payment_unavailable" }, { status: 400 });
   }
 
@@ -66,7 +61,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const currentTier = account.subscription?.tier ?? "STARTER";
   const eligibility = checkSubscriptionUpgradeEligible({
     currentTier,
-    targetTier: parsed.data.tier,
+    targetTier: body.tier,
     hasPendingOrder: Boolean(pendingOrder),
   });
   if (!eligibility.ok) {
@@ -74,8 +69,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const subscriptionSettings = await getProSubscriptionSettings();
-  const amountDzd = priceForTier(parsed.data.tier, subscriptionSettings);
-  const isChargily = parsed.data.method === "chargily";
+  const amountDzd = priceForTier(body.tier, subscriptionSettings);
+  const isChargily = body.method === "chargily";
 
   // Même garde-fou TOCTOU que PaymentOrder (Lot 69) : le `findFirst` ci-dessus
   // ne suffit pas seul contre un double-clic/retry réseau — l'index unique
@@ -86,10 +81,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: {
         userId: user.id,
         professionalAccountId: id,
-        tier: parsed.data.tier,
+        tier: body.tier,
         amountDzd,
         provider: isChargily ? "CHARGILY" : "VIREMENT",
-        reference: isChargily ? "CHARGILY" : parsed.data.reference!,
+        reference: isChargily ? "CHARGILY" : body.reference!,
       },
     });
   } catch (err) {
@@ -111,7 +106,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       successUrl: `${returnBase}?paiement=ok`,
       failureUrl: `${returnBase}?paiement=echec`,
       webhookEndpoint: `${SITE_URL}${CHARGILY_WEBHOOK_PATH}`,
-      description: `Souq Auto — abonnement pro ${parsed.data.tier} — compte ${id} — commande ${order.id}`,
+      description: `Souq Auto — abonnement pro ${body.tier} — compte ${id} — commande ${order.id}`,
       locale,
     });
     order = await prisma.proSubscriptionOrder.update({

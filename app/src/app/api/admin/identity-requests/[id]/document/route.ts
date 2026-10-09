@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import { readIdentityDocument } from "@/lib/identity-uploads";
 import { writeAuditLog } from "@/lib/audit-log";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isStaff(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isStaff);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
   const identityRequest = await prisma.identityVerificationRequest.findUnique({ where: { id } });

@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 import { proAccountFieldsSchema as bodySchema } from "@/lib/validation/pro-account";
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
   if (user.professionalAccount) {
     return NextResponse.json({ error: "already_professional" }, { status: 400 });
   }
@@ -18,14 +16,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
-  if (parsed.data.wilayaId) {
-    const wilaya = await prisma.wilaya.findUnique({ where: { id: parsed.data.wilayaId } });
+  if (body.wilayaId) {
+    const wilaya = await prisma.wilaya.findUnique({ where: { id: body.wilayaId } });
     if (!wilaya) {
       return NextResponse.json({ error: "validation" }, { status: 400 });
     }
@@ -36,10 +31,10 @@ export async function POST(request: NextRequest) {
       const created = await tx.professionalAccount.create({
         data: {
           userId: user.id,
-          nomCommercial: parsed.data.nomCommercial,
-          presentation: parsed.data.presentation || null,
-          horaires: parsed.data.horaires || null,
-          wilayaId: parsed.data.wilayaId ?? null,
+          nomCommercial: body.nomCommercial,
+          presentation: body.presentation || null,
+          horaires: body.horaires || null,
+          wilayaId: body.wilayaId ?? null,
         },
       });
       await tx.user.update({ where: { id: user.id }, data: { role: "PROFESSIONNEL" } });

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { invalidateReferenceData } from "@/lib/reference-data";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { validateCatalogueName } from "@/lib/catalogue-admin";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -11,23 +11,18 @@ import { parsePositiveIntId } from "@/lib/validation/int-bounds";
 const bodySchema = z.object({ name: z.string() });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
   const brandId = parsePositiveIntId(id);
   if (brandId === null) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
-  const name = parsed.data.name.trim();
+  const name = body.name.trim();
   const validation = validateCatalogueName(name);
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
@@ -55,10 +50,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
   const brandId = parsePositiveIntId(id);

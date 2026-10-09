@@ -1,28 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody, NO_STORE } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { canManageListing } from "@/lib/listing-access";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 import { prospectUpdateSchema } from "@/lib/prospects";
 
 // Lot 123 — modifier le statut et/ou la note privée d'un prospect (une conversation d'un compte pro).
-const NO_STORE = { "Cache-Control": "no-store" };
-
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401, headers: NO_STORE });
-  }
+  const user = await requireUser({ headers: NO_STORE });
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`prospect-update:${user.id}`, { limit: 200, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: NO_STORE });
   }
 
-  const parsed = prospectUpdateSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400, headers: NO_STORE });
-  }
+  const body = await parseJsonBody(request, prospectUpdateSchema, { headers: NO_STORE });
+  if (body instanceof NextResponse) return body;
 
   const { conversationId } = await params;
   const conversation = await prisma.conversation.findUnique({ where: { id: conversationId }, select: { id: true, sellerId: true } });
@@ -41,8 +35,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   // Seuls les champs envoyés changent : envoyer le statut seul ne touche pas à la note.
   const data = {
-    ...(parsed.data.status !== undefined ? { status: parsed.data.status } : {}),
-    ...(parsed.data.note !== undefined ? { note: parsed.data.note } : {}),
+    ...(body.status !== undefined ? { status: body.status } : {}),
+    ...(body.note !== undefined ? { note: body.note } : {}),
     updatedById: user.id,
   };
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validation/auth";
 import { hashPassword } from "@/lib/auth-server/password";
@@ -13,16 +14,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = registerSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "validation", issues: parsed.error.issues },
-      { status: 400 }
-    );
-  }
+  const body = await parseJsonBody(request, registerSchema, { issues: "full" });
+  if (body instanceof NextResponse) return body;
 
-  const { displayName, email, password, wilayaId } = parsed.data;
+  const { displayName, email, password, wilayaId } = body;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {

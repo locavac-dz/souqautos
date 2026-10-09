@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const MAX_MEMBERS = 50;
@@ -14,8 +14,8 @@ const createSchema = z.object({
 
 // GET /api/groups — liste les groupes de l'utilisateur connecté
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const memberships = await prisma.groupMember.findMany({
     where: { userId: user.id },
@@ -46,18 +46,17 @@ export async function GET() {
 
 // POST /api/groups — créer un nouveau groupe
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`create-group:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = createSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400 });
+  const body = await parseJsonBody(request, createSchema);
+  if (body instanceof NextResponse) return body;
 
-  const { name, memberIds } = parsed.data;
+  const { name, memberIds } = body;
 
   // Dédoublonner et exclure le créateur (il sera admin)
   const uniqueMemberIds = [...new Set(memberIds.filter((id) => id !== user.id))];

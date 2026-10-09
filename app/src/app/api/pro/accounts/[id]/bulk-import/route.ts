@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageProListings } from "@/lib/pro-account";
 import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -16,10 +16,8 @@ const MAX_ROWS = 500;
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`bulk-import:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });

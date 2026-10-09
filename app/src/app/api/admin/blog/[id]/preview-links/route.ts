@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { NO_STORE, parseJsonBody, requireRole } from "@/lib/api-route";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 import { articlePublicPath } from "@/lib/blog";
@@ -10,16 +10,11 @@ import { TooManyPreviewLinksError, createPreviewLink, listPreviewLinks, parsePre
 
 // Lot 146 — liens de relecture d'un contenu non publié. Réservé aux ADMINISTRATEURS : c'est le droit d'éditer ce contenu, et un lien
 // donne à quelqu'un d'autre le droit de le LIRE avant sa parution. Aucune réponse de cette route n'est mise en cache.
-const NO_STORE = { "Cache-Control": "no-store" };
 const bodySchema = z.object({ days: z.number() });
 
-async function requireAdmin() {
-  const user = await getCurrentUser();
-  return user && isAdmin(user.role) ? user : null;
-}
-
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireAdmin())) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const admin = await requireRole(isAdmin);
+  if (admin instanceof NextResponse) return admin;
   const { id } = await params;
   if (!(await prisma.blogArticle.findUnique({ where: { id }, select: { id: true } }))) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -37,12 +32,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const admin = await requireRole(isAdmin);
+  if (admin instanceof NextResponse) return admin;
   const { id } = await params;
 
-  const parsed = bodySchema.safeParse(await request.json().catch(() => null));
-  const days = parsed.success ? parsePreviewDays(parsed.data.days) : null;
+  const body = await parseJsonBody(request, bodySchema);
+  const days = body instanceof NextResponse ? null : parsePreviewDays(body.days);
   if (days === null) return NextResponse.json({ error: "validation" }, { status: 400 });
 
   const article = await prisma.blogArticle.findUnique({ where: { id }, select: { id: true, kind: true, slug: true, publishedAt: true } });

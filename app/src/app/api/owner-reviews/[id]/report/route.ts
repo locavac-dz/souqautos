@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { ownerReviewReportSchema } from "@/lib/validation/owner-review";
 import { isUniqueViolation } from "@/lib/prisma-errors";
@@ -13,21 +13,16 @@ import type { ReportReason } from "@prisma/client";
 // l'équipe n'a pas confirmé (jamais de retrait automatique sur un signalement
 // non vérifié, même règle que les annonces).
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`report-owner-review:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = ownerReviewReportSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, ownerReviewReportSchema);
+  if (body instanceof NextResponse) return body;
 
   const review = await prisma.ownerReview.findUnique({ where: { id }, select: { id: true, userId: true, status: true } });
   // Un avis non publié n'est vu que de son auteur et de l'équipe : inutile (et
@@ -44,8 +39,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: {
         ownerReviewId: review.id,
         authorId: user.id,
-        reason: parsed.data.reason as ReportReason,
-        comment: parsed.data.comment || null,
+        reason: body.reason as ReportReason,
+        comment: body.comment || null,
       },
     });
   } catch (error) {

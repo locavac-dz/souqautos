@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validation/auth";
 import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/auth-server/password";
@@ -16,16 +17,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = loginSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "validation", issues: parsed.error.issues },
-      { status: 400 }
-    );
-  }
+  const body = await parseJsonBody(request, loginSchema, { issues: "full" });
+  if (body instanceof NextResponse) return body;
 
-  const { email, password } = parsed.data;
+  const { email, password } = body;
 
   // Plafond par compte, contrôlé avant toute vérification de mot de passe et
   // pour n'importe quelle adresse (existante ou non : la réponse ne renseigne

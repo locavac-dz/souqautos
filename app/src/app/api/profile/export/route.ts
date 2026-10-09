@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 // Droit d'accès/portabilité des données (RGPD art. 15/20) — complète le droit
@@ -13,10 +13,8 @@ import { checkRateLimit } from "@/lib/rate-limit";
 // utilisateur est l'auteur ou qu'il peut déjà consulter dans l'application
 // (le contenu d'une conversation à laquelle il participe) est exportée.
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`profile-export:${user.id}`, { limit: 5, windowMs: 24 * 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });

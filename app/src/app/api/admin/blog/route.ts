@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
 import { slugify } from "@/lib/slugify";
@@ -18,17 +18,12 @@ import { writeAuditLog } from "@/lib/audit-log";
 // marque, pas une action de modération courante — même seuil que la gestion
 // du référentiel marques/modèles.
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
-  const body = await request.json().catch(() => null);
-  const parsed = blogArticleSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
-  const data = parsed.data;
+  const body = await parseJsonBody(request, blogArticleSchema);
+  if (body instanceof NextResponse) return body;
+  const data = body;
 
   // Lot 115 — source facultative (nom + lien https normalisé).
   const source = resolveSource(data);

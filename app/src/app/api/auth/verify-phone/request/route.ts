@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendSms } from "@/lib/sms";
 import { generateExpiry, generateNumericCode } from "@/lib/verification";
 
 export async function POST() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
   if (!user.phone) {
     return NextResponse.json({ error: "no_phone" }, { status: 400 });
   }

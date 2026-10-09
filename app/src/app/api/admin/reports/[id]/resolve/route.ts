@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import {
   computeReportTransition,
@@ -23,17 +23,12 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isStaff(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isStaff);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const report = await prisma.report.findUnique({
     where: { id },
@@ -43,7 +38,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const action: ReportModerationAction = parsed.data.action;
+  const action: ReportModerationAction = body.action;
   const transition = computeReportTransition(report.status, action);
   if (!transition.ok) {
     return NextResponse.json({ error: transition.error }, { status: 400 });
@@ -53,7 +48,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     where: { id },
     data: {
       status: transition.newStatus,
-      resolutionNote: parsed.data.note?.trim() || null,
+      resolutionNote: body.note?.trim() || null,
       resolvedAt: new Date(),
     },
   });
@@ -69,7 +64,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       ownerReviewId: report.ownerReviewId,
       previousStatus: report.status,
       newStatus: transition.newStatus,
-      note: parsed.data.note ?? null,
+      note: body.note ?? null,
     },
   });
 

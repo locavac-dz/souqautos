@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/mailer";
 import { generateExpiry } from "@/lib/verification";
 import { SITE_URL } from "@/lib/site";
 
 export async function POST() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
   if (user.emailVerifiedAt) {
     return NextResponse.json({ error: "already_verified" }, { status: 400 });
   }

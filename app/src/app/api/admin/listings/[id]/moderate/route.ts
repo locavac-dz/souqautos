@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import { computeModerationTransition, type ModerationAction } from "@/lib/moderation";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -21,32 +21,27 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isStaff(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isStaff);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const listing = await prisma.listing.findUnique({ where: { id } });
   if (!listing) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const action: ModerationAction = parsed.data.action;
-  const transition = computeModerationTransition(listing.status, action, parsed.data.reason);
+  const action: ModerationAction = body.action;
+  const transition = computeModerationTransition(listing.status, action, body.reason);
   if (!transition.ok) {
     return NextResponse.json({ error: transition.error }, { status: 400 });
   }
 
   const now = new Date();
   const isApproval = action === "approve";
-  const moderationNote = isApproval ? null : (parsed.data.reason?.trim() ?? null);
+  const moderationNote = isApproval ? null : (body.reason?.trim() ?? null);
   const firstPublication = isApproval && !listing.publishedAt;
   const publishedAt = firstPublication ? now : listing.publishedAt;
   // Lot 265 (audit 2026-10-08, constat A2) — la première publication fixe la date d'expiration (publishedAt +
@@ -94,7 +89,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (seller) {
     const t = await getTranslations({ locale: seller.locale, namespace: "Notifications" });
     const title = escapeHtml(listing.title);
-    const reason = escapeHtml(parsed.data.reason?.trim() ?? "");
+    const reason = escapeHtml(body.reason?.trim() ?? "");
 
     let subject: string;
     let html: string;
@@ -138,7 +133,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     details: {
       previousStatus: listing.status,
       newStatus: transition.newStatus,
-      reason: parsed.data.reason ?? null,
+      reason: body.reason ?? null,
     },
   });
 

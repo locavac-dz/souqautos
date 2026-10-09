@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { publishToGroup } from "@/lib/realtime";
 
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const { id, userId } = await params;
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { pressReviewSchema } from "@/lib/validation/press-review";
 import { validateVehicleRefs } from "@/lib/listing-catalogue-refs";
@@ -10,17 +10,12 @@ import { writeAuditLog } from "@/lib/audit-log";
 // Lot 114 — réservé à ADMIN, comme le magazine et les essais : c'est du contenu
 // public qui engage l'image de la marque.
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
-  const body = await request.json().catch(() => null);
-  const parsed = pressReviewSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
-  const data = parsed.data;
+  const body = await parseJsonBody(request, pressReviewSchema);
+  if (body instanceof NextResponse) return body;
+  const data = body;
 
   const refs = await validateVehicleRefs(data);
   if (!refs.ok) {

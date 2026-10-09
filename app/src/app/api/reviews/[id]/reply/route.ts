@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { validateReviewReply } from "@/lib/reviews";
 import { canReplyToProReviews } from "@/lib/pro-account";
@@ -39,23 +39,18 @@ async function checkCanReply(
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`reply-review:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
-  const validation = validateReviewReply(parsed.data.reply);
+  const validation = validateReviewReply(body.reply);
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
@@ -77,7 +72,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const replyText = parsed.data.reply.trim();
+  const replyText = body.reply.trim();
   await prisma.review.update({
     where: { id },
     data: { reply: replyText, repliedAt: new Date() },
@@ -112,10 +107,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
   const review = await prisma.review.findUnique({ where: { id } });

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { formatNumber } from "@/lib/format";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkListingPriceEditable, isPriceDrop } from "@/lib/listing-lifecycle";
 import { canManageListing } from "@/lib/listing-access";
@@ -14,21 +14,16 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`update-price-listing:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const listing = await prisma.listing.findUnique({ where: { id } });
   if (!listing) {
@@ -44,7 +39,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const oldPrice = listing.price;
-  const newPrice = parsed.data.price;
+  const newPrice = body.price;
 
   // Historique des prix (Lot 45) : une entrée par changement réel — jamais si
   // le vendeur "modifie" pour remettre exactement le même montant.

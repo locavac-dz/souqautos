@@ -4,8 +4,7 @@ import { MAX_COMPARE } from "@/lib/compare";
 import { getSellerTrustSummary } from "@/lib/seller-trust";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
-
-const NO_STORE = { "Cache-Control": "no-store" };
+import { NO_STORE } from "@/lib/api-route";
 
 export async function GET(request: NextRequest) {
   if (!(await checkRateLimit(`compare-ip:${getClientIp(request)}`, { limit: 60, windowMs: 60 * 60 * 1000 }))) {

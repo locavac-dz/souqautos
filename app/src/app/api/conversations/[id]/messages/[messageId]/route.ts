@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkCanDeleteMessage } from "@/lib/messaging";
 import { publishToConversation } from "@/lib/realtime";
 import { deleteStoredFile } from "@/lib/uploads";
@@ -9,10 +9,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; messageId: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const { id, messageId } = await params;
   const message = await prisma.message.findUnique({ where: { id: messageId } });

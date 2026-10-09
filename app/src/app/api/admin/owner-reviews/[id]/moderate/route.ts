@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isStaff } from "@/lib/auth-server/roles";
 import { ownerReviewModerationSchema } from "@/lib/validation/owner-review";
 import { computeModerationTransition, validateRejectionReason } from "@/lib/owner-review";
@@ -11,18 +11,13 @@ import { writeAuditLog } from "@/lib/audit-log";
 // ADMIN, comme la modération des annonces). Un refus exige un motif, transmis à
 // l'auteur ; une validation publie l'avis.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isStaff(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isStaff);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = ownerReviewModerationSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
-  const { action } = parsed.data;
+  const body = await parseJsonBody(request, ownerReviewModerationSchema);
+  if (body instanceof NextResponse) return body;
+  const { action } = body;
 
   const review = await prisma.ownerReview.findUnique({ where: { id }, select: { id: true, status: true, modelId: true } });
   if (!review) {
@@ -36,7 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   let reason: string | null = null;
   if (action === "reject") {
-    const validation = validateRejectionReason(parsed.data.reason);
+    const validation = validateRejectionReason(body.reason);
     if (!validation.ok) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageProListings } from "@/lib/pro-account";
 import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -12,10 +12,8 @@ import { hasAdvancedProTools, getSubscriptionStatus } from "@/lib/pro-subscripti
 // (gererAnnonces), mais réservé aux paliers Pro/Premium (§4-B, seul outil
 // distinguant réellement les paliers au-delà du quota).
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`export-listings:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });

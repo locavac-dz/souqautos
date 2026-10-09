@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -19,14 +20,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = proAccountFieldsSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, proAccountFieldsSchema);
+  if (body instanceof NextResponse) return body;
 
-  if (parsed.data.wilayaId) {
-    const wilaya = await prisma.wilaya.findUnique({ where: { id: parsed.data.wilayaId } });
+  if (body.wilayaId) {
+    const wilaya = await prisma.wilaya.findUnique({ where: { id: body.wilayaId } });
     if (!wilaya) {
       return NextResponse.json({ error: "validation" }, { status: 400 });
     }
@@ -36,10 +34,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const revokeBadge = shouldRevokeVerifiedBadge({
     badgeVerifie: current.badgeVerifie,
     currentName: current.nomCommercial,
-    nextName: parsed.data.nomCommercial,
+    nextName: body.nomCommercial,
   });
 
-  const { nomCommercial, presentation, horaires, phone, website, categoryPro, horairesSemaine, wilayaId } = parsed.data;
+  const { nomCommercial, presentation, horaires, phone, website, categoryPro, horairesSemaine, wilayaId } = body;
 
   const account = await prisma.professionalAccount.update({
     where: { id },

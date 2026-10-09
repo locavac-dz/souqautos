@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkCanMessage } from "@/lib/messaging";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUniqueViolation } from "@/lib/prisma-errors";
@@ -12,22 +12,17 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`start-conversation:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
-  const listing = await prisma.listing.findUnique({ where: { id: parsed.data.listingId } });
+  const listing = await prisma.listing.findUnique({ where: { id: body.listingId } });
   if (!listing || listing.status !== "PUBLIEE") {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
@@ -66,7 +61,7 @@ export async function POST(request: NextRequest) {
     if (!conversation) throw error;
   }
 
-  const { initialMessage } = parsed.data;
+  const { initialMessage } = body;
   if (initialMessage && initialMessage.length > 0) {
     const existingCount = await prisma.message.count({ where: { conversationId: conversation.id } });
     if (existingCount === 0) {

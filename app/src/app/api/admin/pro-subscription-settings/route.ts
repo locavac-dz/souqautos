@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { getProSubscriptionSettings, validateQuota } from "@/lib/pro-subscription-settings";
 import { validatePriceDzd } from "@/lib/payment-settings";
@@ -20,18 +20,13 @@ const bodySchema = z.object({
 // chiffres déterminent directement ce qu'un vendeur pro paie et combien
 // d'annonces son abonnement autorise.
 export async function PATCH(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
-  const { starterQuota, businessQuota, proQuota, businessPriceDzd, proPriceDzd, premiumPriceDzd } = parsed.data;
+  const { starterQuota, businessQuota, proQuota, businessPriceDzd, proPriceDzd, premiumPriceDzd } = body;
   const quotaChecks = [starterQuota, businessQuota, proQuota].map(validateQuota);
   const priceChecks = [businessPriceDzd, proPriceDzd, premiumPriceDzd].map(validatePriceDzd);
   if (quotaChecks.some((c) => !c.ok)) {

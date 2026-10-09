@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { publishToGroup } from "@/lib/realtime";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -13,8 +13,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
   if (!(await checkRateLimit(`group-add-member:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
@@ -27,11 +27,10 @@ export async function POST(
   if (!membership) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!membership.isAdmin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  const body = await request.json().catch(() => null);
-  const parsed = addSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400 });
+  const body = await parseJsonBody(request, addSchema);
+  if (body instanceof NextResponse) return body;
 
-  const { email } = parsed.data;
+  const { email } = body;
 
   const targetUser = await prisma.user.findUnique({
     where: { email, deletedAt: null },

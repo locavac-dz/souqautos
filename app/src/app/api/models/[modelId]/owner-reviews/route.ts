@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { parseJsonBody, requireUser } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { ownerReviewSchema } from "@/lib/validation/owner-review";
 import { parsePositiveIntId } from "@/lib/validation/int-bounds";
@@ -22,10 +22,8 @@ async function loadModel(rawId: string) {
 const DAILY_LIMIT = { limit: 20, windowMs: 24 * 60 * 60 * 1000 };
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`owner-review:${user.id}`, DAILY_LIMIT))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -42,21 +40,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = ownerReviewSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation", issues: parsed.error.issues.map((i) => i.path.join(".")) }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, ownerReviewSchema, { issues: "paths" });
+  if (body instanceof NextResponse) return body;
 
   try {
     const review = await prisma.ownerReview.create({
       data: {
         userId: user.id,
         modelId: model.id,
-        rating: parsed.data.rating,
-        comment: parsed.data.comment,
-        purchaseYear: parsed.data.purchaseYear ?? null,
-        mileageKm: parsed.data.mileageKm ?? null,
+        rating: body.rating,
+        comment: body.comment,
+        purchaseYear: body.purchaseYear ?? null,
+        mileageKm: body.mileageKm ?? null,
       },
       select: { id: true, status: true },
     });
@@ -74,10 +69,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`owner-review:${user.id}`, DAILY_LIMIT))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -94,11 +87,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = ownerReviewSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation", issues: parsed.error.issues.map((i) => i.path.join(".")) }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, ownerReviewSchema, { issues: "paths" });
+  if (body instanceof NextResponse) return body;
 
   const existing = await prisma.ownerReview.findUnique({
     where: { userId_modelId: { userId: user.id, modelId: model.id } },
@@ -113,10 +103,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   await prisma.ownerReview.update({
     where: { id: existing.id },
     data: {
-      rating: parsed.data.rating,
-      comment: parsed.data.comment,
-      purchaseYear: parsed.data.purchaseYear ?? null,
-      mileageKm: parsed.data.mileageKm ?? null,
+      rating: body.rating,
+      comment: body.comment,
+      purchaseYear: body.purchaseYear ?? null,
+      mileageKm: body.mileageKm ?? null,
       ...editedByAuthorUpdate(),
     },
   });
@@ -128,10 +118,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const { modelId: rawModelId } = await params;
   const model = await loadModel(rawModelId);

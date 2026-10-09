@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
   createSearchAlertSchema,
@@ -10,22 +10,17 @@ import {
 } from "@/lib/validation/search-alert";
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`alert-create:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = createSearchAlertSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, createSearchAlertSchema);
+  if (body instanceof NextResponse) return body;
 
-  const filters = sanitizeAlertFilters(parsed.data.filters);
+  const filters = sanitizeAlertFilters(body.filters);
   if (!hasAtLeastOneFilter(filters)) {
     return NextResponse.json({ error: "filters_required" }, { status: 400 });
   }
@@ -36,7 +31,7 @@ export async function POST(request: NextRequest) {
   }
 
   const alert = await prisma.searchAlert.create({
-    data: { userId: user.id, label: parsed.data.label, filters: JSON.stringify(filters) },
+    data: { userId: user.id, label: body.label, filters: JSON.stringify(filters) },
   });
 
   return NextResponse.json({ id: alert.id }, { status: 201 });

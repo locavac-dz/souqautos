@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { listingSchema } from "@/lib/validation/listing";
 import { savePhoto, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -17,10 +17,8 @@ const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`create-listing:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { resolveProAccess } from "@/lib/pro-access";
 
 const bodySchema = z.object({
@@ -10,8 +10,8 @@ const bodySchema = z.object({
 });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const resolved = await resolveProAccess(user);
   if (!resolved) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -22,15 +22,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400 });
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const updated = await prisma.callbackRequest.update({
     where: { id },
     data: {
-      ...(parsed.data.status !== undefined ? { status: parsed.data.status } : {}),
-      ...(parsed.data.note !== undefined ? { note: parsed.data.note || null } : {}),
+      ...(body.status !== undefined ? { status: body.status } : {}),
+      ...(body.note !== undefined ? { note: body.note || null } : {}),
     },
   });
 

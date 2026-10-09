@@ -14,7 +14,12 @@ vi.mock("@/lib/prisma", () => ({
     searchAlertNotification: { create: (...a: unknown[]) => notificationCreate(...a) },
   },
 }));
-vi.mock("@/lib/mailer", () => ({ sendEmail: (...a: unknown[]) => sendEmail(...a), escapeHtml: (s: string) => s }));
+vi.mock("@/lib/mailer", () => ({
+  sendEmail: (...a: unknown[]) => sendEmail(...a),
+  // Lot 271 — notifyUser passe par sendEmailBestEffort : délègue au même espion, échec avalé comme en vrai.
+  sendEmailBestEffort: (_tag: string, args: unknown) => Promise.resolve(sendEmail(args)).catch(() => null),
+  escapeHtml: (s: string) => s,
+}));
 vi.mock("@/lib/push-send", () => ({ sendPushToUser: (...a: unknown[]) => sendPushToUser(...a) }));
 vi.mock("@/lib/site", () => ({ SITE_URL: "https://souqauto.example" }));
 vi.mock("next-intl/server", () => ({

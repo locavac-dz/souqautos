@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody, requireUser } from "@/lib/api-route";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 import { checkReviewEligibility, isValidRating } from "@/lib/reviews";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { sendEmailBestEffort, escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
 
 const bodySchema = z.object({
@@ -15,19 +15,17 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`create-review:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const { id: sellerId } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success || !isValidRating(parsed.data.rating)) {
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
+  if (!isValidRating(body.rating)) {
     return NextResponse.json({ error: "validation" }, { status: 400 });
   }
 
@@ -64,8 +62,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: {
         sellerId,
         authorId: user.id,
-        rating: parsed.data.rating,
-        comment: parsed.data.comment?.trim() || null,
+        rating: body.rating,
+        comment: body.comment?.trim() || null,
         status,
       },
     });
@@ -83,20 +81,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // avait reçu un nouvel avis, donc jamais incité à y répondre.
   const t = await getTranslations({ locale: seller.locale, namespace: "Notifications" });
   const authorName = escapeHtml(user.profile?.displayName ?? user.email);
-  const emailResult = await sendEmail({
+  await sendEmailBestEffort("nouvel avis", {
     to: seller.email,
     subject: t("newReviewSubject"),
     html: `<p>${t("greeting")}</p><p>${t("newReviewBody", {
       name: authorName,
-      rating: parsed.data.rating,
+      rating: body.rating,
     })}</p><p><a href="${SITE_URL}/${seller.locale}/vendeur/${sellerId}">${t("newReviewLink")}</a></p>`,
-  }).catch((err) => {
-    console.error(`[EMAIL nouvel avis] échec envoi: ${(err as Error).message}`);
-    return null;
   });
-  if (emailResult?.previewUrl) {
-    console.log(`[EMAIL nouvel avis] ${emailResult.previewUrl}`);
-  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

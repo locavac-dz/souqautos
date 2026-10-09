@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const { id: proAccountId } = await params;
   const proAccount = await prisma.professionalAccount.findUnique({ where: { id: proAccountId } });
@@ -21,8 +21,8 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const { id: proAccountId } = await params;
   await prisma.proFollow.deleteMany({ where: { userId: user.id, proAccountId } });

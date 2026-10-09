@@ -1,9 +1,8 @@
-import { after } from "next/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { saveMessageAttachment, PhotoValidationError, saveVoiceMessage, VoiceValidationError } from "@/lib/uploads";
 import { publishToGroup } from "@/lib/realtime";
@@ -17,8 +16,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
 
@@ -70,8 +69,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`send-group-message:${user.id}`, { limit: 60, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });

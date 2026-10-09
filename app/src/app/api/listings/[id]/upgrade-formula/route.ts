@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { canManageListing } from "@/lib/listing-access";
 import { checkFormulaUpgradeEligible, priceForFormula } from "@/lib/payment-orders";
@@ -24,21 +24,16 @@ const bodySchema = z
 // formule payante — même règle que gérer/renouveler/tarifer une annonce
 // (Lot 43/61).
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`upgrade-formula:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const listing = await prisma.listing.findUnique({ where: { id } });
   if (!listing) {
@@ -50,10 +45,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const settings = await getPaymentSettings();
   const chargily = resolveChargilyConfig(process.env);
-  if (parsed.data.method === "virement" && !isBankDetailsComplete(settings)) {
+  if (body.method === "virement" && !isBankDetailsComplete(settings)) {
     return NextResponse.json({ error: "bank_details_missing" }, { status: 400 });
   }
-  if (parsed.data.method === "chargily" && chargily.mode !== "enabled") {
+  if (body.method === "chargily" && chargily.mode !== "enabled") {
     return NextResponse.json({ error: "online_payment_unavailable" }, { status: 400 });
   }
 
@@ -64,15 +59,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const eligibility = checkFormulaUpgradeEligible({
     status: listing.status,
     currentFormula: listing.formula,
-    targetFormula: parsed.data.formula,
+    targetFormula: body.formula,
     hasPendingOrder: Boolean(pendingOrder),
   });
   if (!eligibility.ok) {
     return NextResponse.json({ error: eligibility.error }, { status: 400 });
   }
 
-  const amountDzd = priceForFormula(parsed.data.formula, settings);
-  const isChargily = parsed.data.method === "chargily";
+  const amountDzd = priceForFormula(body.formula, settings);
+  const isChargily = body.method === "chargily";
 
   // Le `findFirst` ci-dessus ne suffit pas seul contre un double-clic/retry
   // réseau (TOCTOU) — l'index unique filtré `PaymentOrder_pending_unique`
@@ -84,12 +79,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: {
         userId: user.id,
         listingId: id,
-        formula: parsed.data.formula,
+        formula: body.formula,
         amountDzd,
         provider: isChargily ? "CHARGILY" : "VIREMENT",
         // Pour Chargily, la référence est posée après création (identifiant de la commande) : le
         // vendeur n'a rien à saisir.
-        reference: isChargily ? "CHARGILY" : parsed.data.reference!,
+        reference: isChargily ? "CHARGILY" : body.reference!,
       },
     });
   } catch (err) {
@@ -113,7 +108,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       successUrl: `${returnBase}?paiement=ok`,
       failureUrl: `${returnBase}?paiement=echec`,
       webhookEndpoint: `${SITE_URL}${CHARGILY_WEBHOOK_PATH}`,
-      description: `Souq Auto — formule ${parsed.data.formula} — annonce ${id} — commande ${order.id}`,
+      description: `Souq Auto — formule ${body.formula} — annonce ${id} — commande ${order.id}`,
       locale,
     });
     order = await prisma.paymentOrder.update({

@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkCanMessage, checkMessageHasContent, shouldSendMessageNotification } from "@/lib/messaging";
 import { canAccessConversation } from "@/lib/listing-access";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
 import { saveMessageAttachment, PhotoValidationError, saveVoiceMessage, VoiceValidationError } from "@/lib/uploads";
 import { publishToConversation } from "@/lib/realtime";
-import { createNotification } from "@/lib/notification-service";
+import { notifyUser } from "@/lib/notify-user";
 
 const bodySchema = z.object({ content: z.string().trim().max(2000) });
 
 const MESSAGES_PAGE_SIZE = 50;
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
   const conversation = await prisma.conversation.findUnique({
@@ -56,10 +56,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`send-message:${user.id}`, { limit: 60, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -174,18 +172,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           ? "[Message vocal]"
           : "[Pièce jointe]";
       const threadLink = `${SITE_URL}/${recipient.locale}/compte/messages/${id}`;
-      const emailResult = await sendEmail({
-        to: recipient.email,
-        subject: `Nouveau message de ${senderName} — Souq Auto`,
-        html: `<p>Bonjour,</p><p>${senderName} vous a envoyé un message à propos de « ${listingTitle} » :</p><p style="white-space:pre-wrap">${messageHtml}</p><p><a href="${threadLink}">Répondre sur Souq Auto</a></p>`,
-      }).catch(() => null);
-      if (emailResult?.previewUrl) {
-        console.log(`[EMAIL notification nouveau message] ${emailResult.previewUrl}`);
-      }
-
-      await createNotification(otherUserId, "NEW_MESSAGE", {
+      // Lot 271 — courriel (meilleur effort, échec journalisé) + notification in-app en un appel.
+      await notifyUser({
+        userId: otherUserId,
+        kind: "NEW_MESSAGE",
         url: `/${recipient.locale}/compte/messages/${id}`,
         body: conversation.listing.title,
+        email: {
+          tag: "nouveau message",
+          to: recipient.email,
+          subject: `Nouveau message de ${senderName} — Souq Auto`,
+          html: `<p>Bonjour,</p><p>${senderName} vous a envoyé un message à propos de « ${listingTitle} » :</p><p style="white-space:pre-wrap">${messageHtml}</p><p><a href="${threadLink}">Répondre sur Souq Auto</a></p>`,
+        },
       });
     }
   }

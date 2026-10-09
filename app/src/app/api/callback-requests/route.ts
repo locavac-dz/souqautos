@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
@@ -19,13 +20,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation", issues: parsed.error.issues }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema, { issues: "full" });
+  if (body instanceof NextResponse) return body;
 
-  const { listingId, callerName, callerPhone, preferredTime } = parsed.data;
+  const { listingId, callerName, callerPhone, preferredTime } = body;
 
   // Résoudre le compte pro à partir de l'annonce ou refuser si inconnu
   let proAccountId: string | null = null;

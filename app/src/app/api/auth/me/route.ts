@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { requireUser } from "@/lib/api-route";
 import { safeUser } from "@/lib/http";
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
   return NextResponse.json({
     user: {
       ...safeUser(user),

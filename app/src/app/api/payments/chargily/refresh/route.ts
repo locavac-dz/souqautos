@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { refreshChargilyOrder } from "@/lib/chargily-events";
 
@@ -15,25 +15,20 @@ const bodySchema = z.object({
 // notre clé secrète, puis on applique EXACTEMENT la même transition que le webhook (Lot 266 : logique
 // partagée dans `refreshChargilyOrder`, tracée comme REFRESH_USER).
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
   if (!(await checkRateLimit(`chargily-refresh:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   // Seul l'auteur de la commande peut en demander la relecture — une commande d'autrui répond 404,
   // sans révéler qu'elle existe.
   const result = await refreshChargilyOrder({
-    kind: parsed.data.kind,
-    orderId: parsed.data.orderId,
+    kind: body.kind,
+    orderId: body.orderId,
     now: new Date(),
     meta: { source: "REFRESH_USER", actorUserId: user.id },
     ownerUserId: user.id,

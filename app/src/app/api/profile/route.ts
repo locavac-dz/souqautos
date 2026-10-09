@@ -1,35 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { profileUpdateSchema } from "@/lib/validation/profile";
 import { shouldResetPhoneVerification } from "@/lib/profile";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`update-profile:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = profileUpdateSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, profileUpdateSchema);
+  if (body instanceof NextResponse) return body;
 
-  if (parsed.data.wilayaId) {
-    const wilaya = await prisma.wilaya.findUnique({ where: { id: parsed.data.wilayaId } });
+  if (body.wilayaId) {
+    const wilaya = await prisma.wilaya.findUnique({ where: { id: body.wilayaId } });
     if (!wilaya) {
       return NextResponse.json({ error: "validation" }, { status: 400 });
     }
   }
 
-  const newPhone = parsed.data.phone?.trim() || null;
+  const newPhone = body.phone?.trim() || null;
   if (newPhone && newPhone !== user.phone) {
     const existingPhone = await prisma.user.findUnique({ where: { phone: newPhone } });
     if (existingPhone && existingPhone.id !== user.id) {
@@ -38,10 +33,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Lot 119 — WhatsApp n'a de sens qu'avec un numéro ; sans numéro, l'option est désactivée.
-  if (parsed.data.whatsappEnabled && !newPhone) {
+  if (body.whatsappEnabled && !newPhone) {
     return NextResponse.json({ error: "whatsapp_needs_phone" }, { status: 400 });
   }
-  const whatsappEnabled = newPhone ? parsed.data.whatsappEnabled : false;
+  const whatsappEnabled = newPhone ? body.whatsappEnabled : false;
 
   const resetPhoneVerification = shouldResetPhoneVerification({ oldPhone: user.phone, newPhone });
 
@@ -50,9 +45,9 @@ export async function POST(request: NextRequest) {
       prisma.profile.update({
         where: { userId: user.id },
         data: {
-          displayName: parsed.data.displayName,
-          wilayaId: parsed.data.wilayaId ?? null,
-          bio: parsed.data.bio?.trim() || null,
+          displayName: body.displayName,
+          wilayaId: body.wilayaId ?? null,
+          bio: body.bio?.trim() || null,
         },
       }),
       prisma.user.update({

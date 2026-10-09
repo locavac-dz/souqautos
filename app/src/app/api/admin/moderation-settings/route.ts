@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { getModerationSettings, validateThreshold } from "@/lib/moderation-settings";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -16,19 +16,14 @@ const bodySchema = z.object({
 // du référentiel marques/modèles, Lot 25), pas une action de modération au
 // cas par cas.
 export async function PATCH(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
-  const listingCheck = validateThreshold(parsed.data.autoSuspendListingThreshold);
-  const userCheck = validateThreshold(parsed.data.autoSuspendUserThreshold);
+  const listingCheck = validateThreshold(body.autoSuspendListingThreshold);
+  const userCheck = validateThreshold(body.autoSuspendUserThreshold);
   if (!listingCheck.ok || !userCheck.ok) {
     return NextResponse.json({ error: "invalid_threshold" }, { status: 400 });
   }
@@ -39,12 +34,12 @@ export async function PATCH(request: NextRequest) {
     where: { id: "singleton" },
     create: {
       id: "singleton",
-      autoSuspendListingThreshold: parsed.data.autoSuspendListingThreshold,
-      autoSuspendUserThreshold: parsed.data.autoSuspendUserThreshold,
+      autoSuspendListingThreshold: body.autoSuspendListingThreshold,
+      autoSuspendUserThreshold: body.autoSuspendUserThreshold,
     },
     update: {
-      autoSuspendListingThreshold: parsed.data.autoSuspendListingThreshold,
-      autoSuspendUserThreshold: parsed.data.autoSuspendUserThreshold,
+      autoSuspendListingThreshold: body.autoSuspendListingThreshold,
+      autoSuspendUserThreshold: body.autoSuspendUserThreshold,
     },
   });
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageCollaborators } from "@/lib/pro-account";
 import { serializeProPermissions } from "@/lib/pro-permissions";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -20,10 +20,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; collaboratorId: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   // Vérification de débit avant tout accès DB (Lot 98, audit sécurité/qualité
   // — même raisonnement que collaborators/route.ts).
@@ -45,15 +43,12 @@ export async function PATCH(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const updated = await prisma.proCollaborator.update({
     where: { id: collaboratorId },
-    data: { permissions: serializeProPermissions(parsed.data.permissions) },
+    data: { permissions: serializeProPermissions(body.permissions) },
   });
 
   return NextResponse.json({ collaborator: updated });
@@ -63,10 +58,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; collaboratorId: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   // Vérification de débit avant tout accès DB (Lot 98, audit sécurité/qualité
   // — même raisonnement que collaborators/route.ts).

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-route";
 import { contactSchema } from "@/lib/validation/contact";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
@@ -11,13 +12,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = contactSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation", issues: parsed.error.issues }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, contactSchema, { issues: "full" });
+  if (body instanceof NextResponse) return body;
 
-  const { name, email, subject, message } = parsed.data;
+  const { name, email, subject, message } = body;
   // Lot 265 (audit, constat A5) — en production, pas de repli sur l'adresse de développement : sans ADMIN_EMAIL,
   // le message serait parti vers un domaine non maîtrisé sans que personne ne le sache. `launch:check` l'exige.
   const to = process.env.ADMIN_EMAIL?.trim() || (process.env.NODE_ENV !== "production" ? DEV_ADMIN_EMAIL : null);

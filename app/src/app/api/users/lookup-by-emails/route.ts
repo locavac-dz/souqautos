@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
@@ -14,17 +14,16 @@ const schema = z.object({
 // Lot 267 (audit B6) — 20 appels par heure et par compte : sans plafond, 49 adresses par requête permettaient
 // d'énumérer les inscrits en quelques minutes.
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
   if (!(await checkRateLimit(`lookup-emails:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400 });
+  const body = await parseJsonBody(request, schema);
+  if (body instanceof NextResponse) return body;
 
-  const emails = [...new Set(parsed.data.emails.map((e) => e.toLowerCase()))];
+  const emails = [...new Set(body.emails.map((e) => e.toLowerCase()))];
 
   const found = await prisma.user.findMany({
     where: { email: { in: emails }, deletedAt: null },

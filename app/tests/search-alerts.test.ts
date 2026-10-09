@@ -11,8 +11,11 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+// Lot 271 — notifyUser passe par sendEmailBestEffort : il délègue au même espion que sendEmail.
+const { sendEmailSpy } = vi.hoisted(() => ({ sendEmailSpy: vi.fn() }));
 vi.mock("@/lib/mailer", () => ({
-  sendEmail: vi.fn().mockResolvedValue(null),
+  sendEmail: sendEmailSpy,
+  sendEmailBestEffort: (_tag: string, args: unknown) => Promise.resolve(sendEmailSpy(args)).catch(() => null),
   escapeHtml: (s: string) => s,
 }));
 

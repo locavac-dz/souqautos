@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { refreshChargilyOrder } from "@/lib/chargily-events";
 
@@ -13,20 +13,15 @@ const bodySchema = z.object({
 // faire relire une commande Chargily restée en attente (la relecture était réservée à son auteur) et devait
 // trancher à l'aveugle. Même transition que le webhook, tracée comme REFRESH_ADMIN. Réservé à ADMIN (argent).
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const result = await refreshChargilyOrder({
-    kind: parsed.data.kind,
-    orderId: parsed.data.orderId,
+    kind: body.kind,
+    orderId: body.orderId,
     now: new Date(),
     meta: { source: "REFRESH_ADMIN", actorUserId: user.id },
   });

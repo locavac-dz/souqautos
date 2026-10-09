@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { validateReportSubmission } from "@/lib/reports";
 
@@ -20,21 +20,16 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`report-listing:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const listing = await prisma.listing.findUnique({ where: { id } });
   if (!listing) {
@@ -44,7 +39,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "cannot_report_own_listing" }, { status: 400 });
   }
 
-  const validation = validateReportSubmission(parsed.data);
+  const validation = validateReportSubmission(body);
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
@@ -66,8 +61,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: {
         listingId: id,
         authorId: user.id,
-        reason: parsed.data.reason,
-        comment: parsed.data.comment?.trim() || null,
+        reason: body.reason,
+        comment: body.comment?.trim() || null,
       },
     });
   } catch (err) {

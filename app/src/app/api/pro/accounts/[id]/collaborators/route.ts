@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { canManageCollaborators } from "@/lib/pro-account";
 import { serializeProPermissions } from "@/lib/pro-permissions";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -17,10 +17,8 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   // Vérification de débit avant tout accès DB (même ordre que les autres
   // routes de l'application) : un appelant non autorisé sur cette ressource
@@ -39,13 +37,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
-  const targetUser = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+  const targetUser = await prisma.user.findUnique({ where: { email: body.email } });
   if (!targetUser) {
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
@@ -65,7 +60,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: {
         professionalAccountId: id,
         userId: targetUser.id,
-        permissions: serializeProPermissions(parsed.data.permissions),
+        permissions: serializeProPermissions(body.permissions),
       },
     });
     return NextResponse.json({ collaborator }, { status: 201 });

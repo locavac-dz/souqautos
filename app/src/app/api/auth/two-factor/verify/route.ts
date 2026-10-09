@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { parseJsonBody, NO_STORE } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { clearPendingCookie, getPendingFromCookies } from "@/lib/auth-server/two-factor-pending";
@@ -18,7 +19,6 @@ import { challenge } from "@/lib/two-factor";
 //  - par compte, quelle que soit l'adresse (LOGIN_ACCOUNT_LIMIT, comme la connexion) ;
 //  - le verrouillage du compte (5 échecs, 15 min) : chaque code faux compte comme un mot de passe faux, et le compteur n'est remis
 //    à zéro QU'ICI, après un code valable — jamais par la simple saisie du bon mot de passe (voir la route de connexion).
-const NO_STORE = { "Cache-Control": "no-store" };
 const schema = z.object({ code: z.string().trim().min(1).max(40) });
 
 export async function POST(request: NextRequest) {
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: NO_STORE });
   }
 
-  const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400, headers: NO_STORE });
+  const body = await parseJsonBody(request, schema, { headers: NO_STORE });
+  if (body instanceof NextResponse) return body;
 
   const user = await prisma.user.findUnique({ where: { id: pending.sub } });
   // Compte supprimé ou suspendu depuis la première étape : la connexion en attente ne vaut plus rien.
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "account_locked", lockedUntil: user.lockedUntil }, { status: 423, headers: NO_STORE });
   }
 
-  const result = await challenge(user.id, parsed.data.code, now);
+  const result = await challenge(user.id, body.code, now);
   if (!result.ok) {
     if (result.error === "not_enabled") {
       // La fonction a été désactivée entre-temps (réinitialisation par l'équipe) : il suffit de se reconnecter.

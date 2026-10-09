@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { improveListingText } from "@/lib/ai-listing";
 import { z } from "zod";
@@ -15,26 +15,21 @@ const improveSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`listing-improve:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = improveSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, improveSchema);
+  if (body instanceof NextResponse) return body;
 
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "ai_unavailable" }, { status: 503 });
   }
 
-  const improved = await improveListingText(parsed.data);
+  const improved = await improveListingText(body);
   if (!improved) {
     return NextResponse.json({ error: "ai_unavailable" }, { status: 503 });
   }

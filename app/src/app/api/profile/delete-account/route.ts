@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { verifyPassword, hashPassword } from "@/lib/auth-server/password";
 import { clearSessionCookie } from "@/lib/auth-server/session";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -24,26 +24,21 @@ const bodySchema = z.object({ password: z.string().min(1).optional(), confirmEma
 // (contrairement à la suspension, Lot 31) : l'email/mot de passe d'origine
 // sont irrémédiablement perdus.
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`delete-account:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   if (user.passwordHash) {
-    if (!parsed.data.password || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
+    if (!body.password || !(await verifyPassword(body.password, user.passwordHash))) {
       return NextResponse.json({ error: "wrong_password" }, { status: 400 });
     }
-  } else if (parsed.data.confirmEmail?.trim().toLowerCase() !== user.email.toLowerCase()) {
+  } else if (body.confirmEmail?.trim().toLowerCase() !== user.email.toLowerCase()) {
     return NextResponse.json({ error: "wrong_confirmation" }, { status: 400 });
   }
 

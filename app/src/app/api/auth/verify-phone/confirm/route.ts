@@ -1,27 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkPhoneCode } from "@/lib/verification";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const bodySchema = z.object({ code: z.string().trim().length(6) });
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`verify-phone:confirm:${user.id}`, { limit: 10, windowMs: 15 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const record = await prisma.phoneVerificationCode.findFirst({
     where: { userId: user.id },
@@ -32,7 +27,7 @@ export async function POST(request: NextRequest) {
   }
 
   const check = checkPhoneCode({
-    submittedCode: parsed.data.code,
+    submittedCode: body.code,
     storedCode: record.code,
     expiresAt: record.expiresAt,
     attempts: record.attempts,

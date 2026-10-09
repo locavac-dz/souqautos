@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { makeOfferSchema } from "@/lib/validation/offer";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
-import { sendPushToUser } from "@/lib/push-send";
+import { escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
-import { createNotification } from "@/lib/notification-service";
+import { notifyUser } from "@/lib/notify-user";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`offer:${user.id}`, { limit: 10, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -43,17 +42,16 @@ export async function POST(
     return NextResponse.json({ error: "offer_pending" }, { status: 400 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = makeOfferSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400 });
+  const body = await parseJsonBody(request, makeOfferSchema);
+  if (body instanceof NextResponse) return body;
 
   const offer = await prisma.offer.create({
     data: {
       listingId,
       buyerId: user.id,
       sellerId: listing.sellerId,
-      amount: parsed.data.amount,
-      message: parsed.data.message ?? null,
+      amount: body.amount,
+      message: body.message ?? null,
     },
   });
 
@@ -61,30 +59,31 @@ export async function POST(
     const sellerLocale = listing.seller.locale ?? "fr";
     const t = await getTranslations({ locale: sellerLocale, namespace: "Notifications" });
     const offerUrl = `${SITE_URL}/${sellerLocale}/compte/offres`;
+    const amount = body.amount.toLocaleString(sellerLocale === "ar" ? "ar-DZ" : "fr-DZ");
+    const seller = await prisma.user.findUnique({ where: { id: listing.sellerId }, select: { email: true } });
+    if (!seller) return;
 
-    await sendEmail({
-      to: (await prisma.user.findUnique({ where: { id: listing.sellerId }, select: { email: true } }))!.email,
-      subject: t("newOfferSubject", { title: listing.title }),
-      html: `<p>${t("greeting")}</p><p>${t("newOfferBody", {
-        title: escapeHtml(listing.title),
-        amount: parsed.data.amount.toLocaleString(sellerLocale === "ar" ? "ar-DZ" : "fr-DZ"),
-      })}</p><p><a href="${offerUrl}">${t("newOfferLink")}</a></p>`,
-    }).catch(() => null);
-
-    await sendPushToUser(listing.sellerId, {
-      title: t("pushNewOfferTitle"),
-      body: t("pushNewOfferBody", {
-        title: listing.title,
-        amount: parsed.data.amount.toLocaleString(sellerLocale === "ar" ? "ar-DZ" : "fr-DZ"),
-      }),
-      url: `/${sellerLocale}/compte/offres`,
-      tag: `offer-${offer.id}`,
-      lang: sellerLocale === "ar" ? "ar" : "fr",
-    });
-
-    await createNotification(listing.sellerId, "OFFER_RECEIVED", {
+    // Lot 271 — courriel + push + notification in-app en un appel (notifyUser).
+    await notifyUser({
+      userId: listing.sellerId,
+      kind: "OFFER_RECEIVED",
       url: `/${sellerLocale}/compte/offres`,
       body: listing.title,
+      email: {
+        tag: "offre",
+        to: seller.email,
+        subject: t("newOfferSubject", { title: listing.title }),
+        html: `<p>${t("greeting")}</p><p>${t("newOfferBody", {
+          title: escapeHtml(listing.title),
+          amount,
+        })}</p><p><a href="${offerUrl}">${t("newOfferLink")}</a></p>`,
+      },
+      push: {
+        title: t("pushNewOfferTitle"),
+        body: t("pushNewOfferBody", { title: listing.title, amount }),
+        tag: `offer-${offer.id}`,
+        lang: sellerLocale === "ar" ? "ar" : "fr",
+      },
     });
   });
 

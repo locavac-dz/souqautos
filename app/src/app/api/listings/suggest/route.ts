@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { listingSuggestionInputSchema } from "@/lib/validation/listing-suggestion";
 import { generateListingSuggestion } from "@/lib/ai-listing";
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   // Limite volontairement resserrée : un appel IA a un coût réel dès qu'une
   // clé Anthropic est configurée, même si aucun coût n'est engagé aujourd'hui
@@ -17,13 +15,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = listingSuggestionInputSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, listingSuggestionInputSchema);
+  if (body instanceof NextResponse) return body;
 
-  const suggestion = await generateListingSuggestion(parsed.data);
+  const suggestion = await generateListingSuggestion(body);
 
   return NextResponse.json(suggestion);
 }

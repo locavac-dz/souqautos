@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin, isSuperAdmin } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 
@@ -10,10 +10,8 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
   if (id === user.id) {
@@ -21,11 +19,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "cannot_change_own_role" }, { status: 400 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) {
@@ -36,19 +31,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // Un simple ADMIN ne peut pas non plus dégrader un SUPER_ADMIN.
   const targetIsSuperAdmin = isSuperAdmin(target.role);
   const requesterIsSuperAdmin = isSuperAdmin(user.role);
-  if (!requesterIsSuperAdmin && (targetIsSuperAdmin || parsed.data.role === "SUPER_ADMIN")) {
+  if (!requesterIsSuperAdmin && (targetIsSuperAdmin || body.role === "SUPER_ADMIN")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  await prisma.user.update({ where: { id }, data: { role: parsed.data.role } });
+  await prisma.user.update({ where: { id }, data: { role: body.role } });
 
   await writeAuditLog({
     adminId: user.id,
     action: "user.role_change",
     targetType: "User",
     targetId: id,
-    details: { previousRole: target.role, newRole: parsed.data.role },
+    details: { previousRole: target.role, newRole: body.role },
   });
 
-  return NextResponse.json({ role: parsed.data.role });
+  return NextResponse.json({ role: body.role });
 }

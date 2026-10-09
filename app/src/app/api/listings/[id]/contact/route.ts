@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody, NO_STORE } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -26,15 +27,10 @@ const bodySchema = z.object({
   locale: z.enum(CONTACT_LOCALES).default("fr"),
 });
 
-const NO_STORE = { "Cache-Control": "no-store" };
-
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400, headers: NO_STORE });
-  }
-  const { channel, locale } = parsed.data;
+  const body = await parseJsonBody(request, bodySchema, { headers: NO_STORE });
+  if (body instanceof NextResponse) return body;
+  const { channel, locale } = body;
 
   const { id } = await params;
   const viewer = await getCurrentUser();

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -16,18 +17,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   const [brands, wilayas] = await Promise.all([
     prisma.brand.findMany({ include: { models: { select: { id: true, name: true } } } }),
     prisma.wilaya.findMany({ select: { id: true, nomFr: true } }),
   ]);
 
-  const result = await parseNaturalLanguageQuery(parsed.data.query, { brands, wilayas });
+  const result = await parseNaturalLanguageQuery(body.query, { brands, wilayas });
 
   return NextResponse.json(result);
 }

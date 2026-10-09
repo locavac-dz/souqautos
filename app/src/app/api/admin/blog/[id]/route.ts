@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
 import { articleStatus, resolvePublishedAt } from "@/lib/blog-publication";
@@ -25,18 +25,13 @@ async function deleteCoverIfUnused(url: string | null | undefined, exceptArticle
 // Le slug n'est jamais recalculé à l'édition — une fois publié, son URL doit
 // rester stable (référencement, liens déjà partagés), même si le titre change.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
-  const body = await request.json().catch(() => null);
-  const parsed = blogArticleSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
-  const data = parsed.data;
+  const body = await parseJsonBody(request, blogArticleSchema);
+  if (body instanceof NextResponse) return body;
+  const data = body;
 
   const source = resolveSource(data);
   if (!source.ok) {
@@ -139,10 +134,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user || !isAdmin(user.role)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const user = await requireRole(isAdmin);
+  if (user instanceof NextResponse) return user;
 
   const { id } = await params;
   const article = await prisma.blogArticle.findUnique({ where: { id } });

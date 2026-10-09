@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import crypto from "crypto";
 import { z } from "zod";
 import { emailSchema } from "@/lib/validation/auth";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { verifyPassword } from "@/lib/auth-server/password";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getTranslations } from "next-intl/server";
@@ -14,28 +14,23 @@ import { SITE_URL } from "@/lib/site";
 const bodySchema = z.object({ newEmail: emailSchema, password: z.string().max(200).optional() });
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`email-change-request:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "validation" }, { status: 400 });
-  }
+  const body = await parseJsonBody(request, bodySchema);
+  if (body instanceof NextResponse) return body;
 
   // Lot 229 — changer l'adresse de connexion, c'est pouvoir ensuite réinitialiser le mot de passe : une session volée ne doit pas
   // suffire. Le mot de passe est exigé, sauf pour un compte créé avec Google qui n'en a pas (il n'a que sa session).
-  if (user.passwordHash && !(typeof parsed.data.password === "string" && (await verifyPassword(parsed.data.password, user.passwordHash)))) {
+  if (user.passwordHash && !(typeof body.password === "string" && (await verifyPassword(body.password, user.passwordHash)))) {
     return NextResponse.json({ error: "invalid_password" }, { status: 400 });
   }
 
-  const newEmail = parsed.data.newEmail;
+  const newEmail = body.newEmail;
   if (newEmail === user.email) {
     return NextResponse.json({ error: "same_email" }, { status: 400 });
   }

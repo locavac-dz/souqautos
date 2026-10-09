@@ -1,24 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser, parseJsonBody } from "@/lib/api-route";
 import { cancelPendingOrdersForListing } from "@/lib/payment-fulfillment";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { respondOfferSchema, updateOfferSchema } from "@/lib/validation/offer";
 import { sendEmailBestEffort, escapeHtml } from "@/lib/mailer";
-import { sendPushToUser } from "@/lib/push-send";
 import { SITE_URL } from "@/lib/site";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { createNotification } from "@/lib/notification-service";
+import { notifyUser } from "@/lib/notify-user";
 
 // PATCH — vendeur : accepte / refuse / contre-offre ; acheteur : retire / répond à une contre-offre
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`offer:action:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -38,11 +37,10 @@ export async function PATCH(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = respondOfferSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400 });
+  const body = await parseJsonBody(request, respondOfferSchema);
+  if (body instanceof NextResponse) return body;
 
-  const { action, counterAmount } = parsed.data;
+  const { action, counterAmount } = body;
 
   // Règles d'autorisation selon le statut courant et l'action demandée
   const isBuyer  = offer.buyerId  === user.id;
@@ -96,47 +94,55 @@ export async function PATCH(
     const offersUrl = (l: string) => `${SITE_URL}/${l}/compte/offres`;
     const fmt = (n: number, l: string) => n.toLocaleString(l === "ar" ? "ar-DZ" : "fr-DZ");
 
+    // Lot 271 — courriel + push + notification in-app en un appel (notifyUser) ; l'URL est commune.
+    const buyerUrl = `/${buyerLocale}/compte/offres`;
+    const buyerLang = buyerLocale === "ar" ? "ar" : "fr";
+
     if (action === "ACCEPTED") {
-      await sendEmailBestEffort("offre", {
-        to: offer.buyer.email,
-        subject: tBuyer("offerAcceptedSubject", { title: offer.listing.title }),
-        html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("offerAcceptedBody", {
-          title: escapeHtml(offer.listing.title),
-          amount: fmt(offer.amount, buyerLocale),
-        })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("offerAcceptedLink")}</a></p>`,
-      });
-      await sendPushToUser(offer.buyerId, {
-        title: tBuyer("pushOfferAcceptedTitle"),
-        body:  tBuyer("pushOfferAcceptedBody", { title: offer.listing.title }),
-        url:   `/${buyerLocale}/compte/offres`,
-        tag:   `offer-accepted-${offer.id}`,
-        lang:  buyerLocale === "ar" ? "ar" : "fr",
-      });
-      await createNotification(offer.buyerId, "OFFER_ACCEPTED", {
-        url: `/${buyerLocale}/compte/offres`,
+      await notifyUser({
+        userId: offer.buyerId,
+        kind: "OFFER_ACCEPTED",
+        url: buyerUrl,
         body: offer.listing.title,
+        email: {
+          tag: "offre",
+          to: offer.buyer.email,
+          subject: tBuyer("offerAcceptedSubject", { title: offer.listing.title }),
+          html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("offerAcceptedBody", {
+            title: escapeHtml(offer.listing.title),
+            amount: fmt(offer.amount, buyerLocale),
+          })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("offerAcceptedLink")}</a></p>`,
+        },
+        push: {
+          title: tBuyer("pushOfferAcceptedTitle"),
+          body: tBuyer("pushOfferAcceptedBody", { title: offer.listing.title }),
+          tag: `offer-accepted-${offer.id}`,
+          lang: buyerLang,
+        },
       });
     } else if (action === "DECLINED") {
       const recipient = offer.status === "COUNTERED" ? "seller" : "buyer";
       if (recipient === "buyer") {
-        await sendEmailBestEffort("offre", {
-          to: offer.buyer.email,
-          subject: tBuyer("offerDeclinedSubject", { title: offer.listing.title }),
-          html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("offerDeclinedBody", {
-            title: escapeHtml(offer.listing.title),
-            amount: fmt(offer.amount, buyerLocale),
-          })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("offerDeclinedLink")}</a></p>`,
-        });
-        await sendPushToUser(offer.buyerId, {
-          title: tBuyer("pushOfferDeclinedTitle"),
-          body:  tBuyer("pushOfferDeclinedBody", { title: offer.listing.title }),
-          url:   `/${buyerLocale}/compte/offres`,
-          tag:   `offer-declined-${offer.id}`,
-          lang:  buyerLocale === "ar" ? "ar" : "fr",
-        });
-        await createNotification(offer.buyerId, "OFFER_DECLINED", {
-          url: `/${buyerLocale}/compte/offres`,
+        await notifyUser({
+          userId: offer.buyerId,
+          kind: "OFFER_DECLINED",
+          url: buyerUrl,
           body: offer.listing.title,
+          email: {
+            tag: "offre",
+            to: offer.buyer.email,
+            subject: tBuyer("offerDeclinedSubject", { title: offer.listing.title }),
+            html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("offerDeclinedBody", {
+              title: escapeHtml(offer.listing.title),
+              amount: fmt(offer.amount, buyerLocale),
+            })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("offerDeclinedLink")}</a></p>`,
+          },
+          push: {
+            title: tBuyer("pushOfferDeclinedTitle"),
+            body: tBuyer("pushOfferDeclinedBody", { title: offer.listing.title }),
+            tag: `offer-declined-${offer.id}`,
+            lang: buyerLang,
+          },
         });
       }
       // Si c'est l'acheteur qui refuse une contre-offre, notifier le vendeur
@@ -150,24 +156,26 @@ export async function PATCH(
         });
       }
     } else if (action === "COUNTERED" && counterAmount) {
-      await sendEmailBestEffort("offre", {
-        to: offer.buyer.email,
-        subject: tBuyer("counterOfferSubject", { title: offer.listing.title }),
-        html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("counterOfferBody", {
-          title:   escapeHtml(offer.listing.title),
-          amount:  fmt(counterAmount, buyerLocale),
-        })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("counterOfferLink")}</a></p>`,
-      });
-      await sendPushToUser(offer.buyerId, {
-        title: tBuyer("pushCounterOfferTitle"),
-        body:  tBuyer("pushCounterOfferBody", { title: offer.listing.title, amount: fmt(counterAmount, buyerLocale) }),
-        url:   `/${buyerLocale}/compte/offres`,
-        tag:   `offer-countered-${offer.id}`,
-        lang:  buyerLocale === "ar" ? "ar" : "fr",
-      });
-      await createNotification(offer.buyerId, "OFFER_COUNTERED", {
-        url: `/${buyerLocale}/compte/offres`,
+      await notifyUser({
+        userId: offer.buyerId,
+        kind: "OFFER_COUNTERED",
+        url: buyerUrl,
         body: offer.listing.title,
+        email: {
+          tag: "offre",
+          to: offer.buyer.email,
+          subject: tBuyer("counterOfferSubject", { title: offer.listing.title }),
+          html: `<p>${tBuyer("greeting")}</p><p>${tBuyer("counterOfferBody", {
+            title: escapeHtml(offer.listing.title),
+            amount: fmt(counterAmount, buyerLocale),
+          })}</p><p><a href="${offersUrl(buyerLocale)}">${tBuyer("counterOfferLink")}</a></p>`,
+        },
+        push: {
+          title: tBuyer("pushCounterOfferTitle"),
+          body: tBuyer("pushCounterOfferBody", { title: offer.listing.title, amount: fmt(counterAmount, buyerLocale) }),
+          tag: `offer-countered-${offer.id}`,
+          lang: buyerLang,
+        },
       });
     }
   });
@@ -180,8 +188,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  const user = await requireUser();
+  if (user instanceof NextResponse) return user;
 
   if (!(await checkRateLimit(`offer:action:${user.id}`, { limit: 20, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -197,13 +205,12 @@ export async function PUT(
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = updateOfferSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 400 });
+  const body = await parseJsonBody(request, updateOfferSchema);
+  if (body instanceof NextResponse) return body;
 
   const updated = await prisma.offer.update({
     where: { id },
-    data:  { amount: parsed.data.amount, message: parsed.data.message ?? null },
+    data:  { amount: body.amount, message: body.message ?? null },
   });
 
   revalidatePath("/compte/offres");
