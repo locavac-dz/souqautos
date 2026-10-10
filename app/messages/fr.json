@@ -378,6 +378,10 @@
     "shareViaWhatsApp": "Partager sur WhatsApp",
     "descriptionTitle": "Description",
     "detailsTitle": "Caractéristiques",
+    "vignetteLabel": "Vignette automobile estimée",
+    "vignetteAmount": "{value} DA / an",
+    "vignetteExempt": "Exonéré (électrique/hybride)",
+    "vignetteNote": "Estimation à partir de la puissance fiscale et de l'année du véhicule — barème 2026, véhicules de tourisme uniquement.",
     "equipmentsTitle": "Équipements",
     "priceHistoryTitle": "Historique du prix",
     "priceHistoryInitial": "Prix initial",
@@ -549,6 +553,7 @@
   },
   "PriceBadge": {
     "estimationTitle": "Estimation Souq Auto",
+    "showEstimation": "Voir l'estimation Souq Auto",
     "tresBonneAffaire": "Très bonne affaire",
     "bonPrix": "Bon prix",
     "correct": "Prix correct",

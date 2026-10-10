@@ -378,6 +378,10 @@
     "shareViaWhatsApp": "مشاركة عبر واتساب",
     "descriptionTitle": "الوصف",
     "detailsTitle": "المواصفات",
+    "vignetteLabel": "الرسم السنوي التقديري (الفينيات)",
+    "vignetteAmount": "{value} دج / سنة",
+    "vignetteExempt": "معفاة (كهربائية/هجينة)",
+    "vignetteNote": "تقدير بناءً على القوة الجبائية وسنة المركبة — تعريفة 2026، سيارات سياحية فقط.",
     "equipmentsTitle": "التجهيزات",
     "priceHistoryTitle": "سجل الأسعار",
     "priceHistoryInitial": "السعر الأولي",
@@ -549,6 +553,7 @@
   },
   "PriceBadge": {
     "estimationTitle": "تقييم سوق أوتو",
+    "showEstimation": "عرض تقييم سوق أوتو",
     "tresBonneAffaire": "صفقة ممتازة",
     "bonPrix": "سعر جيد",
     "correct": "سعر مناسب",

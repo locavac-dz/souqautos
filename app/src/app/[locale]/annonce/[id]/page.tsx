@@ -28,6 +28,7 @@ import { ContactButtons } from "@/components/ContactButtons";
 import { PhotoCredits } from "@/components/PhotoCredits";
 import { collectPhotoCredits } from "@/lib/photo-credit";
 import { estimatePrice } from "@/lib/price-estimation";
+import { computeVignetteDzd, vehicleAgeYears } from "@/lib/vignette";
 import { computePriceBadge } from "@/lib/price-badge";
 import { PRICE_BADGE_STYLE, PRICE_BADGE_KEY } from "@/lib/price-badge-style";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -50,6 +51,7 @@ import { CallbackRequestButton } from "@/components/CallbackRequestButton";
 import { MakeOfferButton } from "@/components/MakeOfferButton";
 import { MarketStatsWidget } from "@/components/MarketStatsWidget";
 import { formatNumber } from "@/lib/format";
+import { EstimationReveal } from "@/components/EstimationReveal";
 
 const BADGE_STYLE = PRICE_BADGE_STYLE;
 const BADGE_KEY = PRICE_BADGE_KEY;
@@ -238,6 +240,15 @@ export default async function ListingDetailPage({
   const tPriceBadge = await getTranslations("PriceBadge");
   const priceBadge = estimate
     ? computePriceBadge(listing.price, estimate.mid, estimate.sampleSize)
+    : null;
+
+  // Lot 283 — seule donnée de « coût d'usage » retenue : 100 % officielle et déterministe (cf. src/lib/vignette.ts).
+  const vignetteDzd = listing.fiscalPower
+    ? computeVignetteDzd({
+        fiscalPower: listing.fiscalPower,
+        fuelType: listing.fuelType,
+        vehicleAgeYears: vehicleAgeYears(listing.year),
+      })
     : null;
 
   const tFavorites = await getTranslations("Favorites");
@@ -508,24 +519,26 @@ export default async function ListingDetailPage({
           )}
 
           {estimate && (
-            <div className="mt-6">
-              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tPriceBadge("estimationTitle")}</h2>
-              <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
-                <DetailRow label={tPriceBadge("priceRequested")} value={`${formatNumber(listing.price, locale)} DA`} />
-                <DetailRow label={tPriceBadge("priceMarket")} value={`${formatNumber(estimate.mid, locale)} DA`} />
-                {priceBadge && (
-                  <DetailRow
-                    label={tPriceBadge("deviationLabel")}
-                    value={
-                      priceBadge.deviationPct >= 0
-                        ? tPriceBadge("deviationAbove", { value: priceBadge.deviationPct })
-                        : tPriceBadge("deviationBelow", { value: priceBadge.deviationPct })
-                    }
-                  />
-                )}
+            <EstimationReveal>
+              <div className="mt-6">
+                <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tPriceBadge("estimationTitle")}</h2>
+                <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 text-sm">
+                  <DetailRow label={tPriceBadge("priceRequested")} value={`${formatNumber(listing.price, locale)} DA`} />
+                  <DetailRow label={tPriceBadge("priceMarket")} value={`${formatNumber(estimate.mid, locale)} DA`} />
+                  {priceBadge && (
+                    <DetailRow
+                      label={tPriceBadge("deviationLabel")}
+                      value={
+                        priceBadge.deviationPct >= 0
+                          ? tPriceBadge("deviationAbove", { value: priceBadge.deviationPct })
+                          : tPriceBadge("deviationBelow", { value: priceBadge.deviationPct })
+                      }
+                    />
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{tEstimate("disclaimer")}</p>
               </div>
-              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{tEstimate("disclaimer")}</p>
-            </div>
+            </EstimationReveal>
           )}
 
           {/* Lot 253 — simulateur de financement islamique (Murābaha) */}
@@ -591,6 +604,17 @@ export default async function ListingDetailPage({
                     ? tPriceBadge("deviationAbove", { value: priceBadge.deviationPct })
                     : tPriceBadge("deviationBelow", { value: priceBadge.deviationPct })}
                 </p>
+              </div>
+            )}
+
+            {/* Lot 283 — vignette automobile estimée (seule donnée de coût d'usage retenue, 100 % officielle) */}
+            {vignetteDzd !== null && (
+              <div className="mt-4 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400">{tListing("vignetteLabel")}</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  {vignetteDzd === 0 ? tListing("vignetteExempt") : tListing("vignetteAmount", { value: formatNumber(vignetteDzd, locale) })}
+                </p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{tListing("vignetteNote")}</p>
               </div>
             )}
 
