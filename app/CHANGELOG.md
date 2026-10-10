@@ -4109,3 +4109,36 @@ Prévu « dès le deuxième modérateur » dans le document « Équipe de lancem
 - Réel, dans le navigateur en admin : annonce de test déposée → « Annonces en attente (1) », tableau d'équipe vide → Prendre en charge → badge « Pris en charge par vous depuis le 9 oct. 2026, 7:40 PM », Libérer, « En cours : 1 » → Approuver → annonce publiée, affectation effacée en base, tableau « admin@souqauto.dz · 1 annonce traitée · 0 h », journal `listing.assign` puis `listing.approve`. Annonce, photo et téléphone de test nettoyés.
 
 **Limites** : pas de filtre « mes éléments » ni de réaffectation directe à un collègue (on libère, l'autre prend) ; délai moyen calculé sur les annonces seulement ; le tableau d'équipe n'apparaît que sur la file des annonces.
+
+## Lot 278 — Double validation des paiements par virement (2026-10-09)
+
+Dernier maillon de sécurité du document « Équipe de lancement » avant l'embauche d'un deuxième administrateur : au-dessus d'un certain montant, un virement ne doit plus pouvoir être confirmé par une seule personne.
+
+**Le seuil** (`PaymentSettings.dualApprovalThresholdDzd`, réglage « Seuil de double validation des virements (DA) » dans `/admin/parametres`, vide = désactivée). Au-dessus, une commande de virement (formule d'annonce ou palier pro — les paiements Chargily en ligne sont exclus) n'est confirmée qu'après l'approbation de **deux administrateurs différents**. Règles pures dans `src/lib/dual-approval.ts`. La première approbation est enregistrée de façon atomique (`firstApprovedById`/`firstApprovedAt`), la commande reste `EN_ATTENTE` (événement `first_approval`, journal `*.first_approve`) ; la **même** personne qui retente reçoit `409 second_approver_required` ; la seconde, par quelqu'un d'autre, confirme comme avant. Le refus, lui, reste à une seule personne.
+
+**Interface** : `PaymentOrderReviewActions` affiche « Valider (1/2) » puis, une fois la première approbation posée, « Confirmer (2/2) » grisé pour le premier validateur ; la page `/admin/paiements` affiche un bandeau si un seul administrateur est actif (la double validation bloquerait alors toute commande au-dessus du seuil). Migration `20261009180000_lot_278_dual_approval` (ajouts seulement).
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 437 tests / 216 fichiers** verts — 9 nouveaux.
+- Réel : seuil à 1 000 DA, commande de 2 000 DA → première validation par un administrateur → `409` au second essai de la même personne → confirmation par un second administrateur → `CONFIRMEE`, événements et journal corrects ; données de test nettoyées. Un `400` isolé observé au tout premier clic (première compilation du module de route en dev), non reproduit aux essais suivants.
+
+**Limites** : le seuil est global (pas par formule) ; pas de délai de relance si la seconde validation tarde — à revoir si une équipe de plus de deux administrateurs se met en place.
+
+## Lot 279 — Reliquat de l'audit : codes HTTP, agrégats admin, i18n client, communes à la demande (2026-10-10)
+
+Quatre points de l'audit de code restés ouverts (E4, C4, C7, C8) — la journalisation des erreurs communes (E6, enveloppe `apiHandler`) reste à appliquer aux routes, reportée à un lot ultérieur.
+
+**E4 — codes HTTP.** `requireRole` répondait `403` à un visiteur non connecté, confondant « pas identifié » et « rôle insuffisant » : il répond maintenant `401 unauthenticated` (comme `requireUser`), `403 forbidden` restant réservé au rôle insuffisant. Toutes les réponses `already_collaborator` / `already_professional` / `already_reviewed` / `already_verified` passent de `400` à `409` (c'est une course, pas une erreur de saisie). Table des conventions ajoutée dans `src/lib/http.ts`.
+
+**C4 — agrégats admin.** `/admin/statistiques` ne lit plus la table entière des utilisateurs/annonces mais seulement les 12 dernières semaines, et la note moyenne vient d'un `prisma.review.aggregate` plutôt que de charger tous les avis en mémoire. `/admin/utilisateurs` est désormais paginé (50/page, comme les files de modération). `/admin/paiements` calcule ses compteurs via `prisma.paymentOrder.groupBy` au lieu de charger toutes les commandes.
+
+**C7 — i18n côté client.** `src/i18n/client-namespaces.ts` liste les 49 espaces de noms (sur ~80) réellement lus par `useTranslations()` côté client ; le layout ne transmet plus au navigateur que ces espaces (`pickClientMessages`), pas le catalogue de traduction complet. Un test (`tests/i18n-client-namespaces.test.ts`) recalcule cette liste depuis le code source à chaque exécution : un `useTranslations("X")` ajouté sans mettre à jour la liste casserait X côté client en production, détecté immédiatement.
+
+**C8 — communes à la demande.** Les 1 541 communes ne voyagent plus avec les pages d'accueil/recherche/équipements. `SearchFilters` charge désormais celles de la wilaya choisie via `GET /api/wilayas/[id]/communes` (mise en cache navigateur 1 jour), au lieu de recevoir la liste complète au chargement de la page.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 440 tests / 217 fichiers** verts (7 ajustés de 403 à 401 pour un anonyme).
+- Réel, dans le navigateur : `/admin/statistiques` (note moyenne, fenêtre de 12 semaines), `/admin/utilisateurs` (pagination), `/admin/paiements` (compteurs via l'agrégat) ; recherche avec sélection de la wilaya d'Alger → chargement à la demande des communes (Bab El Oued entre autres) sans erreur réseau.
+- Un bug introduit pendant ce lot (l'appel `fetch` des communes omettait l'identifiant de la wilaya, `404` silencieux) a été trouvé et corrigé pendant cette vérification, avant commit.
+
+**Limites** : l'enveloppe `apiHandler` (audit E6, ~146 routes) reste à appliquer — écrite dans `src/lib/api-route.ts` mais pas encore branchée sur une seule route.
