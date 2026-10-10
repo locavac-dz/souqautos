@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { getManageableSellerIds } from "@/lib/listing-access";
 import { getUnreadCount as getUnreadNotificationsCount } from "@/lib/notification-service";
 import { SiteHeader } from "@/components/SiteHeader";
+import { LaunchNoticeBanner } from "@/components/LaunchNoticeBanner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CompareProvider } from "@/components/compare/CompareContext";
 import { CompareTray } from "@/components/compare/CompareTray";
@@ -21,6 +22,7 @@ import { PwaUpdateBanner } from "@/components/PwaUpdateBanner";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { ThemeApplicator } from "@/components/ThemeApplicator";
 import { buildSearchEngineVerification } from "@/lib/seo-verification";
+import { isLaunchNoticeActive } from "@/lib/launch-notice";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -110,6 +112,7 @@ export default async function LocaleLayout({
             >
               {tNav("skipToContent")}
             </a>
+            {isLaunchNoticeActive() && <LaunchNoticeBanner />}
             <SiteHeader
               user={
                 user

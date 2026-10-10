@@ -2325,5 +2325,10 @@
     },
     "success": "Connexion réussie",
     "failure": "Tentative échouée"
+  },
+  "LaunchNotice": {
+    "message": "Souq Auto est en tout premier lancement : si vous rencontrez une anomalie, merci de nous la signaler.",
+    "reportLink": "Signaler un problème",
+    "close": "Fermer ce message"
   }
 }

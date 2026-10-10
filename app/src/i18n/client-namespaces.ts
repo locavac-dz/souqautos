@@ -29,6 +29,7 @@ export const CLIENT_NAMESPACES = [
   "Estimate",
   "Groups",
   "IslamicFinancing",
+  "LaunchNotice",
   "Listing",
   "ListingEdit",
   "Messages",
