@@ -4199,3 +4199,39 @@ Deux bugs signalés en utilisant le site en direct, tous deux liés à l'en-têt
 **Vérifié**
 - `tsc` 0 ; `eslint .` 0 ; **2 454 tests** verts.
 - Réel, avec de **vrais clics** (pas seulement via le DOM, pour écarter un faux positif) : menu mobile défilant jusqu'à Déconnexion sans bouger la page, menu de compte desktop entièrement visible et cliquable jusqu'à Déconnexion.
+
+## Lot 286 — Icônes PWA/Android corrigées, préparation Play Store (2026-10-10)
+
+En préparant la publication sur le Play Store (pas encore de domaine public ni de compte développeur à ce stade), un vrai bug trouvé en régénérant les icônes : trois jeux de fichiers affichaient des dessins **sans aucun rapport avec le logo du site** (`icon.svg`, le losange dégradé turquoise + « S ») — `public/icons/icon-{192,512,maskable-512}.png` et `src/app/apple-icon.png` montraient deux anneaux vert/orange, et les icônes Android (`android/app/src/main/res/mipmap-*/ic_launcher*.png`) un carré arrondi vert-bleu avec une police différente.
+
+**Découverte au passage** : un projet Android complet (Capacitor) existait déjà dans le dépôt, commité le 25 septembre 2026, jamais documenté ni repris depuis — identifiant `dz.souqauto.app`, visant le domaine `souqauto.dz`.
+
+`scripts/generate-pwa-icons.mjs` et `scripts/generate-android-icons.mjs` corrigés pour tracer le vrai losange + « S » (au lieu de leur propre dessin sans lien avec le logo), puis ré-exécutés. Icône maskable et premier plan adaptatif Android replacés dans leur zone de sécurité respective (80 % / 66 %) ; `tests/pwa-manifest.test.ts` (déjà existant) vérifie la première automatiquement.
+
+Nouveau document [`docs/PLAY_STORE.md`](../docs/PLAY_STORE.md) : état exact du projet Capacitor retrouvé, pourquoi Capacitor plutôt qu'une TWA (une TWA exige un domaine public vérifiable dès le premier test, Capacitor peut être testé sans via l'émulateur Android), ordre des étapes restantes, texte de fiche store rédigé à l'avance.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 454 tests** verts.
+- Rendu de chaque icône (192/512/maskable/apple/5 densités Android) servi réellement par le serveur de dev.
+
+**Limites** : projet Capacitor jamais compilé ni exécuté (ni Android Studio ni le SDK Android installés sur la machine de développement) ; pas de clé de signature ; pas de compte développeur Google Play.
+
+## Lot 287 — Domaine décidé : souqauto.com (2026-10-10)
+
+Décision du porteur de projet, après comparatif de prix et de délais entre `.dz` (dossier NIC-DZ plus long, demande une représentation légale en Algérie) et des génériques : `souqauto.com` comme domaine principal pour démarrer, `.dz` restant une option pour plus tard. Toutes les références codées en dur à `souqauto.dz` mises à jour vers `souqauto.com` : `capacitor.config.ts`, adresse d'expédition des emails, email de contact public, compte admin de dev, annonces anonymisées à la suppression de compte, documentation (README, ANDROID.md, docs/PLAY_STORE.md).
+
+Au passage, identifiant Android changé de `dz.souqauto.app` à `com.souqauto.app` (décision du porteur de projet, pour suivre le nouveau domaine) — dernier moment possible pour le faire sans conséquence, cet identifiant devient définitif après la première publication sur le Play Store.
+
+**Vérifié** : `tsc` 0 ; `eslint .` 0 ; **2 454 tests** verts (1 ajusté).
+
+**Corrigé au lot suivant** : en préparant l'achat réel, `souqauto.com` s'est révélé déjà enregistré par un tiers — voir Lot 288.
+
+## Lot 288 — Domaine réel acheté : souqautos.com (2026-10-10)
+
+`souqauto.com` (Lot 287) est en réalité déjà enregistré par un tiers (transfert verrouillé, non récupérable) : constaté en préparant l'achat chez OVH. Comparatif de domaines de repli fait en direct (`souqautos.com`, `soukautos.com`, noms de marque alternatifs) — `souqautos.com` retenu : même orthographe que la marque « Souq Auto », juste le « s » du pluriel, disponible au prix normal (7,99 € puis 13,49 €/an, contrairement à plusieurs noms proches revendus par des tiers à des prix prohibitifs, jusqu'à 42 472 € constatés pour l'un d'eux).
+
+Domaine et hébergement (VPS) achetés chez OVH par le porteur de projet. Même mise à jour qu'au Lot 287, mais vers `souqautos.com` cette fois ; identifiant Android changé une seconde fois (`com.souqauto.app` → `com.souqautos.app`), dernier moment possible avant publication.
+
+**Vérifié** : `tsc` 0 ; `eslint .` 0 ; **2 454 tests** verts (1 ajusté).
+
+**Bloqué ensuite** : l'espace client OVH affichait une page blanche pour le porteur de projet (après connexion, toutes les routes de l'interface) — aucune panne en cours côté OVH constatée (vérifié sur `status-ovhcloud.com`), donc un problème local (navigateur, extension, ou politique d'entreprise bloquant les outils de développement, jamais confirmé faute d'accès à la console du navigateur). Adresse IP du VPS pas encore récupérée ; mise en ligne du site en attente de cette information.
