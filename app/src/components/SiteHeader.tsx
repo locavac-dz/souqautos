@@ -125,7 +125,10 @@ export async function SiteHeader({
           <SiteWordMark className="text-2xl" />
         </Link>
 
-        <nav aria-label={tNav("main")} className="hidden sm:flex items-center gap-4 text-sm flex-1 min-w-0 overflow-hidden">{desktopNav}</nav>
+        {/* Pas d'overflow-hidden ici : même limité à l'axe horizontal (overflow-x-hidden), le CSS force alors
+            overflow-y à "auto" au lieu de "visible" (règle du spec sur les deux axes), qui rogne quand même le
+            menu de compte qui s'ouvre vers le bas en position absolue. */}
+        <nav aria-label={tNav("main")} className="hidden sm:flex items-center gap-4 text-sm flex-1 min-w-0">{desktopNav}</nav>
 
         <MobileMenuToggle menuLabel={tNav("menu")}>{mobileNav}</MobileMenuToggle>
 
