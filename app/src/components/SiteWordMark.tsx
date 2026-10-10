@@ -12,8 +12,8 @@ export function SiteWordMark({ className }: { className?: string }) {
           fontWeight: 400,
         }}
       >
-        <span className="text-slate-800 dark:text-slate-100">SOUQ</span>
-        <span className="text-cyan-600 dark:text-teal-400">AUTO</span>
+        <span className="text-slate-800 dark:text-slate-100">Souq&nbsp;</span>
+        <span className="text-cyan-600 dark:text-teal-400">Auto</span>
       </span>
       <span className="sr-only">Souq Auto</span>
     </>

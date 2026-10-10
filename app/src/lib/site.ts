@@ -3,6 +3,10 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:5
   ""
 );
 
+// Lot 282 — adresse affichée publiquement sur la page Contact (carte « Email »). Distincte de MAIL_REPLY_TO /
+// ADMIN_EMAIL (boîtes internes de traitement) : purement un repère affiché au visiteur.
+export const PUBLIC_CONTACT_EMAIL = "contact@souqauto.dz";
+
 // Construit une URL absolue à partir d'un chemin de photo stocké — celui-ci
 // est soit déjà une URL absolue (stockage S3, cf. src/lib/uploads.ts), soit
 // un chemin relatif local ("/uploads/..."), jamais mélangé au préfixe
