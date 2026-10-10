@@ -55,7 +55,7 @@ describe("POST /api/admin/contact/[id]/status", () => {
     expect(updateMany).not.toHaveBeenCalled();
 
     getCurrentUser.mockResolvedValue(null);
-    expect((await POST(request({ action: "take" }), params)).status).toBe(403);
+    expect((await POST(request({ action: "take" }), params)).status).toBe(401);
   });
 
   it("répond 404 sur un message inconnu et 400 quand un collègue a tranché entre-temps", async () => {

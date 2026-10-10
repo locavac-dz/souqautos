@@ -71,10 +71,10 @@ beforeEach(() => {
 });
 
 describe("POST /api/admin/listings/[id]/moderate", () => {
-  it("returns 403 when the caller is not staff", async () => {
+  it("returns 401 when not authenticated", async () => {
     getCurrentUser.mockResolvedValue(null);
     const res = await POST(request({ action: "approve" }), { params });
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
     expect(findUniqueListing).not.toHaveBeenCalled();
   });
 

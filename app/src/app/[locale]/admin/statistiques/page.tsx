@@ -4,11 +4,18 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isModerator } from "@/lib/auth-server/roles";
 import { bucketByWeek } from "@/lib/product-stats";
-import { computeAverageRating } from "@/lib/reviews";
 
 const WEEKS = 12;
+// Lot 279 (audit C4) — seules les 12 dernières semaines sont lues (plus jamais la table entière), et la note moyenne
+// vient d'un agrégat SQL.
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 const STATUS_ORDER = ["EN_ATTENTE", "PUBLIEE", "REFUSEE", "SUSPENDUE", "VENDUE", "EXPIREE", "BROUILLON"] as const;
+
+// Isolée du composant : la règle de pureté de React interdit un appel à Date.now() dans le corps du composant.
+function weeksAgo(weeks: number): Date {
+  return new Date(Date.now() - (weeks + 1) * WEEK_MS);
+}
 
 export default async function AdminStatisticsPage() {
   const locale = await getLocale();
@@ -20,18 +27,19 @@ export default async function AdminStatisticsPage() {
   const t = await getTranslations("Admin");
   const tStatus = await getTranslations("Status");
 
+  const since = weeksAgo(WEEKS);
   const [
     users,
     listings,
     statusGroups,
     brandGroups,
     wilayaGroups,
-    reviews,
+    reviewAggregate,
     confirmedReportCount,
     conversationCount,
   ] = await Promise.all([
-    prisma.user.findMany({ select: { createdAt: true } }),
-    prisma.listing.findMany({ select: { createdAt: true } }),
+    prisma.user.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+    prisma.listing.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
     prisma.listing.groupBy({ by: ["status"], _count: true }),
     prisma.listing.groupBy({
       by: ["brandId"],
@@ -47,7 +55,7 @@ export default async function AdminStatisticsPage() {
       orderBy: { _count: { wilayaId: "desc" } },
       take: 5,
     }),
-    prisma.review.findMany({ select: { rating: true } }),
+    prisma.review.aggregate({ _avg: { rating: true }, _count: { _all: true } }),
     prisma.report.count({ where: { status: "TRAITE" } }),
     prisma.conversation.count(),
   ]);
@@ -75,7 +83,8 @@ export default async function AdminStatisticsPage() {
   const maxBrandCount = Math.max(1, ...brandGroups.map((g) => g._count));
   const maxWilayaCount = Math.max(1, ...wilayaGroups.map((g) => g._count));
 
-  const { average: avgRating, count: reviewCount } = computeAverageRating(reviews.map((r) => r.rating));
+  const reviewCount = reviewAggregate._count._all;
+  const avgRating = Math.round((reviewAggregate._avg.rating ?? 0) * 10) / 10;
 
   const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", {
     day: "2-digit",

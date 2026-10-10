@@ -98,10 +98,10 @@ describe("POST /api/pro/accounts/[id]/collaborators", () => {
     expect(await res.json()).toMatchObject({ error: "cannot_add_self" });
   });
 
-  it("returns 400 when the user is already a collaborator", async () => {
+  it("returns 409 when the user is already a collaborator", async () => {
     collaboratorFindUnique.mockResolvedValue({ id: "existing" });
     const res = await POST(request(VALID_BODY), ctx());
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(await res.json()).toMatchObject({ error: "already_collaborator" });
   });
 

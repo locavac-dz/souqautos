@@ -11,7 +11,7 @@ export async function POST() {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
   if (user.emailVerifiedAt) {
-    return NextResponse.json({ error: "already_verified" }, { status: 400 });
+    return NextResponse.json({ error: "already_verified" }, { status: 409 });
   }
 
   if (!(await checkRateLimit(`verify-email-request:${user.id}`, { limit: 3, windowMs: 60 * 60 * 1000 }))) {

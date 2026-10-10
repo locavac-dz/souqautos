@@ -68,7 +68,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     // Voir /api/users/[id]/reviews : un seul avis retenu, une seule notification.
     if (isUniqueViolation(error)) {
-      return NextResponse.json({ error: "already_reviewed" }, { status: 400 });
+      return NextResponse.json({ error: "already_reviewed" }, { status: 409 });
     }
     throw error;
   }

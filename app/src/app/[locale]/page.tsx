@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { SITE_URL } from "@/lib/site";
 import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildWebSiteJsonLd, buildOrganizationJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
-import { getSearchBrands, getSearchWilayas } from "@/lib/reference-data";
+import { getSearchBrands, getSearchWilayasLight } from "@/lib/reference-data";
 
 export async function generateMetadata({
   params,
@@ -63,7 +63,7 @@ export default async function HomePage() {
       },
     }),
     getSearchBrands(),
-    getSearchWilayas(),
+    getSearchWilayasLight(),
     // Lot 211 — annonces récentes (hors PREMIUM_PLUS déjà affichées)
     prisma.listing.findMany({
       where: { status: "PUBLIEE", formula: { not: "PREMIUM_PLUS" } },

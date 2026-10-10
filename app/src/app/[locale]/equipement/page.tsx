@@ -13,7 +13,7 @@ import {
   totalPages as computeTotalPages,
   listingCardInclude,
 } from "@/lib/search";
-import { getSearchWilayas } from "@/lib/reference-data";
+import { getSearchWilayasLight } from "@/lib/reference-data";
 import { ListingCard } from "@/components/search/ListingCard";
 import { Pagination } from "@/components/search/Pagination";
 import { SortSelect } from "@/components/search/SortSelect";
@@ -60,7 +60,7 @@ export default async function EquipementPage({
   const page = currentPage(params);
 
   const [wilayas, listings, totalCount, currentUser] = await Promise.all([
-    getSearchWilayas(),
+    getSearchWilayasLight(),
     prisma.listing.findMany({
       where,
       orderBy,

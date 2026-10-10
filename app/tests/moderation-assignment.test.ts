@@ -121,7 +121,7 @@ describe("POST /api/admin/listings/[id]/assign", () => {
     writeAuditLog.mockResolvedValue(undefined);
   });
 
-  it("laisse tout membre de l'équipe prendre en charge ; 409 si déjà pris ; 403 à un anonyme", async () => {
+  it("laisse tout membre de l'équipe prendre en charge ; 409 si déjà pris ; 401 à un anonyme", async () => {
     const ok = await POST(request({ action: "take" }), params);
     expect(ok.status).toBe(200);
     expect(await ok.json()).toEqual({ assignedToId: "s1" });
@@ -131,6 +131,6 @@ describe("POST /api/admin/listings/[id]/assign", () => {
     expect((await POST(request({ action: "release" }), params)).status).toBe(403);
 
     getCurrentUser.mockResolvedValue(null);
-    expect((await POST(request({ action: "take" }), params)).status).toBe(403);
+    expect((await POST(request({ action: "take" }), params)).status).toBe(401);
   });
 });

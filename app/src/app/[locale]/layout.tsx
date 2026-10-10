@@ -4,6 +4,7 @@ import { Bebas_Neue } from "next/font/google";
 const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas-neue", display: "swap" });
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import { pickClientMessages } from "@/i18n/client-namespaces";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing, localeDirection, type AppLocale } from "@/i18n/routing";
@@ -99,7 +100,8 @@ export default async function LocaleLayout({
     <html lang={locale} dir={direction} className={bebasNeue.variable}>
       <body className="min-h-screen flex flex-col antialiased">
         {s3Origin && <link rel="preconnect" href={s3Origin} />}
-        <NextIntlClientProvider messages={messages}>
+        {/* Lot 279 (audit C7) — seuls les espaces de noms lus côté client partent au navigateur. */}
+        <NextIntlClientProvider messages={pickClientMessages(messages)}>
           <CompareProvider>
             {/* Premier élément atteint au clavier : invisible tant qu'il n'a pas le focus, il évite de retraverser toute la navigation à chaque page. */}
             <a

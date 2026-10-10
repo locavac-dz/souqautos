@@ -151,3 +151,23 @@ export function computePaymentOrderStats(orders: PaymentOrderStatsInput[]): Paym
     premiumPlusRevenueDzd,
   };
 }
+
+// Lot 279 (audit C4) — mêmes statistiques à partir d'un `groupBy` (statut, formule) avec somme et comptage,
+// au lieu de relire toute la table des commandes à chaque ouverture de /admin/paiements.
+export type PaymentOrderStatsGroup = {
+  status: PaymentOrderStatus;
+  formula: ListingFormula;
+  count: number;
+  amountDzd: number;
+};
+
+export function computePaymentOrderStatsFromGroups(groups: PaymentOrderStatsGroup[]): PaymentOrderStats {
+  const rows: PaymentOrderStatsInput[] = [];
+  for (const g of groups) {
+    if (g.count <= 0) continue;
+    // Le montant total du groupe est porté par une ligne, les autres à 0 : les comptes et les sommes restent exacts.
+    rows.push({ status: g.status, formula: g.formula, amountDzd: g.amountDzd });
+    for (let i = 1; i < g.count; i++) rows.push({ status: g.status, formula: g.formula, amountDzd: 0 });
+  }
+  return computePaymentOrderStats(rows);
+}

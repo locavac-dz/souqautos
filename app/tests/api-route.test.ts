@@ -53,10 +53,11 @@ describe("requireRole", () => {
     expect(await response.json()).toEqual({ error: "forbidden" });
   });
 
-  it("répond 403 (et non 401) à un anonyme — comportement historique des routes d'équipe", async () => {
+  it("répond 401 « unauthenticated » à un anonyme (Lot 279, audit E4)", async () => {
     getCurrentUser.mockResolvedValue(null);
     const response = (await requireRole(isAdmin)) as NextResponse;
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: "unauthenticated" });
   });
 });
 

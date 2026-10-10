@@ -17,7 +17,8 @@ import { PRO_CATEGORIES } from "@/lib/validation/pro-account";
 type ModelRow = { id: number; name: string; brandId: number; categories: ListingCategory[] };
 type BrandRow = { id: number; name: string; models: ModelRow[] };
 type CommuneRow = { id: number; nomFr: string; nomAr: string };
-type WilayaRow = { id: number; nomFr: string; nomAr: string; communes: CommuneRow[] };
+// Lot 279 (audit C8) — les communes ne voyagent plus avec la page : chargées à la demande pour la wilaya choisie.
+type WilayaRow = { id: number; nomFr: string; nomAr: string };
 type EquipmentRow = { id: number; nameFr: string; nameAr: string; category: string };
 
 export type SearchFilterValues = {
@@ -86,6 +87,7 @@ export function SearchFilters({
   const numberLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
   const [values, setValues] = useState<SearchFilterValues>(initialValues);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [communes, setCommunes] = useState<CommuneRow[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -108,6 +110,28 @@ export function SearchFilters({
   const visibleBrands = filterCatalogueByCategory(brands, values.category as ListingCategory | undefined);
   const selectedBrand = visibleBrands.find((b) => b.id === Number(values.brandId));
   const selectedWilaya = wilayas.find((w) => w.id === Number(values.wilayaId));
+
+  // Lot 279 — communes de la wilaya choisie, depuis une route mise en cache un jour par le navigateur.
+  useEffect(() => {
+    const wilayaId = Number(values.wilayaId);
+    if (!wilayaId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCommunes([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/wilayas/${wilayaId}/communes`)
+      .then((res) => (res.ok ? res.json() : { communes: [] }))
+      .then((data: { communes: CommuneRow[] }) => {
+        if (!cancelled) setCommunes(data.communes ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setCommunes([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [values.wilayaId]);
   const selectedEquipmentIds = values.equipmentIds ? values.equipmentIds.split(",").map(Number) : [];
   const equipmentsByCategory = new Map<string, EquipmentRow[]>();
   for (const eq of equipments) {
@@ -287,7 +311,7 @@ export function SearchFilters({
             </select>
           </Field>
 
-          {selectedWilaya && selectedWilaya.communes.length > 0 && (
+          {selectedWilaya && communes.length > 0 && (
             <Field id="filter-commune" label={t("commune")}>
               <select
                 value={values.communeId ?? ""}
@@ -295,7 +319,7 @@ export function SearchFilters({
                 className="w-full rounded-md border border-slate-300 px-3 py-2 bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
               >
                 <option value="">{t("any")}</option>
-                {selectedWilaya.communes.map((c) => (
+                {communes.map((c) => (
                   <option key={c.id} value={c.id}>
                     {locale === "ar" ? c.nomAr : c.nomFr}
                   </option>

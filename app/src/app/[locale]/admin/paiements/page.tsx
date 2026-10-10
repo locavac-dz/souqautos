@@ -3,7 +3,7 @@ import { Link, redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isAdmin } from "@/lib/auth-server/roles";
-import { computePaymentOrderStats } from "@/lib/payment-orders";
+import { computePaymentOrderStatsFromGroups } from "@/lib/payment-orders";
 import { getPaymentSettings } from "@/lib/payment-settings";
 import { dualApprovalBlocksAlone, requiresDualApproval } from "@/lib/dual-approval";
 import { PaymentOrderReviewActions } from "@/components/admin/PaymentOrderReviewActions";
@@ -29,14 +29,17 @@ export default async function AdminPaymentOrdersPage() {
       orderBy: { createdAt: "asc" },
       include: { user: { include: { profile: true } }, listing: { select: { id: true, title: true } }, firstApprovedBy: { select: { email: true } } },
     }),
-    prisma.paymentOrder.findMany({ select: { status: true, formula: true, amountDzd: true } }),
+    // Lot 279 (audit C4) — agrégat par statut et formule, jamais la table entière.
+    prisma.paymentOrder.groupBy({ by: ["status", "formula"], _count: { _all: true }, _sum: { amountDzd: true } }),
     prisma.proSubscriptionOrder.findMany({
       where: { status: "EN_ATTENTE" },
       orderBy: { createdAt: "asc" },
       include: { user: { include: { profile: true } }, professionalAccount: { select: { id: true, nomCommercial: true } }, firstApprovedBy: { select: { email: true } } },
     }),
   ]);
-  const stats = computePaymentOrderStats(allOrdersForStats);
+  const stats = computePaymentOrderStatsFromGroups(
+    allOrdersForStats.map((g) => ({ status: g.status, formula: g.formula, count: g._count._all, amountDzd: g._sum.amountDzd ?? 0 }))
+  );
 
   // Lot 278 — double validation des gros virements : seuil, et alerte si l'équipe n'a qu'un seul administrateur.
   const [paymentSettings, adminCount] = await Promise.all([

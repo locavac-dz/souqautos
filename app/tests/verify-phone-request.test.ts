@@ -54,10 +54,10 @@ describe("POST /api/auth/verify-phone/request", () => {
     expect(await res.json()).toEqual({ error: "no_phone" });
   });
 
-  it("returns 400 when the phone is already verified", async () => {
+  it("returns 409 when the phone is already verified", async () => {
     getCurrentUser.mockResolvedValue({ ...AUTHED_USER, phoneVerifiedAt: new Date() });
     const res = await POST();
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ error: "already_verified" });
   });
 

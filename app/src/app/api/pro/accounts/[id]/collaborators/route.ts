@@ -52,7 +52,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     where: { professionalAccountId_userId: { professionalAccountId: id, userId: targetUser.id } },
   });
   if (existing) {
-    return NextResponse.json({ error: "already_collaborator" }, { status: 400 });
+    return NextResponse.json({ error: "already_collaborator" }, { status: 409 });
   }
 
   try {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     // Deux invitations simultanées du même compte : la base a déjà retenu l'une.
     if (isUniqueViolation(error)) {
-      return NextResponse.json({ error: "already_collaborator" }, { status: 400 });
+      return NextResponse.json({ error: "already_collaborator" }, { status: 409 });
     }
     throw error;
   }

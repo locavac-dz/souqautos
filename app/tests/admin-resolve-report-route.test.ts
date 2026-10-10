@@ -66,9 +66,9 @@ beforeEach(() => {
 });
 
 describe("POST /api/admin/reports/[id]/resolve", () => {
-  it("returns 403 when not authenticated", async () => {
+  it("returns 401 when not authenticated", async () => {
     getCurrentUser.mockResolvedValue(null);
-    expect((await POST(request({ action: "resolve" }), { params })).status).toBe(403);
+    expect((await POST(request({ action: "resolve" }), { params })).status).toBe(401);
     expect(findUniqueReport).not.toHaveBeenCalled();
   });
 

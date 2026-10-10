@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
   if (user.professionalAccount) {
-    return NextResponse.json({ error: "already_professional" }, { status: 400 });
+    return NextResponse.json({ error: "already_professional" }, { status: 409 });
   }
 
   if (!(await checkRateLimit(`create-pro-account:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 }))) {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Double envoi du formulaire : un seul compte pro par utilisateur, la
     // transaction de l'autre requête est annulée.
     if (isUniqueViolation(error)) {
-      return NextResponse.json({ error: "already_professional" }, { status: 400 });
+      return NextResponse.json({ error: "already_professional" }, { status: 409 });
     }
     throw error;
   }

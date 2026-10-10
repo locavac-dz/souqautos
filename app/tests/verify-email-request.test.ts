@@ -47,10 +47,10 @@ describe("POST /api/auth/verify-email/request", () => {
     expect(await res.json()).toEqual({ error: "unauthenticated" });
   });
 
-  it("returns 400 if email is already verified", async () => {
+  it("returns 409 if email is already verified", async () => {
     getCurrentUser.mockResolvedValue({ ...AUTHED_USER, emailVerifiedAt: new Date() });
     const res = await POST();
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ error: "already_verified" });
   });
 

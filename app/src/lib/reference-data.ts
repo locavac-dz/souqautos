@@ -92,6 +92,16 @@ export const getSearchWilayas = () =>
     }),
   );
 
+// Lot 279 (audit C8) — wilayas SANS leurs 1 541 communes : pour les filtres de recherche et tout formulaire qui ne
+// propose pas la commune. Les communes d'une wilaya se chargent à la demande (/api/wilayas/[id]/communes).
+export const getSearchWilayasLight = () =>
+  cachedReference("search:wilayas-light", () =>
+    prisma.wilaya.findMany({
+      orderBy: { id: "asc" },
+      select: { id: true, nomFr: true, nomAr: true },
+    }),
+  );
+
 export const getSearchEquipments = () =>
   cachedReference("search:equipments", () =>
     prisma.equipment.findMany({

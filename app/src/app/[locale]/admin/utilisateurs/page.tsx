@@ -8,6 +8,11 @@ import { SuspendUserButton } from "@/components/admin/SuspendUserButton";
 import { UnlockUserButton } from "@/components/admin/UnlockUserButton";
 import { ResetTwoFactorButton } from "@/components/admin/ResetTwoFactorButton";
 import { isAccountLocked } from "@/lib/login-lockout";
+import { pageWindow, parseRequestedPage } from "@/lib/pagination";
+import { Pagination } from "@/components/search/Pagination";
+
+// Lot 279 (audit C4) — la liste des comptes était chargée en entier ; 50 par page, même mécanique que les listes publiques.
+const USERS_PAGE_SIZE = 50;
 
 const ROLE_KEY: Record<string, string> = {
   PARTICULIER: "roleOptionParticulier",
@@ -19,7 +24,7 @@ const ROLE_KEY: Record<string, string> = {
   SUPER_ADMIN: "roleOptionSuperAdmin",
 };
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const locale = await getLocale();
   const currentUser = await getCurrentUser();
   if (!currentUser || !isModerator(currentUser.role)) {
@@ -32,15 +37,20 @@ export default async function AdminUsersPage() {
   const canAssignSuperAdmin = isSuperAdmin(currentUser.role);
   const canSuspend = isStaff(currentUser.role);
 
+  const { page: rawPage } = await searchParams;
+  const totalCount = await prisma.user.count();
+  const { page, totalPages, skip } = pageWindow(totalCount, parseRequestedPage(rawPage), USERS_PAGE_SIZE);
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     include: { profile: true },
+    skip,
+    take: USERS_PAGE_SIZE,
   });
   const now = new Date();
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("navUsers")}</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("navUsers")} ({totalCount})</h1>
       <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700">
         {users.map((user) => {
           const locked = isAccountLocked(user.lockedUntil, now);
@@ -92,6 +102,7 @@ export default async function AdminUsersPage() {
           );
         })}
       </div>
+      <Pagination page={page} totalPages={totalPages} searchParams={{}} basePath="/admin/utilisateurs" />
     </div>
   );
 }

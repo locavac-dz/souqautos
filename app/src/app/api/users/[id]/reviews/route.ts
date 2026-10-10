@@ -71,7 +71,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Deux avis simultanés du même auteur : un seul est retenu, et le vendeur
     // n'est pas notifié deux fois.
     if (isUniqueViolation(error)) {
-      return NextResponse.json({ error: "already_reviewed" }, { status: 400 });
+      return NextResponse.json({ error: "already_reviewed" }, { status: 409 });
     }
     throw error;
   }

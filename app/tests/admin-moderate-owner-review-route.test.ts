@@ -39,9 +39,9 @@ beforeEach(() => {
 });
 
 describe("POST /api/admin/owner-reviews/[id]/moderate", () => {
-  it("returns 403 when not authenticated", async () => {
+  it("returns 401 when not authenticated", async () => {
     getCurrentUser.mockResolvedValue(null);
-    expect((await POST(request({ action: "approve" }), { params })).status).toBe(403);
+    expect((await POST(request({ action: "approve" }), { params })).status).toBe(401);
     expect(findUniqueReview).not.toHaveBeenCalled();
   });
 

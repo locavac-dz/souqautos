@@ -39,10 +39,10 @@ beforeEach(() => {
 });
 
 describe("POST /api/admin/users/[id]/role", () => {
-  it("returns 403 for unauthenticated requests", async () => {
+  it("returns 401 for unauthenticated requests", async () => {
     getCurrentUser.mockResolvedValue(null);
     const res = await POST(request({ role: "MODERATEUR" }), ctx());
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
   });
 
   it("returns 403 for non-admin users", async () => {

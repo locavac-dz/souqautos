@@ -15,13 +15,13 @@ import { safeEqual } from "@/lib/google-oauth";
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
-    return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
+    return NextResponse.json({ error: "cron_secret_not_configured" }, { status: 500 });
   }
 
   // Lot 267 (audit F2) — comparaison à temps constant, comme pour les autres secrets (google-oauth, chargily).
   const auth = req.headers.get("authorization") ?? "";
   if (!safeEqual(auth, `Bearer ${secret}`)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
   const now = new Date();
