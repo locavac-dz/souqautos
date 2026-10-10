@@ -4187,3 +4187,15 @@ Au passage, un test de non-régression a été ajouté sur la vérification d'id
 **Vérifié**
 - `tsc` 0 ; `eslint .` 0 ; **2 454 tests** verts (4 nouveaux).
 - Réel, dans le navigateur, FR/AR : bouton visible, estimation masquée avant le clic, bloc complet révélé après.
+
+## Lot 285 — Deux correctifs de menu de navigation (2026-10-10)
+
+Deux bugs signalés en utilisant le site en direct, tous deux liés à l'en-tête.
+
+**Menu mobile.** Un compte avec beaucoup d'entrées (équipe back-office) dépassait la hauteur de l'écran : il fallait faire défiler la **page entière** pour atteindre « Déconnexion », tout en bas de la liste — confondu avec un bouton qui ne répond pas. Le panneau (`MobileMenuToggle.tsx`) défile maintenant lui-même (`max-h-[70vh]` + `overflow-y-auto`), et la page derrière ne bouge plus tant qu'il est ouvert (défilement du corps de page bloqué pendant l'ouverture).
+
+**Menu de compte desktop.** Le menu déroulant du compte (« Administrateur ▼ ») s'ouvrait réellement — flèche inversée, `aria-expanded` correct — mais restait **invisible et impossible à cliquer** : le `<nav>` parent portait un `overflow-hidden` qui découpait net le panneau en position absolue s'ouvrant vers le bas, sous la hauteur de l'en-tête. Un essai limité à l'axe horizontal (`overflow-x-hidden`) n'a pas suffi : le CSS force alors `overflow-y` à `auto` au lieu de `visible` (règle du spec sur l'interaction des deux axes), qui rogne quand même. Retiré entièrement dans `SiteHeader.tsx` — vérifié sans débordement horizontal jusqu'à 640 px, la largeur la plus étroite où ce menu apparaît.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 454 tests** verts.
+- Réel, avec de **vrais clics** (pas seulement via le DOM, pour écarter un faux positif) : menu mobile défilant jusqu'à Déconnexion sans bouger la page, menu de compte desktop entièrement visible et cliquable jusqu'à Déconnexion.
