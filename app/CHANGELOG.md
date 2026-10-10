@@ -4142,3 +4142,48 @@ Quatre points de l'audit de code restés ouverts (E4, C4, C7, C8) — la journal
 - Un bug introduit pendant ce lot (l'appel `fetch` des communes omettait l'identifiant de la wilaya, `404` silencieux) a été trouvé et corrigé pendant cette vérification, avant commit.
 
 **Limites** : l'enveloppe `apiHandler` (audit E6, ~146 routes) reste à appliquer — écrite dans `src/lib/api-route.ts` mais pas encore branchée sur une seule route.
+
+## Lot 280 — Bandeau de premier lancement (2026-10-10)
+
+Bandeau statique et refermable en tête de toutes les pages, pour le tout premier lancement du site : prévient les visiteurs et renvoie vers `/contact` pour signaler une anomalie. Volontairement **sans défilement animé** (un texte en mouvement est moins lisible et contraire aux recommandations d'accessibilité).
+
+Fermeture mémorisée par navigateur (`localStorage`, même principe que `CompareContext`) : une fois fermé, il ne réapparaît pas sur les pages suivantes du même visiteur. **Se retire de lui-même après 3 mois** (`src/lib/launch-notice.ts`, `isLaunchNoticeActive`, échéance au 10 janvier 2027), vérifié côté serveur dans le layout — passé ce délai, le bandeau n'est plus du tout envoyé au navigateur, pas seulement masqué en JavaScript.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 442 tests / 218 fichiers** verts (4 nouveaux).
+- Réel, dans le navigateur : FR, AR (RTL), mode sombre, lien de signalement, fermeture persistante entre les pages.
+
+## Lot 282 — Retouches navigation, logo et page Contact (2026-10-10)
+
+Trois retouches ponctuelles demandées en revoyant le site en direct :
+- Retrait du lien « Équipements » de la navigation (en-tête et menu mobile) : reste accessible via le filtre Catégorie de la recherche, pour ne pas dupliquer l'entrée.
+- Espace dans le logo « SOUQ AUTO » (auparavant collé) ; les deux mots gardent leurs couleurs distinctes. La police du logo (Bebas Neue) n'ayant pas de véritables minuscules, l'aspect « tout en capitales » reste inhérent à cette police.
+- Carte « Email » en haut de la page Contact (`PUBLIC_CONTACT_EMAIL` dans `src/lib/site.ts`), dans l'esprit d'une maquette de référence fournie, adaptée aux thèmes clair et sombre du site.
+
+Au passage, un champ téléphone facultatif avait été ajouté puis entièrement retiré du formulaire de contact sur demande (code, migration et colonne en base) avant tout commit — aucune trace dans l'historique.
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 442 tests** verts.
+- Réel, dans le navigateur, FR/AR, clair/sombre, desktop et mobile.
+
+## Lot 283 — Vignette automobile estimée (2026-10-10)
+
+Première pierre d'un « coût d'usage » affiché sur la fiche annonce, à côté du prix — en se limitant à une donnée **100 % officielle et déterministe**, par choix : ni consommation ni assurance ne sont affichées, pour ne jamais présenter un chiffre inventé comme fiable à un acheteur qui prend une décision financière réelle (même principe que l'absence de consommation « mesurée » sur les essais auto).
+
+`src/lib/vignette.ts` : barème officiel de la loi de finances 2026 (DGI), par puissance fiscale et âge du véhicule — deux données déjà présentes sur chaque annonce. Électrique et hybride exonérés ; le GPL ne l'est plus depuis cette loi. N'affiche rien si la puissance fiscale n'est pas renseignée, plutôt qu'une estimation bancale. Sources : [demarchesdz.com](https://www.demarchesdz.com/vignette-voiture/), [tsa-algerie.com](https://www.tsa-algerie.com/vignette-auto-2026-en-algerie-la-vente-lancee-ce-qui-change/).
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 450 tests** verts (8 nouveaux).
+- Réel, dans le navigateur : calcul exact sur une annonce de test (7 CV, 7 ans → 2 000 DA/an), exonération électrique, disparition propre sans puissance fiscale renseignée, FR et AR.
+
+**Limites** : barème « tourisme » uniquement (le catalogue n'a pas de poids total autorisé en charge pour distinguer les utilitaires) ; âge calculé depuis l'année du véhicule, pas sa date d'immatriculation exacte.
+
+## Lot 284 — Estimation Souq Auto affichée à la demande (2026-10-10)
+
+Sur la fiche annonce, l'encart « Estimation Souq Auto » (prix demandé / estimation du marché / écart) ne s'affiche plus automatiquement : un bouton « Voir l'estimation Souq Auto » le révèle au clic (`src/components/EstimationReveal.tsx`). Les chiffres sont déjà calculés côté serveur — aucun appel réseau supplémentaire au clic, seul l'affichage est différé.
+
+Au passage, un test de non-régression a été ajouté sur la vérification d'identité : elle est réservée aux comptes professionnels et à l'équipe de modération depuis le Lot 168, mais aucun test ne couvrait cette règle au niveau de la route — vérifié avec deux comptes de démonstration réels (particulier refusé, professionnel accepté).
+
+**Vérifié**
+- `tsc` 0 ; `eslint .` 0 ; **2 454 tests** verts (4 nouveaux).
+- Réel, dans le navigateur, FR/AR : bouton visible, estimation masquée avant le clic, bloc complet révélé après.
