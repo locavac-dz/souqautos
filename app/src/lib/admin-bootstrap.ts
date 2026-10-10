@@ -1,13 +1,13 @@
 // Lot 117 — compte administrateur créé par `npm run db:seed`.
 //
-// Avant ce lot, le seed créait TOUJOURS `admin@souqauto.com` avec le mot de passe
+// Avant ce lot, le seed créait TOUJOURS `admin@souqautos.com` avec le mot de passe
 // de développement écrit en clair dans le dépôt (README, code source) : lancé sur
 // une base de production, il y aurait laissé une porte d'entrée administrateur
 // que tout lecteur du dépôt connaît. En production, l'adresse et le mot de passe
 // doivent maintenant être fournis (ADMIN_EMAIL, ADMIN_PASSWORD), et le mot de
 // passe de développement est refusé.
 
-export const DEV_ADMIN_EMAIL = "admin@souqauto.com";
+export const DEV_ADMIN_EMAIL = "admin@souqautos.com";
 export const DEV_ADMIN_PASSWORD = "AdminSouqAuto2026!";
 export const MIN_PRODUCTION_PASSWORD_LENGTH = 12;
 

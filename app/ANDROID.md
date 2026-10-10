@@ -14,7 +14,7 @@ Dans [`capacitor.config.ts`](./capacitor.config.ts), remplacer la valeur de `ser
 
 ```ts
 server: {
-  url: "https://souqauto.com",   // ← votre URL de production
+  url: "https://souqautos.com",   // ← votre URL de production
   ...
 }
 ```
@@ -63,7 +63,7 @@ android/app/release/app-release.aab
 ## 5. Publier sur le Google Play Store
 
 1. Créer un compte développeur sur https://play.google.com/console (25 $ une fois)
-2. Créer une nouvelle application : **Souq Auto** / `com.souqauto.app`
+2. Créer une nouvelle application : **Souq Auto** / `com.souqautos.app`
 3. Remplir la fiche (description, captures d'écran, icône 512×512 px)
 4. Uploader le `.aab` dans **Production → Créer une nouvelle version**
 5. Soumettre à la review Google (1 à 7 jours pour la première version)

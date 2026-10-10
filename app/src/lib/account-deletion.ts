@@ -5,7 +5,7 @@
 // de l'id (déterministe, pratique pour retrouver un compte anonymisé en base
 // à des fins de support, sans jamais révéler l'email d'origine).
 export function generateAnonymizedEmail(userId: string): string {
-  return `deleted-${userId}@deleted.souqauto.com`;
+  return `deleted-${userId}@deleted.souqautos.com`;
 }
 
 // Un nom d'affichage est toujours du texte libre non traduit (comme un vrai

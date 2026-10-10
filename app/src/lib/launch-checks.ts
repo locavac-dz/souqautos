@@ -26,7 +26,7 @@ export type CheckResult = {
 // Faits collectés en base par le script.
 export type LaunchFacts = {
   dbReachable: boolean;
-  // Le compte admin@souqauto.com existe ET son mot de passe est celui du README.
+  // Le compte admin@souqautos.com existe ET son mot de passe est celui du README.
   adminUsesDevPassword: boolean;
   // Comptes dont l'adresse se termine par un domaine de démonstration.
   demoAccounts: number;
@@ -222,7 +222,7 @@ function checkSms(env: Env): CheckResult {
 }
 
 // Lot 265 (constat A5) — sans ADMIN_EMAIL, le formulaire de contact retombait sur l'adresse de développement
-// admin@souqauto.com (domaine non maîtrisé) sans aucune erreur, et le compte administrateur de production n'est pas créé.
+// admin@souqautos.com (domaine non maîtrisé) sans aucune erreur, et le compte administrateur de production n'est pas créé.
 function checkAdminEmail(env: Env): CheckResult {
   const value = env.ADMIN_EMAIL?.trim();
   const fix = "Définir ADMIN_EMAIL (adresse réellement lue par l'équipe) et ADMIN_PASSWORD (voir .env.example).";
@@ -378,7 +378,7 @@ function checkFacts(facts: LaunchFacts): CheckResult[] {
   }
 
   if (facts.adminUsesDevPassword) {
-    results.push({ id: "admin-password", level: "error", message: "Le compte admin@souqauto.com existe avec le mot de passe de développement publié dans le dépôt.", fix: "Changer ce mot de passe, ou supprimer le compte et créer le vôtre avec ADMIN_EMAIL / ADMIN_PASSWORD." });
+    results.push({ id: "admin-password", level: "error", message: "Le compte admin@souqautos.com existe avec le mot de passe de développement publié dans le dépôt.", fix: "Changer ce mot de passe, ou supprimer le compte et créer le vôtre avec ADMIN_EMAIL / ADMIN_PASSWORD." });
   } else {
     results.push({ id: "admin-password", level: "ok", message: "Aucun administrateur avec le mot de passe de développement." });
   }
