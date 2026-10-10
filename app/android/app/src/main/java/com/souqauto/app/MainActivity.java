@@ -1,4 +1,4 @@
-package dz.souqauto.app;
+package com.souqauto.app;
 
 import android.os.Bundle;
 import android.webkit.WebView;
