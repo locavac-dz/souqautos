@@ -12,7 +12,6 @@ const DISMISSED_KEY = "souq-auto-launch-notice-dismissed";
 // Fermeture mémorisée par navigateur (pas de réglage serveur : à retirer du code une fois le
 // lancement passé).
 export function LaunchNoticeBanner() {
-  const t = useTranslations("LaunchNotice");
   const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
@@ -37,8 +36,19 @@ export function LaunchNoticeBanner() {
     }
   };
 
+  return <LaunchNoticeContent onDismiss={dismiss} />;
+}
+
+// Contenu du bandeau, séparé de la logique de fermeture. Un <aside> nommé est un repère (landmark) : sans lui, le
+// texte reste hors de tout repère et axe-core signale « region » sur chaque page (audit d'accessibilité e2e).
+export function LaunchNoticeContent({ onDismiss }: { onDismiss: () => void }) {
+  const t = useTranslations("LaunchNotice");
+
   return (
-    <div className="flex items-center justify-center gap-3 bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+    <aside
+      aria-label={t("ariaLabel")}
+      className="flex items-center justify-center gap-3 bg-amber-100 px-4 py-2 text-center text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100"
+    >
       <span>
         {t("message")}{" "}
         <Link href="/contact" className="font-medium underline hover:no-underline">
@@ -47,12 +57,12 @@ export function LaunchNoticeBanner() {
       </span>
       <button
         type="button"
-        onClick={dismiss}
+        onClick={onDismiss}
         aria-label={t("close")}
         className="shrink-0 rounded-md px-1.5 py-0.5 text-amber-900/70 hover:bg-amber-900/10 hover:text-amber-900 dark:text-amber-100/70 dark:hover:bg-amber-100/10 dark:hover:text-amber-100"
       >
         ✕
       </button>
-    </div>
+    </aside>
   );
 }

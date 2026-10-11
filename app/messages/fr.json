@@ -2334,6 +2334,7 @@
   "LaunchNotice": {
     "message": "Souq Auto est en tout premier lancement : si vous rencontrez une anomalie, merci de nous la signaler.",
     "reportLink": "Signaler un problème",
+    "ariaLabel": "Information sur le lancement",
     "close": "Fermer ce message"
   }
 }
