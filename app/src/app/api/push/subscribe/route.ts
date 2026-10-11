@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody, NO_STORE } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody, NO_STORE } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -7,7 +7,7 @@ import { isUniqueViolation } from "@/lib/prisma-errors";
 import { MAX_ENDPOINT_LENGTH, MAX_SUBSCRIPTIONS_PER_USER, pushSubscriptionSchema, resolvePushConfig } from "@/lib/push";
 
 // Lot 121 — abonner (POST) ou désabonner (DELETE) l'appareil courant aux notifications.
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser({ headers: NO_STORE });
   if (user instanceof NextResponse) return user;
 
@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true }, { status: 201, headers: NO_STORE });
-}
+});
 
 const unsubscribeSchema = z.object({ endpoint: z.string().min(1).max(MAX_ENDPOINT_LENGTH) });
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = apiHandler(async (request: NextRequest) => {
   const user = await requireUser({ headers: NO_STORE });
   if (user instanceof NextResponse) return user;
 
@@ -62,4 +62,4 @@ export async function DELETE(request: NextRequest) {
   // Seulement SES appareils : on ne peut pas désabonner celui d'un autre compte.
   const removed = await prisma.pushSubscription.deleteMany({ where: { endpoint: body.endpoint, userId: user.id } });
   return NextResponse.json({ ok: true, removed: removed.count }, { headers: NO_STORE });
-}
+});

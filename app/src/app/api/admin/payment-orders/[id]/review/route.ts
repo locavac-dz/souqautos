@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/auth-server/roles";
@@ -24,7 +24,7 @@ const bodySchema = z.object({
 // après vérification dans le tableau de bord Chargily — l'activation est la même (payment-fulfillment).
 // Lot 265 : l'approbation passe par `confirmListingFormulaOrder` (transaction + contrôle du statut de
 // l'annonce) — une annonce suspendue entre-temps n'est pas republiée : 400 `listing_not_upgradable`.
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -129,4 +129,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   });
 
   return NextResponse.json({ status: isApproval ? "CONFIRMEE" : "REJETEE" });
-}
+});

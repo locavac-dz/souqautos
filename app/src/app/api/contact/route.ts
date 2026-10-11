@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
-import { parseJsonBody } from "@/lib/api-route";
+import { apiHandler, parseJsonBody } from "@/lib/api-route";
 import { contactSchema } from "@/lib/validation/contact";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
@@ -22,7 +22,7 @@ import {
 // vers la bonne boîte selon le motif, et le client reçoit un accusé de réception avec sa référence.
 const bodySchema = contactSchema.extend({ locale: z.enum(["fr", "ar"]).default("fr") });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const ip = getClientIp(request);
   if (!(await checkRateLimit(`contact:${ip}`, { limit: 3, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -89,4 +89,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ ok: true, reference }, { status: 201 });
-}
+});

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 
-export async function POST(
+export const POST = apiHandler(async (
   _request: Request,
   { params }: { params: Promise<{ listingId: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -35,12 +35,12 @@ export async function POST(
   }
 
   return NextResponse.json({ favorited: true }, { status: 201 });
-}
+});
 
-export async function DELETE(
+export const DELETE = apiHandler(async (
   _request: Request,
   { params }: { params: Promise<{ listingId: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -48,4 +48,4 @@ export async function DELETE(
   await prisma.favorite.deleteMany({ where: { userId: user.id, listingId } });
 
   return NextResponse.json({ favorited: false });
-}
+});

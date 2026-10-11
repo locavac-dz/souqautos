@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { cancelPendingOrdersForListing } from "@/lib/payment-fulfillment";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
@@ -12,10 +12,10 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { notifyUser } from "@/lib/notify-user";
 
 // PATCH — vendeur : accepte / refuse / contre-offre ; acheteur : retire / répond à une contre-offre
-export async function PATCH(
+export const PATCH = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -181,13 +181,13 @@ export async function PATCH(
   });
 
   return NextResponse.json({ offer: updated });
-}
+});
 
 // PUT — acheteur modifie son offre PENDING (montant + message)
-export async function PUT(
+export const PUT = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -215,4 +215,4 @@ export async function PUT(
 
   revalidatePath("/compte/offres");
   return NextResponse.json({ offer: updated });
-}
+});

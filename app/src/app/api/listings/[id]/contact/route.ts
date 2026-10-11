@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseJsonBody, NO_STORE } from "@/lib/api-route";
+import { apiHandler, parseJsonBody, NO_STORE } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -27,7 +27,7 @@ const bodySchema = z.object({
   locale: z.enum(CONTACT_LOCALES).default("fr"),
 });
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const body = await parseJsonBody(request, bodySchema, { headers: NO_STORE });
   if (body instanceof NextResponse) return body;
   const { channel, locale } = body;
@@ -107,4 +107,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     channel === "WHATSAPP" ? { channel, whatsappUrl } : { channel, phone, telUrl },
     { headers: NO_STORE }
   );
-}
+});

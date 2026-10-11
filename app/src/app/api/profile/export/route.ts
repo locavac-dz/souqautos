@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -12,7 +12,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 // reçus, comptes qui ont bloqué cet utilisateur) — seule la donnée dont cet
 // utilisateur est l'auteur ou qu'il peut déjà consulter dans l'application
 // (le contenu d'une conversation à laquelle il participe) est exportée.
-export async function GET() {
+export const GET = apiHandler(async () => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -271,4 +271,4 @@ export async function GET() {
       "Cache-Control": "no-store",
     },
   });
-}
+});

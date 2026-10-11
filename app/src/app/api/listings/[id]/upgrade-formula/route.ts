@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -23,7 +23,7 @@ const bodySchema = z
 // Un collaborateur gererAnnonces peut passer une annonce du compte pro en
 // formule payante — même règle que gérer/renouveler/tarifer une annonce
 // (Lot 43/61).
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -122,4 +122,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     console.error(`[chargily] création de checkout impossible (annonce ${id}) : ${message}`);
     return NextResponse.json({ error: "provider_unavailable" }, { status: 502 });
   }
-}
+});

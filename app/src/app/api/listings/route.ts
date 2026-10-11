@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { tryAutoPublish } from "@/lib/auto-publish";
 import { prisma } from "@/lib/prisma";
@@ -17,7 +17,7 @@ import { isUniqueViolation } from "@/lib/prisma-errors";
 const MIN_PHOTOS = 1;
 const MAX_PHOTOS = 10;
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -182,4 +182,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ listing }, { status: 201 });
-}
+});

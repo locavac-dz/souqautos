@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 type Props = {
@@ -34,6 +34,14 @@ export function GroupMessageThread({ groupId, onSent }: Props) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cleanup recording timer and media tracks on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      mediaRecorderRef.current?.stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;

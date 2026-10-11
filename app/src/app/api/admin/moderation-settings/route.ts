@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/auth-server/roles";
@@ -18,7 +18,7 @@ const bodySchema = z.object({
 // politique de modération elle-même (même niveau de gravité que la gestion
 // du référentiel marques/modèles, Lot 25), pas une action de modération au
 // cas par cas.
-export async function PATCH(request: NextRequest) {
+export const PATCH = apiHandler(async (request: NextRequest) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -68,4 +68,4 @@ export async function PATCH(request: NextRequest) {
   });
 
   return NextResponse.json({ settings });
-}
+});

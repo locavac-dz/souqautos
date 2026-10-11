@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { saveAvatar, deleteStoredFile, PhotoValidationError } from "@/lib/uploads";
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
   if (previous?.avatarUrl) await deleteStoredFile(previous.avatarUrl);
 
   return NextResponse.json({ avatarUrl });
-}
+});
 
-export async function DELETE() {
+export const DELETE = apiHandler(async () => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -46,4 +46,4 @@ export async function DELETE() {
   if (previous?.avatarUrl) await deleteStoredFile(previous.avatarUrl);
 
   return NextResponse.json({ ok: true });
-}
+});

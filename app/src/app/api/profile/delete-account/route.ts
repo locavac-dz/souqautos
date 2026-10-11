@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, hashPassword } from "@/lib/auth-server/password";
@@ -23,7 +23,7 @@ const bodySchema = z.object({ password: z.string().min(1).optional(), confirmEma
 // utilisateurs ont besoin de conserver). Réversibilité délibérément absente
 // (contrairement à la suspension, Lot 31) : l'email/mot de passe d'origine
 // sont irrémédiablement perdus.
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -96,4 +96,4 @@ export async function POST(request: NextRequest) {
   await clearSessionCookie();
 
   return NextResponse.json({ ok: true });
-}
+});

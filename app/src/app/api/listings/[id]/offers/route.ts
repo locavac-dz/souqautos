@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
@@ -9,10 +9,10 @@ import { escapeHtml } from "@/lib/mailer";
 import { SITE_URL } from "@/lib/site";
 import { notifyUser } from "@/lib/notify-user";
 
-export async function POST(
+export const POST = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -88,4 +88,4 @@ export async function POST(
   });
 
   return NextResponse.json({ offer }, { status: 201 });
-}
+});

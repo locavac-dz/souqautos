@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkCanMessage, checkMessageHasContent, shouldSendMessageNotification } from "@/lib/messaging";
@@ -15,7 +15,7 @@ const bodySchema = z.object({ content: z.string().trim().max(2000) });
 
 const MESSAGES_PAGE_SIZE = 50;
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -53,9 +53,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const page = raw.slice(0, MESSAGES_PAGE_SIZE).reverse();
 
   return NextResponse.json({ messages: page, hasMore });
-}
+});
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -189,4 +189,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   return NextResponse.json({ message }, { status: 201 });
-}
+});

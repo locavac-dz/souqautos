@@ -22,8 +22,8 @@ function median(sorted: number[]): number {
 // disponibles sur le marché ».
 function confidenceFromSampleSize(n: number): { pct: number; label: EstimateResult["confidenceLabel"] } {
   if (n >= 15) return { pct: Math.min(92, 25 + n * 4), label: "elevee" };
-  if (n >= 6) return { pct: 25 + n * 6, label: "bonne" };
-  if (n >= 3) return { pct: 25 + n * 8, label: "moyenne" };
+  if (n >= 6) return { pct: Math.min(92, 25 + n * 6), label: "bonne" };
+  if (n >= 3) return { pct: Math.min(92, 25 + n * 8), label: "moyenne" };
   return { pct: 20 + n * 5, label: "faible" };
 }
 

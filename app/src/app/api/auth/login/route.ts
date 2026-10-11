@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { parseJsonBody } from "@/lib/api-route";
+import { apiHandler, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validation/auth";
 import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/auth-server/password";
@@ -10,7 +10,7 @@ import { getClientIp, safeUser } from "@/lib/http";
 import { isAccountLocked, lockedUntilForAttempts, LOGIN_ACCOUNT_LIMIT } from "@/lib/login-lockout";
 import { recordLoginEvent } from "@/lib/login-event-service";
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const ip = getClientIp(request);
   const userAgent = request.headers.get("user-agent") ?? "";
   if (!(await checkRateLimit(`login:${ip}`, { limit: 10, windowMs: 15 * 60 * 1000 }))) {
@@ -101,4 +101,4 @@ export async function POST(request: NextRequest) {
   after(() => recordLoginEvent({ userId: user.id, ip, userAgent, method: "password", success: true }));
 
   return NextResponse.json({ user: safeUser(user) });
-}
+});

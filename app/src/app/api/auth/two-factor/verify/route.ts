@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { parseJsonBody, NO_STORE } from "@/lib/api-route";
+import { apiHandler, parseJsonBody, NO_STORE } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { clearPendingCookie, getPendingFromCookies } from "@/lib/auth-server/two-factor-pending";
@@ -21,7 +21,7 @@ import { challenge } from "@/lib/two-factor";
 //    à zéro QU'ICI, après un code valable — jamais par la simple saisie du bon mot de passe (voir la route de connexion).
 const schema = z.object({ code: z.string().trim().min(1).max(40) });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   if (!(await checkRateLimit(`2fa-verify:${getClientIp(request)}`, { limit: 30, windowMs: 15 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: NO_STORE });
   }
@@ -78,4 +78,4 @@ export async function POST(request: NextRequest) {
     success: true,
   }));
   return NextResponse.json({ user: safeUser(user), next: sanitizeNextPath(pending.next), method: result.method }, { headers: NO_STORE });
-}
+});

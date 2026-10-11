@@ -7,7 +7,8 @@ import { useEffect } from "react";
 export function ThemeApplicator() {
   useEffect(() => {
     function apply() {
-      const stored = localStorage.getItem("souq-theme");
+      let stored: string | null = null;
+      try { stored = localStorage.getItem("souq-theme"); } catch {}
       const root = document.documentElement;
       if (stored === "dark") {
         root.classList.add("dark");
@@ -22,7 +23,9 @@ export function ThemeApplicator() {
 
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const mqHandler = () => {
-      if (!localStorage.getItem("souq-theme") || localStorage.getItem("souq-theme") === "auto") {
+      let stored: string | null = null;
+      try { stored = localStorage.getItem("souq-theme"); } catch {}
+      if (!stored || stored === "auto") {
         apply();
       }
     };

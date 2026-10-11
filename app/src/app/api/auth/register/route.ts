@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseJsonBody } from "@/lib/api-route";
+import { apiHandler, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validation/auth";
 import { hashPassword } from "@/lib/auth-server/password";
@@ -8,7 +8,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, safeUser } from "@/lib/http";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const ip = getClientIp(request);
   if (!(await checkRateLimit(`register:${ip}`, { limit: 10, windowMs: 15 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -63,4 +63,4 @@ export async function POST(request: NextRequest) {
   await setSessionCookie(token);
 
   return NextResponse.json({ user: safeUser(user) }, { status: 201 });
-}
+});

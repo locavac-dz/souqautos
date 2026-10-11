@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { profileUpdateSchema } from "@/lib/validation/profile";
 import { shouldResetPhoneVerification } from "@/lib/profile";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -69,4 +69,4 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true });
-}
+});
