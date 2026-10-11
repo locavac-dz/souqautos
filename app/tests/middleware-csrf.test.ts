@@ -1,8 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-// The middleware uses NextResponse and NextRequest from next/server.
-// In the test environment we mock them minimally.
-
 vi.mock("next/server", () => {
   class FakeURL {
     pathname: string;
@@ -38,8 +35,21 @@ vi.mock("next/server", () => {
   return { NextRequest: MockNextRequest, NextResponse };
 });
 
-// Import after mock is set up.
-import { middleware } from "@/middleware";
+vi.mock("next-intl/middleware", () => ({
+  default: () => ({ _type: "next", headers: new Map() }),
+}));
+
+vi.mock("@/i18n/routing", () => ({ routing: {} }));
+vi.mock("@/lib/site", () => ({ SITE_URL: "http://localhost" }));
+vi.mock("@/lib/security-headers", () => ({
+  CSP_REPORT_PATH: "/api/security/csp-report",
+  buildContentSecurityPolicy: () => "default-src 'self'",
+  createNonce: () => "test-nonce",
+  cspHeaderName: () => "content-security-policy",
+  extraImageOrigins: () => [],
+}));
+
+import { proxy } from "@/proxy";
 
 function req(
   path: string,
@@ -50,25 +60,25 @@ function req(
   return new NextRequest(`http://localhost${path}`, { method, headers });
 }
 
-describe("CSRF middleware", () => {
+describe("CSRF protection in proxy", () => {
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
   });
 
   it("allows GET requests without any origin check", () => {
-    const res = middleware(req("/api/listings", "GET") as any) as any;
+    const res = proxy(req("/api/listings", "GET") as any) as any;
     expect(res._type).toBe("next");
   });
 
   it("allows same-origin POST (Origin matches)", () => {
-    const res = middleware(
+    const res = proxy(
       req("/api/listings", "POST", { origin: "http://localhost" }) as any
     ) as any;
     expect(res._type).toBe("next");
   });
 
   it("blocks cross-origin POST", () => {
-    const res = middleware(
+    const res = proxy(
       req("/api/listings", "POST", { origin: "http://evil.com" }) as any
     ) as any;
     expect(res._type).toBe("json");
@@ -76,7 +86,7 @@ describe("CSRF middleware", () => {
   });
 
   it("blocks cross-site via Sec-Fetch-Site", () => {
-    const res = middleware(
+    const res = proxy(
       req("/api/listings", "POST", { "sec-fetch-site": "cross-site" }) as any
     ) as any;
     expect(res._type).toBe("json");
@@ -84,33 +94,33 @@ describe("CSRF middleware", () => {
   });
 
   it("allows same-origin via Sec-Fetch-Site", () => {
-    const res = middleware(
+    const res = proxy(
       req("/api/listings", "POST", { "sec-fetch-site": "same-origin" }) as any
     ) as any;
     expect(res._type).toBe("next");
   });
 
   it("allows POST without Origin or Sec-Fetch-Site (non-browser client)", () => {
-    const res = middleware(req("/api/listings", "POST") as any) as any;
+    const res = proxy(req("/api/listings", "POST") as any) as any;
     expect(res._type).toBe("next");
   });
 
   it("exempts webhook routes", () => {
-    const res = middleware(
+    const res = proxy(
       req("/api/webhooks/chargily", "POST", { origin: "http://evil.com" }) as any
     ) as any;
     expect(res._type).toBe("next");
   });
 
   it("exempts cron routes", () => {
-    const res = middleware(
+    const res = proxy(
       req("/api/cron/sweep", "POST", { origin: "http://evil.com" }) as any
     ) as any;
     expect(res._type).toBe("next");
   });
 
   it("exempts CSP report endpoint", () => {
-    const res = middleware(
+    const res = proxy(
       req("/api/security/csp-report", "POST", { origin: "http://evil.com" }) as any
     ) as any;
     expect(res._type).toBe("next");
@@ -118,12 +128,12 @@ describe("CSRF middleware", () => {
 
   it("uses NEXT_PUBLIC_SITE_URL when set", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://souqautos.com";
-    const allowed = middleware(
+    const allowed = proxy(
       req("/api/listings", "POST", { origin: "https://souqautos.com" }) as any
     ) as any;
     expect(allowed._type).toBe("next");
 
-    const blocked = middleware(
+    const blocked = proxy(
       req("/api/listings", "POST", { origin: "http://localhost" }) as any
     ) as any;
     expect(blocked._type).toBe("json");
@@ -132,7 +142,7 @@ describe("CSRF middleware", () => {
 
   it("blocks PUT, PATCH, DELETE from cross-origin", () => {
     for (const method of ["PUT", "PATCH", "DELETE"]) {
-      const res = middleware(
+      const res = proxy(
         req("/api/profile", method, { origin: "http://evil.com" }) as any
       ) as any;
       expect(res._type).toBe("json");

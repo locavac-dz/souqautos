@@ -4235,3 +4235,51 @@ Domaine et hébergement (VPS) achetés chez OVH par le porteur de projet. Même 
 **Vérifié** : `tsc` 0 ; `eslint .` 0 ; **2 454 tests** verts (1 ajusté).
 
 **Bloqué ensuite** : l'espace client OVH affichait une page blanche pour le porteur de projet (après connexion, toutes les routes de l'interface) — aucune panne en cours côté OVH constatée (vérifié sur `status-ovhcloud.com`), donc un problème local (navigateur, extension, ou politique d'entreprise bloquant les outils de développement, jamais confirmé faute d'accès à la console du navigateur). Adresse IP du VPS pas encore récupérée ; mise en ligne du site en attente de cette information.
+
+## QA Phase 3 — Sécurité auth, robustesse API, contraintes DB (2026-10-11)
+
+Cinq corrections issues de l'audit AL HANDASSA, par ordre de priorité.
+
+**M03 — Refresh tokens**
+- Modèle `Session` : `refreshTokenHash` (SHA-256, unique), `expiresAt`, `revokedAt`, `userAgent`, `ip`.
+- Jeton opaque 32 octets (base64url), rotation à chaque usage, détection de réutilisation (jeton révoqué présenté → révocation de toutes les sessions du compte).
+- Access token 15 min, refresh token 30 jours ; endpoint `POST /api/auth/refresh`.
+- Intégré dans login, register, callback Google, vérification 2FA, activation 2FA et logout.
+- Migration `20261011073430_add_refresh_session`.
+
+**S05 — Préfixe `__Host-` sur les cookies d'authentification**
+- En production, les 3 cookies de session/refresh/2FA utilisent le préfixe `__Host-` (impose `Secure`, `Path=/`, pas de `Domain`) — empêche l'injection de cookies depuis un sous-domaine.
+- En développement, noms simples conservés (localhost n'est pas HTTPS).
+
+**M04 — Catches silencieux critiques**
+- `console.warn` ajouté sur 9 catches serveur (photo-ai, price-ai, similar-ai, price-estimate, payment-fulfillment) qui avalaient les erreurs sans trace.
+- Les catches client/navigateur intentionnellement silencieux (localStorage, JWT, JSON parsing) sont laissés tels quels.
+
+**M01 — 96 routes API wrappées avec `apiHandler`**
+- Toutes les routes qui n'avaient pas `apiHandler` sont maintenant wrappées : en cas d'erreur non gérée, réponse JSON `{ error: "internal_error" }` avec statut 500 au lieu d'un crash HTML.
+- 3 tests adaptés (`push-route`, `prospects-route`, `user-block`) pour le nouveau comportement.
+
+**D01 — 20 CHECK constraints PostgreSQL**
+- Contraintes de validation au niveau de la base : prix > 0, montants de paiement > 0, notes 1–5, année 1970–2100, kilométrage 0–2M, puissance fiscale 1–99, portes 1–7, places 1–9, compteurs ≥ 0.
+- Migration `20261011080000_check_constraints`.
+
+**Vérifié** : `tsc` 0 erreur ; **2 465 tests** verts (221 fichiers).
+
+## Lot 109 — Vérification PostgreSQL (2026-10-11)
+
+**Livré**
+- Fusion `middleware.ts` → `proxy.ts` : Next.js 16 refuse la coexistence des deux fichiers. La protection CSRF (M02) et le routage i18n + CSP (Lot 134) sont maintenant dans un seul `proxy.ts`, avec un branchement par chemin (`/api/*` → CSRF, pages → i18n + CSP). Test CSRF mis à jour (11/11 verts).
+- Vérification complète de la base `souq_auto` sur PostgreSQL :
+  - 59 migrations appliquées, schéma à jour (pas de dérive Prisma hormis les 3 index GIN trigram attendus).
+  - Extension `pg_trgm` installée, 3 index GIN trigram opérationnels (recherche texte).
+  - 3 index uniques partiels présents (`PaymentOrder_pending_unique`, `ProSubscriptionOrder_pending_unique`, `IdentityVerificationRequest_pending_unique`).
+  - 20 CHECK constraints appliqués (Phase 3 D01).
+  - Table `Session` (9 colonnes, Phase 3 M03).
+  - Ligne `ModerationSettings` existante.
+  - 62 tables, 16 index sur `Listing`.
+- Seeds : 69 wilayas, 1 541 communes, 62 marques, 410 modèles, 67 générations, 25 équipements, 8 utilisateurs, 53 annonces.
+- Collation française : tri des wilayas accentuées correct (Béjaïa avant Biskra).
+- Application : page d'accueil, recherche (`q=renault` / `q=RENAULT` insensible à la casse), Cote Souq Auto, API health (`database: ok`, `redis: ok`), recherche avec `priceMax` excessif (200 sans crash).
+- Base e2e (`souq_auto_e2e`) : reset complet réussi (59 migrations + seeds + 24 annonces démo + 5 annonces équipements).
+
+**Vérifié** : `tsc` 0 ; **2 465 tests** verts ; e2e en cours de vérification.
