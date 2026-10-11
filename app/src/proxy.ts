@@ -1,6 +1,7 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
+import { csrfRefusal, isApiPath } from "./lib/csrf";
 import { SITE_URL } from "./lib/site";
 import { CSP_REPORT_PATH, buildContentSecurityPolicy, createNonce, cspHeaderName, extraImageOrigins } from "./lib/security-headers";
 
@@ -18,7 +19,12 @@ const handleI18nRouting = createMiddleware(routing);
 // Un en-tête « Content-Security-Policy » (ou sa version « observation ») envoyé par le visiteur est retiré de la requête,
 // jamais repris : sinon, en mode observation, Next.js y lirait le nonce à la place du nôtre.
 // Toutes les pages HTML sont rendues à chaque requête (la mise en page lit la session) : condition d'un nonce.
+//
+// Les requetes /api/* ne passent que par la verification CSRF d'origine (src/lib/csrf.ts) : ni CSP ni routage de
+// langue, qui ne concernent que les pages. Next.js n'accepte qu'un seul fichier proxy, d'ou ce point d'entree commun.
 export function proxy(request: NextRequest) {
+  if (isApiPath(request.nextUrl.pathname)) return csrfRefusal(request) ?? NextResponse.next();
+
   const nonce = createNonce();
   const policy = buildContentSecurityPolicy({
     nonce,
@@ -40,5 +46,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/api/:path*", "/((?!api|_next|_vercel|.*\\..*).*)"],
 };
