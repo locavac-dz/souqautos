@@ -77,15 +77,17 @@ describe("workflow CI — commands", () => {
 
   it("applies the migrations to an empty database BEFORE comparing them with the schema", () => {
     expect(indexOfRun("checks", "migrate deploy")).toBeGreaterThan(-1);
-    expect(indexOfRun("checks", "migrate deploy")).toBeLessThan(indexOfRun("checks", "migrate diff"));
-    const diff = wf.jobs.checks.steps[indexOfRun("checks", "migrate diff")].run!;
-    expect(diff).toContain("--from-migrations");
-    expect(diff).toContain("--exit-code"); // sans lui, un écart ne ferait pas échouer l'étape
-    expect(diff).toContain("--shadow-database-url");
+    expect(indexOfRun("checks", "migrate deploy")).toBeLessThan(indexOfRun("checks", "check-schema-drift"));
+    // L'écart est contrôlé par scripts/check-schema-drift.ts, qui ne tolère que les index pg_trgm conditionnels.
+    const drift = readFileSync(path.join(APP, "scripts/check-schema-drift.ts"), "utf8");
+    expect(drift).toContain("--from-migrations");
+    expect(drift).toContain("--shadow-database-url");
+    expect(drift).toContain("--script");
+    expect(drift).toContain("process.exit(1)"); // sans lui, un écart inattendu ne ferait pas échouer l'étape
   });
 
   it("creates the shadow and end-to-end databases before using them", () => {
-    expect(indexOfRun("checks", "CREATE DATABASE souq_auto_shadow")).toBeLessThan(indexOfRun("checks", "migrate diff"));
+    expect(indexOfRun("checks", "CREATE DATABASE souq_auto_shadow")).toBeLessThan(indexOfRun("checks", "check-schema-drift"));
     expect(indexOfRun("e2e", "CREATE DATABASE souq_auto_e2e")).toBeLessThan(indexOfRun("e2e", "npm run test:e2e"));
   });
 
@@ -167,8 +169,7 @@ describe("npm run verify", () => {
     expect(pkg.scripts.verify).toBe("node scripts/verify.mjs");
     for (const [, name] of verify.matchAll(/npm run ([\w:.-]+)/g)) expect(pkg.scripts[name], `npm run ${name}`).toBeTruthy();
     expect(verify).toContain("tsc --noEmit");
-    expect(verify).toContain("migrate diff --from-migrations");
-    expect(verify).toContain("--exit-code");
+    expect(verify).toContain("check-schema-drift"); // le même contrôle d'écart que la CI
   });
 
   it("never loads the whole .env into the tests' environment (they assume no Redis, as in CI)", () => {
