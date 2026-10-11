@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { proxy } from "@/proxy";
 
@@ -47,6 +47,9 @@ describe("proxy — en-têtes de politique de sécurité", () => {
 });
 
 describe("proxy — requêtes /api (vérification CSRF d'origine)", () => {
+  // La CI définit NEXT_PUBLIC_SITE_URL : on fixe ici l'origine attendue pour ne pas dépendre de l'environnement.
+  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:5184"));
+
   const api = (method: string, headers: Record<string, string> = {}) =>
     proxy(new NextRequest("http://localhost:5184/api/listings", { method, headers }));
 
