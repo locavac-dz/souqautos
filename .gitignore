@@ -1,0 +1,25 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editeurs / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code
+.claude/
+
+# Node (racine, au cas ou)
+node_modules/
+
+# Logs
+*.log
+
+# Env
+.env
+.env.local
+.env.*.local
