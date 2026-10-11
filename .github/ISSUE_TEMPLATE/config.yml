@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Vulnerabilite de securite critique
+    url: mailto:security@souqautos.com
+    about: Pour les failles critiques, contactez-nous directement par email.
+  - name: Question generale
+    url: mailto:contact@souqautos.com
+    about: Pour les questions qui ne sont pas des bugs ou des demandes de fonctionnalites.

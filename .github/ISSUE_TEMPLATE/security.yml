@@ -1,0 +1,48 @@
+name: Probleme de securite
+description: Signaler un probleme de securite non critique (pour les failles critiques, envoyez un email a security@souqautos.com)
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Pour les vulnerabilites critiques**, n'utilisez pas ce formulaire.
+        Envoyez un email a **security@souqautos.com** (voir [SECURITY.md](../../SECURITY.md)).
+
+        Ce formulaire est reserve aux problemes de securite mineurs ou aux suggestions d'amelioration de la securite.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Decrivez le probleme de securite ou l'amelioration proposee.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Categorie
+      options:
+        - Authentification / Sessions
+        - Validation des entrees
+        - Permissions / Autorisation
+        - Headers de securite
+        - Configuration
+        - Dependances
+        - Autre
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact potentiel
+      description: Quel est le risque si ce probleme n'est pas corrige ?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Correctif suggere
+      description: Si vous avez une idee de correction, decrivez-la ici.
