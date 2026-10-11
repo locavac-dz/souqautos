@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { canAccessConversation } from "@/lib/listing-access";
 
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (_request: Request, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -19,4 +19,4 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   });
 
   return NextResponse.json({ ok: true });
-}
+});

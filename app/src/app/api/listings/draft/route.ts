@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkDraftPayload } from "@/lib/wizard-draft";
 
-export async function GET() {
+export const GET = apiHandler(async () => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -24,9 +24,9 @@ export async function GET() {
   }
 
   return NextResponse.json({ draft: { data, updatedAt: draft.updatedAt } });
-}
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -47,13 +47,13 @@ export async function PUT(request: NextRequest) {
   });
 
   return NextResponse.json({ updatedAt: draft.updatedAt });
-}
+});
 
-export async function DELETE() {
+export const DELETE = apiHandler(async () => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
   await prisma.listingDraft.deleteMany({ where: { userId: user.id } });
 
   return NextResponse.json({ ok: true });
-}
+});

@@ -3,13 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { subscribeToGroup, type GroupEvent } from "@/lib/realtime";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { apiHandler } from "@/lib/api-route";
 
 const HEARTBEAT_MS = 25000;
 
-export async function GET(
+export const GET = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const user = await getCurrentUser();
   if (!user) return new Response("unauthenticated", { status: 401 });
 
@@ -60,4 +61,4 @@ export async function GET(
       "X-Accel-Buffering": "no",
     },
   });
-}
+});

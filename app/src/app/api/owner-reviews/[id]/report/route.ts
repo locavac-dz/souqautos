@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -12,7 +12,7 @@ import type { ReportReason } from "@prisma/client";
 // file habituelle de /admin/signalements ; l'avis reste en ligne tant que
 // l'équipe n'a pas confirmé (jamais de retrait automatique sur un signalement
 // non vérifié, même règle que les annonces).
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -54,4 +54,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   after(() => notifyStaffOfPending("report"));
 
   return NextResponse.json({ ok: true }, { status: 201 });
-}
+});

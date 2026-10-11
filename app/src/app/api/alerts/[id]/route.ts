@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (_request: Request, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -15,4 +15,4 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   await prisma.searchAlert.delete({ where: { id } });
 
   return NextResponse.json({ ok: true });
-}
+});

@@ -8,11 +8,12 @@ import { sweepPendingChargilyOrders } from "@/lib/chargily-events";
 import { sweepPendingTransferReminders, sweepSubscriptionExpiryReminders } from "@/lib/commercial-reminders";
 import { sendWeeklyReportIfDue } from "@/lib/weekly-report";
 import { safeEqual } from "@/lib/google-oauth";
+import { apiHandler } from "@/lib/api-route";
 
 // Called nightly by cron (see ops/crontab.example).
 // Runs the three sweepers directly — bypasses throttledSweep which is designed
 // for lazy page-visit calls, not scheduled execution.
-export async function POST(req: NextRequest) {
+export const POST = apiHandler(async (req: NextRequest) => {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "cron_secret_not_configured" }, { status: 500 });
@@ -39,4 +40,4 @@ export async function POST(req: NextRequest) {
   const weeklyReport = await sendWeeklyReportIfDue(now);
 
   return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport });
-}
+});

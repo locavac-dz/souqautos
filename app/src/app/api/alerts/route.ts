@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
@@ -9,7 +9,7 @@ import {
   MAX_ALERTS_PER_USER,
 } from "@/lib/validation/search-alert";
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -35,4 +35,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ id: alert.id }, { status: 201 });
-}
+});

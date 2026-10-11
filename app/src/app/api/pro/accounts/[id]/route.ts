@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseJsonBody } from "@/lib/api-route";
+import { apiHandler, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -9,7 +9,7 @@ import { shouldRevokeVerifiedBadge } from "@/lib/pro-account";
 // Lot 106 — édition des informations de la boutique. Réservée au propriétaire
 // (même règle que logo/bannière et gestion des collaborateurs). Remplacement
 // complet des champs : un champ optionnel omis ou vide est effacé.
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const user = await getCurrentUser();
   if (!user || user.professionalAccount?.id !== id) {
@@ -57,4 +57,4 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
 
   return NextResponse.json({ account, badgeRevoked: revokeBadge });
-}
+});

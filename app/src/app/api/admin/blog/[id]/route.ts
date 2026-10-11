@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { isEditor } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
@@ -24,7 +24,7 @@ async function deleteCoverIfUnused(url: string | null | undefined, exceptArticle
 
 // Le slug n'est jamais recalculé à l'édition — une fois publié, son URL doit
 // rester stable (référencement, liens déjà partagés), même si le titre change.
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
@@ -131,9 +131,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
 
   return NextResponse.json({ ok: true });
-}
+});
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
@@ -155,4 +155,4 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   });
 
   return NextResponse.json({ ok: true });
-}
+});

@@ -60,7 +60,8 @@ export async function estimatePriceWithAi(params: {
     const high = Math.round((parsed as { low: number; high: number }).high);
     if (low <= 0 || high <= low) return null;
     return { low, high };
-  } catch {
+  } catch (err) {
+    console.warn("[price-ai] estimation IA impossible", (err as Error).message);
     return null;
   }
 }

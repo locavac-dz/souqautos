@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { isEditor } from "@/lib/auth-server/roles";
 import { pressReviewSchema } from "@/lib/validation/press-review";
@@ -8,7 +8,7 @@ import { resolvePublishedAt } from "@/lib/blog-publication";
 import { isUniqueViolation } from "@/lib/prisma-errors";
 import { writeAuditLog } from "@/lib/audit-log";
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
@@ -67,9 +67,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
 
   return NextResponse.json({ ok: true });
-}
+});
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
@@ -90,4 +90,4 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   });
 
   return NextResponse.json({ ok: true });
-}
+});

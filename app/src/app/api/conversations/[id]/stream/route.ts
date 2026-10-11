@@ -4,10 +4,11 @@ import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { subscribeToConversation, type ConversationEvent } from "@/lib/realtime";
 import { canAccessConversation } from "@/lib/listing-access";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { apiHandler } from "@/lib/api-route";
 
 const HEARTBEAT_MS = 25000;
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await getCurrentUser();
   if (!user) {
     return new Response("unauthenticated", { status: 401 });
@@ -61,4 +62,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       "X-Accel-Buffering": "no",
     },
   });
-}
+});

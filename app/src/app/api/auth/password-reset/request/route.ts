@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { parseJsonBody } from "@/lib/api-route";
+import { apiHandler, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
@@ -16,7 +16,7 @@ import { requestPasswordReset } from "@/lib/password-reset-service";
 // l'existence), pour qu'on ne puisse pas inonder une boîte mail de messages.
 const bodySchema = z.object({ email: emailSchema });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const ip = getClientIp(request);
   if (!(await checkRateLimit(`password-reset-ip:${ip}`, { limit: 5, windowMs: 15 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -40,4 +40,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
-}
+});

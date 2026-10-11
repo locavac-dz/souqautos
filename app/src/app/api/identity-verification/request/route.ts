@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +8,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { checkCanSubmitIdentityRequest } from "@/lib/identity-verification";
 import { saveIdentityDocument, DocumentValidationError } from "@/lib/identity-uploads";
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -68,4 +68,4 @@ export async function POST(request: NextRequest) {
   after(() => notifyStaffOfPending("identity"));
 
   return NextResponse.json({ ok: true }, { status: 201 });
-}
+});

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { parseJsonBody } from "@/lib/api-route";
+import { apiHandler, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
@@ -14,7 +14,7 @@ const bodySchema = z.object({
   preferredTime: z.enum(["MATIN", "APRES_MIDI", "SOIR", "PEU_IMPORTE"]).default("PEU_IMPORTE"),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const ip = getClientIp(request);
   if (!(await checkRateLimit(`callback-request:${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
@@ -47,4 +47,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });
-}
+});

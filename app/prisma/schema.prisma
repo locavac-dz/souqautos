@@ -117,6 +117,7 @@ model User {
   notifications                 UserNotification[]
   // Lot 243 — historique de connexion
   loginEvents                   LoginEvent[]
+  sessions                      Session[]
   // Lot 252 — messagerie de groupe
   groupsCreated    GroupConversation[] @relation("GroupCreator")
   groupMemberships GroupMember[]
@@ -1583,6 +1584,28 @@ model ArticlePreviewLink {
   lastUsedAt  DateTime?
 
   @@index([articleId])
+}
+
+// Lot QA — sessions de rafraîchissement. Le jeton d'accès (JWT) est désormais
+// court (15 min) ; ce modèle stocke le refresh token hashé (SHA-256), valable
+// 30 jours, tourné à chaque usage. La détection de réutilisation (un refresh
+// token déjà tourné est présenté de nouveau) révoque toutes les sessions de
+// l'utilisateur, signe de compromission. TTL 30 jours : le sweeper nightly
+// supprime les lignes expirées.
+model Session {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String    @unique
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  lastUsedAt       DateTime  @default(now())
+  userAgent        String?
+  ip               String?
+  revokedAt        DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // Lot 243 — historique de connexion. TTL 90 jours (sweeper nightly).

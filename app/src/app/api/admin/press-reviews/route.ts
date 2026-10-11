@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { isEditor } from "@/lib/auth-server/roles";
 import { pressReviewSchema } from "@/lib/validation/press-review";
@@ -9,7 +9,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 
 // Lot 114 — réservé à ADMIN, comme le magazine et les essais : c'est du contenu
 // public qui engage l'image de la marque.
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
@@ -62,4 +62,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ review }, { status: 201 });
-}
+});

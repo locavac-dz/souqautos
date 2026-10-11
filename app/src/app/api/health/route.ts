@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRedisClient } from "@/lib/redis";
+import { apiHandler } from "@/lib/api-route";
 
 // Lot 117 — point de contrôle pour la supervision (moniteur de disponibilité,
 // répartiteur de charge, orchestrateur). 200 si l'application répond ET que ses
@@ -21,7 +22,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   }
 }
 
-export async function GET() {
+export const GET = apiHandler(async () => {
   const checks: Record<string, "ok" | "error" | "absent"> = {};
 
   try {
@@ -49,4 +50,4 @@ export async function GET() {
 
   const healthy = checks.database === "ok";
   return NextResponse.json({ status: healthy ? "ok" : "degraded", checks }, { status: healthy ? 200 : 503, headers: { "Cache-Control": "no-store" } });
-}
+});

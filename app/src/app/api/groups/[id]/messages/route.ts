@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
@@ -12,10 +12,10 @@ const contentSchema = z.object({ content: z.string().trim().max(2000) });
 
 const MESSAGES_PAGE_SIZE = 50;
 
-export async function GET(
+export const GET = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -63,12 +63,12 @@ export async function GET(
     })),
     hasMore,
   });
-}
+});
 
-export async function POST(
+export const POST = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -171,4 +171,4 @@ export async function POST(
   });
 
   return NextResponse.json({ message: eventMessage }, { status: 201 });
-}
+});

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole } from "@/lib/api-route";
+import { apiHandler, requireRole } from "@/lib/api-route";
 import { isEditor } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 import { revokePreviewLink } from "@/lib/article-preview-links";
 
 // Lot 146 — révoque un lien de relecture : il cesse de fonctionner immédiatement. Idempotent ; un lien qui n'appartient pas à ce
 // contenu répond 404 comme un lien inexistant (on ne révoque jamais le lien d'un autre contenu par cette adresse).
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string; linkId: string }> }) {
+export const DELETE = apiHandler(async (_request: NextRequest, { params }: { params: Promise<{ id: string; linkId: string }> }) => {
   const admin = await requireRole(isEditor);
   if (admin instanceof NextResponse) return admin;
 
@@ -15,4 +15,4 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   await writeAuditLog({ adminId: admin.id, action: "article_preview_link.revoke", targetType: "BlogArticle", targetId: id, details: { linkId } });
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
-}
+});

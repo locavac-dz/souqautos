@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { listingSuggestionInputSchema } from "@/lib/validation/listing-suggestion";
 import { generateListingSuggestion } from "@/lib/ai-listing";
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -21,4 +21,4 @@ export async function POST(request: NextRequest) {
   const suggestion = await generateListingSuggestion(body);
 
   return NextResponse.json(suggestion);
-}
+});

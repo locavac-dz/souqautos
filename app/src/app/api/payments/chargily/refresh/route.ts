@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { refreshChargilyOrder } from "@/lib/chargily-events";
@@ -14,7 +14,7 @@ const bodySchema = z.object({
 // depuis Internet). Ce n'est pas l'acheteur qui affirme avoir payé : on interroge le prestataire avec
 // notre clé secrète, puis on applique EXACTEMENT la même transition que le webhook (Lot 266 : logique
 // partagée dans `refreshChargilyOrder`, tracée comme REFRESH_USER).
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
   if (!(await checkRateLimit(`chargily-refresh:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
@@ -47,4 +47,4 @@ export async function POST(request: NextRequest) {
     case "provider_unavailable":
       return NextResponse.json({ error: "provider_unavailable" }, { status: 502 });
   }
-}
+});

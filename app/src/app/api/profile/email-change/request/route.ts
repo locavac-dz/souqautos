@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import crypto from "crypto";
 import { z } from "zod";
 import { emailSchema } from "@/lib/validation/auth";
@@ -13,7 +13,7 @@ import { SITE_URL } from "@/lib/site";
 
 const bodySchema = z.object({ newEmail: emailSchema, password: z.string().max(200).optional() });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -66,4 +66,4 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true });
-}
+});

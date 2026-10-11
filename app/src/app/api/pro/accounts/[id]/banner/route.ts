@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { saveProBanner, deleteStoredFile, PhotoValidationError } from "@/lib/uploads";
+import { apiHandler } from "@/lib/api-route";
 
 // Lot 103 — voir logo/route.ts pour la justification de la restriction au
 // seul propriétaire du compte pro.
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const user = await getCurrentUser();
   if (!user || user.professionalAccount?.id !== id) {
@@ -38,9 +39,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (previous?.bannerUrl) await deleteStoredFile(previous.bannerUrl);
 
   return NextResponse.json({ bannerUrl });
-}
+});
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const user = await getCurrentUser();
   if (!user || user.professionalAccount?.id !== id) {
@@ -52,4 +53,4 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   if (previous?.bannerUrl) await deleteStoredFile(previous.bannerUrl);
 
   return NextResponse.json({ ok: true });
-}
+});

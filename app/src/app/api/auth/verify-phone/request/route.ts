@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendSms } from "@/lib/sms";
 import { generateExpiry, generateNumericCode } from "@/lib/verification";
 
-export async function POST() {
+export const POST = apiHandler(async () => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
   if (!user.phone) {
@@ -34,4 +34,4 @@ export async function POST() {
   }
 
   return NextResponse.json({ ok: true });
-}
+});

@@ -10,7 +10,7 @@ import { cookies } from "next/headers";
 //  - le jeton porte `purpose: "2fa"` et n'a PAS de rôle : verifySessionToken() le refuse (session.ts) — impossible de le
 //    recopier dans le cookie de session pour s'en servir de session ;
 //  - il désigne un compte ; le nombre d'essais de code est limité PAR COMPTE (pas par jeton) : en redemander un ne remet rien à zéro.
-export const PENDING_COOKIE = "souq_auto_2fa";
+export const PENDING_COOKIE = process.env.NODE_ENV === "production" ? "__Host-souq_auto_2fa" : "souq_auto_2fa";
 export const PENDING_DURATION_SECONDS = 5 * 60;
 const PURPOSE = "2fa";
 
@@ -43,9 +43,10 @@ export async function verifyPendingToken(token: string): Promise<PendingLogin | 
 
 export async function setPendingCookie(token: string) {
   const store = await cookies();
+  const isProduction = process.env.NODE_ENV === "production";
   store.set(PENDING_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,
     sameSite: "lax",
     path: "/",
     maxAge: PENDING_DURATION_SECONDS,

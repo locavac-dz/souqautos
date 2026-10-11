@@ -54,7 +54,8 @@ export async function getPriceEstimate(
   let market: EstimateResult | null = null;
   try {
     market = await estimatePrice(safe);
-  } catch {
+  } catch (err) {
+    console.warn("[price-estimate] estimation marché impossible", (err as Error).message);
     market = null;
   }
 
@@ -87,8 +88,8 @@ export async function getPriceEstimate(
         source: "ai",
       };
     }
-  } catch {
-    // Silencieux — Claude indisponible, on retombe sur les stats DB si elles existent.
+  } catch (err) {
+    console.warn("[price-estimate] Claude indisponible", (err as Error).message);
   }
 
   // Retourne l'estimation DB même insuffisante plutôt que rien.

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { canManageListing } from "@/lib/listing-access";
@@ -13,7 +13,7 @@ const bodySchema = z.object({ autoRenew: z.boolean() });
 // au moment de l'activation ; le désactiver reste toujours possible, y
 // compris pour un compte déjà rétrogradé (jamais bloquer un vendeur qui veut
 // reprendre la main sur ses propres annonces).
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -47,4 +47,4 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   await prisma.listing.update({ where: { id }, data: { autoRenew: body.autoRenew } });
 
   return NextResponse.json({ autoRenew: body.autoRenew });
-}
+});

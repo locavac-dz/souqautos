@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { invalidateReferenceData } from "@/lib/reference-data";
@@ -10,7 +10,7 @@ import { parsePositiveIntId } from "@/lib/validation/int-bounds";
 
 const bodySchema = z.object({ name: z.string() });
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -47,9 +47,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
 
   return NextResponse.json({ name });
-}
+});
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -87,4 +87,4 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   });
 
   return NextResponse.json({ ok: true });
-}
+});

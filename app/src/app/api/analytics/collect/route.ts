@@ -5,6 +5,7 @@ import { isLikelyBot } from "@/lib/view-tracking";
 import { classifyDevice, classifyPublicPath, classifyReferrer, isTrackingOptOut, parseBeacon } from "@/lib/analytics";
 import { purgeOldPageViews, recordPageView } from "@/lib/analytics-record";
 import { SITE_URL } from "@/lib/site";
+import { apiHandler } from "@/lib/api-route";
 
 // Lot 124 — reçoit la balise « une page a été vue » envoyée par le navigateur.
 //
@@ -22,7 +23,7 @@ const HOURLY_LIMIT_PER_IP = 600;
 // en tâche de fond, plutôt qu'un travail planifié de plus à exploiter.
 const PURGE_PROBABILITY = 1 / 2000;
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   if (isTrackingOptOut(request.headers)) return NO_CONTENT();
 
   const userAgent = request.headers.get("user-agent");
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
   });
 
   return NO_CONTENT();
-}
+});
 
 // Derrière un serveur intermédiaire, l'en-tête Host peut différer du domaine public : la provenance
 // est « interne » si elle vient de l'un OU de l'autre.

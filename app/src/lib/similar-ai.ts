@@ -53,7 +53,8 @@ async function fetchSegmentAlternatives(brandName: string, modelName: string): P
           typeof (x as Record<string, unknown>).model === "string"
       )
       .slice(0, 5);
-  } catch {
+  } catch (err) {
+    console.warn("[similar-ai] recherche alternatives impossible", (err as Error).message);
     return [];
   }
 }
@@ -86,8 +87,9 @@ export async function getAlternativeListings({
       () => fetchSegmentAlternatives(brand.name, model.name),
       { ttlMs: ALT_MODELS_TTL_MS }
     );
-  } catch {
-    return []; // Claude indisponible ou trop lent : pas d'alternatives cette fois, rien mis en cache
+  } catch (err) {
+    console.warn("[similar-ai] Claude indisponible", (err as Error).message);
+    return [];
   }
   if (alts.length === 0) return [];
 

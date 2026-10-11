@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSearchWilayas } from "@/lib/reference-data";
 import { parsePositiveIntId } from "@/lib/validation/int-bounds";
+import { apiHandler } from "@/lib/api-route";
 
 // Lot 279 (audit C8) — communes d'une wilaya, chargées à la demande par les filtres de recherche au lieu d'être
 // toutes envoyées au navigateur avec chaque page. Référentiel quasi immuable : cache public d'un jour.
 const CACHE = { "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800" };
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = apiHandler(async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id: rawId } = await params;
   const id = parsePositiveIntId(rawId);
   if (id === null) return NextResponse.json({ error: "validation" }, { status: 400 });
@@ -18,4 +19,4 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     { communes: wilaya.communes.map((c) => ({ id: c.id, nomFr: c.nomFr, nomAr: c.nomAr })) },
     { headers: CACHE }
   );
-}
+});

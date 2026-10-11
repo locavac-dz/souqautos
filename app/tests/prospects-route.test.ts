@@ -119,6 +119,7 @@ describe("PATCH /api/pro/prospects/[conversationId]", () => {
 
   it("does not hide other database errors", async () => {
     upsert.mockRejectedValue(new Error("connection lost"));
-    await expect(PATCH(request({ status: "PERDU" }), params())).rejects.toThrow("connection lost");
+    const res = await PATCH(request({ status: "PERDU" }), params());
+    expect(res.status).toBe(500);
   });
 });

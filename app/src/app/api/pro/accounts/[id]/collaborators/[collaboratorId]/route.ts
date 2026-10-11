@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { canManageCollaborators } from "@/lib/pro-account";
@@ -16,10 +16,10 @@ const bodySchema = z.object({
 // Lot 42 — permet de modifier les permissions d'un collaborateur existant
 // sans devoir le retirer puis le réajouter (utile maintenant que ce ne sont
 // plus deux rôles fixes mais des cases indépendantes).
-export async function PATCH(
+export const PATCH = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string; collaboratorId: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -52,12 +52,12 @@ export async function PATCH(
   });
 
   return NextResponse.json({ collaborator: updated });
-}
+});
 
-export async function DELETE(
+export const DELETE = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string; collaboratorId: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -84,4 +84,4 @@ export async function DELETE(
   await prisma.proCollaborator.delete({ where: { id: collaboratorId } });
 
   return NextResponse.json({ ok: true });
-}
+});

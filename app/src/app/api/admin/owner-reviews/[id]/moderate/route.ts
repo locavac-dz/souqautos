@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { isStaff } from "@/lib/auth-server/roles";
 import { ownerReviewModerationSchema } from "@/lib/validation/owner-review";
@@ -10,7 +10,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 // Lot 116 — validation d'un avis de propriétaire par l'équipe (MODERATEUR ou
 // ADMIN, comme la modération des annonces). Un refus exige un motif, transmis à
 // l'auteur ; une validation publie l'avis.
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isStaff);
   if (user instanceof NextResponse) return user;
 
@@ -65,4 +65,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   await sendOwnerReviewDecisionEmail(id, action === "approve" ? "approved" : "rejected");
 
   return NextResponse.json({ status: transition.newStatus });
-}
+});

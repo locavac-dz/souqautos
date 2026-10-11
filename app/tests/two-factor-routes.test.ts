@@ -6,8 +6,10 @@ const checkRateLimit     = vi.fn();
 const beginEnrolment     = vi.fn();
 const confirmEnrolment   = vi.fn();
 const disableTwoFactor   = vi.fn();
-const createSessionToken = vi.fn();
-const setSessionCookie   = vi.fn();
+const createSessionToken  = vi.fn();
+const setSessionCookie    = vi.fn();
+const createRefreshSession = vi.fn();
+const setRefreshCookie     = vi.fn();
 
 vi.mock("@/lib/auth-server/current-user", () => ({ getCurrentUser: () => getCurrentUser() }));
 vi.mock("@/lib/rate-limit",               () => ({ checkRateLimit: (...a: unknown[]) => checkRateLimit(...a) }));
@@ -20,6 +22,10 @@ vi.mock("@/lib/auth-server/session", () => ({
   createSessionToken: (...a: unknown[]) => createSessionToken(...a),
   setSessionCookie:   (...a: unknown[]) => setSessionCookie(...a),
 }));
+vi.mock("@/lib/auth-server/refresh-token", () => ({
+  createRefreshSession: (...a: unknown[]) => createRefreshSession(...a),
+  setRefreshCookie:     (...a: unknown[]) => setRefreshCookie(...a),
+}));
 
 import { POST as setupPost }   from "@/app/api/account/two-factor/setup/route";
 import { POST as enablePost }  from "@/app/api/account/two-factor/enable/route";
@@ -28,13 +34,18 @@ import { POST as disablePost } from "@/app/api/account/two-factor/disable/route"
 const USER = { id: "user1", role: "PARTICULIER" };
 
 function request(body: unknown): NextRequest {
-  return { json: async () => body } as unknown as NextRequest;
+  return {
+    json: async () => body,
+    headers: new Headers({ "user-agent": "test-agent" }),
+  } as unknown as NextRequest;
 }
 
 beforeEach(() => {
   vi.resetAllMocks();
   getCurrentUser.mockResolvedValue(USER);
   checkRateLimit.mockResolvedValue(true);
+  createRefreshSession.mockResolvedValue("refresh-token");
+  setRefreshCookie.mockResolvedValue(undefined);
 });
 
 // ── Setup ────────────────────────────────────────────────────────────────────

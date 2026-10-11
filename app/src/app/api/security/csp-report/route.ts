@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
 import { isBrowserExtensionNoise, parseCspReport } from "@/lib/csp-report";
+import { apiHandler } from "@/lib/api-route";
 
 // Lot 134 — reçoit les rapports de violation de la politique de sécurité des contenus, envoyés par le navigateur.
 //
@@ -10,7 +11,7 @@ import { isBrowserExtensionNoise, parseCspReport } from "@/lib/csp-report";
 // journaux du serveur. Rien n'est stocké en base. Limité par adresse IP : un script qui inonde la route est ignoré.
 const NO_CONTENT = () => new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const declared = Number(request.headers.get("content-length") ?? 0);
   if (declared > 8192) return NO_CONTENT();
 
@@ -21,4 +22,4 @@ export async function POST(request: NextRequest) {
     console.warn(`[csp] ${violation.directive || "?"} bloqué : ${violation.blocked || "?"} — page ${violation.page || "?"}${violation.source ? ` — source ${violation.source}${violation.line !== null ? `:${violation.line}` : ""}` : ""}`);
   }
   return NO_CONTENT();
-}
+});

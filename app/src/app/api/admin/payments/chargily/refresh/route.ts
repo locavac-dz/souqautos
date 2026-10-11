@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { isAdmin } from "@/lib/auth-server/roles";
 import { refreshChargilyOrder } from "@/lib/chargily-events";
@@ -12,7 +12,7 @@ const bodySchema = z.object({
 // Lot 266 (audit B1) — « Relire chez Chargily » depuis /admin/paiements : l'admin n'avait aucun moyen de
 // faire relire une commande Chargily restée en attente (la relecture était réservée à son auteur) et devait
 // trancher à l'aveugle. Même transition que le webhook, tracée comme REFRESH_ADMIN. Réservé à ADMIN (argent).
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -39,4 +39,4 @@ export async function POST(request: NextRequest) {
     case "provider_unavailable":
       return NextResponse.json({ error: "provider_unavailable" }, { status: 502 });
   }
-}
+});

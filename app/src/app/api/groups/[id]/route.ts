@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 
 const MESSAGES_PAGE_SIZE = 50;
 
-export async function GET(
+export const GET = apiHandler(async (
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -67,4 +67,4 @@ export async function GET(
       createdAt: m.createdAt.toISOString(),
     })),
   });
-}
+});

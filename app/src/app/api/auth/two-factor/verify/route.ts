@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { clearPendingCookie, getPendingFromCookies } from "@/lib/auth-server/two-factor-pending";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
+import { createRefreshSession, setRefreshCookie } from "@/lib/auth-server/refresh-token";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, safeUser } from "@/lib/http";
 import { recordLoginEvent } from "@/lib/login-event-service";
@@ -70,6 +71,11 @@ export const POST = apiHandler(async (request: NextRequest) => {
   }
   await clearPendingCookie();
   await setSessionCookie(await createSessionToken({ sub: user.id, role: user.role }));
+  const refreshToken = await createRefreshSession(user.id, {
+    ip: getClientIp(request),
+    userAgent: request.headers.get("user-agent") ?? "",
+  });
+  await setRefreshCookie(refreshToken);
   after(() => recordLoginEvent({
     userId: user.id,
     ip: getClientIp(request),

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isStaff } from "@/lib/auth-server/roles";
@@ -9,7 +9,7 @@ const patchSchema = z.object({
   status: z.enum(["APPROVED", "REJECTED"]),
 });
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isStaff);
   if (user instanceof NextResponse) return user;
 
@@ -39,9 +39,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
 
   return NextResponse.json({ ok: true });
-}
+});
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isStaff);
   if (user instanceof NextResponse) return user;
 
@@ -67,4 +67,4 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   });
 
   return NextResponse.json({ ok: true });
-}
+});

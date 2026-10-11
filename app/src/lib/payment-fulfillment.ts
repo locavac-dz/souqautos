@@ -159,7 +159,7 @@ export async function confirmListingFormulaOrder(orderId: string, now: Date, act
     });
   } catch (err) {
     if (err instanceof ListingNotUpgradableError) {
-      // La transaction a été annulée : la commande est toujours EN_ATTENTE ; on l'annote pour l'admin.
+      console.warn(`[payment] annonce non éligible à la mise en avant (${err.listingStatus}), commande ${orderId}`);
       await prisma.paymentOrder.updateMany({
         where: { id: orderId, status: { in: CONFIRMABLE } },
         data: { reviewNote: `${NOT_UPGRADABLE_NOTE}:${err.listingStatus}` },

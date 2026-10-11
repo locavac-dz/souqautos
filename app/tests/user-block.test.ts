@@ -97,7 +97,8 @@ describe("POST /api/users/[id]/block", () => {
   it("rethrows unexpected errors from upsert", async () => {
     blockUpsert.mockRejectedValue(new Error("Database connection lost"));
     isUniqueViolation.mockReturnValue(false);
-    await expect(POST(request(), params())).rejects.toThrow("Database connection lost");
+    const res = await POST(request(), params());
+    expect(res.status).toBe(500);
   });
 });
 

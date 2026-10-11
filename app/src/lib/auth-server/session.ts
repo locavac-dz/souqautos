@@ -1,8 +1,8 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-export const SESSION_COOKIE = "souq_auto_session";
-const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7; // 7 jours
+export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-souq_auto_session" : "souq_auto_session";
+const SESSION_DURATION_SECONDS = 60 * 15; // 15 minutes (le refresh token prend le relais pour la persistance)
 
 function getSecretKey() {
   const secret = process.env.JWT_SECRET;
@@ -57,9 +57,10 @@ export async function verifySessionToken(
 
 export async function setSessionCookie(token: string) {
   const store = await cookies();
+  const isProduction = process.env.NODE_ENV === "production";
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_DURATION_SECONDS,

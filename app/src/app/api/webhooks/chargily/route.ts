@@ -3,6 +3,7 @@ import { parseChargilyEvent, resolveChargilyConfig, verifyChargilySignature } fr
 import { applyChargilyCheckoutState, checkoutStatusFromEvent } from "@/lib/chargily-events";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
+import { apiHandler } from "@/lib/api-route";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export const MAX_WEBHOOK_BODY_BYTES = 64 * 1024;
 // (checkout inconnu, commande déjà tranchée) — sinon le prestataire le renverrait indéfiniment ;
 // 401 si la signature est fausse ; 400 si le corps n'est pas un événement ; 503 si le paiement en ligne
 // n'est pas configuré (rien à vérifier avec).
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const resolution = resolveChargilyConfig(process.env);
   if (resolution.mode !== "enabled") {
     return NextResponse.json({ error: "chargily_not_configured" }, { status: 503 });
@@ -57,4 +58,4 @@ export async function POST(request: NextRequest) {
   const outcome = await applyChargilyCheckoutState(event.data, state, now, `chargily:${event.type}`, { source: "WEBHOOK", providerEventId: event.id ?? null });
   console.log(`[chargily] webhook ${event.type} checkout=${event.data.id} → ${outcome}`);
   return NextResponse.json({ received: true, outcome });
-}
+});

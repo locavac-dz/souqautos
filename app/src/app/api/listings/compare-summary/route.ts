@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -16,7 +16,7 @@ const bodySchema = z.object({
 // aucun coût n'est engagé aujourd'hui, repli heuristique sans clé, cf.
 // src/lib/ai-compare.ts) — limite resserrée comme pour la suggestion de
 // rédaction (Lot 57).
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -59,4 +59,4 @@ export async function POST(request: NextRequest) {
   const summary = await generateCompareSummary(facts, body.locale);
 
   return NextResponse.json(summary);
-}
+});

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
@@ -28,7 +28,7 @@ const RESULTS_LIMIT = 6;
 // Un appel IA a un coût réel dès qu'une clé Anthropic est configurée — même
 // limite que les autres tours de conversation/génération IA (suggest,
 // compare-summary), cf. src/lib/ai-advisor.ts pour le repli heuristique.
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -84,4 +84,4 @@ export async function POST(request: NextRequest) {
     totalCount,
     source: turn.source,
   });
-}
+});

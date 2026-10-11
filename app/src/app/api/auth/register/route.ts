@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validation/auth";
 import { hashPassword } from "@/lib/auth-server/password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
+import { createRefreshSession, setRefreshCookie } from "@/lib/auth-server/refresh-token";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp, safeUser } from "@/lib/http";
 import { isUniqueViolation } from "@/lib/prisma-errors";
@@ -61,6 +62,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   const token = await createSessionToken({ sub: user.id, role: user.role });
   await setSessionCookie(token);
+  const userAgent = request.headers.get("user-agent") ?? "";
+  const refreshToken = await createRefreshSession(user.id, { ip, userAgent });
+  await setRefreshCookie(refreshToken);
 
   return NextResponse.json({ user: safeUser(user) }, { status: 201 });
 });

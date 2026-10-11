@@ -37,7 +37,8 @@ async function readStoredPhotoBytes(storedPath: string): Promise<Buffer | null> 
       return await readFile(path.join(uploadsRoot(), rel));
     }
     return null;
-  } catch {
+  } catch (err) {
+    console.warn("[photo-ai] lecture photo impossible", (err as Error).message);
     return null;
   }
 }
@@ -55,7 +56,8 @@ export async function analyzePhoto(imageBuffer: Buffer): Promise<PhotoAiTag | nu
       .resize({ width: 400, withoutEnlargement: true })
       .jpeg({ quality: 70 })
       .toBuffer();
-  } catch {
+  } catch (err) {
+    console.warn("[photo-ai] redimensionnement impossible", (err as Error).message);
     return null;
   }
 
@@ -79,7 +81,8 @@ export async function analyzePhoto(imageBuffer: Buffer): Promise<PhotoAiTag | nu
       isProfessionalStock: Boolean(parsed.isProfessionalStock),
       note: typeof parsed.note === "string" ? parsed.note.slice(0, 200) : null,
     };
-  } catch {
+  } catch (err) {
+    console.warn("[photo-ai] analyse impossible", (err as Error).message);
     return null;
   }
 }

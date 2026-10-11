@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody, NO_STORE } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody, NO_STORE } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { canManageListing } from "@/lib/listing-access";
@@ -7,7 +7,7 @@ import { isUniqueViolation } from "@/lib/prisma-errors";
 import { prospectUpdateSchema } from "@/lib/prospects";
 
 // Lot 123 — modifier le statut et/ou la note privée d'un prospect (une conversation d'un compte pro).
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) => {
   const user = await requireUser({ headers: NO_STORE });
   if (user instanceof NextResponse) return user;
 
@@ -58,4 +58,4 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   return NextResponse.json({ status: saved.status, note: saved.note, updatedAt: saved.updatedAt }, { headers: NO_STORE });
-}
+});

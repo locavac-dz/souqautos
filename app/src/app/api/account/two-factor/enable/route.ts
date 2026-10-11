@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiHandler, requireUser, parseJsonBody, NO_STORE } from "@/lib/api-route";
 import { z } from "zod";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
+import { createRefreshSession, setRefreshCookie } from "@/lib/auth-server/refresh-token";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { confirmEnrolment } from "@/lib/two-factor";
 
@@ -27,5 +28,10 @@ export const POST = apiHandler(async (request: NextRequest) => {
   // L'activation révoque toutes les sessions ouvertes avant cet instant (dont celle de cette requête) : on en émet une nouvelle,
   // sinon la personne serait déconnectée à la seconde même où elle protège son compte.
   await setSessionCookie(await createSessionToken({ sub: user.id, role: user.role }));
+  const refreshToken = await createRefreshSession(user.id, {
+    ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
+    userAgent: request.headers.get("user-agent") ?? "",
+  });
+  await setRefreshCookie(refreshToken);
   return NextResponse.json({ recoveryCodes: result.recoveryCodes }, { headers: NO_STORE });
 });

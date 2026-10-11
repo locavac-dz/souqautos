@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkListingCanBeMarkedSold } from "@/lib/listing-lifecycle";
 import { canManageListing } from "@/lib/listing-access";
 import { cancelPendingOrdersForListing } from "@/lib/payment-fulfillment";
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -37,4 +37,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   });
 
   return NextResponse.json({ status: "VENDUE" });
-}
+});

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkPhoneCode } from "@/lib/verification";
@@ -7,7 +7,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 const bodySchema = z.object({ code: z.string().trim().length(6) });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -47,4 +47,4 @@ export async function POST(request: NextRequest) {
   await prisma.phoneVerificationCode.delete({ where: { id: record.id } });
 
   return NextResponse.json({ ok: true });
-}
+});

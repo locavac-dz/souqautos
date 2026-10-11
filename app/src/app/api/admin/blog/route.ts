@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { isEditor } from "@/lib/auth-server/roles";
 import { blogArticleSchema } from "@/lib/validation/blog";
@@ -17,7 +17,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 // Réservé à ADMIN : le blog est un contenu public engageant l'image de la
 // marque, pas une action de modération courante — même seuil que la gestion
 // du référentiel marques/modèles.
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireRole(isEditor);
   if (user instanceof NextResponse) return user;
 
@@ -123,4 +123,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ article }, { status: 201 });
-}
+});

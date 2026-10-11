@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseJsonBody } from "@/lib/api-route";
+import { apiHandler, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
@@ -11,7 +11,7 @@ import { confirmPasswordReset } from "@/lib/password-reset-service";
 // avant ce changement sont révoquées par confirmPasswordReset).
 const bodySchema = z.object({ token: z.string().min(1).max(200), password: newPasswordSchema });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   if (!(await checkRateLimit(`password-reset-confirm:${getClientIp(request)}`, { limit: 10, windowMs: 15 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
@@ -24,4 +24,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
-}
+});

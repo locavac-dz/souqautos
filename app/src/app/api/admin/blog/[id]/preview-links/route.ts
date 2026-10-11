@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { NO_STORE, parseJsonBody, requireRole } from "@/lib/api-route";
+import { apiHandler, NO_STORE, parseJsonBody, requireRole } from "@/lib/api-route";
 import { isEditor } from "@/lib/auth-server/roles";
 import { writeAuditLog } from "@/lib/audit-log";
 import { articlePublicPath } from "@/lib/blog";
@@ -12,7 +12,7 @@ import { TooManyPreviewLinksError, createPreviewLink, listPreviewLinks, parsePre
 // donne à quelqu'un d'autre le droit de le LIRE avant sa parution. Aucune réponse de cette route n'est mise en cache.
 const bodySchema = z.object({ days: z.number() });
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = apiHandler(async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const admin = await requireRole(isEditor);
   if (admin instanceof NextResponse) return admin;
   const { id } = await params;
@@ -29,9 +29,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     state: previewLinkState(link, now),
   }));
   return NextResponse.json({ links }, { headers: NO_STORE });
-}
+});
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const admin = await requireRole(isEditor);
   if (admin instanceof NextResponse) return admin;
   const { id } = await params;
@@ -66,4 +66,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (error instanceof TooManyPreviewLinksError) return NextResponse.json({ error: "too_many" }, { status: 409 });
     throw error;
   }
-}
+});

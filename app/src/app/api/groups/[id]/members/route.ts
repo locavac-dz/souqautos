@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { publishToGroup } from "@/lib/realtime";
@@ -9,10 +9,10 @@ const addSchema = z.object({ email: z.string().email() });
 
 // Lot 267 (audit B6) — 30 ajouts par heure et par compte : la réponse 404 / 409 révèle si une adresse a un compte
 // (nécessaire pour l'administrateur du groupe), le plafond empêche d'en faire un outil d'énumération.
-export async function POST(
+export const POST = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
   if (!(await checkRateLimit(`group-add-member:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 }))) {
@@ -54,4 +54,4 @@ export async function POST(
   await publishToGroup(id, { type: "member_added", member: { userId, userName, isAdmin: false } });
 
   return NextResponse.json({ ok: true, member: { userId, userName, isAdmin: false } }, { status: 201 });
-}
+});

@@ -5,6 +5,7 @@ import { getClientIp } from "@/lib/http";
 import { recordLoginEvent } from "@/lib/login-event-service";
 import { SITE_URL } from "@/lib/site";
 import { createSessionToken, setSessionCookie } from "@/lib/auth-server/session";
+import { createRefreshSession, setRefreshCookie } from "@/lib/auth-server/refresh-token";
 import { createPendingToken, setPendingCookie } from "@/lib/auth-server/two-factor-pending";
 import { signInWithGoogleProfile } from "@/lib/google-account";
 import {
@@ -17,6 +18,7 @@ import {
   safeEqual,
   validateIdTokenClaims,
 } from "@/lib/google-oauth";
+import { apiHandler } from "@/lib/api-route";
 
 // Lot 132 — retour de Google : vérifie l'état, échange le code, vérifie le jeton d'identité, puis ouvre (ou crée) le
 // compte du site et sa session. Voir src/lib/google-oauth.ts et src/lib/google-account.ts.
@@ -33,7 +35,7 @@ const REFUSAL_CODE = {
   deleted: "google_invalide",
 } as const;
 
-export async function GET(request: NextRequest) {
+export const GET = apiHandler(async (request: NextRequest) => {
   const store = await cookies();
   const flow = await openFlow(store.get(GOOGLE_FLOW_COOKIE)?.value);
   store.set(GOOGLE_FLOW_COOKIE, "", { path: GOOGLE_FLOW_PATH, maxAge: 0 });
@@ -87,6 +89,11 @@ export async function GET(request: NextRequest) {
   }
 
   await setSessionCookie(await createSessionToken({ sub: result.user.id, role: result.user.role }));
+  const refreshToken = await createRefreshSession(result.user.id, {
+    ip: getClientIp(request),
+    userAgent: request.headers.get("user-agent") ?? "",
+  });
+  await setRefreshCookie(refreshToken);
   after(() => recordLoginEvent({
     userId: result.user.id,
     ip: getClientIp(request),
@@ -95,4 +102,4 @@ export async function GET(request: NextRequest) {
     success: true,
   }));
   return redirectTo(`/${flow.locale}${flow.next}`);
-}
+});

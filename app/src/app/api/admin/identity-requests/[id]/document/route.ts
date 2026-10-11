@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole } from "@/lib/api-route";
+import { apiHandler, requireRole } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { isStaff } from "@/lib/auth-server/roles";
 import { readIdentityDocument } from "@/lib/identity-uploads";
 import { writeAuditLog } from "@/lib/audit-log";
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isStaff);
   if (user instanceof NextResponse) return user;
 
@@ -38,4 +38,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       "Cache-Control": "no-store",
     },
   });
-}
+});

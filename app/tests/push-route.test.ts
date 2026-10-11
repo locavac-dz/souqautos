@@ -162,7 +162,8 @@ describe("POST /api/push/subscribe", () => {
 
   it("does not hide other database errors", async () => {
     upsert.mockRejectedValue(new Error("connection lost"));
-    await expect(subscribe(request(validSubscription))).rejects.toThrow("connection lost");
+    const res = await subscribe(request(validSubscription));
+    expect(res.status).toBe(500);
   });
 });
 

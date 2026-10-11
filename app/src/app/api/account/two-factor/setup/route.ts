@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, NO_STORE } from "@/lib/api-route";
+import { apiHandler, requireUser, NO_STORE } from "@/lib/api-route";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { beginEnrolment } from "@/lib/two-factor";
@@ -10,7 +10,7 @@ import { beginEnrolment } from "@/lib/two-factor";
 const schema = z.object({ password: z.string().max(200).optional() });
 const STATUS: Record<"already_enabled" | "not_found" | "invalid_password", number> = { already_enabled: 409, not_found: 404, invalid_password: 400 };
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser({ headers: NO_STORE });
   if (user instanceof NextResponse) return user;
 
@@ -23,4 +23,4 @@ export async function POST(request: NextRequest) {
   const result = await beginEnrolment(user.id, parsed.data.password);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: STATUS[result.error], headers: NO_STORE });
   return NextResponse.json({ secret: result.secretDisplay, uri: result.uri, qr: result.qr }, { headers: NO_STORE });
-}
+});

@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
+import { apiHandler } from "@/lib/api-route";
 
 // Renvoie jusqu'à 8 suggestions de saisie à partir des marques, modèles et
 // wilayas dont le nom contient la chaîne saisie.
-export async function GET(request: NextRequest) {
+export const GET = apiHandler(async (request: NextRequest) => {
   if (!(await checkRateLimit(`suggest-ip:${getClientIp(request)}`, { limit: 120, windowMs: 60 * 1000 }))) {
     return NextResponse.json([], { status: 429 });
   }
@@ -39,4 +40,4 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json(suggestions);
-}
+});

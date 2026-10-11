@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { parseJsonBody, requireUser } from "@/lib/api-route";
+import { apiHandler, parseJsonBody, requireUser } from "@/lib/api-route";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -21,7 +21,7 @@ async function loadModel(rawId: string) {
 // pour corriger un texte plusieurs fois, assez étroit pour freiner un envoi en série.
 const DAILY_LIMIT = { limit: 20, windowMs: 24 * 60 * 60 * 1000 };
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -66,9 +66,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     throw error;
   }
-}
+});
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -115,9 +115,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   after(() => notifyStaffOfPending("ownerReview"));
 
   return NextResponse.json({ ok: true, status: "EN_ATTENTE" });
-}
+});
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) {
+export const DELETE = apiHandler(async (_request: NextRequest, { params }: { params: Promise<{ modelId: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -130,4 +130,4 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   // Les signalements qui visaient cet avis disparaissent avec lui (cascade).
   await prisma.ownerReview.deleteMany({ where: { userId: user.id, modelId: model.id } });
   return NextResponse.json({ ok: true });
-}
+});

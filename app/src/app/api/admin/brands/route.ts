@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { invalidateReferenceData } from "@/lib/reference-data";
@@ -11,7 +11,7 @@ import { isUniqueViolation } from "@/lib/prisma-errors";
 
 const bodySchema = z.object({ name: z.string() });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -50,4 +50,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ brand }, { status: 201 });
-}
+});

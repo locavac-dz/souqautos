@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { invalidateReferenceData } from "@/lib/reference-data";
@@ -12,7 +12,7 @@ import { normalizeModelCategories } from "@/lib/vehicle-catalogue";
 // Lot 130 — `categories` facultatif : absent = catégories inchangées.
 const bodySchema = z.object({ name: z.string(), categories: z.unknown().optional() });
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -53,9 +53,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
 
   return NextResponse.json({ name, categories: categories ?? model.categories });
-}
+});
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -93,4 +93,4 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   });
 
   return NextResponse.json({ ok: true });
-}
+});

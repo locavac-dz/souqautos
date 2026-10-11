@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { publishToGroup } from "@/lib/realtime";
 
-export async function DELETE(
+export const DELETE = apiHandler(async (
   _request: NextRequest,
   { params }: { params: Promise<{ id: string; userId: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -33,4 +33,4 @@ export async function DELETE(
   await publishToGroup(id, { type: "member_removed", userId });
 
   return NextResponse.json({ ok: true });
-}
+});

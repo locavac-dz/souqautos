@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/auth-server/roles";
@@ -19,7 +19,7 @@ const bodySchema = z.object({
 // Réservé à ADMIN, même sensibilité que PaymentSettings (Lot 66) — ces
 // chiffres déterminent directement ce qu'un vendeur pro paie et combien
 // d'annonces son abonnement autorise.
-export async function PATCH(request: NextRequest) {
+export const PATCH = apiHandler(async (request: NextRequest) => {
   const user = await requireRole(isAdmin);
   if (user instanceof NextResponse) return user;
 
@@ -64,4 +64,4 @@ export async function PATCH(request: NextRequest) {
   });
 
   return NextResponse.json({ settings });
-}
+});

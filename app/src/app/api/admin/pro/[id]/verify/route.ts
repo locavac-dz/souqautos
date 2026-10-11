@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireRole, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isStaff } from "@/lib/auth-server/roles";
@@ -7,7 +7,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 
 const bodySchema = z.object({ verified: z.boolean() });
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireRole(isStaff);
   if (user instanceof NextResponse) return user;
 
@@ -34,4 +34,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   });
 
   return NextResponse.json({ ok: true });
-}
+});

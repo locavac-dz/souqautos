@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -7,7 +7,7 @@ import { sendEmail } from "@/lib/mailer";
 import { generateExpiry } from "@/lib/verification";
 import { SITE_URL } from "@/lib/site";
 
-export async function POST() {
+export const POST = apiHandler(async () => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
   if (user.emailVerifiedAt) {
@@ -32,4 +32,4 @@ export async function POST() {
   });
 
   return NextResponse.json({ ok: true, previewUrl });
-}
+});

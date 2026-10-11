@@ -15,6 +15,7 @@ import {
   sanitizeNextPath,
   sealFlow,
 } from "@/lib/google-oauth";
+import { apiHandler } from "@/lib/api-route";
 
 // Lot 132 — début de la connexion avec Google : prépare l'état, le nonce et le vérificateur PKCE, les scelle dans un
 // cookie court, puis renvoie le navigateur vers la page de choix de compte de Google. Voir src/lib/google-oauth.ts.
@@ -23,7 +24,7 @@ import {
 // personne est venue, même derrière un serveur intermédiaire.
 const redirectTo = (location: string) => new NextResponse(null, { status: 302, headers: { Location: location, "Cache-Control": "no-store" } });
 
-export async function GET(request: NextRequest) {
+export const GET = apiHandler(async (request: NextRequest) => {
   const locale = pickLoginLocale(request.nextUrl.searchParams.get("locale"));
   const login = (code: string) => redirectTo(`/${locale}/connexion?erreur=${code}`);
 
@@ -53,4 +54,4 @@ export async function GET(request: NextRequest) {
   });
 
   return redirectTo(buildAuthorizationUrl(resolution.config, { state: flow.state, nonce: flow.nonce, challenge: pkceChallenge(flow.verifier), locale }));
-}
+});

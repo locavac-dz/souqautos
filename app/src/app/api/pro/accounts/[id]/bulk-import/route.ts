@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { canManageProListings } from "@/lib/pro-account";
 import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions";
@@ -15,7 +15,7 @@ const MAX_ROWS = 500;
 // dans 3 Mo : au-delà, le fichier est refusé AVANT d'être lu en mémoire (l'ancien plafond ne comptait les lignes qu'après avoir tout chargé).
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -162,4 +162,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   return NextResponse.json({ imported: toCreate.length, rejected });
-}
+});

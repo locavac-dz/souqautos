@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { saveProLogo, deleteStoredFile, PhotoValidationError } from "@/lib/uploads";
+import { apiHandler } from "@/lib/api-route";
 
 // Lot 103 — logo/bannière réservés au propriétaire du compte pro, jamais
 // délégables à un collaborateur : même règle que la gestion des
 // collaborateurs eux-mêmes (cf. canManageCollaborators, src/lib/pro-account.ts)
 // — l'identité visuelle de la boutique n'est pas une tâche opérationnelle.
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const user = await getCurrentUser();
   if (!user || user.professionalAccount?.id !== id) {
@@ -40,9 +41,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (previous?.logoUrl) await deleteStoredFile(previous.logoUrl);
 
   return NextResponse.json({ logoUrl });
-}
+});
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = apiHandler(async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const user = await getCurrentUser();
   if (!user || user.professionalAccount?.id !== id) {
@@ -54,4 +55,4 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   if (previous?.logoUrl) await deleteStoredFile(previous.logoUrl);
 
   return NextResponse.json({ ok: true });
-}
+});

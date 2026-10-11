@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { safeUser } from "@/lib/http";
 
-export async function GET() {
+export const GET = apiHandler(async () => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
   return NextResponse.json({
@@ -18,4 +18,4 @@ export async function GET() {
         : null,
     },
   });
-}
+});

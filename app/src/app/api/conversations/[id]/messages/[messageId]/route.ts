@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { checkCanDeleteMessage } from "@/lib/messaging";
 import { publishToConversation } from "@/lib/realtime";
 import { deleteStoredFile } from "@/lib/uploads";
 
-export async function DELETE(
+export const DELETE = apiHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string; messageId: string }> }
-) {
+) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -39,4 +39,4 @@ export async function DELETE(
   await publishToConversation(id, { type: "delete", messageId });
 
   return NextResponse.json({ ok: true });
-}
+});

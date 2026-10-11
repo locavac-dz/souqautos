@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -13,7 +13,7 @@ const createSchema = z.object({
 });
 
 // GET /api/groups — liste les groupes de l'utilisateur connecté
-export async function GET() {
+export const GET = apiHandler(async () => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -42,10 +42,10 @@ export async function GET() {
   }));
 
   return NextResponse.json({ groups });
-}
+});
 
 // POST /api/groups — créer un nouveau groupe
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -88,4 +88,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ group: { id: group.id, name: group.name, memberCount: group._count.members } }, { status: 201 });
-}
+});

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser, NO_STORE } from "@/lib/api-route";
+import { apiHandler, requireUser, NO_STORE } from "@/lib/api-route";
 import { getTranslations } from "next-intl/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { resolvePushConfig } from "@/lib/push";
@@ -7,7 +7,7 @@ import { sendPushToUser } from "@/lib/push-send";
 
 // Lot 121 — envoie une notification d'essai à TOUS les appareils du compte, pour que la personne
 // vérifie que tout fonctionne (bouton « Envoyer une notification d'essai »).
-export async function POST() {
+export const POST = apiHandler(async () => {
   const user = await requireUser({ headers: NO_STORE });
   if (user instanceof NextResponse) return user;
 
@@ -30,4 +30,4 @@ export async function POST() {
   });
 
   return NextResponse.json(result, { headers: NO_STORE });
-}
+});

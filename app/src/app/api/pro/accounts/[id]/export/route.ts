@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/api-route";
+import { apiHandler, requireUser } from "@/lib/api-route";
 import { prisma } from "@/lib/prisma";
 import { canManageProListings } from "@/lib/pro-account";
 import { parseProPermissions, type ProPermissions } from "@/lib/pro-permissions";
@@ -11,7 +11,7 @@ import { hasAdvancedProTools, getSubscriptionStatus } from "@/lib/pro-subscripti
 // Lot 81 — inverse de l'import en masse (Lot 41) : même permission
 // (gererAnnonces), mais réservé aux paliers Pro/Premium (§4-B, seul outil
 // distinguant réellement les paliers au-delà du quota).
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -57,4 +57,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       "Content-Disposition": `attachment; filename="souq-auto-stock-${id}.csv"`,
     },
   });
-}
+});

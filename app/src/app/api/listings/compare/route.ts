@@ -4,9 +4,9 @@ import { MAX_COMPARE } from "@/lib/compare";
 import { getSellerTrustSummary } from "@/lib/seller-trust";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
-import { NO_STORE } from "@/lib/api-route";
+import { apiHandler, NO_STORE } from "@/lib/api-route";
 
-export async function GET(request: NextRequest) {
+export const GET = apiHandler(async (request: NextRequest) => {
   if (!(await checkRateLimit(`compare-ip:${getClientIp(request)}`, { limit: 60, windowMs: 60 * 60 * 1000 }))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: NO_STORE });
   }
@@ -60,4 +60,4 @@ export async function GET(request: NextRequest) {
     .filter((l): l is (typeof withTrust)[number] => Boolean(l));
 
   return NextResponse.json({ listings: ordered });
-}
+});

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser, parseJsonBody } from "@/lib/api-route";
+import { apiHandler, requireUser, parseJsonBody } from "@/lib/api-route";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { improveListingText } from "@/lib/ai-listing";
 import { z } from "zod";
@@ -14,7 +14,7 @@ const improveSchema = z.object({
   condition: z.string().optional(),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   const user = await requireUser();
   if (user instanceof NextResponse) return user;
 
@@ -35,4 +35,4 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(improved);
-}
+});
