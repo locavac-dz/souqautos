@@ -66,17 +66,6 @@ jobs:
         run: npm ci
       - name: Générer le client de base de données
         run: npx prisma generate
-      # pg_dump refuse de sauvegarder un serveur plus récent que lui : le service PostgreSQL est en 17 alors que le
-      # runner fournit le client 16 (cf. app/Dockerfile : le client doit être de la version du serveur ou plus récente).
-      - name: Client PostgreSQL 17 (pg_dump, pg_restore)
-        run: |
-          # Le dépôt apt PGDG du runner ne propose pas la 17 : on le (re)configure avec le script officiel.
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends postgresql-common
-          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-          sudo apt-get install -y --no-install-recommends postgresql-client-17
-          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
-          /usr/lib/postgresql/17/bin/pg_dump --version
       - name: Types
         run: npx tsc --noEmit
       - name: Lint
