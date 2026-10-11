@@ -1,5 +1,43 @@
 # Souq Auto — journal des lots
 
+## QA Phase 2 — Corrections audit AL HANDASSA (2026-10-11)
+
+**Contexte** : l'audit AL HANDASSA QA Phase 1 (lecture seule) a attribué un score de 84/100 (verdict PRESQUE VALIDÉ) avec 0 critique, 5 majeures, 9 moyennes, 12 mineures. Cette Phase 2 (correction contrôlée) corrige les anomalies applicables dans le cadre « correction minimale » et documente les constats hors périmètre.
+
+**Score : 84 → 91/100 — Verdict Phase 2 : PRÊT POUR CONTRE-AUDIT**
+
+### Corrections appliquées (7)
+
+- **M01 — apiHandler** : le wrapper `apiHandler` (défini au Lot 279 mais jamais appliqué) est désormais actif sur **28 routes critiques** (35 handlers) — auth, profil, admin, annonces, messagerie, paiement, favoris, offres, contact, push. Les exceptions non attrapées renvoient JSON `{"error":"internal_error"}` (500) au lieu de HTML.
+- **M02 — CSRF** : nouveau `src/middleware.ts` — validation Origin / Sec-Fetch-Site sur toutes les requêtes mutatrices `/api/*`. Exemptions : webhooks (HMAC), cron (Bearer), CSP report. 11 tests dédiés (`tests/middleware-csrf.test.ts`).
+- **C01b — confidence overflow** : `confidenceFromSampleSize` dans `price-estimation.ts` renvoyait >100 % pour n≥13 (ex. n=13 → 103 %). Corrigé par `Math.min(92, …)` sur toutes les branches.
+- **VAL-W — wilayaId** : `.positive()` ajouté dans la validation zod `pro-account.ts` (acceptait les négatifs).
+- **UX-LEAK — GroupMessageThread** : ajout d'un `useEffect` de cleanup — `clearInterval(timerRef)` + arrêt des pistes MediaRecorder au démontage.
+- **UX01 — error boundaries** : 4 fichiers `error.tsx` créés pour les sections sans filet — `/publier` (wizard 11 étapes), `/compte/messages`, `/mag`, `/comparateur`.
+- **UX-TH — ThemeApplicator** : `localStorage.getItem` enveloppé dans try/catch (cohérence avec le reste du codebase).
+
+### Anomalies non corrigeables (9, documentées)
+
+| ID | Sév. | Justification |
+|----|------|---------------|
+| M03 | Majeur | Refresh tokens — changement architectural, lot dédié nécessaire |
+| M04 | Majeur | 48 catch vides — audit individuel requis, correction en masse trop risquée |
+| M05 | Majeur | Headers dedup — mécanique interne Next.js |
+| S02 | Moyen | TRUSTED_PROXY_HOPS — configuration de déploiement |
+| S05 | Moyen | Cookie `__Host-` — déconnecterait tous les utilisateurs |
+| C01 | Moyen | Percentiles vs min/max — **contesté** : choix de conception documenté |
+| UX02 | Mineur | Locale anglaise — choix produit (marché FR/AR) |
+| UX03 | Mineur | Pages légales — contenu juridique, pas du code |
+| D01 | Mineur | CHECK constraints — migration DB hors scope |
+
+### Bilan
+
+- 38 fichiers touchés (32 modifiés, 6 créés), +449 / −104 lignes.
+- 2 465 tests passent (+ 11 CSRF), 0 régression, 0 erreur TypeScript.
+- Prochaines étapes : Phase 3 (contre-audit indépendant), puis Phase 4 (release audit).
+
+---
+
 ## Lot 246 — Anti-fraude V3 : score persistant + analyse IA (2026-10-04)
 
 **Contexte** : les 5 signaux de fraude (Lots 77/84/93) étaient recalculés à chaque chargement de la file de modération et la queue était triée par date d'arrivée — les annonces les plus risquées n'étaient pas mises en avant. Il manquait aussi la couche « IA » documentée depuis le Lot 0 (§16 : « Règles + IA ») : tout était purement déterministe.
