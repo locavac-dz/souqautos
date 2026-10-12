@@ -9,6 +9,7 @@ const deleteMany = vi.fn();
 const getCurrentUser = vi.fn();
 const checkRateLimit = vi.fn();
 const sendPushToUser = vi.fn();
+const reportServerError = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   prisma: { pushSubscription: { upsert: (...a: unknown[]) => upsert(...a), findMany: (...a: unknown[]) => findMany(...a), deleteMany: (...a: unknown[]) => deleteMany(...a) } },
@@ -17,6 +18,7 @@ vi.mock("@/lib/auth-server/current-user", () => ({ getCurrentUser: () => getCurr
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: (...a: unknown[]) => checkRateLimit(...a) }));
 vi.mock("@/lib/push-send", () => ({ sendPushToUser: (...a: unknown[]) => sendPushToUser(...a) }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
+vi.mock("@/lib/server-error-alerts", () => ({ reportServerError: (...a: unknown[]) => reportServerError(...a) }));
 
 import { GET as getConfig } from "@/app/api/push/config/route";
 import { POST as subscribe, DELETE as unsubscribe } from "@/app/api/push/subscribe/route";
@@ -164,6 +166,13 @@ describe("POST /api/push/subscribe", () => {
     upsert.mockRejectedValue(new Error("connection lost"));
     const res = await subscribe(request(validSubscription));
     expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: "internal_error" });
+    await vi.waitFor(() => expect(reportServerError).toHaveBeenCalledTimes(1));
+    expect(reportServerError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "connection lost" }),
+      expect.any(Object),
+      expect.anything(),
+    );
   });
 });
 

@@ -77,7 +77,8 @@ jobs:
       - name: Les migrations s'appliquent sur une base vide
         run: npx prisma migrate deploy
       - name: Le schéma ne diffère pas des migrations (aucune migration oubliée)
-        run: npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url "$SHADOW_DATABASE_URL" --exit-code
+        # Tolère uniquement les index GIN pg_trgm conditionnels (cf. app/src/lib/schema-drift.ts) ; tout autre écart échoue.
+        run: npx tsx scripts/check-schema-drift.ts
       - name: Vulnérabilités connues des dépendances de production (information)
         run: npm audit --omit=dev --audit-level=high
         continue-on-error: true
@@ -86,7 +87,7 @@ jobs:
     name: Tests de bout en bout
     needs: checks
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:17

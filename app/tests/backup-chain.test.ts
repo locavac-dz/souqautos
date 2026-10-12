@@ -16,7 +16,8 @@ import { evaluateOps, isDumpName, type OpsFacts, type OpsStatus } from "@/lib/op
 // au rouge quand la sauvegarde casse.
 //
 // Utilise la base de développement (lecture seule : pg_dump ne la modifie pas ; la restauration se fait dans une base
-// temporaire « <base>_restorecheck », supprimée ensuite). Se SAUTE si la configuration, la base ou les outils PostgreSQL manquent.
+// temporaire « <base>_restorecheck », supprimée ensuite). Se SAUTE si la configuration, la base ou les outils PostgreSQL manquent,
+// ou si la base n'a ni le schéma ni de données (cas de la CI, où les migrations ne sont appliquées qu'après les tests).
 
 const APP = process.cwd();
 const ENV_FILE = path.join(APP, ".env");
@@ -36,6 +37,19 @@ async function reachable(url: string): Promise<boolean> {
       socket.on("error", () => resolve(false));
       socket.on("timeout", () => (socket.destroy(), resolve(false)));
     });
+  } catch {
+    return false;
+  }
+}
+
+// La base doit porter le schéma ET des données : vide, l'archive ne pèserait que quelques centaines d'octets et la vérification de
+// restauration signalerait « tables absentes ou vides ». psql n'accepte pas les paramètres Prisma (?schema=...) : on les retire.
+function hasAppData(url: string): boolean {
+  try {
+    const u = new URL(url);
+    u.search = "";
+    const res = spawnSync("psql", [u.toString(), "-tA", "-c", 'SELECT count(*) FROM "User"'], { encoding: "utf8", timeout: 15_000 });
+    return res.status === 0 && Number(res.stdout.trim()) > 0;
   } catch {
     return false;
   }
@@ -63,7 +77,7 @@ let brokenEnv = "";
 
 beforeAll(async () => {
   const url = databaseUrl();
-  ready = Boolean(url) && (await reachable(url!));
+  ready = Boolean(url) && (await reachable(url!)) && hasAppData(url!);
   if (!ready) return;
   dir = mkdtempSync(path.join(os.tmpdir(), "souq-backup-chain-"));
   // Même compte, base qui n'existe pas : provoque un vrai échec de pg_dump.

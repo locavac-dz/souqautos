@@ -9,7 +9,7 @@
 ### Corrections appliquées (7)
 
 - **M01 — apiHandler** : le wrapper `apiHandler` (défini au Lot 279 mais jamais appliqué) est désormais actif sur **28 routes critiques** (35 handlers) — auth, profil, admin, annonces, messagerie, paiement, favoris, offres, contact, push. Les exceptions non attrapées renvoient JSON `{"error":"internal_error"}` (500) au lieu de HTML.
-- **M02 — CSRF** : nouveau `src/middleware.ts` — validation Origin / Sec-Fetch-Site sur toutes les requêtes mutatrices `/api/*`. Exemptions : webhooks (HMAC), cron (Bearer), CSP report. 11 tests dédiés (`tests/middleware-csrf.test.ts`).
+- **M02 — CSRF** : validation Origin / Sec-Fetch-Site sur toutes les requêtes mutatrices `/api/*` (`src/lib/csrf.ts`, appelée par `src/proxy.ts` ; le fichier `src/middleware.ts` d'origine est supprimé car Next.js 16 refuse de compiler avec un `middleware.ts` à côté d'un `proxy.ts`). Exemptions : webhooks (HMAC), cron (Bearer), CSP report. Tests dédiés : `tests/csrf-origin.test.ts` et `tests/proxy.test.ts`.
 - **C01b — confidence overflow** : `confidenceFromSampleSize` dans `price-estimation.ts` renvoyait >100 % pour n≥13 (ex. n=13 → 103 %). Corrigé par `Math.min(92, …)` sur toutes les branches.
 - **VAL-W — wilayaId** : `.positive()` ajouté dans la validation zod `pro-account.ts` (acceptait les négatifs).
 - **UX-LEAK — GroupMessageThread** : ajout d'un `useEffect` de cleanup — `clearInterval(timerRef)` + arrêt des pistes MediaRecorder au démontage.

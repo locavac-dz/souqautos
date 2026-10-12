@@ -10,6 +10,7 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { PRICE_ESTIMATE_RATE_LIMIT } from "@/lib/price-estimate-limits";
 import { estimatePrice, type EstimateResult } from "@/lib/price-estimation";
 import { estimatePriceWithAi } from "@/lib/price-ai";
 
@@ -38,7 +39,6 @@ const inputSchema = z.object({
 });
 
 const MIN_COMPARABLES_FOR_BADGE = 3;
-export const PRICE_ESTIMATE_RATE_LIMIT = { limit: 30, windowMs: 60 * 60 * 1000 };
 
 export async function getPriceEstimate(
   input: PriceEstimateInput

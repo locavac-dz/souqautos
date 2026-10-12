@@ -16,7 +16,7 @@ Marketplace automobile algerienne — achat, vente et estimation de vehicules ne
 - **Magazine & Essais** — articles editoriaux et essais routiers avec notes, points forts/faibles
 - **Administration** — moderation, anti-fraude (score + analyse IA), gestion des utilisateurs, roles (Admin, Moderateur, Support), journal d'audit
 - **Paiement** — virement bancaire et Chargily Pay (CIB / Edahabia)
-- **Securite** — JWT avec revocation individuelle, 2FA TOTP, verrouillage de compte, rate limiting, CSRF middleware, CSP headers
+- **Securite** — JWT avec revocation individuelle, 2FA TOTP, verrouillage de compte, rate limiting, vérification CSRF d'origine (proxy), CSP headers
 - **i18n** — francais et arabe (RTL complet)
 - **PWA** — installation sur mobile, notifications push, mode hors-ligne
 - **SEO** — sitemap dynamique, JSON-LD, meta OG, ISR
@@ -108,7 +108,7 @@ Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour le cahier d'architecture 
 - **2 465+ tests** unitaires et d'integration (Vitest)
 - **Audit AL HANDASSA QA** — score 91/100
 - TypeScript strict, ESLint, zero erreur de compilation
-- CSRF middleware, CSP headers, rate limiting, anti-fraude
+- Vérification CSRF d'origine (proxy), CSP headers, rate limiting, anti-fraude
 
 ## Licence
 

@@ -26,7 +26,7 @@ const steps = [
   { name: "Lint", cmd: "npm run lint" },
   { name: "Tests unitaires et cohérence des textes FR/AR", cmd: "npm test" },
   shadowUrl
-    ? { name: "Écart schéma / migrations", cmd: `npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url "${shadowUrl}" --exit-code` }
+    ? { name: "Écart schéma / migrations", cmd: "npx tsx scripts/check-schema-drift.ts", env: { SHADOW_DATABASE_URL: shadowUrl } }
     : { name: "Écart schéma / migrations", skip: "SHADOW_DATABASE_URL non définie (base vide nécessaire)" },
   ...(withE2e
     ? [
@@ -45,7 +45,7 @@ for (const step of steps) {
   }
   console.log(`\n▶ ${step.name}`);
   const started = Date.now();
-  const run = spawnSync(step.cmd, { stdio: "inherit", shell: true });
+  const run = spawnSync(step.cmd, { stdio: "inherit", shell: true, env: { ...process.env, ...(step.env ?? {}) } });
   const seconds = Math.round((Date.now() - started) / 100) / 10;
   const ok = run.status === 0;
   results.push({ name: step.name, status: ok ? "ok" : "ÉCHEC", seconds });
