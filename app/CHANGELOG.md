@@ -1,5 +1,17 @@
 # Souq Auto — journal des lots
 
+## Lot 298 — Partenariat Assurance Niveau 2 (2026-10-12)
+
+**Livré**
+- **Page /assurance** : calculateur de prime + comparateur de 3 formules (RC seule, RC + tiers collision, tous risques) côte à côte, avec fourchettes de prix et liste des garanties couvertes.
+- Formulaire de demande de devis intégré : le visiteur sélectionne une formule, saisit ses coordonnées, et l'équipe reçoit un e-mail récapitulatif.
+- Route API `POST /api/assurance/devis` : validation Zod, rate limiting (5/h), honeypot anti-spam, envoi d'e-mail à l'équipe via `sendEmail`.
+- Les champs du calculateur sont pré-remplis depuis les query params (`?fiscalPower=X&year=Y&wilayaId=Z`).
+- CTA « Comparer les formules d'assurance » sur la fiche d'annonce (si puissance fiscale renseignée), relié à la page /assurance avec pré-remplissage.
+- Lien « Assurance » ajouté dans le header (navigation publique) et le footer.
+- Fonction pure `estimateAllFormulas` : multiplicateurs par formule sur la base RC, avec liste des garanties couvertes.
+- i18n FR/AR complet (namespace Insurance, clés Nav, Footer, Listing), 17 nouveaux tests (formules + validation Zod).
+
 ## Lot 297 — Partenariat Assurance Niveau 1 (2026-10-12)
 
 **Livré**

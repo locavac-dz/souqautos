@@ -637,6 +637,12 @@ export default async function ListingDetailPage({
                   {tListing("rcRange", { low: formatNumber(rcEstimate.lowDzd, locale), high: formatNumber(rcEstimate.highDzd, locale) })}
                 </p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{tListing("rcNote")}</p>
+                <Link
+                  href={`/assurance?fiscalPower=${listing.fiscalPower}&year=${listing.year}&wilayaId=${listing.wilayaId}`}
+                  className="mt-1.5 inline-block text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                >
+                  {tListing("rcCta")} &rarr;
+                </Link>
               </div>
             )}
 

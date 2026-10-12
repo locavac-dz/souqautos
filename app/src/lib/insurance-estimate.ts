@@ -4,6 +4,10 @@
 // cumulés). Fourchette basse/haute par puissance fiscale ; la prime réelle varie
 // selon l'assureur, la zone tarifaire (wilaya) et le coefficient bonus-malus.
 // Source : CNA (cna.dz), barème réglementé RC automobile, loi de finances 2025.
+//
+// Lot 298 — comparateur de formules : RC seule, RC + tiers collision, tous risques.
+// Les multiplicateurs tiers et tous risques sont des fourchettes indicatives basées
+// sur les grilles tarifaires courantes du marché algérien (SAA, CAAT, Alliance, etc.).
 
 type PowerBracket = {
   maxFiscalPower: number | null;
@@ -27,3 +31,45 @@ export function estimateRcPremiumDzd(fiscalPower: number): RcEstimate {
     RC_BRACKETS[RC_BRACKETS.length - 1];
   return { lowDzd: bracket.lowDzd, highDzd: bracket.highDzd };
 }
+
+export type InsuranceFormula = "rc" | "rc_tiers" | "tous_risques";
+
+export type FormulaEstimate = {
+  formula: InsuranceFormula;
+  lowDzd: number;
+  highDzd: number;
+  covers: readonly string[];
+};
+
+const FORMULA_MULTIPLIERS: { formula: InsuranceFormula; lowMult: number; highMult: number; covers: readonly string[] }[] = [
+  {
+    formula: "rc",
+    lowMult: 1,
+    highMult: 1,
+    covers: ["coverRcDamages", "coverRcInjury"],
+  },
+  {
+    formula: "rc_tiers",
+    lowMult: 1.5,
+    highMult: 1.8,
+    covers: ["coverRcDamages", "coverRcInjury", "coverCollision", "coverTheft", "coverFire"],
+  },
+  {
+    formula: "tous_risques",
+    lowMult: 2.8,
+    highMult: 3.5,
+    covers: ["coverRcDamages", "coverRcInjury", "coverCollision", "coverTheft", "coverFire", "coverGlass", "coverNatural", "coverOwnDamage"],
+  },
+];
+
+export function estimateAllFormulas(fiscalPower: number): FormulaEstimate[] {
+  const rc = estimateRcPremiumDzd(fiscalPower);
+  return FORMULA_MULTIPLIERS.map(({ formula, lowMult, highMult, covers }) => ({
+    formula,
+    lowDzd: Math.round(rc.lowDzd * lowMult / 100) * 100,
+    highDzd: Math.round(rc.highDzd * highMult / 100) * 100,
+    covers,
+  }));
+}
+
+export const FORMULA_KEYS: readonly InsuranceFormula[] = ["rc", "rc_tiers", "tous_risques"];

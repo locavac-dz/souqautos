@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { estimateRcPremiumDzd, type RcEstimate } from "@/lib/insurance-estimate";
+import { estimateRcPremiumDzd, estimateAllFormulas, FORMULA_KEYS, type RcEstimate } from "@/lib/insurance-estimate";
 
 describe("estimateRcPremiumDzd", () => {
   it("returns a range for a low-power vehicle (≤ 5 CV)", () => {
@@ -55,5 +55,50 @@ describe("estimateRcPremiumDzd", () => {
       const r = estimateRcPremiumDzd(cv);
       expect(r.lowDzd).toBeLessThan(r.highDzd);
     }
+  });
+});
+
+describe("estimateAllFormulas", () => {
+  it("returns exactly 3 formulas", () => {
+    const results = estimateAllFormulas(7);
+    expect(results).toHaveLength(3);
+    expect(results.map((r) => r.formula)).toEqual(["rc", "rc_tiers", "tous_risques"]);
+  });
+
+  it("RC formula matches the base RC estimate", () => {
+    const rc = estimateRcPremiumDzd(7);
+    const formulas = estimateAllFormulas(7);
+    const rcFormula = formulas[0];
+    expect(rcFormula.lowDzd).toBe(Math.round(rc.lowDzd / 100) * 100);
+    expect(rcFormula.highDzd).toBe(Math.round(rc.highDzd / 100) * 100);
+  });
+
+  it("RC + tiers is more expensive than RC alone", () => {
+    const formulas = estimateAllFormulas(7);
+    expect(formulas[1].lowDzd).toBeGreaterThan(formulas[0].lowDzd);
+    expect(formulas[1].highDzd).toBeGreaterThan(formulas[0].highDzd);
+  });
+
+  it("tous risques is more expensive than RC + tiers", () => {
+    const formulas = estimateAllFormulas(7);
+    expect(formulas[2].lowDzd).toBeGreaterThan(formulas[1].lowDzd);
+    expect(formulas[2].highDzd).toBeGreaterThan(formulas[1].highDzd);
+  });
+
+  it("each formula has covers and lowDzd < highDzd", () => {
+    const formulas = estimateAllFormulas(10);
+    for (const f of formulas) {
+      expect(f.covers.length).toBeGreaterThan(0);
+      expect(f.lowDzd).toBeLessThanOrEqual(f.highDzd);
+    }
+  });
+
+  it("tous risques has more covers than RC", () => {
+    const formulas = estimateAllFormulas(7);
+    expect(formulas[2].covers.length).toBeGreaterThan(formulas[0].covers.length);
+  });
+
+  it("FORMULA_KEYS exports the 3 formulas", () => {
+    expect(FORMULA_KEYS).toEqual(["rc", "rc_tiers", "tous_risques"]);
   });
 });

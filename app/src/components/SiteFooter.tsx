@@ -24,6 +24,7 @@ export async function SiteFooter() {
             <Link href="/essais" className="hover:text-slate-700 dark:hover:text-slate-200">{t("roadTests")}</Link>
             <Link href="/guides" className="hover:text-slate-700 dark:hover:text-slate-200">{t("guides")}</Link>
             <Link href="/equipement" className="hover:text-slate-700 dark:hover:text-slate-200">{t("equipment")}</Link>
+            <Link href="/assurance" className="hover:text-slate-700 dark:hover:text-slate-200">{t("insurance")}</Link>
           </div>
           <div className="flex flex-col gap-2">
             <Link href="/professionnels" className="hover:text-slate-700 dark:hover:text-slate-200">{t("professionals")}</Link>

@@ -28,6 +28,7 @@ export const CLIENT_NAMESPACES = [
   "ErrorPage",
   "Estimate",
   "Groups",
+  "Insurance",
   "IslamicFinancing",
   "LaunchNotice",
   "Listing",
