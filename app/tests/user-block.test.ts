@@ -20,6 +20,10 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/auth-server/current-user", () => ({ getCurrentUser: () => getCurrentUser() }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: (...a: unknown[]) => checkRateLimit(...a) }));
 vi.mock("@/lib/prisma-errors", () => ({ isUniqueViolation: (...a: unknown[]) => isUniqueViolation(...a) }));
+// Une erreur inattendue est signalée à l'équipe par un import paresseux lancé SANS être attendu (api-route.ts). Non
+// doublé, il se terminait parfois après la fin de l'environnement de test (EnvironmentTeardownError en CI).
+const reportServerError = vi.fn();
+vi.mock("@/lib/server-error-alerts", () => ({ reportServerError: (...a: unknown[]) => reportServerError(...a) }));
 
 import { POST, DELETE } from "@/app/api/users/[id]/block/route";
 
@@ -99,6 +103,7 @@ describe("POST /api/users/[id]/block", () => {
     isUniqueViolation.mockReturnValue(false);
     const res = await POST(request(), params());
     expect(res.status).toBe(500);
+    await vi.waitFor(() => expect(reportServerError).toHaveBeenCalledOnce());
   });
 });
 

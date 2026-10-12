@@ -19,6 +19,10 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/auth-server/current-user", () => ({ getCurrentUser: () => getCurrentUser() }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: (...a: unknown[]) => checkRateLimit(...a) }));
 vi.mock("@/lib/listing-access", () => ({ canManageListing: (...a: unknown[]) => canManageListing(...a) }));
+// Une erreur inattendue est signalée à l'équipe par un import paresseux lancé SANS être attendu (api-route.ts). Non
+// doublé, il se terminait parfois après la fin de l'environnement de test (EnvironmentTeardownError en CI).
+const reportServerError = vi.fn();
+vi.mock("@/lib/server-error-alerts", () => ({ reportServerError: (...a: unknown[]) => reportServerError(...a) }));
 
 import { PATCH } from "@/app/api/pro/prospects/[conversationId]/route";
 
@@ -121,5 +125,6 @@ describe("PATCH /api/pro/prospects/[conversationId]", () => {
     upsert.mockRejectedValue(new Error("connection lost"));
     const res = await PATCH(request({ status: "PERDU" }), params());
     expect(res.status).toBe(500);
+    await vi.waitFor(() => expect(reportServerError).toHaveBeenCalledOnce());
   });
 });
