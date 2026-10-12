@@ -89,7 +89,7 @@ export async function deleteStoredFile(storedPath: string): Promise<void> {
       return;
     }
     if (storedPath.startsWith("/uploads/")) {
-      await unlink(path.join(process.cwd(), "public", storedPath));
+      await unlink(path.join(uploadsRoot(), storedPath.slice("/uploads/".length)));
     }
   } catch {
     // volontairement silencieux au-delà du log interne de deleteObject —
