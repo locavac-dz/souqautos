@@ -81,7 +81,9 @@ test.describe("Lot 158 : encart pro sur la fiche annonce", () => {
     await buyer.page.goto(`/fr/annonce/${listing.id}`);
     // L'encart pro affiche le nom commercial et un lien « Voir les N annonces » vers la vitrine /pro/<accountId>
     // (libellé Pro.proEncartViewAll ; le nombre varie, d'où la correspondance partielle ci-dessous).
-    const encartLink = buyer.page.getByRole("link", { name: /Voir les/ });
+    // Le lien est identifié par sa destination : un autre lien de la fiche (« Voir les annonces du modèle »)
+    // porte aussi un libellé « Voir les… », ce qui rendait le sélecteur par le seul libellé ambigu.
+    const encartLink = buyer.page.locator(`a[href*="/pro/${pro.accountId}"]`).filter({ hasText: /Voir les/ });
     await expect(encartLink).toBeVisible();
     await expect(encartLink).toHaveAttribute("href", new RegExp(`/pro/${pro.accountId}`));
   });

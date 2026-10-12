@@ -121,10 +121,12 @@ export async function SiteHeader({
 
   return (
     <header className="border-b border-slate-200 dark:border-slate-700 dark:bg-slate-900">
-      <div className="relative mx-auto max-w-6xl px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-3 shrink-0">
-          <SiteLogoMark className="h-11 w-11 shrink-0" />
-          <SiteWordMark className="text-2xl" />
+      {/* Serré sous 640 px : en arabe (libellés plus larges), la rangée logo + menu + langue débordait de la fenêtre
+          à 375 px (et plus encore à 320 px), d'où un défilement horizontal de toute la page. */}
+      <div className="relative mx-auto max-w-6xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-4">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <SiteLogoMark className="h-10 w-10 max-[359px]:h-9 max-[359px]:w-9 sm:h-11 sm:w-11 shrink-0" />
+          <SiteWordMark className="text-xl max-[359px]:text-lg sm:text-2xl" />
         </Link>
 
         {/* Pas d'overflow-hidden ici : même limité à l'axe horizontal (overflow-x-hidden), le CSS force alors
@@ -134,7 +136,7 @@ export async function SiteHeader({
 
         <MobileMenuToggle menuLabel={tNav("menu")}>{mobileNav}</MobileMenuToggle>
 
-        <div className="flex items-center gap-2 shrink-0 ltr:ml-auto rtl:mr-auto">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0 ltr:ml-auto rtl:mr-auto">
           {user && <NotificationBell initialCount={unreadNotificationsCount} />}
           <ThemeToggle />
           <LocaleSwitcher />
