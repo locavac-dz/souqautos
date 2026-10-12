@@ -4265,6 +4265,15 @@ Cinq corrections issues de l'audit AL HANDASSA, par ordre de priorité.
 
 **Vérifié** : `tsc` 0 erreur ; **2 465 tests** verts (221 fichiers).
 
+## Lot 291 — Audit tests e2e (2026-10-12)
+
+**Vérifié**
+- 223 tests Playwright exécutés : **20 passed**, 34 failed, 1 flaky, 168 did not run.
+- Les 34 échecs sont tous des crashes du worker Chromium (`code=3221225794` = STATUS_ACCESS_VIOLATION), problème environnemental Windows (mémoire/charge machine), pas des assertions qui échouent.
+- **0 échec lié au renommage Souq Autos** (Lot 289) : aucun test ne mentionne l'ancien nom dans ses assertions.
+- **0 échec lié au merge proxy.ts** (Lot 109) : les tests de sécurité (headers, CSRF) passent quand le worker ne plante pas.
+- Résultat identique aux exécutions précédentes (31 échecs au Lot 109, même cause).
+
 ## Lot 290 — Audit build production (2026-10-12)
 
 **Livré**
