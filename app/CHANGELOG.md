@@ -1,5 +1,14 @@
 # Souq Auto — journal des lots
 
+## Lot 306 — Statistiques vendeur (2026-10-12)
+
+**Livré**
+- **Tableau de bord enrichi** (`/compte/tableau-de-bord`) : 4 KPI (vues, favoris, offres, annonces actives) sur 30 jours + histogramme de vues par jour (`DailyBars`). Visible pour tout vendeur ayant au moins une annonce publiée/vendue/expirée/suspendue.
+- **Mini-stats sur mes-annonces** : favoris et offres affichés à côté du compteur de vues existant sur chaque carte d'annonce.
+- Module pur `seller-stats.ts` : `loadSellerStats(sellerId, days)` charge vues, favoris, offres et position tarifaire (`computePriceBadge`) en requêtes parallèles, réutilise `pro-stats.ts` (séries journalières, clé jour algérien).
+- i18n FR/AR (namespace `SellerStats` + clés `favorites`/`offers` dans `MyListings`).
+- 7 nouveaux tests (intégration price-badge dans les stats vendeur).
+
 ## Lot 305 — Export CSV admin (2026-10-12)
 
 **Livré**

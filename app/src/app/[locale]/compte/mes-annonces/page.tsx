@@ -111,6 +111,16 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
     skip,
     take: MY_LISTINGS_PAGE_SIZE,
   });
+  const listingIds = listings.map((l) => l.id);
+  const [favoritesByListing, offersByListing] = listings.length
+    ? await Promise.all([
+        prisma.favorite.groupBy({ by: ["listingId"], where: { listingId: { in: listingIds } }, _count: { _all: true } }),
+        prisma.offer.groupBy({ by: ["listingId"], where: { listingId: { in: listingIds } }, _count: { _all: true } }),
+      ])
+    : [[], []];
+  const favsMap = new Map(favoritesByListing.map((r) => [r.listingId, r._count._all]));
+  const offersMap = new Map(offersByListing.map((r) => [r.listingId, r._count._all]));
+
   // Indicateurs de qualité de toutes les photos des annonces de la page, sans leurs autres champs.
   const qualityRows = listings.length
     ? await prisma.listingPhoto.findMany({ where: { listingId: { in: listings.map((l) => l.id) } }, select: { listingId: true, qualityFlags: true } })
@@ -195,6 +205,12 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
                         </span>
                       )}
                       <span>{t("views", { count: listing.views })}</span>
+                      {(favsMap.get(listing.id) ?? 0) > 0 && (
+                        <span>{t("favorites", { count: favsMap.get(listing.id)! })}</span>
+                      )}
+                      {(offersMap.get(listing.id) ?? 0) > 0 && (
+                        <span>{t("offers", { count: offersMap.get(listing.id)! })}</span>
+                      )}
                     </div>
                     {proAccount && (
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

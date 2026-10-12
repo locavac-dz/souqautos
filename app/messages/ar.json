@@ -141,6 +141,14 @@
     "activityLink": "نشاطي",
     "offresLink": "عروضي"
   },
+  "SellerStats": {
+    "sectionTitle": "إحصائياتك (آخر 30 يومًا)",
+    "views": "المشاهدات",
+    "favorites": "المفضلة",
+    "offers": "العروض",
+    "activeListings": "الإعلانات النشطة",
+    "viewsChart": "المشاهدات يوميًا"
+  },
   "Footer": {
     "group": "منصة تابعة لـ INGENICA CIVIL EURL",
     "browseBrands": "جميع الماركات",
@@ -459,7 +467,9 @@
     "photoQualityTooBright": "صورة فاتحة جدًا (تعرض مفرط للضوء)",
     "photoQualityNearSolidColor": "صورة شبه أحادية اللون (تفاصيل قليلة مرئية)",
     "photoQualityAction": "تعديل الصور",
-    "statsAction": "الإحصائيات"
+    "statsAction": "الإحصائيات",
+    "favorites": "{count} مفضلة",
+    "offers": "{count} عروض"
   },
   "ListingStats": {
     "title": "إحصائيات الإعلان",

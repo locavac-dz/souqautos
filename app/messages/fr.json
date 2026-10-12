@@ -141,6 +141,14 @@
     "activityLink": "Mon activité",
     "offresLink": "Mes offres"
   },
+  "SellerStats": {
+    "sectionTitle": "Vos statistiques (30 derniers jours)",
+    "views": "Vues",
+    "favorites": "Favoris",
+    "offers": "Offres",
+    "activeListings": "Annonces actives",
+    "viewsChart": "Vues par jour"
+  },
   "Footer": {
     "group": "Une plateforme INGENICA CIVIL EURL",
     "browseBrands": "Toutes les marques",
@@ -459,7 +467,9 @@
     "photoQualityTooBright": "photo trop claire (surexposée)",
     "photoQualityNearSolidColor": "photo quasiment unie (peu de détails visibles)",
     "photoQualityAction": "Modifier les photos",
-    "statsAction": "Statistiques"
+    "statsAction": "Statistiques",
+    "favorites": "{count} favoris",
+    "offers": "{count} offres"
   },
   "ListingStats": {
     "title": "Statistiques de l'annonce",

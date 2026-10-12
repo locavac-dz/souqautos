@@ -9,6 +9,8 @@ import { PhoneVerificationStatus } from "@/components/PhoneVerificationStatus";
 import { IdentityVerificationStatus } from "@/components/IdentityVerificationStatus";
 import { OwnResponsiveness } from "@/components/OwnResponsiveness";
 import { getSellerResponsiveness } from "@/lib/seller-responsiveness-service";
+import { loadSellerStats } from "@/lib/seller-stats";
+import { DailyBars } from "@/components/DailyBars";
 
 export default async function DashboardPage() {
   const locale = await getLocale();
@@ -20,6 +22,9 @@ export default async function DashboardPage() {
 
   const t = await getTranslations("Dashboard");
   const tNav = await getTranslations("Nav");
+
+  const tStats = await getTranslations("SellerStats");
+  const stats = await loadSellerStats(user.id, 30);
 
   const isPro = user.role === "PROFESSIONNEL" || user.role === "MODERATEUR" || user.role === "ADMIN";
   const latestIdentityRequest = isPro && !user.identityVerifiedAt
@@ -87,6 +92,24 @@ export default async function DashboardPage() {
 
       <OwnResponsiveness responsiveness={await getSellerResponsiveness(user.id)} />
 
+      {(stats.totalViews > 0 || stats.activeListings > 0) && (
+        <div className="mt-6">
+          <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3">{tStats("sectionTitle")}</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <KpiCard label={tStats("views")} value={stats.totalViews} />
+            <KpiCard label={tStats("favorites")} value={stats.totalFavorites} />
+            <KpiCard label={tStats("offers")} value={stats.totalOffers} />
+            <KpiCard label={tStats("activeListings")} value={stats.activeListings} />
+          </div>
+          {stats.viewsSeries.some((p) => p.value > 0) && (
+            <div className="mt-4 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{tStats("viewsChart")}</p>
+              <DailyBars points={stats.viewsSeries} label={tStats("viewsChart")} locale={locale} barClass="bg-sky-500" />
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mt-6 flex items-center gap-4 flex-wrap">
         <Link
           href="/compte/mes-annonces"
@@ -131,6 +154,15 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="px-4 py-3 flex justify-between text-sm">
       <span className="text-slate-500 dark:text-slate-400">{label}</span>
       <span className="text-slate-900 dark:text-slate-100 font-medium">{value}</span>
+    </div>
+  );
+}
+
+function KpiCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 text-center">
+      <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">{value}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{label}</p>
     </div>
   );
 }
