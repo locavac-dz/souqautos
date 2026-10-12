@@ -9,6 +9,8 @@ import { listingEditSchema } from "@/lib/validation/listing";
 import { savePhoto, deleteStoredFile, PhotoValidationError, type SavedPhoto } from "@/lib/uploads";
 import { computeListingContentHash, refreshListingFraudScore } from "@/lib/fraud-signals";
 import { analyzeAndStoreListingFraud } from "@/lib/fraud-ai";
+import { analyzeListingPhotos } from "@/lib/photo-ai";
+import { computeAndStorePriceAiEstimate } from "@/lib/price-ai";
 import { notifyStaffOfPending } from "@/lib/staff-alerts";
 import { tryAutoPublish } from "@/lib/auto-publish";
 import { validateCatalogueRefs } from "@/lib/listing-catalogue-refs";
@@ -152,6 +154,7 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }: { param
         accidented: data.accidented,
         controltechniqueExpiry: data.controltechniqueExpiry ?? null,
         assuranceExpiry: data.assuranceExpiry ?? null,
+        vin: data.vin ?? null,
         wilayaId: data.wilayaId,
         communeId: data.communeId ?? null,
         status: "EN_ATTENTE",
@@ -170,9 +173,8 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }: { param
   // de fichier ne doit jamais annuler une mutation déjà appliquée en base.
   await Promise.all(photosToDelete.map((p) => deleteStoredFile(p.path)));
 
-  // Lot 272 — une annonce modifiée revient dans la file : l'équipe est prévenue, le score anti-fraude et l'analyse IA
-  // sont recalculés sur le NOUVEAU contenu (ils ne l'étaient pas : l'ancien score restait affiché), puis la
-  // publication automatique s'applique aux mêmes conditions qu'à la soumission.
+  // Lot 272/296 — une annonce modifiée revient dans la file : l'équipe est prévenue, le score anti-fraude, l'analyse IA
+  // du texte ET des photos, et l'estimation de prix IA sont recalculés sur le NOUVEAU contenu.
   after(async () => {
     await notifyStaffOfPending("listing");
     await refreshListingFraudScore(id);
@@ -185,6 +187,19 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }: { param
       mileage: data.mileage ?? null,
     });
     await tryAutoPublish(id);
+    const currentPhotos = await prisma.listingPhoto.findMany({
+      where: { listingId: id },
+      select: { id: true, path: true },
+    });
+    await analyzeListingPhotos(currentPhotos);
+    await computeAndStorePriceAiEstimate(id, {
+      brandId: data.brandId ?? null,
+      modelId: data.modelId ?? null,
+      year: data.year,
+      mileage: data.mileage ?? null,
+      condition: data.condition,
+      fuelType: data.fuelType ?? null,
+    });
   });
 
   return NextResponse.json({ status: "EN_ATTENTE" });

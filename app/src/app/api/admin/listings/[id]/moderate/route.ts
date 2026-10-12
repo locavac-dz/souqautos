@@ -9,9 +9,17 @@ import { cancelPendingOrdersForListing } from "@/lib/payment-fulfillment";
 import { broadcastPublication, notifySellerOfModeration, publicationData } from "@/lib/listing-publication";
 import { CLEAR_ASSIGNMENT } from "@/lib/moderation-assignment";
 
+const checklistSchema = z.object({
+  photosMatch: z.boolean(),
+  descriptionAccurate: z.boolean(),
+  priceReasonable: z.boolean(),
+  noFraudSuspected: z.boolean(),
+});
+
 const bodySchema = z.object({
   action: z.enum(["approve", "reject", "suspend"]),
   reason: z.string().trim().max(500).optional(),
+  checklist: checklistSchema.optional(),
 });
 
 export const POST = apiHandler(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -31,6 +39,16 @@ export const POST = apiHandler(async (request: NextRequest, { params }: { params
   const transition = computeModerationTransition(listing.status, action, body.reason);
   if (!transition.ok) {
     return NextResponse.json({ error: transition.error }, { status: 400 });
+  }
+
+  if (action === "approve") {
+    if (!body.checklist) {
+      return NextResponse.json({ error: "checklist_required" }, { status: 400 });
+    }
+    const cl = body.checklist;
+    if (!cl.photosMatch || !cl.descriptionAccurate || !cl.priceReasonable || !cl.noFraudSuspected) {
+      return NextResponse.json({ error: "checklist_incomplete" }, { status: 400 });
+    }
   }
 
   const now = new Date();
@@ -80,6 +98,7 @@ export const POST = apiHandler(async (request: NextRequest, { params }: { params
       previousStatus: listing.status,
       newStatus: transition.newStatus,
       reason: body.reason ?? null,
+      ...(body.checklist ? { checklist: body.checklist } : {}),
     },
   });
 

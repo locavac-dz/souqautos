@@ -379,6 +379,11 @@ model Listing {
   // Lot 178 — type de carrosserie et prix négociable.
   bodyType               BodyType?
   negotiable             Boolean          @default(false)
+  // Lot 296 — numéro d'identification du véhicule (ISO 3779, 17 caractères).
+  // Optionnel : tous les vendeurs ne le connaissent pas ou ne souhaitent pas le
+  // communiquer. Validé côté serveur (format + chiffre de contrôle). Unicité
+  // partielle : deux annonces ACTIVES ne peuvent pas porter le même VIN.
+  vin                    String?
   wilayaId     Int
   wilaya       Wilaya           @relation(fields: [wilayaId], references: [id])
   // Lot 87 — précision géographique optionnelle sous la wilaya (docs/ARCHITECTURE.md
@@ -473,6 +478,8 @@ model Listing {
   @@index([generationId])
   // Lot 246 — tri de la file de modération par risque décroissant.
   @@index([status, fraudScore(sort: Desc)])
+  // Lot 296 — détection de VIN dupliqué (annonces actives uniquement).
+  @@index([vin])
   contactEvents    ContactEvent[]
   callbackRequests CallbackRequest[]
 }

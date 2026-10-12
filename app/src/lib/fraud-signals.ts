@@ -18,6 +18,7 @@ export type FraudSignals = {
   sellerRejectionHistory: boolean;
   duplicateContent: boolean;
   vehicleInconsistency: boolean;
+  duplicateVin: boolean;
 };
 
 // Lot 84 — "spam" (§16 : "répétition de contenu ... pour un même vendeur") :
@@ -108,7 +109,23 @@ export function detectVehicleInconsistency(
   return false;
 }
 
-// Lot 246 — score composite 0-100 : pondération empirique des 5 signaux.
+// Lot 296 — même VIN sur une autre annonce ACTIVE (n'importe quel vendeur,
+// y compris soi-même : deux annonces pour le même véhicule physique est
+// toujours un signal). Seuls les statuts « vivants » comptent : un VIN sur
+// une annonce refusée/vendue/expirée ne bloque pas une nouvelle publication.
+import type { ListingStatus } from "@prisma/client";
+const ACTIVE_STATUSES_FOR_VIN: ListingStatus[] = ["EN_ATTENTE", "PUBLIEE", "SUSPENDUE", "BROUILLON"];
+
+export function detectDuplicateVin(
+  ownListingId: string,
+  vin: string | null,
+  otherActiveVins: { id: string; vin: string | null }[]
+): boolean {
+  if (!vin) return false;
+  return otherActiveVins.some((l) => l.id !== ownListingId && l.vin === vin);
+}
+
+// Lot 246 — score composite 0-100 : pondération empirique des 6 signaux.
 // duplicatePhoto (40) et duplicateContent (35) sont les plus forts car ils
 // impliquent nécessairement un AUTRE compte — une erreur de bonne foi n'existe
 // pas. lowPrice (20) et vehicleInconsistency (20) sont modérés : légitimes si
@@ -118,6 +135,7 @@ export function detectVehicleInconsistency(
 export const FRAUD_SIGNAL_WEIGHTS = {
   duplicatePhoto: 40,
   duplicateContent: 35,
+  duplicateVin: 30,
   lowPrice: 20,
   vehicleInconsistency: 20,
   sellerRejectionHistory: 15,
@@ -147,6 +165,7 @@ export async function refreshListingFraudScore(listingId: string): Promise<void>
       wilayaId: true,
       condition: true,
       contentHash: true,
+      vin: true,
       photos: { select: { sha256: true } },
     },
   });
@@ -156,6 +175,7 @@ export async function refreshListingFraudScore(listingId: string): Promise<void>
   const signals = signalsMap.get(listingId) ?? {
     duplicatePhoto: false,
     duplicateContent: false,
+    duplicateVin: false,
     lowPrice: false,
     vehicleInconsistency: false,
     sellerRejectionHistory: false,
@@ -178,6 +198,7 @@ type ListingForFraudSignals = {
   wilayaId: number;
   condition: "NEUF" | "OCCASION";
   contentHash: string;
+  vin: string | null;
   photos: { sha256: string }[];
 };
 
@@ -205,8 +226,9 @@ export async function getFraudSignalsForListings(
     }
   }
   const sellerIds = Array.from(new Set(listings.map((l) => l.sellerId)));
+  const allVins = Array.from(new Set(listings.map((l) => l.vin).filter((v): v is string => v !== null && v !== "")));
 
-  const [matchingPhotos, matchingContent, rowsByPairEntries, rejectionGroups] = await Promise.all([
+  const [matchingPhotos, matchingContent, rowsByPairEntries, rejectionGroups, matchingVins] = await Promise.all([
     allHashes.length === 0
       ? Promise.resolve([])
       : prisma.listingPhoto.findMany({
@@ -230,6 +252,12 @@ export async function getFraudSignalsForListings(
           by: ["sellerId"],
           where: { sellerId: { in: sellerIds }, status: { in: ["REFUSEE", "SUSPENDUE"] } },
           _count: { _all: true },
+        }),
+    allVins.length === 0
+      ? Promise.resolve([])
+      : prisma.listing.findMany({
+          where: { vin: { in: allVins }, status: { in: ACTIVE_STATUSES_FOR_VIN } },
+          select: { id: true, vin: true },
         }),
   ]);
 
@@ -269,12 +297,15 @@ export async function getFraudSignalsForListings(
       currentYear
     );
 
+    const duplicateVin = detectDuplicateVin(listing.id, listing.vin, matchingVins);
+
     results.set(listing.id, {
       duplicatePhoto,
       lowPrice,
       sellerRejectionHistory,
       duplicateContent,
       vehicleInconsistency,
+      duplicateVin,
     });
   }
 

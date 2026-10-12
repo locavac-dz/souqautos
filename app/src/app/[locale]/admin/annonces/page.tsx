@@ -57,6 +57,7 @@ export default async function AdminListingsPage() {
       wilayaId: l.wilayaId,
       condition: l.condition,
       contentHash: l.contentHash,
+      vin: l.vin,
       photos: l.photos,
     }))
   );
@@ -116,11 +117,17 @@ export default async function AdminListingsPage() {
                           {t("fraudScore")}&nbsp;{listing.fraudScore}/100
                         </span>
                       )}
+                      {listing.vin && (
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          VIN : <span className="font-mono font-medium text-slate-700 dark:text-slate-300">{listing.vin}</span>
+                        </p>
+                      )}
                       {(signals?.duplicatePhoto ||
                         signals?.lowPrice ||
                         signals?.sellerRejectionHistory ||
                         signals?.duplicateContent ||
-                        signals?.vehicleInconsistency) && (
+                        signals?.vehicleInconsistency ||
+                        signals?.duplicateVin) && (
                         <div className="mt-1 flex flex-wrap gap-2">
                           {signals.duplicatePhoto && (
                             <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
@@ -145,6 +152,11 @@ export default async function AdminListingsPage() {
                           {signals.vehicleInconsistency && (
                             <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
                               {t("fraudSignalVehicleInconsistency")}
+                            </span>
+                          )}
+                          {signals.duplicateVin && (
+                            <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+                              {t("fraudSignalDuplicateVin")}
                             </span>
                           )}
                         </div>

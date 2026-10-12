@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { algerianPhoneRegex } from "./phone";
 import { INT4_MAX } from "./int-bounds";
+import { vinField } from "./vin";
 
 export const listingCategories = [
   "VOITURE",
@@ -52,6 +53,7 @@ const listingBaseSchema = z.object({
   wilayaId: z.number().int().positive().max(INT4_MAX),
   communeId: z.number().int().positive().max(INT4_MAX).optional(),
   phone: z.string().trim().regex(algerianPhoneRegex).optional(),
+  vin: vinField,
 });
 
 // Lot 72/73 — équipements, ajoutés après coup (pas dans listingBaseSchema

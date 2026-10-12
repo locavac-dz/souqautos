@@ -108,6 +108,7 @@ export function ListingEditForm({
   const [condition, setCondition] = useState<ListingCondition>(listing.condition);
   const [firstHand, setFirstHand] = useState(listing.firstHand);
   const [accidented, setAccidented] = useState(listing.accidented);
+  const [vin, setVin] = useState(listing.vin ?? "");
   const [wilayaId, setWilayaId] = useState<number>(listing.wilayaId);
   const [communeId, setCommuneId] = useState<number | undefined>(listing.communeId ?? undefined);
   const [equipmentIds, setEquipmentIds] = useState<number[]>(listing.equipments.map((e) => e.equipmentId));
@@ -195,6 +196,7 @@ export function ListingEditForm({
         accidented,
         wilayaId,
         communeId,
+        vin: vin.trim() || undefined,
         equipmentIds,
         existingPhotoIds: existingPhotos.map((p) => p.id),
       })
@@ -594,6 +596,24 @@ export function ListingEditForm({
         <input type="checkbox" checked={accidented} onChange={(e) => setAccidented(e.target.checked)} />
         {tWizard("accidented")}
       </label>
+
+      {hasVehicleFields(category) && (
+        <div>
+          <label htmlFor="edit-vin" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            {tWizard("vin")}
+          </label>
+          <p className="text-xs text-slate-500 mb-1">{tWizard("vinHint")}</p>
+          <input
+            id="edit-vin"
+            type="text"
+            maxLength={17}
+            value={vin}
+            onChange={(e) => setVin(e.target.value.toUpperCase().replace(/\s/g, ""))}
+            placeholder="VF1AB12C345678901"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+          />
+        </div>
+      )}
 
       <div>
         <p className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{tWizard("equipmentsTitle")}</p>

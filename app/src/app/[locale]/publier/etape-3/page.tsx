@@ -207,6 +207,21 @@ export default function Step3Page() {
         </>
       )}
 
+      {hasVehicleFields(data.category) && (
+        <label className="block">
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t("vin")}</span>
+          <p className="text-xs text-slate-500 mb-1">{t("vinHint")}</p>
+          <input
+            type="text"
+            maxLength={17}
+            value={data.vin ?? ""}
+            onChange={(e) => setData({ vin: e.target.value.toUpperCase().replace(/\s/g, "") || undefined })}
+            placeholder="VF1AB12C345678901"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+          />
+        </label>
+      )}
+
     </StepShell>
   );
 }

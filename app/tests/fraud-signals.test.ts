@@ -181,6 +181,7 @@ describe("computeFraudScore", () => {
   const noSignals = {
     duplicatePhoto: false,
     duplicateContent: false,
+    duplicateVin: false,
     lowPrice: false,
     vehicleInconsistency: false,
     sellerRejectionHistory: false,
@@ -204,10 +205,10 @@ describe("computeFraudScore", () => {
   });
 
   it("is capped at 100 even when the raw sum would exceed it", () => {
-    // All five signals sum to 40+35+20+20+15 = 130 > 100.
     const allSignals = {
       duplicatePhoto: true,
       duplicateContent: true,
+      duplicateVin: true,
       lowPrice: true,
       vehicleInconsistency: true,
       sellerRejectionHistory: true,

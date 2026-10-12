@@ -499,6 +499,15 @@ export default async function ListingDetailPage({
                   value={new Intl.DateTimeFormat(locale === "ar" ? "ar-DZ" : "fr-DZ", { dateStyle: "long" }).format(listing.assuranceExpiry)}
                 />
               )}
+              {listing.vin && (
+                <div className="col-span-2 flex items-center gap-2">
+                  <DetailRow label={tListing("vin")} value={listing.vin} />
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3 w-3 fill-current"><path d="M6.2 11.7 2.9 8.4l1.1-1.1 2.2 2.2 5.8-5.8 1.1 1.1z" /></svg>
+                    {tListing("vinVerified")}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

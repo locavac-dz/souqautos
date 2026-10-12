@@ -1,5 +1,17 @@
 # Souq Auto — journal des lots
 
+## Lot 296 — Vérification d'annonces renforcée (2026-10-12)
+
+**Livré**
+- Champ VIN (numéro de châssis, ISO 3779) optionnel dans la publication et l'édition, avec validation du check digit et normalisation automatique.
+- Signal anti-fraude `duplicateVin` (poids 30) : détection de VIN identique sur toute autre annonce active, quel que soit le vendeur.
+- Badge rouge « VIN dupliqué » visible dans la file de modération admin.
+- Badge vert « VIN fourni » sur la fiche publique de l'annonce.
+- Checklist de modération obligatoire avant approbation : photos conformes, description exacte, prix cohérent, absence de suspicion de fraude — les 4 cases doivent être cochées.
+- La checklist est validée côté serveur (erreur `checklist_required` / `checklist_incomplete`) et enregistrée dans le journal d'audit.
+- Correction d'un manque : la ré-analyse IA des photos et la ré-estimation du prix sont désormais relancées à chaque édition d'annonce (pas seulement à la création).
+- Migration Prisma appliquée (`vin TEXT` + index), i18n FR/AR complet, 12 nouveaux tests (VIN validation, duplicate detection, checklist).
+
 ## Lot 295 — Notifications temps réel + alertes prix favoris (2026-10-12)
 
 **Livré**

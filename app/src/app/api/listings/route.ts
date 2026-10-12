@@ -128,6 +128,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       accidented: data.accidented,
       controltechniqueExpiry: data.controltechniqueExpiry ?? null,
       assuranceExpiry: data.assuranceExpiry ?? null,
+      vin: data.vin ?? null,
       wilayaId: data.wilayaId,
       communeId: data.communeId ?? null,
       // Lot 7 : file de modération — publication seulement après approbation admin (§39).

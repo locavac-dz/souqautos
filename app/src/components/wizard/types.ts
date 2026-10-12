@@ -43,6 +43,7 @@ export type WizardData = {
   communeId?: number;
   communeName?: string;
   phone?: string;
+  vin?: string;
 };
 
 export const WIZARD_STEPS = [
