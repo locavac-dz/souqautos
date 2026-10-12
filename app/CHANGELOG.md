@@ -1,5 +1,16 @@
 # Souq Auto — journal des lots
 
+## Lot 297 — Partenariat Assurance Niveau 1 (2026-10-12)
+
+**Livré**
+- **Rappels d'expiration des documents** : le cron nightly envoie une notification (email + push + in-app) au vendeur quand l'assurance ou le contrôle technique de son véhicule expire dans les 30 jours.
+- Deux nouveaux kinds de notification : `ASSURANCE_EXPIRING` et `CT_EXPIRING`.
+- Champs de suivi `assuranceExpiryReminderSentAt` et `ctExpiryReminderSentAt` sur Listing ; remis à null si le vendeur met à jour la date d'expiration correspondante (nouveau cycle de rappel).
+- Claim atomique avant envoi (même patron anti-doublon que les rappels d'expiration d'annonce).
+- **Estimation de prime RC** affichée sur la fiche de l'annonce : fourchette basse/haute par puissance fiscale, barème réglementé 2026 (post-revalorisation de 30 % en 2025, source CNA).
+- Fonction pure `estimateRcPremiumDzd` (5 tranches de puissance fiscale), même patron que `computeVignetteDzd`.
+- Migration Prisma appliquée, i18n FR/AR complet, 16 nouveaux tests (estimation RC + sweep documents).
+
 ## Lot 296 — Vérification d'annonces renforcée (2026-10-12)
 
 **Livré**

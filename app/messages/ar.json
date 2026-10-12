@@ -386,6 +386,9 @@
     "vignetteAmount": "{value} دج / سنة",
     "vignetteExempt": "معفاة (كهربائية/هجينة)",
     "vignetteNote": "تقدير بناءً على القوة الجبائية وسنة المركبة — تعريفة 2026، سيارات سياحية فقط.",
+    "rcLabel": "تأمين المسؤولية المدنية التقديري",
+    "rcRange": "{low} إلى {high} دج / سنة",
+    "rcNote": "نطاق تقديري لقسط التأمين الإجباري (التعريفة المنظمة 2026، سيارة سياحية، بدون حوادث). القسط الفعلي يختلف حسب شركة التأمين والولاية ومعامل المكافأة-العقوبة.",
     "equipmentsTitle": "التجهيزات",
     "priceHistoryTitle": "سجل الأسعار",
     "priceHistoryInitial": "السعر الأولي",
@@ -1453,7 +1456,14 @@
     "counterDeclinedBody": "رفض المشتري عرضك المضاد للإعلان « {title} ».",
     "counterDeclinedLink": "عرض عروضي على سوق أوتو",
     "pushGroupMessageTitle": "رسالة مجموعة جديدة",
-    "pushGroupMessageBody": "{senderName} في « {groupName} »"
+    "pushGroupMessageBody": "{senderName} في « {groupName} »",
+    "assuranceExpirySubject": "تأمين مركبتك سينتهي قريبًا — سوق أوتو",
+    "assuranceExpiryBody": "سينتهي تأمين المركبة في إعلانك « {title} » في {date}. تذكّر تجديده لإبقاء إعلانك محدّثًا.",
+    "assuranceExpiryBodyShort": "تأمين « {title} » ينتهي في {date}.",
+    "ctExpirySubject": "الفحص التقني لمركبتك سينتهي قريبًا — سوق أوتو",
+    "ctExpiryBody": "سينتهي الفحص التقني للمركبة في إعلانك « {title} » في {date}. تذكّر تجديده لإبقاء إعلانك محدّثًا.",
+    "ctExpiryBodyShort": "الفحص التقني لـ « {title} » ينتهي في {date}.",
+    "documentExpiryLink": "عرض إعلاني على سوق أوتو"
   },
   "Alerts": {
     "title": "تنبيهاتي",

@@ -9,6 +9,7 @@ import { sweepPendingTransferReminders, sweepSubscriptionExpiryReminders } from 
 import { sendWeeklyReportIfDue } from "@/lib/weekly-report";
 import { sweepOldErrorLogs } from "@/lib/error-log";
 import { takeMarketSnapshots, sweepOldSnapshots } from "@/lib/market-price-snapshot";
+import { sweepDocumentExpiryReminders } from "@/lib/document-expiry-reminder-sweep";
 import { safeEqual } from "@/lib/google-oauth";
 import { apiHandler } from "@/lib/api-route";
 
@@ -45,6 +46,8 @@ export const POST = apiHandler(async (req: NextRequest) => {
   // Lot 294 — snapshot hebdomadaire des prix du marché + purge > 24 mois.
   const marketSnapshots = await takeMarketSnapshots(now);
   const oldSnapshotsSwept = await sweepOldSnapshots(now);
+  // Lot 297 — rappels d'expiration des documents du véhicule (assurance et CT).
+  const documentReminders = await sweepDocumentExpiryReminders(now);
 
-  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept, marketSnapshots, oldSnapshotsSwept });
+  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept, marketSnapshots, oldSnapshotsSwept, documentReminders });
 });

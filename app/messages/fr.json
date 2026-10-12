@@ -386,6 +386,9 @@
     "vignetteAmount": "{value} DA / an",
     "vignetteExempt": "Exonéré (électrique/hybride)",
     "vignetteNote": "Estimation à partir de la puissance fiscale et de l'année du véhicule — barème 2026, véhicules de tourisme uniquement.",
+    "rcLabel": "Assurance RC estimée",
+    "rcRange": "{low} à {high} DA / an",
+    "rcNote": "Fourchette indicative de la prime RC obligatoire (barème réglementé 2026, véhicule de tourisme, sans sinistres). La prime réelle varie selon l'assureur, la wilaya et le bonus-malus.",
     "equipmentsTitle": "Équipements",
     "priceHistoryTitle": "Historique du prix",
     "priceHistoryInitial": "Prix initial",
@@ -1453,7 +1456,14 @@
     "counterDeclinedBody": "L'acheteur a refusé votre contre-offre pour l'annonce « {title} ».",
     "counterDeclinedLink": "Voir mes offres sur Souq Autos",
     "pushGroupMessageTitle": "Nouveau message de groupe",
-    "pushGroupMessageBody": "{senderName} dans « {groupName} »"
+    "pushGroupMessageBody": "{senderName} dans « {groupName} »",
+    "assuranceExpirySubject": "L'assurance de votre véhicule expire bientôt — Souq Autos",
+    "assuranceExpiryBody": "L'assurance du véhicule de votre annonce « {title} » expire le {date}. Pensez à la renouveler pour garder votre annonce à jour.",
+    "assuranceExpiryBodyShort": "L'assurance de « {title} » expire le {date}.",
+    "ctExpirySubject": "Le contrôle technique de votre véhicule expire bientôt — Souq Autos",
+    "ctExpiryBody": "Le contrôle technique du véhicule de votre annonce « {title} » expire le {date}. Pensez à le renouveler pour garder votre annonce à jour.",
+    "ctExpiryBodyShort": "Le CT de « {title} » expire le {date}.",
+    "documentExpiryLink": "Voir mon annonce sur Souq Autos"
   },
   "Alerts": {
     "title": "Mes alertes",

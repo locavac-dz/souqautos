@@ -421,6 +421,11 @@ model Listing {
   // l'expiration elle-même (aucun scheduler dans cette application). Remis à
   // null à chaque renouvellement (nouveau cycle d'expiration, cf. route renew).
   expiryReminderSentAt DateTime?
+  // Lot 297 — rappels d'expiration des documents du véhicule (assurance et CT).
+  // Distincts du rappel d'expiration de l'annonce elle-même (expiryReminderSentAt).
+  // Remis à null si le vendeur met à jour la date d'expiration correspondante.
+  assuranceExpiryReminderSentAt DateTime?
+  ctExpiryReminderSentAt        DateTime?
   // Lot 272 — renseigné quand la publication a été décidée par la règle automatique, jamais par un modérateur.
   autoPublishedAt      DateTime?
   // Lot 277 — prise en charge dans la file de modération (« pris en charge par X »), effacée à la décision.
@@ -1560,6 +1565,8 @@ enum NotificationKind {
   PRO_FOLLOWER_LISTING
   SUBSCRIPTION_EXPIRING
   FAVORITE_PRICE_DROP
+  ASSURANCE_EXPIRING
+  CT_EXPIRING
 }
 
 model UserNotification {

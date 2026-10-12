@@ -29,6 +29,7 @@ import { PhotoCredits } from "@/components/PhotoCredits";
 import { collectPhotoCredits } from "@/lib/photo-credit";
 import { estimatePrice } from "@/lib/price-estimation";
 import { computeVignetteDzd, vehicleAgeYears } from "@/lib/vignette";
+import { estimateRcPremiumDzd } from "@/lib/insurance-estimate";
 import { computePriceBadge } from "@/lib/price-badge";
 import { PRICE_BADGE_STYLE, PRICE_BADGE_KEY } from "@/lib/price-badge-style";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -250,6 +251,8 @@ export default async function ListingDetailPage({
         vehicleAgeYears: vehicleAgeYears(listing.year),
       })
     : null;
+
+  const rcEstimate = listing.fiscalPower ? estimateRcPremiumDzd(listing.fiscalPower) : null;
 
   const tFavorites = await getTranslations("Favorites");
   const tCompare = await getTranslations("Compare");
@@ -624,6 +627,16 @@ export default async function ListingDetailPage({
                   {vignetteDzd === 0 ? tListing("vignetteExempt") : tListing("vignetteAmount", { value: formatNumber(vignetteDzd, locale) })}
                 </p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{tListing("vignetteNote")}</p>
+              </div>
+            )}
+
+            {rcEstimate && (
+              <div className="mt-2 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400">{tListing("rcLabel")}</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  {tListing("rcRange", { low: formatNumber(rcEstimate.lowDzd, locale), high: formatNumber(rcEstimate.highDzd, locale) })}
+                </p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{tListing("rcNote")}</p>
               </div>
             )}
 

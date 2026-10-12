@@ -154,6 +154,10 @@ export const PATCH = apiHandler(async (request: NextRequest, { params }: { param
         accidented: data.accidented,
         controltechniqueExpiry: data.controltechniqueExpiry ?? null,
         assuranceExpiry: data.assuranceExpiry ?? null,
+        // Lot 297 — si le vendeur met à jour une date d'expiration de document,
+        // on remet le champ de suivi à null pour qu'un nouveau rappel puisse partir.
+        ...(data.assuranceExpiry !== undefined ? { assuranceExpiryReminderSentAt: null } : {}),
+        ...(data.controltechniqueExpiry !== undefined ? { ctExpiryReminderSentAt: null } : {}),
         vin: data.vin ?? null,
         wilayaId: data.wilayaId,
         communeId: data.communeId ?? null,
