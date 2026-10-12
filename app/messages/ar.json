@@ -874,6 +874,7 @@
     "navEquipement": "تجهيزات السيارة",
     "navEditorial": "الإيقاع التحريري",
     "navPressReviews": "قراءة في الصحافة",
+    "navModeration": "الإشراف الذكي",
     "navErrors": "الأخطاء",
     "statisticsTitle": "إحصائيات المنتج",
     "statSummaryConversations": "المحادثات",
@@ -885,7 +886,39 @@
     "statStatusBreakdownTitle": "توزيع الإعلانات حسب الحالة",
     "statTopBrandsTitle": "أفضل 5 ماركات (إعلانات منشورة)",
     "statTopWilayasTitle": "أفضل 5 ولايات (إعلانات منشورة)",
-    "statNoData": "لا توجد بيانات بعد."
+    "statNoData": "لا توجد بيانات بعد.",
+    "exportCsv": "تصدير CSV"
+  },
+  "AdminModeration": {
+    "title": "لوحة القيادة — الإشراف الذكي",
+    "subtitle": "نظرة عامة على نشاط الإشراف خلال آخر 30 يومًا.",
+    "kpiTotal": "إجمالي القرارات",
+    "kpiLast30": "آخر 30 يومًا",
+    "kpiAutoRate": "معدل النشر التلقائي",
+    "kpiAutoRateSub": "{auto} تلقائي · {human} يدوي",
+    "kpiAiSuspicion": "معدل الشك الذكي",
+    "kpiAiSuspicionSub": "إعلانات بها إشارات احتيال مكتشفة",
+    "kpiAvgTime": "متوسط مدة الإشراف",
+    "kpiAvgTimeValue": "{hours} س",
+    "kpiAvgTimeSub": "بين الإرسال والقرار البشري",
+    "approved": "موافق عليها",
+    "autoPublished": "نُشرت تلقائيًا",
+    "rejected": "مرفوضة",
+    "suspended": "معلّقة",
+    "weeklyTitle": "الإرسالات الأسبوعية",
+    "weeklyHelp": "{total} إعلان مُرسل خلال آخر 12 أسبوعًا",
+    "weeklyChartLabel": "{total} إرسال",
+    "fraudTitle": "توزيع درجات الاحتيال",
+    "fraudHelp": "توزيع الإعلانات المنشورة والمعلّقة حسب درجة الاحتيال",
+    "pendingQueue": "قائمة الانتظار",
+    "oldestPending": "الأقدم: {date}",
+    "viewQueue": "عرض الإعلانات المعلّقة",
+    "publishedFlagged": "منشورة بإشارات",
+    "publishedFlaggedHelp": "إعلانات منشورة بدرجة احتيال أكبر من 0",
+    "moderationSettings": "إعدادات الإشراف",
+    "moderationSettingsHelp": "الحدود، النشر التلقائي وإعدادات الذكاء الاصطناعي",
+    "viewSettings": "عرض الإعدادات",
+    "note": "الإحصائيات تغطي آخر 30 يومًا. تُعاد حسابات درجات الاحتيال أسبوعيًا بواسطة المسح الدوري."
   },
   "Report": {
     "reportListing": "الإبلاغ عن هذا الإعلان",
@@ -1618,7 +1651,8 @@
     "paginationLabel": "التنقل بين صفحات السجل",
     "previous": "السابق",
     "next": "التالي",
-    "pageOf": "الصفحة {page} / {totalPages}"
+    "pageOf": "الصفحة {page} / {totalPages}",
+    "exportCsv": "تصدير CSV"
   },
   "Payment": {
     "checkPayment": "التحقق من الدفع",

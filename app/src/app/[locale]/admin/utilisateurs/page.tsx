@@ -10,6 +10,7 @@ import { ResetTwoFactorButton } from "@/components/admin/ResetTwoFactorButton";
 import { isAccountLocked } from "@/lib/login-lockout";
 import { pageWindow, parseRequestedPage } from "@/lib/pagination";
 import { Pagination } from "@/components/search/Pagination";
+import { ExportCsvButton } from "@/components/ExportCsvButton";
 
 // Lot 279 (audit C4) — la liste des comptes était chargée en entier ; 50 par page, même mécanique que les listes publiques.
 const USERS_PAGE_SIZE = 50;
@@ -50,7 +51,10 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-6">{t("navUsers")} ({totalCount})</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("navUsers")} ({totalCount})</h1>
+        <ExportCsvButton href="/api/admin/export/users" label={t("exportCsv")} />
+      </div>
       <div className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700">
         {users.map((user) => {
           const locked = isAccountLocked(user.lockedUntil, now);
