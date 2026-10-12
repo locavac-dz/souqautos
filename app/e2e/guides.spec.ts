@@ -132,8 +132,8 @@ test.describe("droits d'accès et validation", () => {
     const clio = await modelId("Renault", "Clio");
     const payload = guidePayload({ title: `Guide de test E2E droits ${Date.now()}`, modelId: clio });
 
-    // Sans compte, puis avec un compte ordinaire : refusé (403), rien n'est créé.
-    expect((await request.post("/api/admin/blog", { data: payload })).status()).toBe(403);
+    // Sans compte : 401 (non authentifié, lot 279) ; avec un compte ordinaire : 403 (rôle insuffisant). Rien n'est créé.
+    expect((await request.post("/api/admin/blog", { data: payload })).status()).toBe(401);
     const member = await browser.newContext();
     const memberPage = await member.newPage();
     await registerAndLogin(memberPage, "fr", uniqueAccount("membre"));
