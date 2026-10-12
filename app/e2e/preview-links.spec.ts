@@ -142,7 +142,7 @@ test.describe("un lien n'ouvre que CE contenu", () => {
       expect((await stranger.request.get(`/fr/mag/${c.slug}?apercu=${body.token}`)).status(), "un article").toBe(404);
       // Et il ne donne AUCUN accès à l'administration : c'est de la lecture, pas une session.
       expect((await stranger.request.get(`/fr/admin/guides/${a.id}/modifier`, { maxRedirects: 0 })).status()).not.toBe(200);
-      expect((await stranger.request.get(`/api/admin/blog/${a.id}/preview-links`)).status()).toBe(403);
+      expect((await stranger.request.get(`/api/admin/blog/${a.id}/preview-links`)).status(), "sans session : 401 (lot 279)").toBe(401);
     } finally {
       await stranger.close();
       await cleanup(a.id, b.id, c.id);
@@ -301,7 +301,7 @@ test.describe("le jeton n'est jamais stocké, jamais journalisé, jamais relu", 
 });
 
 test.describe("qui peut créer, lister et révoquer", () => {
-  test("seul un administrateur : anonyme, membre et modérateur reçoivent 403 sur les trois routes, et rien n'est créé", async ({ page, browser }) => {
+  test("seul un administrateur : l'anonyme reçoit 401 (non authentifié), le membre et le modérateur 403, sur les trois routes, et rien n'est créé", async ({ page, browser }) => {
     await adminPage(page, "links-rights");
     const content = await createContent(page, "GUIDE");
     const { body } = await createLink(page, content.id);
@@ -310,10 +310,11 @@ test.describe("qui peut créer, lister et révoquer", () => {
     const moderator = await asRole(browser, "MODERATEUR");
     try {
       const before = await e2eDb().articlePreviewLink.count({ where: { articleId: content.id } });
-      for (const [who, request] of [["anonyme", anonymous.request], ["membre", member.page.request], ["modérateur", moderator.page.request]] as const) {
-        expect((await request.post(`/api/admin/blog/${content.id}/preview-links`, { data: { days: 7 } })).status(), `${who} : créer`).toBe(403);
-        expect((await request.get(`/api/admin/blog/${content.id}/preview-links`)).status(), `${who} : lister`).toBe(403);
-        expect((await request.delete(`/api/admin/blog/${content.id}/preview-links/${body.link.id}`)).status(), `${who} : révoquer`).toBe(403);
+      // Lot 279 : sans session, 401 « unauthenticated » ; connecté sans le rôle, 403.
+      for (const [who, request, refused] of [["anonyme", anonymous.request, 401], ["membre", member.page.request, 403], ["modérateur", moderator.page.request, 403]] as const) {
+        expect((await request.post(`/api/admin/blog/${content.id}/preview-links`, { data: { days: 7 } })).status(), `${who} : créer`).toBe(refused);
+        expect((await request.get(`/api/admin/blog/${content.id}/preview-links`)).status(), `${who} : lister`).toBe(refused);
+        expect((await request.delete(`/api/admin/blog/${content.id}/preview-links/${body.link.id}`)).status(), `${who} : révoquer`).toBe(refused);
       }
       expect(await e2eDb().articlePreviewLink.count({ where: { articleId: content.id } }), "rien n'a été créé").toBe(before);
       expect((await e2eDb().articlePreviewLink.findUniqueOrThrow({ where: { id: body.link.id } })).revokedAt, "rien n'a été révoqué").toBeNull();

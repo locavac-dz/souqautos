@@ -478,7 +478,8 @@ test.describe("administration", () => {
     await context.close();
 
     const anonymous = await browser.newContext();
-    expect((await anonymous.request.post(`/api/admin/users/${await userIdOf(admin.email)}/two-factor/reset`)).status()).toBe(403);
+    // Non authentifié : 401 (lot 279) ; le modérateur ci-dessus, authentifié mais sans le rôle, reçoit 403.
+    expect((await anonymous.request.post(`/api/admin/users/${await userIdOf(admin.email)}/two-factor/reset`)).status()).toBe(401);
     await anonymous.close();
   });
 
