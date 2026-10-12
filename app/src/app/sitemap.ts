@@ -29,20 +29,9 @@ function localizedEntry(path: string, lastModified?: Date) {
   };
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [brands, wilayas, articles, proShowcases] = await Promise.all([
-    prisma.brand.findMany({ include: { models: true } }),
-    prisma.wilaya.findMany(),
-    prisma.blogArticle.findMany({
-      where: publishedNow(new Date()),
-      select: { slug: true, kind: true, updatedAt: true },
-    }),
-    // Seules les vitrines indexables (au moins une annonce publiée, cf.
-    // isShowcaseIndexable) : exactement celles de l'annuaire.
-    getDirectoryEntries(),
-  ]);
-
-  const staticEntries = [
+// Pages sans base : leur adresse ne dépend d'aucune donnée.
+function staticSitemapEntries() {
+  return [
     localizedEntry(""),
     localizedEntry("/recherche"),
     localizedEntry("/cote-souq-auto"),
@@ -59,9 +48,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localizedEntry("/comparateur"),
     localizedEntry("/contact"),
   ];
+}
+
+// La compilation de production (image Docker, CI) n'a aucune base : Next.js y préproduit le plan du site. Seule
+// cette phase est tolérante — le plan se limite alors aux pages statiques, et il est recalculé avec la base au
+// premier passage après l'heure de `revalidate`. En service, une base indisponible reste une erreur : Next.js
+// garde alors le dernier plan complet au lieu de le remplacer par un plan amputé.
+function isProductionBuild() {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const staticEntries = staticSitemapEntries();
+  try {
+    return [...staticEntries, ...(await databaseSitemapEntries(staticEntries.length))];
+  } catch (error) {
+    if (!isProductionBuild()) throw error;
+    console.warn("Plan du site : base indisponible pendant la compilation, pages statiques seules.", error);
+    return staticEntries;
+  }
+}
+
+async function databaseSitemapEntries(staticCount: number): Promise<MetadataRoute.Sitemap> {
+  const [brands, wilayas, articles, proShowcases] = await Promise.all([
+    prisma.brand.findMany({ include: { models: true } }),
+    prisma.wilaya.findMany(),
+    prisma.blogArticle.findMany({
+      where: publishedNow(new Date()),
+      select: { slug: true, kind: true, updatedAt: true },
+    }),
+    // Seules les vitrines indexables (au moins une annonce publiée, cf.
+    // isShowcaseIndexable) : exactement celles de l'annuaire.
+    getDirectoryEntries(),
+  ]);
 
   // Lot 137 — au plus 50 000 adresses au total (limite du protocole) : les annonces les plus récentes d'abord.
-  const otherCount = staticEntries.length + proShowcases.length + articles.length + wilayas.length + brands.length + brands.reduce((sum, b) => sum + b.models.length, 0);
+  const otherCount = staticCount + proShowcases.length + articles.length + wilayas.length + brands.length + brands.reduce((sum, b) => sum + b.models.length, 0);
   const budget = listingBudget(otherCount);
   const publishedCount = await prisma.listing.count({ where: { status: "PUBLIEE" } });
   const warning = sitemapTruncationWarning(publishedCount, budget);
@@ -92,7 +114,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const proShowcaseEntries = proShowcases.map((entry) => localizedEntry(`/pro/${entry.id}`));
 
   return [
-    ...staticEntries,
     ...proShowcaseEntries,
     ...brandEntries,
     ...modelEntries,

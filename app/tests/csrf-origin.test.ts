@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
-// The middleware uses NextResponse and NextRequest from next/server.
+// The CSRF check uses NextResponse and NextRequest from next/server.
 // In the test environment we mock them minimally.
 
 vi.mock("next/server", () => {
@@ -40,23 +40,25 @@ vi.mock("next/server", () => {
 });
 
 // Import after mock is set up.
-import { middleware } from "@/middleware";
+import { csrfRefusal, isApiPath } from "@/lib/csrf";
 
 // Shape of the responses produced by the NextResponse mock above.
 type MockResponse = { _type: "json" | "next"; status?: number; body?: unknown };
 
 // "next/server" is mocked, so NextRequest is MockNextRequest at runtime: the cast only
-// bridges the mock to the real type expected by `middleware`.
+// bridges the mock to the real type expected by `csrfRefusal`. A null result (request may continue)
+// is mapped to the "next" shape the tests below assert on.
 function run(
   path: string,
   method: string,
   headers: Record<string, string> = {}
 ): MockResponse {
   const request = new NextRequest(`http://localhost${path}`, { method, headers });
-  return middleware(request) as unknown as MockResponse;
+  const refusal = csrfRefusal(request) as unknown as MockResponse | null;
+  return refusal ?? { _type: "next" };
 }
 
-describe("CSRF middleware", () => {
+describe("CSRF origin check", () => {
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
   });
@@ -124,5 +126,12 @@ describe("CSRF middleware", () => {
       expect(res._type).toBe("json");
       expect(res.status).toBe(403);
     }
+  });
+
+  it("limits the check to /api and below", () => {
+    expect(isApiPath("/api")).toBe(true);
+    expect(isApiPath("/api/listings")).toBe(true);
+    expect(isApiPath("/fr/api-docs")).toBe(false);
+    expect(isApiPath("/apiary")).toBe(false);
   });
 });
