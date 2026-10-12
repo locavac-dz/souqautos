@@ -1,5 +1,13 @@
 # Souq Auto — journal des lots
 
+## Lot 300 — Revue de presse IA (2026-10-12)
+
+**Livré**
+- **Synthèses d'actualité auto IA** : le cron nightly génère un brouillon de revue de presse par semaine, en plus de l'article Mag hebdomadaire. Les brouillons couvrent 10 thèmes : nouveaux modèles, réglementation, marché de l'occasion, électrification, constructeurs/usines, prix carburant, sécurité routière, salons auto, pièces détachées, financement.
+- Cadence indépendante du Mag : la revue de presse et l'article Mag ont chacun leur propre intervalle de 7 jours, distingués par préfixe de slug (`ai-revue-*` vs `ai-*`).
+- Contenu bilingue FR/AR, format synthèse journalistique (pas un guide ni un tutoriel).
+- 12 nouveaux tests (topics presse, génération, sweep), suite complète 238 fichiers / 2585 tests.
+
 ## Lot 299 — Contenu éditorial semi-automatique (2026-10-12)
 
 **Livré**

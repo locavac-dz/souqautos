@@ -1,20 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 import { generateUniqueSlug, RESERVED_SLUGS } from "@/lib/blog";
-import { generateMagArticleDraft, generateBuyingGuideDraft } from "@/lib/editorial-ai-writer";
+import { generateMagArticleDraft, generateBuyingGuideDraft, generatePressReviewDraft } from "@/lib/editorial-ai-writer";
 import { pickNextTopic, MAG_TOPIC_TEMPLATES } from "@/lib/editorial-topics";
+import { pickNextPressReviewTopic, PRESS_REVIEW_TEMPLATES } from "@/lib/editorial-press-topics";
 
 const ARTICLE_INTERVAL_DAYS = 7;
+const PRESS_REVIEW_INTERVAL_DAYS = 7;
 const GUIDE_INTERVAL_DAYS = 30;
+
+const MAG_SLUG_PREFIX = "ai-";
+const PRESS_SLUG_PREFIX = "ai-revue-";
 
 export type EditorialDraftResult = {
   articleDraft: string | null;
+  pressReviewDraft: string | null;
   guideDraft: string | null;
 };
 
 export async function sweepEditorialDrafts(now: Date): Promise<EditorialDraftResult> {
   if (!process.env.ANTHROPIC_API_KEY) {
-    return { articleDraft: null, guideDraft: null };
+    return { articleDraft: null, pressReviewDraft: null, guideDraft: null };
   }
 
   const botUser = await prisma.user.findFirst({
@@ -22,13 +28,18 @@ export async function sweepEditorialDrafts(now: Date): Promise<EditorialDraftRes
     select: { id: true },
     orderBy: { createdAt: "asc" },
   });
-  if (!botUser) return { articleDraft: null, guideDraft: null };
+  if (!botUser) return { articleDraft: null, pressReviewDraft: null, guideDraft: null };
 
-  const result: EditorialDraftResult = { articleDraft: null, guideDraft: null };
+  const result: EditorialDraftResult = { articleDraft: null, pressReviewDraft: null, guideDraft: null };
 
-  const articleDue = await isDraftDue("ARTICLE", ARTICLE_INTERVAL_DAYS, now);
+  const articleDue = await isDraftDueBySlug(MAG_SLUG_PREFIX, PRESS_SLUG_PREFIX, ARTICLE_INTERVAL_DAYS, now);
   if (articleDue) {
     result.articleDraft = await tryGenerateArticle(botUser.id, now);
+  }
+
+  const pressReviewDue = await isDraftDueBySlug(PRESS_SLUG_PREFIX, null, PRESS_REVIEW_INTERVAL_DAYS, now);
+  if (pressReviewDue) {
+    result.pressReviewDraft = await tryGeneratePressReview(botUser.id, now);
   }
 
   const guideDue = await isDraftDue("GUIDE", GUIDE_INTERVAL_DAYS, now);
@@ -43,6 +54,26 @@ async function isDraftDue(kind: "ARTICLE" | "GUIDE", intervalDays: number, now: 
   const cutoff = new Date(now.getTime() - intervalDays * 24 * 60 * 60 * 1000);
   const recent = await prisma.blogArticle.findFirst({
     where: { kind, aiGenerated: true, createdAt: { gte: cutoff } },
+    select: { id: true },
+  });
+  return !recent;
+}
+
+async function isDraftDueBySlug(
+  slugPrefix: string,
+  excludePrefix: string | null,
+  intervalDays: number,
+  now: Date,
+): Promise<boolean> {
+  const cutoff = new Date(now.getTime() - intervalDays * 24 * 60 * 60 * 1000);
+  const recent = await prisma.blogArticle.findFirst({
+    where: {
+      kind: "ARTICLE",
+      aiGenerated: true,
+      slug: { startsWith: slugPrefix },
+      ...(excludePrefix ? { NOT: { slug: { startsWith: excludePrefix } } } : {}),
+      createdAt: { gte: cutoff },
+    },
     select: { id: true },
   });
   return !recent;
@@ -89,6 +120,51 @@ async function tryGenerateArticle(authorId: string, now: Date): Promise<string |
     return article.slug;
   } catch (err) {
     console.error(`[editorial-sweep] erreur article : ${(err as Error).message}`);
+    return null;
+  }
+}
+
+async function tryGeneratePressReview(authorId: string, now: Date): Promise<string | null> {
+  try {
+    const recentAiReviews = await prisma.blogArticle.findMany({
+      where: { kind: "ARTICLE", aiGenerated: true, slug: { startsWith: PRESS_SLUG_PREFIX } },
+      orderBy: { createdAt: "desc" },
+      take: PRESS_REVIEW_TEMPLATES.length,
+      select: { slug: true },
+    });
+    const recentKeys = recentAiReviews.map((a) => a.slug.replace(/^ai-revue-/, "").replace(/-\d+$/, ""));
+    const topic = pickNextPressReviewTopic(recentKeys);
+
+    const draft = await generatePressReviewDraft(topic);
+    if (!draft) {
+      console.error("[editorial-sweep] échec génération revue de presse IA");
+      return null;
+    }
+
+    const existingSlugs = (await prisma.blogArticle.findMany({ select: { slug: true }, take: 500 })).map((a) => a.slug);
+    const slug = generateUniqueSlug(`ai-revue-${slugify(topic.key)}`, [...existingSlugs, ...RESERVED_SLUGS]);
+
+    const article = await prisma.blogArticle.create({
+      data: {
+        slug,
+        kind: "ARTICLE",
+        titleFr: draft.titleFr,
+        titleAr: draft.titleAr,
+        excerptFr: draft.excerptFr,
+        excerptAr: draft.excerptAr,
+        contentFr: draft.contentFr,
+        contentAr: draft.contentAr,
+        authorId,
+        aiGenerated: true,
+        publishedAt: null,
+      },
+      select: { id: true, slug: true },
+    });
+
+    console.log(`[editorial-sweep] brouillon revue de presse IA créé : ${article.slug}`);
+    return article.slug;
+  } catch (err) {
+    console.error(`[editorial-sweep] erreur revue de presse : ${(err as Error).message}`);
     return null;
   }
 }

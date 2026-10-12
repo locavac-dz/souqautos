@@ -1,5 +1,6 @@
 import { callAnthropicMessages } from "@/lib/anthropic-client";
 import type { MagTopicTemplate } from "@/lib/editorial-topics";
+import type { PressReviewTopicTemplate } from "@/lib/editorial-press-topics";
 
 type GeneratedArticle = {
   titleFr: string;
@@ -89,6 +90,31 @@ Réponds en JSON avec exactement ces clés :
   });
 
   return parseGuideJson(raw);
+}
+
+export async function generatePressReviewDraft(topic: PressReviewTopicTemplate): Promise<GeneratedArticle | null> {
+  const prompt = `Tu rédiges la rubrique « Revue de presse » de souqautos.com. ${topic.promptFr}
+
+L'article doit être une synthèse journalistique : pas un tutoriel ni un guide, mais un point d'actualité informatif et structuré, avec des données chiffrées quand c'est possible. Cite des sources plausibles (médias algériens, institutions) sans inventer de liens.
+
+Réponds en JSON avec exactement ces clés :
+{
+  "titleFr": "titre accrocheur en français (10-150 caractères)",
+  "titleAr": "titre en arabe (10-150 caractères)",
+  "excerptFr": "résumé en français (20-300 caractères)",
+  "excerptAr": "résumé en arabe (20-300 caractères)",
+  "contentFr": "synthèse complète en français, format Markdown (500-2000 mots)",
+  "contentAr": "synthèse complète en arabe, format Markdown (500-2000 mots)"
+}`;
+
+  const raw = await callAnthropicMessages({
+    system: SYSTEM_PROMPT,
+    messages: [{ role: "user", content: prompt }],
+    maxTokens: 8192,
+    timeoutMs: 120_000,
+  });
+
+  return parseArticleJson(raw);
 }
 
 function parseArticleJson(raw: string | null): GeneratedArticle | null {

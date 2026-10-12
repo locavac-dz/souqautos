@@ -5,7 +5,7 @@ vi.mock("@/lib/anthropic-client", () => ({
 }));
 
 import { callAnthropicMessages } from "@/lib/anthropic-client";
-import { generateMagArticleDraft, generateBuyingGuideDraft } from "@/lib/editorial-ai-writer";
+import { generateMagArticleDraft, generateBuyingGuideDraft, generatePressReviewDraft } from "@/lib/editorial-ai-writer";
 
 const mockedCall = vi.mocked(callAnthropicMessages);
 
@@ -122,6 +122,29 @@ describe("generateBuyingGuideDraft", () => {
     });
     mockedCall.mockResolvedValueOnce(bad);
     const result = await generateBuyingGuideDraft(ctx);
+    expect(result).toBeNull();
+  });
+});
+
+describe("generatePressReviewDraft", () => {
+  const topic = { key: "nouveaux-modeles", promptFr: "Synthèse des nouveaux modèles." };
+
+  it("parses a valid JSON response", async () => {
+    mockedCall.mockResolvedValueOnce(VALID_ARTICLE_JSON);
+    const result = await generatePressReviewDraft(topic);
+    expect(result).not.toBeNull();
+    expect(result!.titleFr).toContain("Entretien");
+  });
+
+  it("returns null when API returns null", async () => {
+    mockedCall.mockResolvedValueOnce(null as unknown as string);
+    const result = await generatePressReviewDraft(topic);
+    expect(result).toBeNull();
+  });
+
+  it("returns null for invalid JSON", async () => {
+    mockedCall.mockResolvedValueOnce("not json");
+    const result = await generatePressReviewDraft(topic);
     expect(result).toBeNull();
   });
 });
