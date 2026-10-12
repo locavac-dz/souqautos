@@ -19,6 +19,18 @@ vi.mock("@/lib/commercial-reminders", () => ({
   sweepSubscriptionExpiryReminders: vi.fn().mockResolvedValue({ first: 0, last: 0 }),
 }));
 vi.mock("@/lib/weekly-report", () => ({ sendWeeklyReportIfDue: vi.fn().mockResolvedValue({ status: "already_sent" }) }));
+// Balayages ajoutés par les lots 293 à 303 : sans ces doublures, ils s'exécutaient pour de bon (donc contre une base
+// absente en CI) et la route répondait 500.
+vi.mock("@/lib/error-log", () => ({ sweepOldErrorLogs: vi.fn().mockResolvedValue(0) }));
+vi.mock("@/lib/market-price-snapshot", () => ({
+  takeMarketSnapshots: vi.fn().mockResolvedValue(0),
+  sweepOldSnapshots: vi.fn().mockResolvedValue(0),
+}));
+vi.mock("@/lib/document-expiry-reminder-sweep", () => ({ sweepDocumentExpiryReminders: vi.fn().mockResolvedValue({ assurance: 0, ct: 0 }) }));
+vi.mock("@/lib/editorial-draft-sweep", () => ({ sweepEditorialDrafts: vi.fn().mockResolvedValue({ articleDraft: null, pressReviewDraft: null, guideDraft: null }) }));
+vi.mock("@/lib/editorial-draft-notify", () => ({ notifyEditorialDrafts: vi.fn().mockResolvedValue(0) }));
+vi.mock("@/lib/listing-remoderation-sweep", () => ({ sweepListingRemoderation: vi.fn().mockResolvedValue({ checked: 0, flagged: [] }) }));
+vi.mock("@/lib/listing-remoderation-notify", () => ({ notifyRemoderationFlags: vi.fn().mockResolvedValue(0) }));
 
 import { POST } from "@/app/api/cron/sweep/route";
 

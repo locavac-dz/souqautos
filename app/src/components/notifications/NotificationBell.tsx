@@ -6,12 +6,16 @@ import { useTranslations } from "next-intl";
 
 export function NotificationBell({ initialCount }: { initialCount: number }) {
   const [count, setCount] = useState(initialCount);
+  const [lastInitialCount, setLastInitialCount] = useState(initialCount);
   const esRef = useRef<EventSource | null>(null);
   const t = useTranslations("Nav");
 
-  useEffect(() => {
+  // Le compte serveur change (navigation) : on s'y recale PENDANT le rendu, motif recommandé par React plutôt qu'un
+  // setState dans un effet (rendu en cascade, règle react-hooks/set-state-in-effect).
+  if (initialCount !== lastInitialCount) {
+    setLastInitialCount(initialCount);
     setCount(initialCount);
-  }, [initialCount]);
+  }
 
   useEffect(() => {
     const es = new EventSource("/api/notifications/stream");
