@@ -35,16 +35,14 @@ export default async function AdminListingsPage() {
     }),
     prisma.listing.findMany({
       where: { status: "PUBLIEE" },
-      orderBy: { publishedAt: "desc" },
+      orderBy: [{ fraudScore: "desc" }, { publishedAt: "desc" }],
       take: 20,
       include: { photos: { orderBy: { position: "asc" }, take: 1 }, seller: { include: { profile: true } } },
     }),
   ]);
 
-  // Lot 77 — signaux anti-fraude (§16) : uniquement sur la file d'attente, où
-  // ils aident concrètement une décision qui n'a pas encore été prise. Une
-  // annonce déjà publiée a déjà été validée par un modérateur, jamais
-  // ré-examinée automatiquement ici.
+  // Lot 77 — signaux anti-fraude (§16) : sur la file d'attente, ils aident la décision.
+  // Lot 303 — les annonces publiées sont aussi re-vérifiées par le cron (fraudScore mis à jour).
   const fraudSignals = await getFraudSignalsForListings(
     pending.map((l) => ({
       id: l.id,
@@ -225,11 +223,24 @@ export default async function AdminListingsPage() {
                     {listing.title}
                   </Link>
                   <p className="text-sm text-slate-500 dark:text-slate-400">{formatNumber(listing.price, locale)} DA</p>
-                  {listing.autoPublishedAt && (
-                    <span className="inline-block rounded bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
-                      {t("autoPublishedBadge")}
-                    </span>
-                  )}
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {listing.autoPublishedAt && (
+                      <span className="inline-block rounded bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+                        {t("autoPublishedBadge")}
+                      </span>
+                    )}
+                    {listing.fraudScore > 0 && (
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          listing.fraudScore >= 60
+                            ? "border border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+                            : "border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                        }`}
+                      >
+                        {t("fraudScore")}&nbsp;{listing.fraudScore}/100
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {t("sellerLabel")}: {listing.seller.profile?.displayName ?? listing.seller.email}
                   </p>

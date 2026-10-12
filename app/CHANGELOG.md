@@ -1,5 +1,15 @@
 # Souq Auto — journal des lots
 
+## Lot 303 — Balayage cron de re-modération (2026-10-12)
+
+**Livré**
+- **Re-modération des annonces publiées** : le cron nightly re-calcule les signaux de fraude (6 signaux déterministes) sur les annonces PUBLIÉES dont le dernier contrôle remonte à plus de 7 jours (ou jamais vérifié), par lots de 200.
+- **Détection post-publication** : attrape les doublons (photos, contenu, VIN) apparus après la publication initiale — signaux impossibles à détecter lors de la première vérification.
+- **Email d'alerte à l'équipe** quand des annonces publiées gagnent de nouveaux signaux : score avant/après, signaux détaillés en français, lien vers l'administration. Envoi best-effort aux destinataires STAFF_ALERT_EMAILS.
+- **Score de fraude sur les annonces publiées** dans /admin/annonces : badge score rouge (≥60) ou ambre, tri par score décroissant. L'ancienne règle « jamais ré-examinées » est remplacée par la re-vérification cron.
+- Modules purs `listing-remoderation-sweep.ts` et `listing-remoderation-notify.ts`.
+- 20 nouveaux tests (sweep logic, notification building, signal labels, recipients), suite complète 242 fichiers / 2628 tests.
+
 ## Lot 302 — Tableau de bord éditorial IA (2026-10-12)
 
 **Livré**

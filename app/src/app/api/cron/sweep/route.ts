@@ -12,6 +12,8 @@ import { takeMarketSnapshots, sweepOldSnapshots } from "@/lib/market-price-snaps
 import { sweepDocumentExpiryReminders } from "@/lib/document-expiry-reminder-sweep";
 import { sweepEditorialDrafts } from "@/lib/editorial-draft-sweep";
 import { notifyEditorialDrafts } from "@/lib/editorial-draft-notify";
+import { sweepListingRemoderation } from "@/lib/listing-remoderation-sweep";
+import { notifyRemoderationFlags } from "@/lib/listing-remoderation-notify";
 import { safeEqual } from "@/lib/google-oauth";
 import { apiHandler } from "@/lib/api-route";
 
@@ -54,6 +56,9 @@ export const POST = apiHandler(async (req: NextRequest) => {
   const editorialDrafts = await sweepEditorialDrafts(now);
   // Lot 301 — notification admin quand des brouillons IA sont créés.
   const editorialNotified = await notifyEditorialDrafts(editorialDrafts);
+  // Lot 303 — re-modération des annonces publiées : détecte les doublons apparus après publication.
+  const remoderation = await sweepListingRemoderation(now);
+  const remoderationNotified = await notifyRemoderationFlags(remoderation);
 
-  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept, marketSnapshots, oldSnapshotsSwept, documentReminders, editorialDrafts, editorialNotified });
+  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept, marketSnapshots, oldSnapshotsSwept, documentReminders, editorialDrafts, editorialNotified, remoderation: { checked: remoderation.checked, flagged: remoderation.flagged.length }, remoderationNotified });
 });
