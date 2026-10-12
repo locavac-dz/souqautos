@@ -1,5 +1,19 @@
 # Souq Auto — journal des lots
 
+## Lot 304 — Dashboard stats modération IA (2026-10-12)
+
+**Livré**
+- **Page /admin/moderation** : tableau de bord dédié à la modération IA, accessible aux modérateurs.
+- **4 KPI principaux** (30 derniers jours) : décisions totales, taux d'auto-publication, taux de suspicion IA, délai moyen de modération humaine.
+- **4 mini-cartes** : ventilation approuvées / auto-publiées / rejetées / suspendues.
+- **Histogramme hebdomadaire** : soumissions sur 12 semaines (réutilise `DailyBars` + `bucketByWeek`).
+- **Distribution des scores de fraude** : barres horizontales colorées (vert/ambre/rouge) sur 6 tranches (0, 1–20, 21–40, 41–60, 61–80, 81–100).
+- **Cartes opérationnelles** : file d'attente (nombre + plus ancienne), publiées avec signaux, lien vers les paramètres.
+- Module pur `moderation-stats.ts` : 3 fonctions pures testables (`computeAutoPublishRate`, `computeAvgModerationHours`, `bucketFraudScores`) + `loadModerationStats` (8 requêtes parallèles).
+- i18n FR/AR (28 nouvelles clés AdminModeration + navModeration).
+- Lien « Modération IA » dans la navigation admin, gated `isModerator`.
+- 16 nouveaux tests (fonctions pures : autoPublishRate, avgModerationHours, bucketFraudScores), suite complète 243 fichiers / 2644 tests.
+
 ## Lot 303 — Balayage cron de re-modération (2026-10-12)
 
 **Livré**
