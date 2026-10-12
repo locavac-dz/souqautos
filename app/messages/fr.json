@@ -1904,7 +1904,20 @@
     "writeGuide": "Rédiger un guide",
     "noteTargets": "Les objectifs (revue de presse : 7 jours, essais et magazine : 30 jours, guides : 60 jours) sont des repères d'affichage : rien n'est bloqué ni envoyé. Ils se règlent dans src/lib/editorial.ts.",
     "listCapped": "Seuls les {shown} premiers sont listés ({total} au total).",
-    "noteWeeks": "Les semaines commencent le lundi. Un contenu programmé compte à sa date de parution, pas avant."
+    "noteWeeks": "Les semaines commencent le lundi. Un contenu programmé compte à sa date de parution, pas avant.",
+    "aiTitle": "Cadence IA",
+    "aiSubtitle": "Le cron génère automatiquement des brouillons IA selon ces cadences. Ils sont à relire avant publication.",
+    "aiCadenceMag": "Article Mag",
+    "aiCadencePress": "Revue de presse",
+    "aiCadenceGuide": "Guide d'achat",
+    "aiDueNow": "À générer",
+    "aiOverdue": "En retard ({days} j)",
+    "aiNextIn": "Dans {days} j",
+    "aiInterval": "Cadence : tous les {days} jours",
+    "aiStatGenerated": "{count} brouillon(s) IA générés au total",
+    "aiStatPending": "{count} en attente de relecture",
+    "aiStatPublished": "{count} publiés",
+    "aiBadge": "IA"
   },
   "AdminGuide": {
     "title": "Guides d'achat",

@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const m = {
   articleGroupBy: vi.fn(),
   articleFindMany: vi.fn(),
+  articleFindFirst: vi.fn(),
+  articleCount: vi.fn(),
   pressAggregate: vi.fn(),
   pressCount: vi.fn(),
   pressFindMany: vi.fn(),
@@ -17,7 +19,7 @@ const m = {
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    blogArticle: { groupBy: (...a: unknown[]) => m.articleGroupBy(...a), findMany: (...a: unknown[]) => m.articleFindMany(...a) },
+    blogArticle: { groupBy: (...a: unknown[]) => m.articleGroupBy(...a), findMany: (...a: unknown[]) => m.articleFindMany(...a), findFirst: (...a: unknown[]) => m.articleFindFirst(...a), count: (...a: unknown[]) => m.articleCount(...a) },
     pressReview: { aggregate: (...a: unknown[]) => m.pressAggregate(...a), count: (...a: unknown[]) => m.pressCount(...a), findMany: (...a: unknown[]) => m.pressFindMany(...a), groupBy: (...a: unknown[]) => m.pressGroupBy(...a) },
     listing: { groupBy: (...a: unknown[]) => m.listingGroupBy(...a) },
     model: { findMany: (...a: unknown[]) => m.modelFindMany(...a) },
@@ -47,7 +49,7 @@ beforeEach(() => {
   m.articleFindMany.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
     const p = where.publishedAt as Record<string, unknown> | null;
     if (p && "gt" in p) return [{ id: "a-sched", kind: "GUIDE", titleFr: "Guide programmé", publishedAt: inDays(4) }];
-    if (p === null) return [{ id: "a-draft", kind: "ARTICLE", titleFr: "Vieux brouillon", updatedAt: daysAgo(30) }, { id: "a-draft2", kind: "GUIDE", titleFr: "Brouillon récent", updatedAt: daysAgo(2) }];
+    if (p === null) return [{ id: "a-draft", kind: "ARTICLE", titleFr: "Vieux brouillon", updatedAt: daysAgo(30), aiGenerated: false }, { id: "a-draft2", kind: "GUIDE", titleFr: "Brouillon récent", updatedAt: daysAgo(2), aiGenerated: true }];
     return [{ publishedAt: daysAgo(3) }, { publishedAt: daysAgo(10) }];
   });
   m.pressFindMany.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
@@ -56,6 +58,10 @@ beforeEach(() => {
     if (p === null) return [{ id: "p-draft", title: "Revue en brouillon", updatedAt: daysAgo(20) }];
     return [{ publishedAt: daysAgo(3) }];
   });
+
+  // AI cadence queries: findFirst returns null (no AI draft), count returns 0
+  m.articleFindFirst.mockResolvedValue(null);
+  m.articleCount.mockResolvedValue(0);
 
   m.listingGroupBy.mockImplementation(async ({ by }: { by: string[]; take?: number }) => (by.length === 1 && "take" in (m.listingGroupBy.mock.calls.at(-1)?.[0] ?? {}) ? [{ modelId: 1, _count: { _all: 9 } }, { modelId: 2, _count: { _all: 4 } }, { modelId: 3, _count: { _all: 1 } }] : [{ modelId: 1 }, { modelId: 2 }, { modelId: 3 }, { modelId: 4 }]));
   m.modelFindMany.mockResolvedValue([
@@ -86,12 +92,12 @@ describe("loadEditorial", () => {
     expect(report.scheduled.map((s) => `${s.section}:${s.title}`)).toEqual(["press:Revue programmée", "guides:Guide programmé"]);
   });
 
-  it("lists drafts oldest first and flags the forgotten ones", async () => {
+  it("lists drafts oldest first, flags forgotten ones, and carries aiGenerated", async () => {
     const report = await loadEditorial(NOW);
-    expect(report.drafts.map((d) => [d.title, d.stale])).toEqual([
-      ["Vieux brouillon", true],
-      ["Revue en brouillon", true],
-      ["Brouillon récent", false],
+    expect(report.drafts.map((d) => [d.title, d.stale, d.aiGenerated])).toEqual([
+      ["Vieux brouillon", true, false],
+      ["Revue en brouillon", true, false],
+      ["Brouillon récent", false, true],
     ]);
   });
 
@@ -133,5 +139,23 @@ describe("loadEditorial", () => {
     const report = await loadEditorial(NOW);
     expect(report).toMatchObject({ gaps: [], modelsOnSite: 0, modelsWithGuide: 0 });
     expect(m.modelFindMany).not.toHaveBeenCalled();
+  });
+
+  it("includes AI cadence with 3 entries and stats", async () => {
+    const report = await loadEditorial(NOW);
+    expect(report.aiCadence).toHaveLength(3);
+    expect(report.aiCadence.map((c) => c.key)).toEqual(["magArticle", "pressReview", "guide"]);
+    expect(report.aiCadence[0]).toMatchObject({ intervalDays: 7, status: { status: "due", overdueDays: 0 } });
+    expect(report.aiStats).toEqual({ totalGenerated: 0, pendingReview: 0, published: 0 });
+  });
+
+  it("reflects AI cadence status when a recent AI draft exists", async () => {
+    m.articleFindFirst.mockResolvedValueOnce({ createdAt: daysAgo(3) });
+    m.articleFindFirst.mockResolvedValueOnce(null);
+    m.articleFindFirst.mockResolvedValueOnce(null);
+    m.articleCount.mockResolvedValueOnce(5).mockResolvedValueOnce(2).mockResolvedValueOnce(3);
+    const report = await loadEditorial(NOW);
+    expect(report.aiCadence[0].status).toEqual({ status: "ok", daysUntilNext: 4 });
+    expect(report.aiStats).toEqual({ totalGenerated: 5, pendingReview: 2, published: 3 });
   });
 });

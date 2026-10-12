@@ -1,5 +1,15 @@
 # Souq Auto — journal des lots
 
+## Lot 302 — Tableau de bord éditorial IA (2026-10-12)
+
+**Livré**
+- **Section « Cadence IA »** sur la page /admin/editorial : 3 cartes (Article Mag, Revue de presse, Guide d'achat) avec badge « À générer » / « Dans X j » / « En retard », cadence affichée.
+- **Statistiques IA** : total généré, en attente de relecture, publiés.
+- **Badge « IA »** violet sur les brouillons générés par l'IA dans la liste des brouillons.
+- Module pur `editorial-ai-cadence.ts` (cadence status, constantes), enrichissement de `editorial-data.ts` (6 requêtes supplémentaires).
+- i18n FR/AR (14 nouvelles clés AdminEditorial).
+- 11 nouveaux tests (cadence pure + editorial-data AI), suite complète 240 fichiers / 2608 tests.
+
 ## Lot 301 — Notification admin des brouillons IA (2026-10-12)
 
 **Livré**

@@ -13,6 +13,7 @@ import {
   type Freshness,
   type ModelCoverage,
 } from "@/lib/editorial";
+import { AI_CADENCE, AI_CADENCE_KEYS, aiCadenceStatus, type AiCadenceKey, type AiCadenceStatus, type AiStats } from "@/lib/editorial-ai-cadence";
 
 // Lot 127 — lit en base ce qu'il faut pour le suivi du rythme éditorial (page /admin/editorial).
 
@@ -27,7 +28,9 @@ export type SectionSummary = {
 };
 
 export type ScheduledItem = { id: string; section: EditorialSection; title: string; publishedAt: Date };
-export type DraftItem = { id: string; section: EditorialSection; title: string; updatedAt: Date; stale: boolean };
+export type DraftItem = { id: string; section: EditorialSection; title: string; updatedAt: Date; stale: boolean; aiGenerated: boolean };
+
+export type AiCadenceItem = { key: AiCadenceKey; intervalDays: number; lastCreatedAt: Date | null; status: AiCadenceStatus };
 
 export type EditorialReport = {
   sections: SectionSummary[];
@@ -37,6 +40,8 @@ export type EditorialReport = {
   gaps: ModelCoverage[]; // modèles sans guide, les plus présents d'abord
   modelsOnSite: number; // modèles ayant au moins une annonce publiée
   modelsWithGuide: number;
+  aiCadence: AiCadenceItem[];
+  aiStats: AiStats;
 };
 
 const KIND_TO_SECTION: Record<ArticleKind, EditorialSection> = { ARTICLE: "magazine", ESSAI: "roadTests", GUIDE: "guides", EQUIPEMENT: "equipment" };
@@ -59,7 +64,7 @@ export async function loadEditorial(now: Date = new Date()): Promise<EditorialRe
     prisma.pressReview.count({ where: { publishedAt: { gt: now } } }),
     prisma.pressReview.count({ where: { publishedAt: null } }),
     prisma.blogArticle.findMany({ where: { publishedAt: { gt: now } }, orderBy: { publishedAt: "asc" }, take: LIST_LIMIT, select: { id: true, kind: true, titleFr: true, publishedAt: true } }),
-    prisma.blogArticle.findMany({ where: { publishedAt: null }, orderBy: { updatedAt: "asc" }, take: LIST_LIMIT, select: { id: true, kind: true, titleFr: true, updatedAt: true } }),
+    prisma.blogArticle.findMany({ where: { publishedAt: null }, orderBy: { updatedAt: "asc" }, take: LIST_LIMIT, select: { id: true, kind: true, titleFr: true, updatedAt: true, aiGenerated: true } }),
     prisma.pressReview.findMany({ where: { publishedAt: { gt: now } }, orderBy: { publishedAt: "asc" }, take: LIST_LIMIT, select: { id: true, title: true, publishedAt: true } }),
     prisma.pressReview.findMany({ where: { publishedAt: null }, orderBy: { updatedAt: "asc" }, take: LIST_LIMIT, select: { id: true, title: true, updatedAt: true } }),
     prisma.blogArticle.findMany({ where: { publishedAt: { gte: rhythmStart, lte: now } }, select: { publishedAt: true } }),
@@ -101,8 +106,8 @@ export async function loadEditorial(now: Date = new Date()): Promise<EditorialRe
     .slice(0, LIST_LIMIT);
 
   const drafts: DraftItem[] = [
-    ...draftArticles.map((a) => ({ id: a.id, section: KIND_TO_SECTION[a.kind], title: a.titleFr, updatedAt: a.updatedAt })),
-    ...draftPress.map((p) => ({ id: p.id, section: "press" as const, title: p.title, updatedAt: p.updatedAt })),
+    ...draftArticles.map((a) => ({ id: a.id, section: KIND_TO_SECTION[a.kind], title: a.titleFr, updatedAt: a.updatedAt, aiGenerated: a.aiGenerated })),
+    ...draftPress.map((p) => ({ id: p.id, section: "press" as const, title: p.title, updatedAt: p.updatedAt, aiGenerated: false })),
   ]
     .map((d) => ({ ...d, stale: isStaleDraft(d.updatedAt, now) }))
     .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())
@@ -162,5 +167,25 @@ export async function loadEditorial(now: Date = new Date()): Promise<EditorialRe
     gaps = modelsWithoutGuide(coverage).slice(0, MAX_GAPS);
   }
 
-  return { sections, scheduled, drafts, weekly, gaps, modelsOnSite: onSite.length, modelsWithGuide };
+  // --- cadence et statistiques IA ---
+  const [lastAiMag, lastAiPress, lastAiGuide, aiTotalGenerated, aiPendingReview, aiPublished] = await Promise.all([
+    prisma.blogArticle.findFirst({ where: { aiGenerated: true, kind: "ARTICLE", slug: { startsWith: "ai-" }, NOT: { slug: { startsWith: "ai-revue-" } } }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+    prisma.blogArticle.findFirst({ where: { aiGenerated: true, kind: "ARTICLE", slug: { startsWith: "ai-revue-" } }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+    prisma.blogArticle.findFirst({ where: { aiGenerated: true, kind: "GUIDE" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+    prisma.blogArticle.count({ where: { aiGenerated: true } }),
+    prisma.blogArticle.count({ where: { aiGenerated: true, publishedAt: null } }),
+    prisma.blogArticle.count({ where: { aiGenerated: true, ...published } }),
+  ]);
+
+  const aiCadence: AiCadenceItem[] = AI_CADENCE_KEYS.map((key) => {
+    const cfg = AI_CADENCE[key];
+    const lastCreatedAt = key === "magArticle" ? lastAiMag?.createdAt ?? null
+      : key === "pressReview" ? lastAiPress?.createdAt ?? null
+      : lastAiGuide?.createdAt ?? null;
+    return { key, intervalDays: cfg.intervalDays, lastCreatedAt, status: aiCadenceStatus(lastCreatedAt, cfg.intervalDays, now) };
+  });
+
+  const aiStats: AiStats = { totalGenerated: aiTotalGenerated, pendingReview: aiPendingReview, published: aiPublished };
+
+  return { sections, scheduled, drafts, weekly, gaps, modelsOnSite: onSite.length, modelsWithGuide, aiCadence, aiStats };
 }

@@ -2,9 +2,10 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isEditor } from "@/lib/auth-server/roles";
-import { loadEditorial, type SectionSummary } from "@/lib/editorial-data";
+import { loadEditorial, type SectionSummary, type AiCadenceItem } from "@/lib/editorial-data";
 import { coveragePercent, type EditorialSection } from "@/lib/editorial";
 import { DailyBars } from "@/components/DailyBars";
+import type { AiCadenceKey } from "@/lib/editorial-ai-cadence";
 
 // Lot 127 — suivi du rythme éditorial : où en est chaque rubrique, ce qui est programmé, les
 // brouillons oubliés, les modèles qui attendent un guide. ADMIN seulement, comme les contenus.
@@ -52,6 +53,21 @@ export default async function AdminEditorialPage() {
         ))}
       </section>
 
+      <section className="mt-8">
+        <h2 className="mb-1 text-sm font-medium text-slate-900 dark:text-slate-100">{t("aiTitle")}</h2>
+        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">{t("aiSubtitle")}</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {report.aiCadence.map((c) => (
+            <AiCadenceCard key={c.key} c={c} t={t} fmt={fmt} />
+          ))}
+        </div>
+        <div className="mt-3 flex gap-6 text-xs text-slate-500 dark:text-slate-400">
+          <span>{t("aiStatGenerated", { count: fmt(report.aiStats.totalGenerated) })}</span>
+          <span>{t("aiStatPending", { count: fmt(report.aiStats.pendingReview) })}</span>
+          <span>{t("aiStatPublished", { count: fmt(report.aiStats.published) })}</span>
+        </div>
+      </section>
+
       <section className="mt-10">
         <h2 className="mb-1 text-sm font-medium text-slate-900 dark:text-slate-100">{t("rhythmTitle")}</h2>
         <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">{t("rhythmHelp", { total: fmt(weeklyTotal) })}</p>
@@ -90,9 +106,16 @@ export default async function AdminEditorialPage() {
               {report.drafts.map((item) => (
                 <li key={`${item.section}-${item.id}`} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                   <div className="min-w-0">
-                    <Link href={item.section === "press" ? ADMIN_BASE.press : `${ADMIN_BASE[item.section]}/${item.id}/modifier`} className="block truncate text-slate-900 dark:text-slate-100 hover:underline">
-                      {item.title}
-                    </Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link href={item.section === "press" ? ADMIN_BASE.press : `${ADMIN_BASE[item.section]}/${item.id}/modifier`} className="block truncate text-slate-900 dark:text-slate-100 hover:underline">
+                        {item.title}
+                      </Link>
+                      {item.aiGenerated && (
+                        <span className="inline-flex shrink-0 items-center rounded-full bg-violet-100 dark:bg-violet-900/30 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 dark:text-violet-300">
+                          {t("aiBadge")}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">{sectionLabel(item.section)}</p>
                   </div>
                   <span className={`shrink-0 text-xs ${item.stale ? "text-red-600" : "text-slate-500 dark:text-slate-400"}`}>
@@ -211,6 +234,40 @@ function SectionCard({
           </Link>
         )}
       </div>
+    </div>
+  );
+}
+
+const AI_CADENCE_LABELS: Record<AiCadenceKey, string> = {
+  magArticle: "aiCadenceMag",
+  pressReview: "aiCadencePress",
+  guide: "aiCadenceGuide",
+};
+
+function AiCadenceCard({
+  c,
+  t,
+  fmt,
+}: {
+  c: AiCadenceItem;
+  t: Awaited<ReturnType<typeof getTranslations<"AdminEditorial">>>;
+  fmt: (n: number) => string;
+}) {
+  const labelKey = AI_CADENCE_LABELS[c.key] as "aiCadenceMag";
+  const pill =
+    c.status.status === "due"
+      ? { text: c.status.overdueDays > 0 ? t("aiOverdue", { days: c.status.overdueDays }) : t("aiDueNow"), cls: "bg-amber-100 text-amber-800" }
+      : c.status.status === "ok"
+        ? { text: t("aiNextIn", { days: c.status.daysUntilNext }), cls: "bg-emerald-100 text-emerald-800" }
+        : { text: "—", cls: "bg-slate-100 text-slate-500" };
+
+  return (
+    <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-900/10 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{t(labelKey)}</span>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${pill.cls}`}>{pill.text}</span>
+      </div>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("aiInterval", { days: fmt(c.intervalDays) })}</p>
     </div>
   );
 }
