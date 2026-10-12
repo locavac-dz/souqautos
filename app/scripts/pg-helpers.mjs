@@ -51,6 +51,9 @@ export function parseDatabaseUrl(raw = process.env.DATABASE_URL) {
 
 // Trouve un outil PostgreSQL : PG_BIN, puis le PATH, puis les emplacements
 // d'installation habituels de Windows (version la plus récente d'abord).
+// Le fichier doit exister ET être exécutable (`--version` retourne 0) : sous
+// Windows, une politique de contrôle d'application peut bloquer un exécutable
+// présent sur le disque sans que Node signale d'erreur (status 0xC0E90002).
 export function findPgTool(name) {
   const exe = process.platform === "win32" ? `${name}.exe` : name;
   const dirs = [];
@@ -67,7 +70,9 @@ export function findPgTool(name) {
   }
   for (const dir of dirs) {
     const candidate = path.join(dir, exe);
-    if (existsSync(candidate)) return candidate;
+    if (!existsSync(candidate)) continue;
+    const probe = spawnSync(candidate, ["--version"], { encoding: "utf8", timeout: 5000 });
+    if (probe.status === 0) return candidate;
   }
   fail(`Outil PostgreSQL « ${name} » introuvable. Installer les outils clients PostgreSQL ou définir PG_BIN (dossier bin).`, 2);
 }
