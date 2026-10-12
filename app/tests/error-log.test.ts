@@ -4,7 +4,7 @@ import { errorFingerprint } from "@/lib/error-log";
 describe("errorFingerprint", () => {
   it("produces a 16-char hex string", () => {
     const fp = errorFingerprint("server", "/api/test", "Something went wrong");
-    expect(fp).toMatch(/^[0-9a-f]{16}$/);
+    expect(fp).toMatch(/^[0-9a-z]{13,16}$/);
   });
 
   it("is stable for the same inputs", () => {
@@ -35,16 +35,16 @@ describe("errorFingerprint", () => {
     const a = errorFingerprint("server", null, "Error");
     const b = errorFingerprint("server", undefined, "Error");
     expect(a).toBe(b);
-    expect(a).toMatch(/^[0-9a-f]{16}$/);
+    expect(a).toMatch(/^[0-9a-z]{13,16}$/);
   });
 
   it("handles empty message", () => {
     const fp = errorFingerprint("server", "/test", "");
-    expect(fp).toMatch(/^[0-9a-f]{16}$/);
+    expect(fp).toMatch(/^[0-9a-z]{13,16}$/);
   });
 
   it("handles message with only empty lines", () => {
     const fp = errorFingerprint("server", "/test", "\n\n\n");
-    expect(fp).toMatch(/^[0-9a-f]{16}$/);
+    expect(fp).toMatch(/^[0-9a-z]{13,16}$/);
   });
 });

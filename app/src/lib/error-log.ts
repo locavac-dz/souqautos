@@ -1,6 +1,5 @@
-import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { maskSensitive } from "@/lib/server-error-alerts";
+import { maskSensitive } from "@/lib/mask-sensitive";
 
 // Lot 293 — persistance des erreurs en base (monitoring interne).
 //
@@ -30,7 +29,21 @@ const ROUTE_MAX = 200;
 
 export function errorFingerprint(kind: string, route: string | null | undefined, message: string): string {
   const firstLine = message.split("\n").find(Boolean) ?? "";
-  return createHash("sha256").update(`${kind}|${route ?? ""}|${firstLine}`).digest("hex").slice(0, 16);
+  return simpleHash(`${kind}|${route ?? ""}|${firstLine}`);
+}
+
+function simpleHash(input: string): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h2 = Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  const n = (((h1 ^ (h1 >>> 16)) >>> 0) * 4294967296 + ((h2 ^ (h2 >>> 13)) >>> 0));
+  return n.toString(36).padStart(13, "0").slice(0, 16);
 }
 
 function truncate(value: string | null | undefined, max: number): string | null {

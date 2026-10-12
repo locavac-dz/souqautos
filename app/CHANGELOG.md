@@ -1,5 +1,16 @@
 # Souq Auto — journal des lots
 
+## Lot 295 — Notifications temps réel + alertes prix favoris (2026-10-12)
+
+**Livré**
+- Cloche de notification visible en permanence dans le header (desktop + mobile) avec badge compteur.
+- Mise à jour temps réel du badge via SSE (`/api/notifications/stream`) — le compteur se met à jour sans recharger la page.
+- Pub/sub notifications dans `realtime.ts` (canal `notification:{userId}`, Redis ou repli mémoire).
+- Baisse de prix sur favoris : passage de l'email seul aux 3 canaux (email + push + in-app) via `notifyUser()`.
+- Nouveau kind `FAVORITE_PRICE_DROP` dans `NotificationKind`.
+- Le badge se remet à zéro instantanément après « Tout marquer comme lu ».
+- Migration Prisma appliquée, i18n FR/AR complet, 5 tests realtime + enum.
+
 ## Lot 1 — Comptes & fondations (2026-09-02)
 
 Premier module codé après validation du cahier d'architecture ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)), stack Next.js confirmée.

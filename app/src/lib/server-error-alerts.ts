@@ -36,13 +36,8 @@ export const ERROR_ALERT_WINDOW_MS = 30 * 60 * 1000;
 export const ERROR_ALERT_GLOBAL_LIMIT = 6; // par heure
 const MESSAGE_MAX = 200;
 
-// Adresses e-mail, longues suites de chiffres (téléphones, numéros de pièce) et jetons : jamais dans un courriel d'alerte.
-export function maskSensitive(text: string): string {
-  return text
-    .replace(/[^\s@'"<>()]+@[^\s@'"<>()]+\.[^\s@'"<>()]+/g, "[e-mail]")
-    .replace(/\+?\d[\d\s().-]{7,}\d/g, "[numéro]")
-    .replace(/\b[A-Za-z0-9_-]{32,}\b/g, "[…]");
-}
+import { maskSensitive } from "@/lib/mask-sensitive";
+export { maskSensitive };
 
 function readDigest(error: unknown): string | null {
   if (typeof error === "object" && error !== null && "digest" in error && (error as { digest?: unknown }).digest != null) {

@@ -1552,6 +1552,7 @@ enum NotificationKind {
   SEARCH_ALERT_MATCH
   PRO_FOLLOWER_LISTING
   SUBSCRIPTION_EXPIRING
+  FAVORITE_PRICE_DROP
 }
 
 model UserNotification {

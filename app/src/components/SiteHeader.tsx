@@ -8,6 +8,7 @@ import { NavLink } from "./NavLink";
 import { SiteLogoMark } from "./SiteLogoMark";
 import { SiteWordMark } from "./SiteWordMark";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./notifications/NotificationBell";
 import { isStaff } from "@/lib/auth-server/roles";
 import type { Role } from "@prisma/client";
 
@@ -133,6 +134,7 @@ export async function SiteHeader({
         <MobileMenuToggle menuLabel={tNav("menu")}>{mobileNav}</MobileMenuToggle>
 
         <div className="flex items-center gap-2 shrink-0 ltr:ml-auto rtl:mr-auto">
+          {user && <NotificationBell initialCount={unreadNotificationsCount} />}
           <ThemeToggle />
           <LocaleSwitcher />
         </div>

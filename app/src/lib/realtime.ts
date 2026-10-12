@@ -209,3 +209,81 @@ export async function publishToGroup(groupId: string, event: GroupEvent): Promis
     deliverGroupLocally(groupId, event);
   }
 }
+
+// --- Lot 295 — pub/sub pour les notifications utilisateur (badge temps réel) ---
+
+export type NotificationEvent = { type: "new"; count: number };
+
+type NotificationListener = (event: NotificationEvent) => void;
+
+const localNotifSubscribers = new Map<string, Set<NotificationListener>>();
+const REDIS_NOTIF_PREFIX = "notification:";
+
+function deliverNotifLocally(userId: string, event: NotificationEvent): void {
+  const set = localNotifSubscribers.get(userId);
+  if (!set) return;
+  for (const listener of set) listener(event);
+}
+
+let notifPmessageHandlerRegistered = false;
+let notifRedisSubscriptionPromise: Promise<void> | null = null;
+
+function ensureNotifRedisSubscription(): void {
+  const subscriber = getRedisSubscriberClient();
+  if (!subscriber) return;
+
+  if (!notifPmessageHandlerRegistered) {
+    notifPmessageHandlerRegistered = true;
+    subscriber.on("pmessage", (_pattern: string, channel: string, message: string) => {
+      if (!channel.startsWith(REDIS_NOTIF_PREFIX)) return;
+      const userId = channel.slice(REDIS_NOTIF_PREFIX.length);
+      try {
+        deliverNotifLocally(userId, JSON.parse(message) as NotificationEvent);
+      } catch (err) {
+        console.error(`[realtime/notif] message Redis illisible, ignoré: ${(err as Error).message}`);
+      }
+    });
+  }
+
+  if (notifRedisSubscriptionPromise) return;
+  notifRedisSubscriptionPromise = subscriber.psubscribe(`${REDIS_NOTIF_PREFIX}*`).then(
+    () => undefined,
+    (err: Error) => {
+      console.error(`[realtime/notif] échec abonnement Redis: ${err.message}`);
+      notifRedisSubscriptionPromise = null;
+    }
+  );
+}
+
+export function subscribeToUserNotifications(userId: string, listener: NotificationListener): () => void {
+  ensureNotifRedisSubscription();
+
+  let set = localNotifSubscribers.get(userId);
+  if (!set) {
+    set = new Set();
+    localNotifSubscribers.set(userId, set);
+  }
+  set.add(listener);
+
+  return () => {
+    const current = localNotifSubscribers.get(userId);
+    if (!current) return;
+    current.delete(listener);
+    if (current.size === 0) localNotifSubscribers.delete(userId);
+  };
+}
+
+export async function publishToUserNotifications(userId: string, event: NotificationEvent): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) {
+    deliverNotifLocally(userId, event);
+    return;
+  }
+
+  try {
+    await redis.publish(`${REDIS_NOTIF_PREFIX}${userId}`, JSON.stringify(event));
+  } catch (err) {
+    console.error(`[realtime/notif] Redis indisponible, repli local: ${(err as Error).message}`);
+    deliverNotifLocally(userId, event);
+  }
+}

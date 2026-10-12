@@ -1354,6 +1354,10 @@
     "ownerReviewLink": "عرض صفحة الطراز على سوق أوتو",
     "priceDropSubject": "انخفاض سعر إعلان ضمن مفضلتك — سوق أوتو",
     "priceDropBody": "انخفض سعر الإعلان « {title} »، الموجود ضمن مفضلتك: {oldPrice} دج ← {newPrice} دج.",
+    "priceDropInAppTitle": "انخفاض السعر",
+    "priceDropLink": "عرض الإعلان على سوق أوتو",
+    "pushPriceDropTitle": "انخفاض سعر في مفضلتك",
+    "pushPriceDropBody": "{title}: {oldPrice} دج ← {newPrice} دج",
     "reviewReplySubject": "رد على تقييمك — سوق أوتو",
     "reviewReplyBody": "رد {name} على التقييم الذي تركته: « {reply} »",
     "reviewReplyLink": "عرض الرد على سوق أوتو",
@@ -2333,7 +2337,8 @@
       "OFFER_COUNTERED": "عرض مضاد",
       "SEARCH_ALERT_MATCH": "تنبيه بحث",
       "PRO_FOLLOWER_LISTING": "إعلان جديد",
-      "SUBSCRIPTION_EXPIRING": "اشتراك على وشك الانتهاء"
+      "SUBSCRIPTION_EXPIRING": "اشتراك على وشك الانتهاء",
+      "FAVORITE_PRICE_DROP": "انخفاض السعر"
     }
   },
   "LoginHistory": {

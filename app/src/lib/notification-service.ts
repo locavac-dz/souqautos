@@ -5,6 +5,7 @@
 // La lecture de `data` côté affichage est typée par le kind : cf. NotificationData.
 import { prisma } from "@/lib/prisma";
 import type { NotificationKind } from "@prisma/client";
+import { publishToUserNotifications } from "@/lib/realtime";
 
 export type NotificationData = {
   url: string;
@@ -29,6 +30,8 @@ export async function createNotification(
 ): Promise<void> {
   try {
     await prisma.userNotification.create({ data: { userId, kind, data } });
+    const count = await prisma.userNotification.count({ where: { userId, readAt: null } });
+    publishToUserNotifications(userId, { type: "new", count }).catch(() => {});
   } catch (err) {
     // Une notification qui échoue ne doit jamais bloquer l'action principale.
     console.error(`[notification-service] création échouée (${kind}): ${(err as Error).message}`);
@@ -62,6 +65,7 @@ export async function markAllRead(userId: string): Promise<void> {
     where: { userId, readAt: null },
     data: { readAt: new Date() },
   });
+  publishToUserNotifications(userId, { type: "new", count: 0 }).catch(() => {});
 }
 
 export async function markRead(userId: string, id: string): Promise<void> {

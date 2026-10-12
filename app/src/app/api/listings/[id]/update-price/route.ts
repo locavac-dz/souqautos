@@ -7,7 +7,9 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { checkListingPriceEditable, isPriceDrop } from "@/lib/listing-lifecycle";
 import { canManageListing } from "@/lib/listing-access";
-import { sendEmail, escapeHtml } from "@/lib/mailer";
+import { escapeHtml } from "@/lib/mailer";
+import { SITE_URL } from "@/lib/site";
+import { notifyUser } from "@/lib/notify-user";
 
 const bodySchema = z.object({
   price: z.number().int().positive().max(999_999_999),
@@ -64,7 +66,7 @@ export const POST = apiHandler(async (request: NextRequest, { params }: { params
   return NextResponse.json({ price: newPrice });
 });
 
-const PRICE_DROP_EMAIL_BATCH = 20;
+const PRICE_DROP_BATCH = 20;
 
 async function notifyFavoritesOfPriceDrop(listingId: string, title: string, oldPrice: number, newPrice: number): Promise<void> {
   const favorites = await prisma.favorite.findMany({
@@ -72,26 +74,36 @@ async function notifyFavoritesOfPriceDrop(listingId: string, title: string, oldP
     include: { user: true },
   });
 
-  for (let i = 0; i < favorites.length; i += PRICE_DROP_EMAIL_BATCH) {
-    // Chaque envoi est indépendant et au mieux (.catch() propre) : un échec n'arrête jamais les autres.
+  for (let i = 0; i < favorites.length; i += PRICE_DROP_BATCH) {
     await Promise.all(
-      favorites.slice(i, i + PRICE_DROP_EMAIL_BATCH).map(async (favorite) => {
-        const t = await getTranslations({ locale: favorite.user.locale, namespace: "Notifications" });
-        const emailResult = await sendEmail({
-          to: favorite.user.email,
-          subject: t("priceDropSubject"),
-          html: `<p>${t("greeting")}</p><p>${t("priceDropBody", {
-            title: escapeHtml(title),
-            oldPrice: formatNumber(oldPrice, favorite.user.locale),
-            newPrice: formatNumber(newPrice, favorite.user.locale),
-          })}</p>`,
-        }).catch((err) => {
-          console.error(`[EMAIL notification baisse de prix] échec envoi: ${(err as Error).message}`);
-          return null;
+      favorites.slice(i, i + PRICE_DROP_BATCH).map(async (favorite) => {
+        const locale = favorite.user.locale === "ar" ? "ar" : "fr";
+        const t = await getTranslations({ locale, namespace: "Notifications" });
+        const price = (p: number) => formatNumber(p, locale);
+
+        await notifyUser({
+          userId: favorite.userId,
+          kind: "FAVORITE_PRICE_DROP",
+          url: `/${locale}/annonce/${listingId}`,
+          body: t("priceDropBody", { title, oldPrice: price(oldPrice), newPrice: price(newPrice) }),
+          title: t("priceDropInAppTitle"),
+          email: {
+            tag: "baisse de prix favori",
+            to: favorite.user.email,
+            subject: t("priceDropSubject"),
+            html: `<p>${t("greeting")}</p><p>${t("priceDropBody", {
+              title: escapeHtml(title),
+              oldPrice: price(oldPrice),
+              newPrice: price(newPrice),
+            })}</p><p><a href="${SITE_URL}/${locale}/annonce/${listingId}">${t("priceDropLink")}</a></p>`,
+          },
+          push: {
+            title: t("pushPriceDropTitle"),
+            body: t("pushPriceDropBody", { title, oldPrice: price(oldPrice), newPrice: price(newPrice) }),
+            tag: `pricedrop-${listingId}`,
+            lang: locale,
+          },
         });
-        if (emailResult?.previewUrl) {
-          console.log(`[EMAIL notification baisse de prix] ${emailResult.previewUrl}`);
-        }
       })
     );
   }

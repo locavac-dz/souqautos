@@ -1354,6 +1354,10 @@
     "ownerReviewLink": "Voir la page du modèle sur Souq Autos",
     "priceDropSubject": "Baisse de prix sur une annonce de vos favoris — Souq Autos",
     "priceDropBody": "Le prix de l'annonce « {title} », dans vos favoris, vient de baisser : {oldPrice} DA → {newPrice} DA.",
+    "priceDropInAppTitle": "Baisse de prix",
+    "priceDropLink": "Voir l'annonce sur Souq Autos",
+    "pushPriceDropTitle": "Baisse de prix dans vos favoris",
+    "pushPriceDropBody": "{title} : {oldPrice} DA → {newPrice} DA",
     "reviewReplySubject": "Réponse à votre avis — Souq Autos",
     "reviewReplyBody": "{name} a répondu à l'avis que vous avez laissé : « {reply} »",
     "reviewReplyLink": "Voir la réponse sur Souq Autos",
@@ -2333,7 +2337,8 @@
       "OFFER_COUNTERED": "Contre-offre reçue",
       "SEARCH_ALERT_MATCH": "Alerte de recherche",
       "PRO_FOLLOWER_LISTING": "Nouvelle annonce",
-      "SUBSCRIPTION_EXPIRING": "Abonnement bientôt expiré"
+      "SUBSCRIPTION_EXPIRING": "Abonnement bientôt expiré",
+      "FAVORITE_PRICE_DROP": "Baisse de prix"
     }
   },
   "LoginHistory": {
