@@ -4265,6 +4265,19 @@ Cinq corrections issues de l'audit AL HANDASSA, par ordre de priorité.
 
 **Vérifié** : `tsc` 0 erreur ; **2 465 tests** verts (221 fichiers).
 
+## Lot 289 — Renommage Souq Auto → Souq Autos (2026-10-12)
+
+**Livré**
+- Nom de marque aligné sur le domaine `souqautos.com` : « Souq Auto » devient « Souq Autos » dans tout le projet.
+- Wordmark du header et du footer (`SiteWordMark.tsx`).
+- Traductions FR (83 occurrences) et AR (4 occurrences) : titres de pages, metadata OG, descriptions, emails, notifications.
+- Données structurées JSON-LD (publisher, auteur), images de partage, manifest PWA, service worker (notification push par défaut).
+- Seeds Prisma, Capacitor, Playwright, scripts i18n.
+- Tests unitaires et e2e mis à jour (218 occurrences au total, 84 fichiers).
+- Les slugs d'URL (`/cote-souq-auto`) et le domaine (`souqautos.com`, `contact@souqautos.com`) sont inchangés.
+
+**Vérifié** : `tsc` 0 ; **2 453 tests** verts (5 échecs `backup-chain` pré-existants, liés à `pg_dump`) ; site vérifié dans le navigateur (header, footer, titre, bandeau de lancement).
+
 ## Lot 109 — Vérification PostgreSQL (2026-10-11)
 
 **Livré**
