@@ -17,7 +17,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 import { estimateParamsSchema } from "@/lib/validation/estimate";
 import { estimatePrice } from "@/lib/price-estimation";
+import { getMarketPriceTrend } from "@/lib/market-price-snapshot";
 import { EstimateForm } from "@/components/estimate/EstimateForm";
+import { MarketPriceTrend } from "@/components/MarketPriceTrend";
 import { formatNumber } from "@/lib/format";
 
 const CONFIDENCE_KEY: Record<string, string> = {
@@ -60,6 +62,10 @@ export default async function EstimatePage({
         wilayaId: params.wilayaId,
       })
     : null;
+
+  const trend = hasQuery
+    ? await getMarketPriceTrend(params.modelId!, params.year)
+    : [];
 
   const brandName = brands.find((b) => b.id === params.brandId)?.name;
   const modelName = brands
@@ -146,6 +152,18 @@ export default async function EstimatePage({
                 {t("disclaimer")}
               </p>
             </div>
+          )}
+
+          {hasQuery && trend.length >= 2 && (
+            <section className="mt-6">
+              <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t("trendTitle")}</h2>
+              <MarketPriceTrend
+                points={trend}
+                label={t("trendLabel", { brand: brandName ?? "", model: modelName ?? "" })}
+                locale={locale}
+              />
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("trendNote")}</p>
+            </section>
           )}
         </div>
       </div>

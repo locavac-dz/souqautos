@@ -187,6 +187,7 @@ model Brand {
   roadTests RoadTest[]
   buyingGuides BuyingGuide[]
   pressReviews PressReview[]
+  marketPriceSnapshots MarketPriceSnapshot[]
 }
 
 model Model {
@@ -213,6 +214,7 @@ model Model {
   buyingGuides BuyingGuide[]
   pressReviews PressReview[]
   ownerReviews OwnerReview[]
+  marketPriceSnapshots MarketPriceSnapshot[]
 
   @@unique([brandId, slug])
 }
@@ -1765,4 +1767,21 @@ model ErrorLog {
   @@index([fingerprint, createdAt])
   @@index([kind, createdAt])
   @@index([createdAt])
+}
+
+model MarketPriceSnapshot {
+  id         String   @id @default(cuid())
+  brandId    Int
+  brand      Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  modelId    Int
+  model      Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  year       Int
+  low        Int
+  mid        Int
+  high       Int
+  sampleSize Int
+  snapshotAt DateTime @default(now())
+
+  @@index([modelId, year, snapshotAt])
+  @@index([brandId, snapshotAt])
 }

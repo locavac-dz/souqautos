@@ -525,7 +525,10 @@
     "filterMileageRelaxed": "Kilométrage non pris en compte (pas assez d'annonces comparables).",
     "filterWilayaRelaxed": "Wilaya non prise en compte (pas assez d'annonces comparables).",
     "noData": "Pas encore assez d'annonces publiées pour ce modèle pour proposer une estimation — revenez quand le catalogue aura grandi.",
-    "disclaimer": "Estimation indicative basée sur les données disponibles sur le marché. Ce n'est ni une expertise ni une garantie de prix."
+    "disclaimer": "Estimation indicative basée sur les données disponibles sur le marché. Ce n'est ni une expertise ni une garantie de prix.",
+    "trendTitle": "Évolution de la cote",
+    "trendLabel": "Évolution du prix médian {brand} {model}",
+    "trendNote": "Fourchette P25–P75 et prix médian, relevés hebdomadaires."
   },
   "IslamicFinancing": {
     "title": "Financement islamique — Murābaha",
@@ -650,7 +653,10 @@
     "emptyCategory": "Aucune marque dans cette catégorie.",
     "priceHistoryTitle": "Évolution du prix moyen (12 mois)",
     "priceHistoryLabel": "Prix moyen des {brand} {model} sur 12 mois",
-    "priceHistoryNote": "Prix calculé sur les annonces publiées chaque mois. Survolez les barres pour le détail."
+    "priceHistoryNote": "Prix calculé sur les annonces publiées chaque mois. Survolez les barres pour le détail.",
+    "marketTrendTitle": "Tendance du marché",
+    "marketTrendLabel": "Tendance des prix {brand} {model}",
+    "marketTrendNote": "Fourchette P25–P75 et prix médian, relevés hebdomadaires sur les annonces en ligne."
   },
   "ErrorPage": {
     "title": "Une erreur est survenue",

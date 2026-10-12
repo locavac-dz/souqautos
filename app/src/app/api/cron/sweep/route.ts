@@ -8,6 +8,7 @@ import { sweepPendingChargilyOrders } from "@/lib/chargily-events";
 import { sweepPendingTransferReminders, sweepSubscriptionExpiryReminders } from "@/lib/commercial-reminders";
 import { sendWeeklyReportIfDue } from "@/lib/weekly-report";
 import { sweepOldErrorLogs } from "@/lib/error-log";
+import { takeMarketSnapshots, sweepOldSnapshots } from "@/lib/market-price-snapshot";
 import { safeEqual } from "@/lib/google-oauth";
 import { apiHandler } from "@/lib/api-route";
 
@@ -41,6 +42,9 @@ export const POST = apiHandler(async (req: NextRequest) => {
   const weeklyReport = await sendWeeklyReportIfDue(now);
   // Lot 293 — purge des erreurs de plus de 30 jours + cap à 10 000 lignes.
   const errorLogsSwept = await sweepOldErrorLogs(now);
+  // Lot 294 — snapshot hebdomadaire des prix du marché + purge > 24 mois.
+  const marketSnapshots = await takeMarketSnapshots(now);
+  const oldSnapshotsSwept = await sweepOldSnapshots(now);
 
-  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept });
+  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept, marketSnapshots, oldSnapshotsSwept });
 });

@@ -4265,6 +4265,20 @@ Cinq corrections issues de l'audit AL HANDASSA, par ordre de priorité.
 
 **Vérifié** : `tsc` 0 erreur ; **2 465 tests** verts (221 fichiers).
 
+## Lot 294 — Historique des prix du marché (2026-10-12)
+
+**Livré**
+- Table `MarketPriceSnapshot` (Prisma) : stocke les relevés hebdomadaires P25/médian/P75 par modèle et année, avec nombre d'annonces comparables.
+- Module `src/lib/market-price-snapshot.ts` : `takeMarketSnapshots()` (une requête SQL agrégée, un batch insert), `getMarketPriceTrend()` (lecture pour les graphiques), `sweepOldSnapshots()` (rétention 24 mois).
+- Composant `MarketPriceTrend` : graphique SVG avec bande P25–P75 et courbe médiane, tooltips, axes auto-scalés, dark mode.
+- Intégration page `/cote-souq-auto` : affiche la tendance de prix sous le résultat d'estimation.
+- Intégration page modèle `/voitures/[brand]/[model]` : section « Tendance du marché » sous le graphique mensuel existant.
+- Snapshot + purge automatiques dans le cron sweep (`/api/cron/sweep`).
+- Clés i18n FR/AR (`Estimate.trend*`, `Catalogue.marketTrend*`).
+- 9 tests unitaires (ticks, formatage compact, médiane).
+
+**Vérifié** : `tsc --noEmit` zéro erreur, 2 482/2 482 tests OK.
+
 ## Lot 293 — Monitoring d'erreurs interne (2026-10-12)
 
 **Livré**

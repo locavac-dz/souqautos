@@ -13,6 +13,8 @@ import { GuideCard, guideCardSelect } from "@/components/GuideCard";
 import { PressReviewCard } from "@/components/PressReviewCard";
 import { OwnerReviewsSection } from "@/components/OwnerReviewsSection";
 import { MonthlyPriceBars } from "@/components/MonthlyPriceBars";
+import { MarketPriceTrend } from "@/components/MarketPriceTrend";
+import { getMarketPriceTrend } from "@/lib/market-price-snapshot";
 import { publishedNow } from "@/lib/blog-publication";
 import { ListingCard } from "@/components/search/ListingCard";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
@@ -71,9 +73,10 @@ export default async function ModelPage({
   const tGuide = await getTranslations("Guide");
   const tPress = await getTranslations("PressReview");
 
-  const [stats, priceHistory, listings, currentUser, roadTests, guides, pressReviews, pressTotal] = await Promise.all([
+  const [stats, priceHistory, marketTrend, listings, currentUser, roadTests, guides, pressReviews, pressTotal] = await Promise.all([
     getListingStats({ brandId: brand.id, modelId: model.id }),
     getModelPriceHistory({ brandId: brand.id, modelId: model.id }),
+    getMarketPriceTrend(model.id),
     prisma.listing.findMany({
       where: { brandId: brand.id, modelId: model.id, status: "PUBLIEE" },
       orderBy: { createdAt: "desc" },
@@ -215,6 +218,18 @@ export default async function ModelPage({
             locale={locale}
           />
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("priceHistoryNote")}</p>
+        </section>
+      )}
+
+      {marketTrend.length >= 2 && (
+        <section className="mt-6">
+          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t("marketTrendTitle")}</h2>
+          <MarketPriceTrend
+            points={marketTrend}
+            label={t("marketTrendLabel", { brand: brand.name, model: model.name })}
+            locale={locale}
+          />
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("marketTrendNote")}</p>
         </section>
       )}
 
