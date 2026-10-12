@@ -1,5 +1,15 @@
 # Souq Auto — journal des lots
 
+## Lot 299 — Contenu éditorial semi-automatique (2026-10-12)
+
+**Livré**
+- **Brouillons IA automatiques** : le cron nightly génère un brouillon d'article Mag par semaine et un guide d'achat par mois, via l'API Anthropic (Claude Sonnet). Les brouillons sont créés avec `publishedAt: null` (non visibles du public) et `aiGenerated: true`, prêts à être relus et publiés par l'équipe.
+- **Sélection intelligente des sujets** : 12 templates Mag couvrant l'actualité auto algérienne (entretien, assurance, contrôle technique, GPL, import, comparatifs…), rotation automatique pour éviter les doublons. Les guides ciblent le modèle le plus populaire sans guide existant.
+- **Badge « Brouillon IA »** violet dans la liste d'administration des articles, visible tant que l'article n'est pas publié.
+- Contenu bilingue FR/AR généré en une seule passe, avec validation des longueurs minimales et troncature de sécurité.
+- Migration Prisma : champ `aiGenerated` (Boolean) sur BlogArticle.
+- i18n FR/AR (`AdminBlog.aiDraft`), 22 nouveaux tests (topics, AI writer JSON parsing, sweep scheduling).
+
 ## Lot 298 — Partenariat Assurance Niveau 2 (2026-10-12)
 
 **Livré**

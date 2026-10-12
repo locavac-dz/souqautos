@@ -61,7 +61,14 @@ export async function AdminBlogList({ kind }: { kind: ArticleKind }) {
                 className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 dark:border-slate-700 p-3"
               >
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">{article.titleFr}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{article.titleFr}</p>
+                    {article.aiGenerated && !article.publishedAt && (
+                      <span className="inline-flex items-center rounded-full bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 text-[10px] font-medium text-violet-700 dark:text-violet-300">
+                        {t("aiDraft")}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {status === "published" && article.publishedAt && (
                       <span className="text-emerald-700">

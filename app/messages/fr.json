@@ -2150,6 +2150,7 @@
     "editArticle": "Modifier l'article",
     "empty": "Aucun article pour le moment.",
     "draft": "Brouillon",
+    "aiDraft": "Brouillon IA",
     "publishedOn": "Publié le {date}",
     "view": "Voir",
     "preview": "Aperçu",

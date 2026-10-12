@@ -2150,6 +2150,7 @@
     "editArticle": "تعديل المقال",
     "empty": "لا يوجد مقال حاليًا.",
     "draft": "مسودة",
+    "aiDraft": "مسودة ذ.ا.",
     "publishedOn": "نُشر في {date}",
     "view": "عرض",
     "preview": "معاينة",
