@@ -4265,6 +4265,14 @@ Cinq corrections issues de l'audit AL HANDASSA, par ordre de priorité.
 
 **Vérifié** : `tsc` 0 erreur ; **2 465 tests** verts (221 fichiers).
 
+## Lot 290 — Audit build production (2026-10-12)
+
+**Livré**
+- Build production (`next build` Turbopack) : 0 erreur TypeScript, 222 pages statiques générées, 0 warning.
+- Fix warning Turbopack dans `src/lib/uploads.ts` : le pattern `path.join(process.cwd(), "public", storedPath)` matchait 11 496 fichiers. Remplacé par `uploadsRoot()` qui retourne un chemin fixe vers `public/uploads/`.
+
+**Vérifié** : build propre (0 warning, 0 erreur) ; site fonctionnel en mode dev après le fix.
+
 ## Lot 289 — Renommage Souq Auto → Souq Autos (2026-10-12)
 
 **Livré**
