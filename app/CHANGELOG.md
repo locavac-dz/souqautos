@@ -4265,6 +4265,15 @@ Cinq corrections issues de l'audit AL HANDASSA, par ordre de priorité.
 
 **Vérifié** : `tsc` 0 erreur ; **2 465 tests** verts (221 fichiers).
 
+## Lot 292 — Fix tests backup-chain (2026-10-12)
+
+**Livré**
+- Fix `findPgTool` dans `scripts/pg-helpers.mjs` : vérifie que l'outil PostgreSQL est réellement exécutable (`--version` retourne 0) avant de le retenir, pas seulement qu'il existe sur le disque.
+- Cause racine : sous Windows, une politique de contrôle d'application (WDAC/SmartScreen) bloque `pg_dump.exe` (status `0xC0E90002`) sans que Node signale d'erreur. `existsSync` trouvait le fichier mais l'exécution échouait avec status 1 au lieu de 2 (skip).
+- 5 tests `backup-chain.test.ts` passent désormais en skip propre (status 2) au lieu d'échouer.
+
+**Vérifié** : suite vitest complète 2 453 passed, 0 failed, 12 skipped.
+
 ## Lot 291 — Audit tests e2e (2026-10-12)
 
 **Vérifié**
