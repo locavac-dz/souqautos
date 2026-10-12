@@ -11,6 +11,7 @@ import { sweepOldErrorLogs } from "@/lib/error-log";
 import { takeMarketSnapshots, sweepOldSnapshots } from "@/lib/market-price-snapshot";
 import { sweepDocumentExpiryReminders } from "@/lib/document-expiry-reminder-sweep";
 import { sweepEditorialDrafts } from "@/lib/editorial-draft-sweep";
+import { notifyEditorialDrafts } from "@/lib/editorial-draft-notify";
 import { safeEqual } from "@/lib/google-oauth";
 import { apiHandler } from "@/lib/api-route";
 
@@ -51,6 +52,8 @@ export const POST = apiHandler(async (req: NextRequest) => {
   const documentReminders = await sweepDocumentExpiryReminders(now);
   // Lot 299 — brouillons éditoriaux IA : 1 article Mag / semaine + 1 guide d'achat / mois.
   const editorialDrafts = await sweepEditorialDrafts(now);
+  // Lot 301 — notification admin quand des brouillons IA sont créés.
+  const editorialNotified = await notifyEditorialDrafts(editorialDrafts);
 
-  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept, marketSnapshots, oldSnapshotsSwept, documentReminders, editorialDrafts });
+  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept, marketSnapshots, oldSnapshotsSwept, documentReminders, editorialDrafts, editorialNotified });
 });

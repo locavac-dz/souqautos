@@ -1,5 +1,13 @@
 # Souq Auto — journal des lots
 
+## Lot 301 — Notification admin des brouillons IA (2026-10-12)
+
+**Livré**
+- **Email automatique à l'équipe** quand le cron éditorial génère des brouillons IA : l'admin et l'équipe (STAFF_ALERT_EMAILS + ADMIN_EMAIL) reçoivent un récapitulatif avec liens directs vers l'administration (/admin/mag ou /admin/guides).
+- Envoi « best-effort » (sendEmailBestEffort) : un échec d'envoi est journalisé mais n'interrompt pas le cron.
+- Mention claire que les brouillons ne sont pas publiés et doivent être relus.
+- 12 nouveaux tests (résolution des destinataires, construction de l'email, pluriel, envoi).
+
 ## Lot 300 — Revue de presse IA (2026-10-12)
 
 **Livré**
