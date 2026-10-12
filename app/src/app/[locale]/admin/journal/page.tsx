@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-server/current-user";
 import { isModerator } from "@/lib/auth-server/roles";
 import { formatAuditLogDetails } from "@/lib/audit-log";
+import { ExportCsvButton } from "@/components/ExportCsvButton";
 
 // Journal d'audit (§47 du cahier d'architecture : « logs d'audit sur toute
 // action admin »). AuditLog est alimenté depuis le Lot 7 par une quinzaine de
@@ -51,7 +52,10 @@ export default async function AdminAuditLogPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("title")}</h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{t("title")}</h1>
+        <ExportCsvButton href="/api/admin/export/audit-log" label={t("exportCsv")} />
+      </div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("subtitle")}</p>
 
       {entries.length === 0 ? (

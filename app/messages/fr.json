@@ -886,7 +886,8 @@
     "statStatusBreakdownTitle": "Répartition des annonces par statut",
     "statTopBrandsTitle": "Top 5 marques (annonces publiées)",
     "statTopWilayasTitle": "Top 5 wilayas (annonces publiées)",
-    "statNoData": "Pas encore de données."
+    "statNoData": "Pas encore de données.",
+    "exportCsv": "Exporter CSV"
   },
   "AdminModeration": {
     "title": "Tableau de bord — Modération IA",
@@ -1650,7 +1651,8 @@
     "paginationLabel": "Pagination du journal",
     "previous": "Précédent",
     "next": "Suivant",
-    "pageOf": "Page {page} / {totalPages}"
+    "pageOf": "Page {page} / {totalPages}",
+    "exportCsv": "Exporter CSV"
   },
   "Payment": {
     "checkPayment": "Vérifier le paiement",

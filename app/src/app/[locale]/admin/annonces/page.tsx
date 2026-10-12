@@ -9,6 +9,7 @@ import { ModerationActions } from "@/components/admin/ModerationActions";
 import { AssignmentControls } from "@/components/admin/AssignmentControls";
 import { TeamActivityTable } from "@/components/admin/TeamActivityTable";
 import { isAdmin } from "@/lib/auth-server/roles";
+import { ExportCsvButton } from "@/components/ExportCsvButton";
 import { getFraudSignalsForListings } from "@/lib/fraud-signals";
 import type { PhotoAiTag } from "@/lib/photo-ai";
 
@@ -64,6 +65,9 @@ export default async function AdminListingsPage() {
     <div className="space-y-10">
       {/* Lot 277 — activité de l'équipe */}
       <TeamActivityTable />
+      <div className="flex items-center justify-between mb-4">
+        <ExportCsvButton href="/api/admin/export/listings" label={t("exportCsv")} />
+      </div>
       <section>
         <h1 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
           {t("pendingListings")} ({pending.length})

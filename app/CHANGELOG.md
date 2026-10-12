@@ -1,5 +1,18 @@
 # Souq Auto — journal des lots
 
+## Lot 305 — Export CSV admin (2026-10-12)
+
+**Livré**
+- **Export CSV des annonces** : `GET /api/admin/export/listings?status=…` — 22 colonnes (ID, titre, marque, modèle, prix, kilométrage, carburant, boîte, wilaya, statut, formule, score fraude, vues, vendeur, dates…). Filtre optionnel par statut, brouillons exclus par défaut.
+- **Export CSV des utilisateurs** : `GET /api/admin/export/users` — 13 colonnes (email, téléphone, nom affiché, rôle, wilaya, langue, vérifications, nb annonces, dates…).
+- **Export CSV du journal d'audit** : `GET /api/admin/export/audit-log?from=…&to=…` — 6 colonnes, plage de dates optionnelle.
+- **Bouton « Exporter CSV »** sur les 3 pages admin (annonces, utilisateurs, journal d'audit) avec téléchargement côté client et spinner.
+- Module pur `csv-export.ts` : `buildCsv(rows, columns)` typé avec BOM UTF-8 (Excel), protection contre l'injection de formule (OWASP) via `guardFormula` existant.
+- Composant client `ExportCsvButton` réutilisable.
+- Accès réservé aux modérateurs (isModerator) via `requireRole`.
+- i18n FR/AR (clé `exportCsv` dans Admin + AdminAuditLog).
+- 7 nouveaux tests (buildCsv, csvResponse, BOM, échappement, injection), suite complète 244 fichiers / 2651 tests.
+
 ## Lot 304 — Dashboard stats modération IA (2026-10-12)
 
 **Livré**
