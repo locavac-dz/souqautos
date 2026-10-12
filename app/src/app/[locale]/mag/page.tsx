@@ -37,7 +37,7 @@ export async function generateMetadata({
   const canonical = `${SITE_URL}/${locale}/mag${page && page > 1 ? `?page=${page}` : ""}`;
 
   return {
-    title: `${t("indexTitle")} — Souq Auto`,
+    title: `${t("indexTitle")} — Souq Autos`,
     description: t("indexSubtitle"),
     alternates: {
       ...localizedAlternates(canonical),

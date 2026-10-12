@@ -21,7 +21,7 @@ const goodEnv = {
   SMTP_HOST: "smtp.example.org",
   SMTP_USER: "u",
   SMTP_PASS: "p",
-  SMTP_FROM: "Souq Auto <contact@souqauto.example>",
+  SMTP_FROM: "Souq Autos <contact@souqauto.example>",
   TRUSTED_PROXY_HOPS: "1",
   REDIS_URL: "redis://redis.internal:6379",
   S3_BUCKET: "souq-auto-photos",

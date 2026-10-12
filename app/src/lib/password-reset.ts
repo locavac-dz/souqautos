@@ -45,10 +45,10 @@ export function resetEmail(locale: ResetLocale, link: string): { subject: string
     };
   }
   return {
-    subject: "Réinitialisation de votre mot de passe — Souq Auto",
+    subject: "Réinitialisation de votre mot de passe — Souq Autos",
     html: wrap(
       "fr",
-      `<p>Bonjour,</p><p>Une demande de réinitialisation du mot de passe de votre compte Souq Auto a été faite. Cliquez sur ce lien pour choisir un nouveau mot de passe :</p><p><a href="${link}">${link}</a></p><p>Ce lien est valable ${RESET_TOKEN_TTL_MINUTES / 60} heure et ne peut servir qu'une fois.</p><p>Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : rien ne change sur votre compte.</p>`
+      `<p>Bonjour,</p><p>Une demande de réinitialisation du mot de passe de votre compte Souq Autos a été faite. Cliquez sur ce lien pour choisir un nouveau mot de passe :</p><p><a href="${link}">${link}</a></p><p>Ce lien est valable ${RESET_TOKEN_TTL_MINUTES / 60} heure et ne peut servir qu'une fois.</p><p>Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : rien ne change sur votre compte.</p>`
     ),
   };
 }
@@ -62,7 +62,7 @@ export function passwordChangedEmail(locale: ResetLocale): { subject: string; ht
     };
   }
   return {
-    subject: "Votre mot de passe a été modifié — Souq Auto",
-    html: wrap("fr", `<p>Bonjour,</p><p>Le mot de passe de votre compte Souq Auto vient d'être modifié, et tous vos appareils ont été déconnectés.</p><p>Si ce n'est pas vous, réinitialisez immédiatement votre mot de passe, puis contactez-nous.</p>`),
+    subject: "Votre mot de passe a été modifié — Souq Autos",
+    html: wrap("fr", `<p>Bonjour,</p><p>Le mot de passe de votre compte Souq Autos vient d'être modifié, et tous vos appareils ont été déconnectés.</p><p>Si ce n'est pas vous, réinitialisez immédiatement votre mot de passe, puis contactez-nous.</p>`),
   };
 }

@@ -30,7 +30,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   const t = await getTranslations({ locale, namespace: "Guide" });
   const canonical = `${SITE_URL}/${locale}/guides${page && page > 1 ? `?page=${page}` : ""}`;
   return {
-    title: `${t("indexTitle")} — Souq Auto`,
+    title: `${t("indexTitle")} — Souq Autos`,
     description: t("indexSubtitle"),
     alternates: {
       ...localizedAlternates(canonical),

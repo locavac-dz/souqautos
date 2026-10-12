@@ -93,12 +93,12 @@ export default async function HomePage() {
 
   const webSiteJsonLd = buildWebSiteJsonLd({
     siteUrl: SITE_URL,
-    siteName: "Souq Auto",
+    siteName: "Souq Autos",
     searchUrlTemplate: `${SITE_URL}/fr/recherche?q={search_term_string}`,
   });
   const orgJsonLd = buildOrganizationJsonLd({
     siteUrl: SITE_URL,
-    siteName: "Souq Auto",
+    siteName: "Souq Autos",
     logoUrl: `${SITE_URL}/icons/icon-512.png`,
   });
 

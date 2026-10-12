@@ -6,7 +6,7 @@
 // une boîte de test que personne ne lit, sans aucune erreur visible. En
 // production, un SMTP non configuré est maintenant une erreur explicite.
 
-export const DEFAULT_MAIL_FROM = "Souq Auto <no-reply@souqautos.com>";
+export const DEFAULT_MAIL_FROM = "Souq Autos <no-reply@souqautos.com>";
 
 export type MailConfig =
   | {

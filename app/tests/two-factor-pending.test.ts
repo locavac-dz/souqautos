@@ -60,7 +60,7 @@ describe("courriels d'avertissement de sécurité", () => {
   it.each(kinds)("« %s » existe en français et en arabe, avec un sujet, un texte et l'avertissement « ce n'est pas vous »", (kind) => {
     const fr = twoFactorNoticeEmail(kind, "fr", 4);
     const ar = twoFactorNoticeEmail(kind, "ar", 4);
-    expect(fr.subject).toContain("Souq Auto");
+    expect(fr.subject).toContain("Souq Autos");
     expect(ar.subject).toContain("سوق أوتو");
     expect(fr.html).toContain('dir="ltr"');
     expect(ar.html).toContain('dir="rtl"');

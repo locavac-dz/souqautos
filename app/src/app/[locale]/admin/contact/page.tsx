@@ -60,7 +60,7 @@ export default async function AdminContactPage() {
         <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
           {m.name} ·{" "}
           <a
-            href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: [${m.reference}] Souq Auto`)}`}
+            href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: [${m.reference}] Souq Autos`)}`}
             className="font-normal text-emerald-700 hover:underline dark:text-emerald-400"
           >
             {m.email}
@@ -78,7 +78,7 @@ export default async function AdminContactPage() {
       </div>
       <div className="sm:w-60 sm:shrink-0">
         <a
-          href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: [${m.reference}] Souq Auto`)}`}
+          href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: [${m.reference}] Souq Autos`)}`}
           className="mb-2 inline-block text-sm font-medium text-slate-900 underline dark:text-slate-100"
         >
           {t("contactReplyByEmail")}

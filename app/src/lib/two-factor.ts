@@ -11,7 +11,7 @@ import { normalizeNoticeLocale, twoFactorNoticeEmail, type TwoFactorNoticeKind }
 // Lot 138 — double authentification (TOTP) : le déroulement, séparé des routes pour être testé sans réseau.
 // Les règles de calcul (code, fenêtre, anti-rejeu) sont dans src/lib/totp.ts ; ici : la base, les courriels, le journal d'audit.
 
-export const ISSUER = "Souq Auto";
+export const ISSUER = "Souq Autos";
 
 const sealSecret = (secret: string) => encryptBuffer(Buffer.from(secret, "utf8")).toString("base64");
 const openSecret = (sealed: string) => decryptBuffer(Buffer.from(sealed, "base64")).toString("utf8");

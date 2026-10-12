@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.souqautos.app",
-  appName: "Souq Auto",
+  appName: "Souq Autos",
   // webDir est requis par Capacitor mais non utilisé en mode server.url
   webDir: "out",
   server: {

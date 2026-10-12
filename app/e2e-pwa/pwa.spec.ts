@@ -30,7 +30,7 @@ test.describe("application installable", () => {
     await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#12222e");
 
     const manifest = await (await request.get(href!)).json();
-    expect(manifest).toMatchObject({ name: "Souq Auto", display: "standalone", start_url: "/", scope: "/" });
+    expect(manifest).toMatchObject({ name: "Souq Autos", display: "standalone", start_url: "/", scope: "/" });
     for (const icon of manifest.icons) {
       const res = await request.get(icon.src);
       expect(res.status(), icon.src).toBe(200);

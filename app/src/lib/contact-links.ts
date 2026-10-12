@@ -27,7 +27,7 @@ export type ContactLocale = (typeof CONTACT_LOCALES)[number];
 export function buildWhatsappMessage({ title, url, locale }: { title: string; url: string; locale: ContactLocale }): string {
   return locale === "ar"
     ? `مرحبًا، أنا مهتم بإعلانكم «${title}» على سوق أوتو : ${url}`
-    : `Bonjour, je suis intéressé(e) par votre annonce « ${title} » sur Souq Auto : ${url}`;
+    : `Bonjour, je suis intéressé(e) par votre annonce « ${title} » sur Souq Autos : ${url}`;
 }
 
 export function buildWhatsappUrl(phone: string, message: string): string | null {

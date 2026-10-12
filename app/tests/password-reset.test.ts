@@ -62,7 +62,7 @@ describe("emails", () => {
 
   it("the French reset email carries the link, its lifetime and a « not you? » line", () => {
     const { subject, html } = resetEmail("fr", link);
-    expect(subject).toBe("Réinitialisation de votre mot de passe — Souq Auto");
+    expect(subject).toBe("Réinitialisation de votre mot de passe — Souq Autos");
     expect(html).toContain(`href="${link}"`);
     expect(html).toContain("1 heure");
     expect(html).toContain("Si vous n'êtes pas à l'origine");

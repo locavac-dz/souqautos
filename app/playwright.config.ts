@@ -80,7 +80,7 @@ export default defineConfig({
       SMTP_SECURE: "false",
       SMTP_USER: "",
       SMTP_PASS: "",
-      SMTP_FROM: "Souq Auto <test@example.dz>",
+      SMTP_FROM: "Souq Autos <test@example.dz>",
       // Lot 143 — le cache de réactivité des cartes de résultats (5 min par défaut) est DÉSACTIVÉ ici : les tests modifient des
       // conversations puis regardent tout de suite le résultat. Sa version active est prouvée sur le serveur de production
       // (e2e-pwa/seller-trust-cache.spec.ts).

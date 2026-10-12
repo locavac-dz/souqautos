@@ -11,8 +11,8 @@ describe("web app manifest", () => {
   const m = manifest();
 
   it("has the fields a browser needs to offer installation", () => {
-    expect(m.name).toBe("Souq Auto");
-    expect(m.short_name).toBe("Souq Auto");
+    expect(m.name).toBe("Souq Autos");
+    expect(m.short_name).toBe("Souq Autos");
     expect(m.display).toBe("standalone");
     expect(m.start_url).toBe("/");
     expect(m.scope).toBe("/");

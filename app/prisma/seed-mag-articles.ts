@@ -32,7 +32,7 @@ La Renault Clio et la Toyota Corolla dominent les recherches. La première attir
 
 ## Conseils aux acheteurs
 
-Avant de signer, vérifiez toujours l'historique d'entretien, faites contrôler le véhicule par un mécanicien indépendant et consultez la cote du modèle sur Souq Auto.`,
+Avant de signer, vérifiez toujours l'historique d'entretien, faites contrôler le véhicule par un mécanicien indépendant et consultez la cote du modèle sur Souq Autos.`,
     contentAr: `## سوق واعد
 
 أكّد عام 2025 قوة سوق السيارات المستعملة في الجزائر. وعلى الرغم من ضغوط التضخم، ارتفعت الصفقات بنسبة تقارب 8 % مقارنة بالعام الماضي.
@@ -62,7 +62,7 @@ Plusieurs wilayas ont annoncé des programmes d'installation de bornes de rechar
 
 ## Ce qu'il faut surveiller
 
-La réglementation concernant l'importation des véhicules électriques devrait évoluer dans les prochains mois. Restez informé sur Souq Auto.`,
+La réglementation concernant l'importation des véhicules électriques devrait évoluer dans les prochains mois. Restez informé sur Souq Autos.`,
     contentAr: `## انطلاقة حذرة
 
 لا يزال المركبات الكهربائية تجد صعوبة في فرض نفسها على السوق الجزائري. تبقى حصته السوقية هامشية، بسبب غياب البنية التحتية للشحن والغموض حول أسعار قطع الغيار.
@@ -92,7 +92,7 @@ Prenez au moins 8 photos : extérieur (4 angles), intérieur, tableau de bord, c
 
 ## Fixez le bon prix
 
-Consultez les annonces similaires sur Souq Auto et tenez compte de l'état réel du véhicule. Un prix trop élevé allongera inutilement la durée de vente.`,
+Consultez les annonces similaires sur Souq Autos et tenez compte de l'état réel du véhicule. Un prix trop élevé allongera inutilement la durée de vente.`,
     contentAr: `## العنوان: انطباعك الأول
 
 تجنب العناوين المبهمة مثل "سيارة للبيع". حدّد الماركة والطراز والسنة وميزة رئيسية: "رينو كليو 2019 – ديزل – كيلومترية منخفضة".

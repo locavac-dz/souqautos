@@ -108,7 +108,7 @@ describe("createChargilyCheckout / retrieveChargilyCheckout (fetch simulé)", ()
       successUrl: "https://souqauto.example/fr/compte/mes-annonces?paiement=ok",
       failureUrl: "https://souqauto.example/fr/compte/mes-annonces?paiement=echec",
       webhookEndpoint: "https://souqauto.example/api/webhooks/chargily",
-      description: "Souq Auto — formule PREMIUM",
+      description: "Souq Autos — formule PREMIUM",
       locale: "fr",
     });
 

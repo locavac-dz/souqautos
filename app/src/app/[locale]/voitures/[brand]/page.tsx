@@ -40,7 +40,7 @@ export async function generateMetadata({
 
   const description = t("brandMetaDescription", { brand: brand.name });
   return {
-    title: `${title} — Souq Auto`,
+    title: `${title} — Souq Autos`,
     description,
     alternates: localizedAlternates(canonical),
     openGraph: { title, description, url: canonical, type: "website" },

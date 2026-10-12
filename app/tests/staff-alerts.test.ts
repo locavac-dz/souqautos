@@ -59,7 +59,7 @@ describe("buildStaffAlertEmail", () => {
   it("names the triggering event and the size of the whole queue in the subject", () => {
     expect(totalPending(queue)).toBe(6);
     const { subject } = buildStaffAlertEmail({ kind: "report", counts: queue, siteUrl: "https://souqauto.example" });
-    expect(subject).toBe("[Souq Auto] Modération : nouveau signalement — 6 éléments en attente");
+    expect(subject).toBe("[Souq Autos] Modération : nouveau signalement — 6 éléments en attente");
   });
 
   it("agrees the gender of the triggering item in the subject (« nouvel avis », « nouvelle annonce »…)", () => {

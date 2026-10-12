@@ -603,7 +603,7 @@
   },
   "AiAdvisor": {
     "pageTitle": "المستشار الذكي",
-    "pageIntro": "صف السيارة التي تبحث عنها، سيطرح عليك المستشار بعض الأسئلة ثم يقترح إعلانات حقيقية منشورة على Souq Auto.",
+    "pageIntro": "صف السيارة التي تبحث عنها، سيطرح عليك المستشار بعض الأسئلة ثم يقترح إعلانات حقيقية منشورة على Souq Autos.",
     "inputPlaceholder": "مثال: سيارة مدينية ديزل في الجزائر العاصمة، أقل من مليون",
     "sendButton": "إرسال",
     "pending": "المستشار يفكر…",
@@ -619,7 +619,7 @@
     "indexTitle": "جميع الماركات",
     "indexSubtitle": "تصفح الإعلانات المنشورة حسب ماركة السيارة في الجزائر.",
     "brandTitle": "{brand} في الجزائر",
-    "brandMetaDescription": "اكتشف جميع سيارات {brand} المستعملة في الجزائر على Souq Auto. قارن الموديلات والأسعار والإعلانات المتاحة.",
+    "brandMetaDescription": "اكتشف جميع سيارات {brand} المستعملة في الجزائر على Souq Autos. قارن الموديلات والأسعار والإعلانات المتاحة.",
     "brandTitleSuffix": "في الجزائر",
     "statsCount": "{count} إعلان متوفر",
     "avgPrice": "متوسط السعر",
@@ -630,7 +630,7 @@
     "viewAllListings": "عرض كل إعلانات {brand}",
     "noStatsBrand": "لا يوجد إعلان منشور بعد لهذه الماركة.",
     "modelTitle": "{brand} {model}",
-    "modelMetaDescription": "إعلانات {brand} {model} مستعملة في الجزائر. اطلع على الأسعار والمسافة المقطوعة والتقييمات على Souq Auto.",
+    "modelMetaDescription": "إعلانات {brand} {model} مستعملة في الجزائر. اطلع على الأسعار والمسافة المقطوعة والتقييمات على Souq Autos.",
     "estimateLink": "تقييم {brand} {model}",
     "viewAllModelListings": "عرض كل إعلانات {brand} {model}",
     "noStatsModel": "لا يوجد إعلان منشور بعد لهذا الموديل.",
@@ -2332,7 +2332,7 @@
     "failure": "محاولة فاشلة"
   },
   "LaunchNotice": {
-    "message": "موقع Souq Auto في انطلاقته الأولى: إذا واجهتم أي خلل، يرجى إبلاغنا به.",
+    "message": "موقع Souq Autos في انطلاقته الأولى: إذا واجهتم أي خلل، يرجى إبلاغنا به.",
     "reportLink": "الإبلاغ عن مشكلة",
     "close": "إغلاق هذه الرسالة"
   }

@@ -106,8 +106,8 @@ describe("buildShareCard", () => {
     expect(buildShareCard({ ...CAR, mileage: 0 }).details).toBe("2019 · Diesel · Alger");
   });
 
-  it("une marque et un modèle saisis en arabe donnent « Souq Auto », jamais un titre vide", () => {
-    expect(buildShareCard({ ...CAR, brandLabel: "رينو", modelLabel: "كليو" }).heading).toBe("Souq Auto");
+  it("une marque et un modèle saisis en arabe donnent « Souq Autos », jamais un titre vide", () => {
+    expect(buildShareCard({ ...CAR, brandLabel: "رينو", modelLabel: "كليو" }).heading).toBe("Souq Autos");
   });
 
   it("un texte libre mêlant arabe et emojis ne garde que sa partie latine", () => {

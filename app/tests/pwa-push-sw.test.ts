@@ -27,17 +27,17 @@ describe("service worker — parsePushPayload", () => {
   });
 
   it("never produces an empty notification: defaults for a missing title or a message that is not JSON", () => {
-    expect(sw.parsePushPayload("").title).toBe("Souq Auto");
-    expect(sw.parsePushPayload("pas du json").title).toBe("Souq Auto");
-    expect(sw.parsePushPayload("null").title).toBe("Souq Auto");
-    expect(sw.parsePushPayload("42").title).toBe("Souq Auto");
-    expect(sw.parsePushPayload(JSON.stringify({ title: "" })).title).toBe("Souq Auto");
-    expect(sw.parsePushPayload("{}")).toEqual({ title: "Souq Auto", body: "", url: "/", tag: "souq-auto", lang: "fr" });
+    expect(sw.parsePushPayload("").title).toBe("Souq Autos");
+    expect(sw.parsePushPayload("pas du json").title).toBe("Souq Autos");
+    expect(sw.parsePushPayload("null").title).toBe("Souq Autos");
+    expect(sw.parsePushPayload("42").title).toBe("Souq Autos");
+    expect(sw.parsePushPayload(JSON.stringify({ title: "" })).title).toBe("Souq Autos");
+    expect(sw.parsePushPayload("{}")).toEqual({ title: "Souq Autos", body: "", url: "/", tag: "souq-auto", lang: "fr" });
   });
 
   it("ignores fields of the wrong type instead of showing « [object Object] »", () => {
     const payload = sw.parsePushPayload(JSON.stringify({ title: { a: 1 }, body: 12, url: ["/x"], tag: null, lang: "en" }));
-    expect(payload).toEqual({ title: "Souq Auto", body: "", url: "/", tag: "souq-auto", lang: "fr" });
+    expect(payload).toEqual({ title: "Souq Autos", body: "", url: "/", tag: "souq-auto", lang: "fr" });
   });
 
   it("bounds the length of what it shows", () => {

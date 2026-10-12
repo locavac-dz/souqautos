@@ -165,7 +165,7 @@ async function main() {
         email: ADMIN_EMAIL,
         passwordHash,
         role: "ADMIN",
-        profile: { create: { displayName: "Administrateur Souq Auto" } },
+        profile: { create: { displayName: "Administrateur Souq Autos" } },
       },
     });
     console.log(

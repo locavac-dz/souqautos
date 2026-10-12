@@ -88,7 +88,7 @@ const ROUTE_TYPE_LABEL: Record<string, string> = {
 };
 
 export function buildServerErrorEmail(described: DescribedError, when: Date): { subject: string; html: string } {
-  const subject = `[Souq Auto] Erreur du serveur : ${described.routePath} (${described.name})`.slice(0, 200);
+  const subject = `[Souq Autos] Erreur du serveur : ${described.routePath} (${described.name})`.slice(0, 200);
   const rows: [string, string][] = [
     ["Quand", when.toISOString().replace("T", " ").slice(0, 19) + " UTC"],
     ["Où", `${described.method} ${described.path}`],

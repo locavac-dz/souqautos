@@ -39,7 +39,7 @@ export async function generateMetadata({
   const canonical = `${SITE_URL}/${locale}/essais${page && page > 1 ? `?page=${page}` : ""}`;
 
   return {
-    title: `${t("indexTitle")} — Souq Auto`,
+    title: `${t("indexTitle")} — Souq Autos`,
     description: t("indexSubtitle"),
     // Lot 111 — signale le flux RSS aux lecteurs et navigateurs.
     alternates: { ...localizedAlternates(canonical), types: { "application/rss+xml": `${SITE_URL}/${locale}/essais/feed.xml` } },

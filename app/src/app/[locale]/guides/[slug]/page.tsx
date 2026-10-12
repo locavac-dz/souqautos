@@ -42,10 +42,10 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   const excerpt = locale === "ar" ? article.excerptAr : article.excerptFr;
   const canonical = `${SITE_URL}/${locale}/guides/${article.slug}`;
   // Un aperçu n'a ni adresse canonique ni partage, et ne doit JAMAIS être indexé : ce contenu n'est pas public.
-  if (preview) return { title: `${title} — Souq Auto`, robots: { index: false, follow: false } };
+  if (preview) return { title: `${title} — Souq Autos`, robots: { index: false, follow: false } };
 
   return {
-    title: `${title} — Souq Auto`,
+    title: `${title} — Souq Autos`,
     description: excerpt,
     alternates: localizedAlternates(canonical),
     openGraph: {
@@ -87,7 +87,7 @@ export default async function GuidePage({ params, searchParams }: { params: Prom
   const checklist = splitLines(isAr ? g.checklistAr : g.checklistFr);
 
   const profile = article.author.profile;
-  const authorName = profile?.displayName ?? "Souq Auto";
+  const authorName = profile?.displayName ?? "Souq Autos";
   // Lot 144 — un guide GÉNÉRAL n'a ni marque ni modèle : ni ligne de véhicule, ni lien vers une page de modèle.
   const vehicle = g.brand && g.model ? `${g.brand.name} ${g.model.name}` : null;
 

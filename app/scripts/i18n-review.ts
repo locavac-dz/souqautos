@@ -50,7 +50,7 @@ const variablesOf = (message: string) => (messageArguments(message) ?? []).map((
 const usage = termUsage(ar);
 const totals = { messages: Object.keys(fr).length, sections: namespaces.length };
 
-let html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Relecture des textes arabes — Souq Auto</title>
+let html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Relecture des textes arabes — Souq Autos</title>
 <style>
 body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px auto;max-width:1100px;padding:0 16px;color:#1e293b}
 h1{font-size:22px}h2{font-size:17px;margin:28px 0 4px;padding-top:12px;border-top:2px solid #e2e8f0}
@@ -61,7 +61,7 @@ td.key{font:11px ui-monospace,Consolas,monospace;color:#64748b;width:16%;word-br
 input{width:100%;padding:8px;font-size:15px;margin:8px 0}.hidden{display:none}
 .terms td{font-size:14px}.terms td.ar{font-size:16px;width:auto}
 </style></head><body>
-<h1>Relecture des textes arabes de Souq Auto</h1>
+<h1>Relecture des textes arabes de Souq Autos</h1>
 <p class="meta">${totals.messages} textes en ${totals.sections} sections. Généré par <code>npm run i18n:review</code>.</p>
 <div class="note"><strong>Ce qu'on vous demande.</strong> Pour chaque ligne : le texte français est la référence, la colonne arabe est le texte actuel du site.
 Dites si l'arabe est <em>juste</em> (sens fidèle), <em>naturel</em> (une personne l'écrirait ainsi) et <em>cohérent</em> avec les autres écrans (mêmes mots pour les mêmes notions).

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { QR_QUIET_ZONE, drawingToMatrix, qrDrawing } from "@/lib/qr";
 import { otpauthUri } from "@/lib/totp";
 
-const SAMPLE = otpauthUri({ issuer: "Souq Auto", account: "amina@example.dz", secret: "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP" });
+const SAMPLE = otpauthUri({ issuer: "Souq Autos", account: "amina@example.dz", secret: "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP" });
 
 describe("qrDrawing", () => {
   const drawing = qrDrawing(SAMPLE);

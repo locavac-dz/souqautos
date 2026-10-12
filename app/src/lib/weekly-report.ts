@@ -225,7 +225,7 @@ export function buildWeeklyReportEmail(input: {
     `<table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse"><tbody>${state}</tbody></table>` +
     `<p style="font-family:Arial,sans-serif;font-size:13px"><a href="${input.siteUrl}/fr/admin">Ouvrir le back-office</a> · <a href="${input.siteUrl}/fr/admin/prospection">Liste de prospection</a> · <a href="${input.siteUrl}/fr/admin/rapports">Rapports précédents</a></p>`;
 
-  return { subject: `[Souq Auto] ${title}`, html };
+  return { subject: `[Souq Autos] ${title}`, html };
 }
 
 // Équipe (STAFF_ALERT_EMAILS) + PDG (ADMIN_EMAIL), sans doublon.

@@ -40,11 +40,11 @@ export async function generateMetadata({
   const excerpt = locale === "ar" ? article.excerptAr : article.excerptFr;
   const canonical = `${SITE_URL}/${locale}/mag/${article.slug}`;
   // Un aperçu n'a ni adresse canonique ni partage, et ne doit JAMAIS être indexé : ce contenu n'est pas public.
-  if (preview) return { title: `${title} — Souq Auto`, robots: { index: false, follow: false } };
+  if (preview) return { title: `${title} — Souq Autos`, robots: { index: false, follow: false } };
 
   const coverAbsoluteUrl = article.coverImageUrl ? resolveAbsolutePhotoUrl(article.coverImageUrl) : undefined;
   return {
-    title: `${title} — Souq Auto`,
+    title: `${title} — Souq Autos`,
     description: excerpt,
     alternates: localizedAlternates(canonical),
     openGraph: {
@@ -106,7 +106,7 @@ export default async function BlogArticlePage({
         url: canonical,
         // Éditorial de la marque, jamais attribué publiquement à un compte admin
         // précis (l'auteur réel n'a aucune pertinence pour le lecteur).
-        authorName: "Souq Auto",
+        authorName: "Souq Autos",
         datePublished: article.publishedAt.toISOString(),
         dateModified: article.updatedAt.toISOString(),
         isBasedOn: article.sourceUrl ?? undefined,

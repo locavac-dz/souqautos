@@ -27,7 +27,7 @@ export const POST = apiHandler(async () => {
   const link = `${SITE_URL}/${user.locale}/verifier-email/${token}`;
   const { previewUrl } = await sendEmail({
     to: user.email,
-    subject: "Vérifiez votre adresse email — Souq Auto",
+    subject: "Vérifiez votre adresse email — Souq Autos",
     html: `<p>Bonjour,</p><p>Cliquez sur ce lien pour vérifier votre adresse email :</p><p><a href="${link}">${link}</a></p><p>Ce lien expire dans 24 heures.</p>`,
   });
 

@@ -1,4 +1,4 @@
-/* Souq Auto — service worker (Lot 120)
+/* Souq Autos — service worker (Lot 120)
  *
  * Volontairement MINIMAL et prudent :
  *  - il ne met JAMAIS en cache une page HTML ni une réponse d'API : elles sont personnalisées
@@ -67,7 +67,7 @@ function parsePushPayload(text) {
     return typeof value === "string" ? value.slice(0, max) : "";
   };
   return {
-    title: str(data.title, 120) || "Souq Auto",
+    title: str(data.title, 120) || "Souq Autos",
     body: str(data.body, 200),
     url: typeof data.url === "string" ? data.url : "/",
     tag: str(data.tag, 80) || "souq-auto",

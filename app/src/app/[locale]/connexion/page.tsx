@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const t = await getTranslations({ locale, namespace: "Auth" });
   const canonical = `${SITE_URL}/${locale}/connexion`;
   return {
-    title: `${t("loginTitle")} — Souq Auto`,
+    title: `${t("loginTitle")} — Souq Autos`,
     alternates: localizedAlternates(canonical),
     robots: { index: false },
   };

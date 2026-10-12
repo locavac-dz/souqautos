@@ -184,7 +184,7 @@ const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (c) => ({ "&": "&a
 export function buildOpsAlertEmail(checks: OpsCheck[], includeWarnings: boolean): { subject: string; html: string } {
   const problems = checks.filter((c) => c.level === "error" || (includeWarnings && c.level === "warning"));
   const errors = problems.filter((c) => c.level === "error").length;
-  const subject = `[Souq Auto] ${errors > 0 ? "PROBLÈME" : "Attention"} : sauvegardes et supervision — ${problems.length} point${problems.length > 1 ? "s" : ""}`;
+  const subject = `[Souq Autos] ${errors > 0 ? "PROBLÈME" : "Attention"} : sauvegardes et supervision — ${problems.length} point${problems.length > 1 ? "s" : ""}`;
   const items = problems
     .map((c) => `<li><strong>${c.level === "error" ? "✗" : "⚠"}</strong> ${escapeHtml(c.message)}${c.fix ? `<br><span style="color:#475569">→ ${escapeHtml(c.fix)}</span>` : ""}</li>`)
     .join("");

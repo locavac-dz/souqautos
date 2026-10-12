@@ -34,7 +34,7 @@ function overlayElement(card: ShareCard, hasPhoto: boolean) {
     >
       <div style={{ display: "flex" }}>
         <div style={{ display: "flex", background: "rgba(255,255,255,0.95)", color: "#0f172a", fontSize: 34, padding: "8px 26px", borderRadius: 999 }}>
-          Souq Auto
+          Souq Autos
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column" }}>

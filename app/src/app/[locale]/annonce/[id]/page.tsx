@@ -96,7 +96,7 @@ export async function generateMetadata({
   const title = `${listing.title} — ${brandLabel} ${modelLabel} ${listing.year}`.trim();
   const canonical = `${SITE_URL}/${locale}/annonce/${listing.id}`;
   return {
-    title: `${title} — Souq Auto`,
+    title: `${title} — Souq Autos`,
     description: listing.description.slice(0, 160),
     alternates: localizedAlternates(canonical),
     // Lot 142 — PAS d'`images` ici : elle l'emporterait sur le fichier `opengraph-image.tsx` voisin (la carte de partage avec prix

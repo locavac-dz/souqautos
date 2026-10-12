@@ -9,7 +9,7 @@ import { resolveListingLabels } from "@/lib/site";
 //
 // Uniquement pour les annonces PUBLIÉES, exactement comme la fiche elle-même : un brouillon, une annonce refusée ou suspendue ne
 // doit fuiter ni son prix ni sa photo par une adresse d'image devinée.
-export const alt = "Annonce Souq Auto : photo, prix et caractéristiques du véhicule";
+export const alt = "Annonce Souq Autos : photo, prix et caractéristiques du véhicule";
 export const size = { width: SHARE_WIDTH, height: SHARE_HEIGHT };
 export const contentType = "image/jpeg";
 

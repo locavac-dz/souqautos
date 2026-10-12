@@ -186,7 +186,7 @@ export type ReviewJsonLdInput = {
   brandName?: string;
   ratingValue: number;
   authorName: string;
-  // Person quand l'essai est signé d'un nom, Organization quand il est signé « Souq Auto ».
+  // Person quand l'essai est signé d'un nom, Organization quand il est signé « Souq Autos ».
   authorIsPerson: boolean;
   datePublished: string;
   dateModified: string;
@@ -215,7 +215,7 @@ export function buildReviewJsonLd(input: ReviewJsonLdInput) {
       worstRating: 1,
     },
     author: { "@type": input.authorIsPerson ? "Person" : "Organization", name: input.authorName },
-    publisher: { "@type": "Organization", name: "Souq Auto" },
+    publisher: { "@type": "Organization", name: "Souq Autos" },
     datePublished: input.datePublished,
     dateModified: input.dateModified,
     ...(input.image ? { image: input.image } : {}),

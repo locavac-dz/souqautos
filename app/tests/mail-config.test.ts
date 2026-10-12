@@ -48,8 +48,8 @@ describe("resolveMailConfig", () => {
   });
 
   it("uses the configured sender address", () => {
-    const config = resolveMailConfig({ SMTP_HOST: "h", SMTP_FROM: "Souq Auto <contact@souqauto.example>", SMTP_USER: "u", SMTP_PASS: "p" });
-    expect(config.mode === "smtp" && config.from).toBe("Souq Auto <contact@souqauto.example>");
+    const config = resolveMailConfig({ SMTP_HOST: "h", SMTP_FROM: "Souq Autos <contact@souqauto.example>", SMTP_USER: "u", SMTP_PASS: "p" });
+    expect(config.mode === "smtp" && config.from).toBe("Souq Autos <contact@souqauto.example>");
   });
 });
 

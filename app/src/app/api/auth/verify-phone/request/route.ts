@@ -27,7 +27,7 @@ export const POST = apiHandler(async () => {
 
   // Lot 265 — un SMS non parti n'est plus un succès silencieux : 502 pour que l'écran dise « réessayez ».
   // Lot 269 (audit D2) — le SMS parle la langue du compte (il partait en français à tout le monde).
-  const message = user.locale === "ar" ? `رمز التحقق الخاص بك في سوق أوتو: ${code}` : `Votre code de vérification Souq Auto : ${code}`;
+  const message = user.locale === "ar" ? `رمز التحقق الخاص بك في سوق أوتو: ${code}` : `Votre code de vérification Souq Autos : ${code}`;
   const sent = await sendSms({ to: user.phone, message });
   if (!sent) {
     return NextResponse.json({ error: "sms_failed" }, { status: 502 });

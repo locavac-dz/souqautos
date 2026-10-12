@@ -36,7 +36,7 @@ describe("dessin de la carte", () => {
   it("dessine réellement le texte par-dessus la photo : le bas s'assombrit, le haut reste celui de la photo", async () => {
     const light = await photo({ r: 235, g: 235, b: 235 });
     const image = await getShareImage(CARD, "p", async () => light);
-    const top = await meanBrightness(image, { left: 700, top: 20, width: 480, height: 200 }); // loin de la pastille « Souq Auto »
+    const top = await meanBrightness(image, { left: 700, top: 20, width: 480, height: 200 }); // loin de la pastille « Souq Autos »
     const bottom = await meanBrightness(image, { left: 700, top: 400, width: 480, height: 200 }); // sous le dégradé, à droite du texte
     expect(top).toBeGreaterThan(200); // la photo claire est intacte en haut
     expect(bottom).toBeLessThan(100); // le dégradé sombre la recouvre en bas : sans lui, le texte blanc serait illisible

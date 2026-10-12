@@ -48,9 +48,9 @@ const contentFr = `Acheter une voiture d'occasion, c'est acheter un historique q
 ## 1. Avant de contacter le vendeur
 
 - **Calculez votre budget total**, pas seulement le prix affiché : assurance, changement de titulaire de la carte grise, entretien à prévoir (pneus, freins, vidange, courroie de distribution) et une réserve pour les imprévus.
-- **Comparez avant de choisir.** Regardez plusieurs annonces du même modèle, du même âge et du même kilométrage. La [Cote Souq Auto](/fr/cote-souq-auto) et le [comparateur](/fr/comparateur) vous aident à situer un prix.
+- **Comparez avant de choisir.** Regardez plusieurs annonces du même modèle, du même âge et du même kilométrage. La [Cote Souq Autos](/fr/cote-souq-auto) et le [comparateur](/fr/comparateur) vous aident à situer un prix.
 - **Lisez l'annonce comme un enquêteur.** Plusieurs photos nettes (extérieur, intérieur, compteur, moteur) sont bon signe. Une description vide, des photos floues ou prises d'un seul angle, ou un texte identique à celui d'une autre annonce doivent vous faire douter.
-- **Regardez le vendeur.** Sur Souq Auto, « Identité vérifiée » signifie que l'équipe du site a contrôlé une pièce d'identité ; « Répond en moins de… » est calculé à partir des messages échangés sur le site. Ce sont des repères, pas des garanties.
+- **Regardez le vendeur.** Sur Souq Autos, « Identité vérifiée » signifie que l'équipe du site a contrôlé une pièce d'identité ; « Répond en moins de… » est calculé à partir des messages échangés sur le site. Ce sont des repères, pas des garanties.
 - **Méfiez-vous du prix trop beau.** Le repère « Très bonne affaire » signale un prix nettement inférieur aux annonces comparables : ce peut être une vraie occasion, ou une annonce à vérifier avec le plus grand soin.
 
 ## 2. Le premier échange

@@ -55,7 +55,7 @@ export async function generateMetadata({
   const image = account.bannerUrl ?? account.logoUrl;
 
   return {
-    title: `${title} — Souq Auto`,
+    title: `${title} — Souq Autos`,
     description,
     alternates: localizedAlternates(canonical),
     ...(isShowcaseIndexable(publishedCount) ? {} : { robots: { index: false, follow: true } }),

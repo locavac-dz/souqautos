@@ -55,7 +55,7 @@ export async function generateMetadata({
   const canonical = `${SITE_URL}/${locale}/concessionnaires${qs ? `?${qs}` : ""}`;
 
   return {
-    title: `${t("title")} — Souq Auto`,
+    title: `${t("title")} — Souq Autos`,
     description: t("subtitle"),
     alternates: localizedAlternates(canonical),
     openGraph: { title: t("title"), url: canonical, type: "website" },

@@ -34,7 +34,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   });
 
   const feed = buildRssFeed({
-    title: `${t("indexTitle")} — Souq Auto`,
+    title: `${t("indexTitle")} — Souq Autos`,
     link: `${SITE_URL}/${locale}/mag`,
     selfUrl: `${SITE_URL}/${locale}/mag/feed.xml`,
     description: t("indexSubtitle"),

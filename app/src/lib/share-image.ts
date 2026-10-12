@@ -72,8 +72,8 @@ export function buildShareCard(input: ShareCardInput): ShareCard {
   ].filter((part) => part !== "");
 
   return {
-    // Une marque/modèle saisis en arabe donnent un texte vide : « Souq Auto » plutôt qu'un titre vide sur la carte.
-    heading: heading === "" ? "Souq Auto" : heading,
+    // Une marque/modèle saisis en arabe donnent un texte vide : « Souq Autos » plutôt qu'un titre vide sur la carte.
+    heading: heading === "" ? "Souq Autos" : heading,
     details: truncateLabel(detailParts.join(" · "), SHARE_DETAILS_MAX),
     price: formatSharePrice(input.price),
   };

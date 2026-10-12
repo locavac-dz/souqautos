@@ -13,9 +13,9 @@ export function SiteWordMark({ className }: { className?: string }) {
         }}
       >
         <span className="text-slate-800 dark:text-slate-100">Souq&nbsp;</span>
-        <span className="text-cyan-600 dark:text-teal-400">Auto</span>
+        <span className="text-cyan-600 dark:text-teal-400">Autos</span>
       </span>
-      <span className="sr-only">Souq Auto</span>
+      <span className="sr-only">Souq Autos</span>
     </>
   );
 }

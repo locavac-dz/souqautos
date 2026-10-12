@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const t = await getTranslations({ locale, namespace: "Estimate" });
   const canonical = `${SITE_URL}/${locale}/cote-souq-auto`;
   return {
-    title: `${t("title")} — Souq Auto`,
+    title: `${t("title")} — Souq Autos`,
     description: t("subtitle"),
     alternates: localizedAlternates(canonical),
     openGraph: { title: t("title"), description: t("subtitle"), url: canonical, type: "website" },

@@ -181,8 +181,8 @@ export const POST = apiHandler(async (request: NextRequest, { params }: { params
         email: {
           tag: "nouveau message",
           to: recipient.email,
-          subject: `Nouveau message de ${senderName} — Souq Auto`,
-          html: `<p>Bonjour,</p><p>${senderName} vous a envoyé un message à propos de « ${listingTitle} » :</p><p style="white-space:pre-wrap">${messageHtml}</p><p><a href="${threadLink}">Répondre sur Souq Auto</a></p>`,
+          subject: `Nouveau message de ${senderName} — Souq Autos`,
+          html: `<p>Bonjour,</p><p>${senderName} vous a envoyé un message à propos de « ${listingTitle} » :</p><p style="white-space:pre-wrap">${messageHtml}</p><p><a href="${threadLink}">Répondre sur Souq Autos</a></p>`,
         },
       });
     }

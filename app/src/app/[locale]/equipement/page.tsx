@@ -33,10 +33,10 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "EquipementSearch" });
   const canonical = `${SITE_URL}/${locale}/equipement`;
   return {
-    title: `${t("pageTitle")} — Souq Auto`,
+    title: `${t("pageTitle")} — Souq Autos`,
     description: t("metaDescription"),
     alternates: localizedAlternates(canonical),
-    openGraph: { title: `${t("pageTitle")} — Souq Auto`, url: canonical, type: "website" },
+    openGraph: { title: `${t("pageTitle")} — Souq Autos`, url: canonical, type: "website" },
   };
 }
 

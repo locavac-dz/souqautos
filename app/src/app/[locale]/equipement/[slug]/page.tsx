@@ -41,11 +41,11 @@ export async function generateMetadata({
   const title = locale === "ar" ? article.titleAr : article.titleFr;
   const excerpt = locale === "ar" ? article.excerptAr : article.excerptFr;
   const canonical = `${SITE_URL}/${locale}/equipement/${article.slug}`;
-  if (preview) return { title: `${title} — Souq Auto`, robots: { index: false, follow: false } };
+  if (preview) return { title: `${title} — Souq Autos`, robots: { index: false, follow: false } };
 
   const coverAbsoluteUrl = article.coverImageUrl ? resolveAbsolutePhotoUrl(article.coverImageUrl) : undefined;
   return {
-    title: `${title} — Souq Auto`,
+    title: `${title} — Souq Autos`,
     description: excerpt,
     alternates: { ...localizedAlternates(canonical), types: { "application/rss+xml": `${SITE_URL}/${locale}/equipement/feed.xml` } },
     openGraph: {
@@ -82,7 +82,7 @@ export default async function EquipementArticlePage({
   const content = isAr ? article.contentAr : article.contentFr;
 
   const profile = article.author.profile;
-  const authorName = profile?.displayName ?? "Souq Auto";
+  const authorName = profile?.displayName ?? "Souq Autos";
 
   const bcp47 = isAr ? "ar-DZ" : "fr-DZ";
   const dateFormatter = new Intl.DateTimeFormat(bcp47, { dateStyle: "long" });

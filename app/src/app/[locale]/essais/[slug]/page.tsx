@@ -49,10 +49,10 @@ export async function generateMetadata({
   const excerpt = locale === "ar" ? article.excerptAr : article.excerptFr;
   const canonical = `${SITE_URL}/${locale}/essais/${article.slug}`;
   // Un aperçu n'a ni adresse canonique ni partage, et ne doit JAMAIS être indexé : ce contenu n'est pas public.
-  if (preview) return { title: `${title} — Souq Auto`, robots: { index: false, follow: false } };
+  if (preview) return { title: `${title} — Souq Autos`, robots: { index: false, follow: false } };
 
   return {
-    title: `${title} — Souq Auto`,
+    title: `${title} — Souq Autos`,
     description: excerpt,
     alternates: localizedAlternates(canonical),
     openGraph: {
@@ -102,7 +102,7 @@ export default async function RoadTestPage({
   const cons = splitLines(isAr ? rt.consAr : rt.consFr);
 
   const profile = article.author.profile;
-  const authorName = profile?.displayName ?? "Souq Auto";
+  const authorName = profile?.displayName ?? "Souq Autos";
   const vehicle = [rt.brand?.name, rt.model?.name].filter(Boolean).join(" ");
 
   const bcp47 = isAr ? "ar-DZ" : "fr-DZ";

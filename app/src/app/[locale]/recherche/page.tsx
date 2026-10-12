@@ -17,7 +17,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Search" });
   const canonical = `${SITE_URL}/${locale}/recherche`;
 
-  let title = `${t("pageTitle")} — Souq Auto`;
+  let title = `${t("pageTitle")} — Souq Autos`;
   const q = typeof raw.q === "string" ? raw.q.trim() : undefined;
   if (q) title = `${q} — ${t("pageTitle")}`;
 

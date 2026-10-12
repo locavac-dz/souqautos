@@ -82,7 +82,7 @@ describe("buildArticleJsonLd — isBasedOn", () => {
     url: "https://souq.example/fr/mag/x",
     datePublished: "2026-09-19T10:00:00.000Z",
     dateModified: "2026-09-19T10:00:00.000Z",
-    authorName: "Souq Auto",
+    authorName: "Souq Autos",
   };
 
   it("cites the source document when there is a link", () => {

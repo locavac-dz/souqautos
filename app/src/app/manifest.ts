@@ -4,14 +4,14 @@ import type { MetadataRoute } from "next";
 //
 // Un seul manifeste pour les deux langues : `start_url: "/"` laisse le site choisir la langue
 // du visiteur (comme à l'ouverture normale), et les raccourcis pointent vers des adresses sans
-// préfixe de langue pour la même raison. Le nom reste « Souq Auto » dans les deux langues.
+// préfixe de langue pour la même raison. Le nom reste « Souq Autos » dans les deux langues.
 // Lot 269 (audit D2) — un manifeste ne peut pas être localisé par visiteur (Next n'en sert qu'un) : la description
 // et les raccourcis sont bilingues, pour qu'un arabophone qui installe l'application ne lise pas que du français.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Souq Auto",
-    short_name: "Souq Auto",
+    name: "Souq Autos",
+    short_name: "Souq Autos",
     description: "Le premier moteur de recherche automobile pensé pour l'Algérie · أول محرك بحث عن السيارات مصمّم للجزائر",
     start_url: "/",
     scope: "/",

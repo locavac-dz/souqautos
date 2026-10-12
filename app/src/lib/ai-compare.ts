@@ -67,7 +67,7 @@ type NarrativeListing = ComparableListingFacts & { title: string };
 async function callAnthropicForNarrative(listings: NarrativeListing[], locale: string): Promise<string | null> {
   const text = await callAnthropicMessages({
     maxTokens: 400,
-    system: `Tu résumes une comparaison entre véhicules d'occasion pour la plateforme Souq Auto (Algérie). Réponds UNIQUEMENT avec un paragraphe de 2 à 4 phrases en ${locale === "ar" ? "arabe" : "français"}, factuel et neutre, sans superlatifs marketing. N'invente JAMAIS une caractéristique absente des données fournies. Ne donne pas de conseil d'achat définitif, seulement une synthèse des différences.`,
+    system: `Tu résumes une comparaison entre véhicules d'occasion pour la plateforme Souq Autos (Algérie). Réponds UNIQUEMENT avec un paragraphe de 2 à 4 phrases en ${locale === "ar" ? "arabe" : "français"}, factuel et neutre, sans superlatifs marketing. N'invente JAMAIS une caractéristique absente des données fournies. Ne donne pas de conseil d'achat définitif, seulement une synthèse des différences.`,
     messages: [{ role: "user", content: JSON.stringify(listings) }],
   });
   return text ? text.trim().slice(0, 1000) : null;

@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const t = await getTranslations({ locale, namespace: "Pro" });
   const canonical = `${SITE_URL}/${locale}/devenir-professionnel`;
   return {
-    title: `${t("becomeProTitle")} — Souq Auto`,
+    title: `${t("becomeProTitle")} — Souq Autos`,
     description: t("becomeProSubtitle"),
     alternates: localizedAlternates(canonical),
     robots: { index: false },

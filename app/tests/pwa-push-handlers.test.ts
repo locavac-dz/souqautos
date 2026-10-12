@@ -72,8 +72,8 @@ describe("service worker — réception d'un message push", () => {
   });
 
   it("never shows an empty notification: no body at all, or one that is not JSON", async () => {
-    expect((await receivePush(null))[0]).toBe("Souq Auto");
-    expect((await receivePush("ceci n'est pas du JSON"))[0]).toBe("Souq Auto");
+    expect((await receivePush(null))[0]).toBe("Souq Autos");
+    expect((await receivePush("ceci n'est pas du JSON"))[0]).toBe("Souq Autos");
   });
 
   it("keeps the browser waiting until the notification is really shown (or it may kill the worker)", async () => {

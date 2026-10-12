@@ -193,7 +193,7 @@ describe("buildReviewJsonLd", () => {
     verdict: "Une compacte confortable et bien équipée.",
     itemName: "Citroën C4",
     ratingValue: 3.5,
-    authorName: "Souq Auto",
+    authorName: "Souq Autos",
     authorIsPerson: false,
     datePublished: "2026-09-01T08:00:00.000Z",
     dateModified: "2026-09-05T08:00:00.000Z",
@@ -207,7 +207,7 @@ describe("buildReviewJsonLd", () => {
   });
 
   it("signs with a Person when the essai has a named author, an Organization otherwise", () => {
-    expect(buildReviewJsonLd(base).author).toEqual({ "@type": "Organization", name: "Souq Auto" });
+    expect(buildReviewJsonLd(base).author).toEqual({ "@type": "Organization", name: "Souq Autos" });
     expect(buildReviewJsonLd({ ...base, authorName: "Sara Hamdi", authorIsPerson: true }).author).toEqual({
       "@type": "Person",
       name: "Sara Hamdi",

@@ -64,7 +64,7 @@ test.describe("parcours complet", () => {
 
     // 2. Le courriel : bon objet, bon lien, en français.
     const [mail] = await mailsFor(request, account.email);
-    expect(mail.subject).toBe("Réinitialisation de votre mot de passe — Souq Auto");
+    expect(mail.subject).toBe("Réinitialisation de votre mot de passe — Souq Autos");
     const link = resetLink(mail);
     expect(link).toMatch(/^http:\/\/localhost:5185\/fr\/reinitialiser-mot-de-passe\/[A-Za-z0-9_-]{43}$/);
     expect(mail.html).toContain("1 heure");
@@ -101,7 +101,7 @@ test.describe("parcours complet", () => {
 
     // 6. La personne est prévenue du changement ; l'adresse est désormais vérifiée (elle a lu ce courrier).
     const mails = await mailsFor(request, account.email, 2);
-    expect(mails.map((m) => m.subject)).toContain("Votre mot de passe a été modifié — Souq Auto");
+    expect(mails.map((m) => m.subject)).toContain("Votre mot de passe a été modifié — Souq Autos");
     expect((await e2eDb().user.findUniqueOrThrow({ where: { email: account.email } })).emailVerifiedAt).not.toBeNull();
 
     // 7. Le lien est à usage unique.

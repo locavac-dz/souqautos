@@ -106,7 +106,7 @@ export const POST = apiHandler(async (request: NextRequest, { params }: { params
       successUrl: `${returnBase}?paiement=ok`,
       failureUrl: `${returnBase}?paiement=echec`,
       webhookEndpoint: `${SITE_URL}${CHARGILY_WEBHOOK_PATH}`,
-      description: `Souq Auto — abonnement pro ${body.tier} — compte ${id} — commande ${order.id}`,
+      description: `Souq Autos — abonnement pro ${body.tier} — compte ${id} — commande ${order.id}`,
       locale,
     });
     order = await prisma.proSubscriptionOrder.update({

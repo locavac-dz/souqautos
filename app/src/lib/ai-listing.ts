@@ -57,7 +57,7 @@ async function callAnthropic(
   const text = await callAnthropicMessages({
     maxTokens: 500,
     system:
-      'Tu rédiges des annonces de vente de véhicules d\'occasion en Algérie pour la plateforme Souq Auto. Réponds UNIQUEMENT avec un objet JSON de la forme {"title": string, "description": string}, sans aucun texte avant ou après. N\'invente JAMAIS une caractéristique qui ne t\'a pas été fournie explicitement dans les données du véhicule. Le titre fait au maximum 120 caractères. La description fait entre 30 et 500 caractères, en français, dans un ton clair et factuel, sans superlatifs exagérés ni promesses non vérifiables.',
+      'Tu rédiges des annonces de vente de véhicules d\'occasion en Algérie pour la plateforme Souq Autos. Réponds UNIQUEMENT avec un objet JSON de la forme {"title": string, "description": string}, sans aucun texte avant ou après. N\'invente JAMAIS une caractéristique qui ne t\'a pas été fournie explicitement dans les données du véhicule. Le titre fait au maximum 120 caractères. La description fait entre 30 et 500 caractères, en français, dans un ton clair et factuel, sans superlatifs exagérés ni promesses non vérifiables.',
     messages: [{ role: "user", content: JSON.stringify(input) }],
   });
   if (!text) return null;
@@ -97,7 +97,7 @@ export async function improveListingText(
   const text = await callAnthropicMessages({
     maxTokens: 600,
     system:
-      'Tu améliores des annonces de vente de véhicules pour la plateforme Souq Auto (Algérie). ' +
+      'Tu améliores des annonces de vente de véhicules pour la plateforme Souq Autos (Algérie). ' +
       'Corrige les fautes, améliore la clarté, la fluidité et la structure, sans jamais inventer de ' +
       'caractéristiques absentes du texte original. Réponds UNIQUEMENT avec un objet JSON : ' +
       '{"title": string (max 120 car.), "description": string (30-500 car.)}, aucun autre texte.',

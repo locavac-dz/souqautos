@@ -21,18 +21,18 @@ export function emailChangedNoticeEmail(
   const resetLink = `${SITE_URL}/${locale}/mot-de-passe-oublie`;
   if (locale === "ar") {
     return {
-      subject: "تم تغيير عنوان البريد الإلكتروني لحسابك — Souq Auto",
+      subject: "تم تغيير عنوان البريد الإلكتروني لحسابك — Souq Autos",
       html: wrap(
         "ar",
-        `<p>مرحباً،</p><p>تم للتو تغيير عنوان تسجيل الدخول إلى حسابك في Souq Auto من <strong>${previous}</strong> إلى <strong>${next}</strong>.</p><p>إذا كنت أنت من قام بهذا التغيير، فلا حاجة لأي إجراء.</p><p>إن لم يكن كذلك، فهناك من يملك الوصول إلى حسابك: أعد تعيين كلمة المرور فوراً من <a href="${resetLink}">${resetLink}</a> ثم اتصل بنا.</p>`
+        `<p>مرحباً،</p><p>تم للتو تغيير عنوان تسجيل الدخول إلى حسابك في Souq Autos من <strong>${previous}</strong> إلى <strong>${next}</strong>.</p><p>إذا كنت أنت من قام بهذا التغيير، فلا حاجة لأي إجراء.</p><p>إن لم يكن كذلك، فهناك من يملك الوصول إلى حسابك: أعد تعيين كلمة المرور فوراً من <a href="${resetLink}">${resetLink}</a> ثم اتصل بنا.</p>`
       ),
     };
   }
   return {
-    subject: "L'adresse email de votre compte a été modifiée — Souq Auto",
+    subject: "L'adresse email de votre compte a été modifiée — Souq Autos",
     html: wrap(
       "fr",
-      `<p>Bonjour,</p><p>L'adresse de connexion de votre compte Souq Auto vient de passer de <strong>${previous}</strong> à <strong>${next}</strong>.</p><p>Si vous êtes à l'origine de ce changement, aucune action n'est nécessaire.</p><p>Sinon, quelqu'un a accès à votre compte : réinitialisez votre mot de passe sans attendre depuis <a href="${resetLink}">${resetLink}</a>, puis contactez-nous.</p>`
+      `<p>Bonjour,</p><p>L'adresse de connexion de votre compte Souq Autos vient de passer de <strong>${previous}</strong> à <strong>${next}</strong>.</p><p>Si vous êtes à l'origine de ce changement, aucune action n'est nécessaire.</p><p>Sinon, quelqu'un a accès à votre compte : réinitialisez votre mot de passe sans attendre depuis <a href="${resetLink}">${resetLink}</a>, puis contactez-nous.</p>`
     ),
   };
 }

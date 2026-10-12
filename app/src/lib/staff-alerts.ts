@@ -70,7 +70,7 @@ export function buildStaffAlertEmail({
   rows.sort((a, b) => Number(b.key === kind) - Number(a.key === kind));
 
   const total = totalPending(counts);
-  const subject = `[Souq Auto] Modération : ${NEW_ITEM_LABEL[kind]} — ${total} élément${total > 1 ? "s" : ""} en attente`;
+  const subject = `[Souq Autos] Modération : ${NEW_ITEM_LABEL[kind]} — ${total} élément${total > 1 ? "s" : ""} en attente`;
   const items = rows
     .filter((row) => row.count > 0 || row.key === kind)
     .map((row) => `<li><a href="${escapeHtml(base + row.path)}">${escapeHtml(row.label)}</a> : <strong>${row.count}</strong></li>`)

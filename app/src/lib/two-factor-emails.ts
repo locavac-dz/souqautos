@@ -12,16 +12,16 @@ export function normalizeNoticeLocale(value: string | null | undefined): NoticeL
 const wrap = (locale: NoticeLocale, body: string) => `<div dir="${locale === "ar" ? "rtl" : "ltr"}" style="font-family:Arial,sans-serif;line-height:1.6">${body}</div>`;
 
 const FR: Record<TwoFactorNoticeKind, (remaining: number) => { subject: string; text: string }> = {
-  enabled: () => ({ subject: "Double authentification activée — Souq Auto", text: "La double authentification vient d'être activée sur votre compte Souq Auto. Vos autres appareils ont été déconnectés." }),
-  disabled: () => ({ subject: "Double authentification désactivée — Souq Auto", text: "La double authentification vient d'être désactivée sur votre compte Souq Auto : un simple mot de passe suffit de nouveau pour vous connecter." }),
+  enabled: () => ({ subject: "Double authentification activée — Souq Autos", text: "La double authentification vient d'être activée sur votre compte Souq Autos. Vos autres appareils ont été déconnectés." }),
+  disabled: () => ({ subject: "Double authentification désactivée — Souq Autos", text: "La double authentification vient d'être désactivée sur votre compte Souq Autos : un simple mot de passe suffit de nouveau pour vous connecter." }),
   recovery_used: (remaining) => ({
-    subject: "Un code de secours a été utilisé — Souq Auto",
-    text: `Un de vos codes de secours vient d'être utilisé pour vous connecter à votre compte Souq Auto. Il vous en reste ${remaining}.`,
+    subject: "Un code de secours a été utilisé — Souq Autos",
+    text: `Un de vos codes de secours vient d'être utilisé pour vous connecter à votre compte Souq Autos. Il vous en reste ${remaining}.`,
   }),
-  recovery_regenerated: () => ({ subject: "Nouveaux codes de secours — Souq Auto", text: "De nouveaux codes de secours ont été générés pour votre compte Souq Auto. Les précédents ne fonctionnent plus." }),
+  recovery_regenerated: () => ({ subject: "Nouveaux codes de secours — Souq Autos", text: "De nouveaux codes de secours ont été générés pour votre compte Souq Autos. Les précédents ne fonctionnent plus." }),
   reset_by_admin: () => ({
-    subject: "Double authentification réinitialisée — Souq Auto",
-    text: "Notre équipe a réinitialisé la double authentification de votre compte Souq Auto, et vos appareils ont été déconnectés. Activez-la de nouveau dès votre prochaine connexion.",
+    subject: "Double authentification réinitialisée — Souq Autos",
+    text: "Notre équipe a réinitialisé la double authentification de votre compte Souq Autos, et vos appareils ont été déconnectés. Activez-la de nouveau dès votre prochaine connexion.",
   }),
 };
 

@@ -112,11 +112,11 @@ describe("secrets et adresse otpauth", () => {
     }
   });
   it("l'adresse otpauth porte le secret, l'émetteur et les paramètres, correctement encodés", () => {
-    const uri = otpauthUri({ issuer: "Souq Auto", account: "amina+test@example.dz", secret: "JBSWY3DPEHPK3PXP" });
-    expect(uri.startsWith("otpauth://totp/Souq%20Auto:amina%2Btest%40example.dz?")).toBe(true);
+    const uri = otpauthUri({ issuer: "Souq Autos", account: "amina+test@example.dz", secret: "JBSWY3DPEHPK3PXP" });
+    expect(uri.startsWith("otpauth://totp/Souq%20Autos:amina%2Btest%40example.dz?")).toBe(true);
     const params = new URL(uri).searchParams;
     expect(params.get("secret")).toBe("JBSWY3DPEHPK3PXP");
-    expect(params.get("issuer")).toBe("Souq Auto");
+    expect(params.get("issuer")).toBe("Souq Autos");
     expect(params.get("algorithm")).toBe("SHA1");
     expect(params.get("digits")).toBe("6");
     expect(params.get("period")).toBe("30");
