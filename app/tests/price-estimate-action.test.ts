@@ -12,7 +12,8 @@ vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: (...a: unknown[]) => checkR
 vi.mock("@/lib/price-estimation", () => ({ estimatePrice: (...a: unknown[]) => estimatePrice(...a) }));
 vi.mock("@/lib/price-ai", () => ({ estimatePriceWithAi: (...a: unknown[]) => estimatePriceWithAi(...a) }));
 
-import { getPriceEstimate, PRICE_ESTIMATE_RATE_LIMIT } from "@/lib/price-estimate-action";
+import { getPriceEstimate } from "@/lib/price-estimate-action";
+import { PRICE_ESTIMATE_RATE_LIMIT } from "@/lib/price-estimate-limits";
 
 const INPUT = { brandId: 1, modelId: 2, year: 2019, mileage: 80_000 };
 const MARKET = { low: 1_000_000, mid: 1_200_000, high: 1_400_000, sampleSize: 12, confidencePct: 80, confidenceLabel: "bonne", appliedFilters: { year: true, mileage: true, wilaya: false, equipment: false } };
