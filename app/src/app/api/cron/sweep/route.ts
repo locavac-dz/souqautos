@@ -7,6 +7,7 @@ import { sweepOldLoginEvents } from "@/lib/login-event-sweep";
 import { sweepPendingChargilyOrders } from "@/lib/chargily-events";
 import { sweepPendingTransferReminders, sweepSubscriptionExpiryReminders } from "@/lib/commercial-reminders";
 import { sendWeeklyReportIfDue } from "@/lib/weekly-report";
+import { sweepOldErrorLogs } from "@/lib/error-log";
 import { safeEqual } from "@/lib/google-oauth";
 import { apiHandler } from "@/lib/api-route";
 
@@ -38,6 +39,8 @@ export const POST = apiHandler(async (req: NextRequest) => {
   const subscriptionReminders = await sweepSubscriptionExpiryReminders(now);
   // Lot 275 — rapport hebdomadaire à l'équipe, une fois par semaine complète (part donc le lundi).
   const weeklyReport = await sendWeeklyReportIfDue(now);
+  // Lot 293 — purge des erreurs de plus de 30 jours + cap à 10 000 lignes.
+  const errorLogsSwept = await sweepOldErrorLogs(now);
 
-  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport });
+  return NextResponse.json({ ok: true, sweptAt: now.toISOString(), pendingPayments, transferReminders, subscriptionReminders, weeklyReport, errorLogsSwept });
 });

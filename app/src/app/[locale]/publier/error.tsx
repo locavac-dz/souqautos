@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { reportClientError } from "@/lib/report-client-error";
 
 export default function Error({
   error,
@@ -15,6 +16,7 @@ export default function Error({
 
   useEffect(() => {
     console.error(error);
+    reportClientError(error);
   }, [error]);
 
   return (

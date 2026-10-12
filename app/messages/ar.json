@@ -851,6 +851,7 @@
     "navEquipement": "تجهيزات السيارة",
     "navEditorial": "الإيقاع التحريري",
     "navPressReviews": "قراءة في الصحافة",
+    "navErrors": "الأخطاء",
     "statisticsTitle": "إحصائيات المنتج",
     "statSummaryConversations": "المحادثات",
     "statSummaryReviews": "التقييمات",
@@ -2054,6 +2055,15 @@
     "saving": "جارٍ الحفظ…",
     "errorUrlTaken": "هذا المقال موجود بالفعل في هذا القسم.",
     "errorValidation": "تحققوا من الرابط (https:// دون معرّف)، ومن العنوان والوسيلة والجملتين (من 20 إلى 300 حرف لكل واحدة)."
+  },
+  "AdminErrors": {
+    "title": "سجل الأخطاء",
+    "subtitle": "أخطاء الخادم والعميل وانتهاكات CSP المسجّلة تلقائيًا.",
+    "empty": "لا توجد أخطاء مسجّلة.",
+    "filterAll": "الكل",
+    "filterServer": "الخادم",
+    "filterClient": "العميل",
+    "filterCsp": "CSP"
   },
   "Blog": {
     "breadcrumbHome": "الرئيسية",

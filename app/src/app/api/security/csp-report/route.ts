@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/http";
 import { isBrowserExtensionNoise, parseCspReport } from "@/lib/csp-report";
+import { logError } from "@/lib/error-log";
 import { apiHandler } from "@/lib/api-route";
 
 // Lot 134 — reçoit les rapports de violation de la politique de sécurité des contenus, envoyés par le navigateur.
 //
 // RÉPOND TOUJOURS 204, quoi qu'on lui envoie : le navigateur n'en fait rien, et un visiteur malveillant n'apprend
 // rien. Le rapport est réduit (src/lib/csp-report.ts : ni requête d'adresse, ni jeton) puis écrit en UNE ligne dans les
-// journaux du serveur. Rien n'est stocké en base. Limité par adresse IP : un script qui inonde la route est ignoré.
+// journaux du serveur. Lot 293 — les violations non triviales sont aussi persistées en base (monitoring interne).
+// Limité par adresse IP : un script qui inonde la route est ignoré.
 const NO_CONTENT = () => new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 
 export const POST = apiHandler(async (request: NextRequest) => {
@@ -19,7 +21,15 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
   const violation = parseCspReport(await request.text().catch(() => ""));
   if (violation && !isBrowserExtensionNoise(violation)) {
-    console.warn(`[csp] ${violation.directive || "?"} bloqué : ${violation.blocked || "?"} — page ${violation.page || "?"}${violation.source ? ` — source ${violation.source}${violation.line !== null ? `:${violation.line}` : ""}` : ""}`);
+    const summary = `${violation.directive || "?"} bloqué : ${violation.blocked || "?"} — page ${violation.page || "?"}${violation.source ? ` — source ${violation.source}${violation.line !== null ? `:${violation.line}` : ""}` : ""}`;
+    console.warn(`[csp] ${summary}`);
+    void logError({
+      kind: "csp",
+      message: summary,
+      route: violation.page ?? null,
+      context: "proxy",
+      userAgent: (request.headers.get("user-agent") ?? "").slice(0, 300),
+    }).catch(() => {});
   }
   return NO_CONTENT();
 });

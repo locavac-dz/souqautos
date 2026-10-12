@@ -851,6 +851,7 @@
     "navEquipement": "Équipements auto",
     "navEditorial": "Rythme éditorial",
     "navPressReviews": "Revue de presse",
+    "navErrors": "Erreurs",
     "statisticsTitle": "Statistiques produit",
     "statSummaryConversations": "Conversations",
     "statSummaryReviews": "Avis",
@@ -2054,6 +2055,15 @@
     "saving": "Enregistrement…",
     "errorUrlTaken": "Cet article figure déjà dans la revue de presse.",
     "errorValidation": "Vérifiez l'adresse (https://, sans identifiant), le titre, le média et les deux phrases (20 à 300 caractères chacune)."
+  },
+  "AdminErrors": {
+    "title": "Journal des erreurs",
+    "subtitle": "Erreurs serveur, client et violations CSP enregistrées automatiquement.",
+    "empty": "Aucune erreur enregistrée.",
+    "filterAll": "Toutes",
+    "filterServer": "Serveur",
+    "filterClient": "Client",
+    "filterCsp": "CSP"
   },
   "Blog": {
     "breadcrumbHome": "Accueil",

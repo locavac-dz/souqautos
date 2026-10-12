@@ -50,6 +50,7 @@ export const ADMIN_PAGES = [
   "/admin/editorial",
   "/admin/revue-de-presse",
   "/admin/revue-de-presse/nouveau",
+  "/admin/erreurs",
 ];
 
 // Les écrans d'un compte ordinaire connecté (hors annonce précise) ; l'assistant de publication compte 11 étapes.

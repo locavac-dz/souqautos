@@ -112,6 +112,19 @@ export async function reportServerError(error: unknown, request: ErrorRequest, c
     // Toujours dans les journaux (une ligne, sans pile ni paramètres), qu'un courriel parte ou non.
     console.error(`[erreur] ${described.method} ${described.path} — ${described.routePath} (${described.routeType}) — ${described.name}${described.digest ? ` [${described.digest}]` : ""} : ${described.message}`);
 
+    // Lot 293 — persistance en base (monitoring interne). L'import dynamique et le catch évitent
+    // qu'une erreur de journalisation n'aggrave la panne ou ne bloque le démarrage.
+    void import("@/lib/error-log").then(({ logError }) =>
+      logError({
+        kind: "server",
+        message: `${described.name}: ${described.message}`,
+        stack: error instanceof Error ? error.stack?.slice(0, 4000) : null,
+        route: described.routePath,
+        method: described.method,
+        context: described.routeType,
+      }),
+    ).catch(() => {});
+
     const recipients = resolveOpsRecipients(process.env);
     if (recipients.length === 0) return;
     if (!(await checkRateLimit(`server-error-alert:${described.signature}`, { limit: 1, windowMs: ERROR_ALERT_WINDOW_MS }))) return;

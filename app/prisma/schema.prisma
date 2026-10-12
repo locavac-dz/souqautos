@@ -1748,3 +1748,21 @@ model WeeklyReport {
   payload     Json // WeeklyMetrics de la semaine et de la précédente
   createdAt   DateTime @default(now())
 }
+
+model ErrorLog {
+  id          String   @id @default(cuid())
+  kind        String   // "server" | "client" | "csp"
+  fingerprint String
+  message     String
+  stack       String?
+  route       String?
+  method      String?
+  context     String?  // "page" | "api" | "action" | "proxy" | "client"
+  statusCode  Int?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([fingerprint, createdAt])
+  @@index([kind, createdAt])
+  @@index([createdAt])
+}

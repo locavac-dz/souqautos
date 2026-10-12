@@ -70,7 +70,7 @@ const SAME_IN_BOTH = new Set([
   "ProLanding.tierPREMIUM",
   "OwnerReview.averageLabel",
 ]);
-const LATIN_ONLY_IN_ARABIC = new Set([...SAME_IN_BOTH, "Pro.subscriptionTierPRO", "ProLanding.tierPRO", "Pro.subscriptionUpgradeBankRib"]);
+const LATIN_ONLY_IN_ARABIC = new Set([...SAME_IN_BOTH, "Pro.subscriptionTierPRO", "ProLanding.tierPRO", "Pro.subscriptionUpgradeBankRib", "AdminErrors.filterCsp"]);
 const ARABIC_LETTER = /[؀-ۿ]/;
 const LATIN_WORD = /[A-Za-zÀ-ÿ]{3,}/;
 

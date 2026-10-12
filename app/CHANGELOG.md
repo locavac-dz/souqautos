@@ -4265,6 +4265,22 @@ Cinq corrections issues de l'audit AL HANDASSA, par ordre de priorité.
 
 **Vérifié** : `tsc` 0 erreur ; **2 465 tests** verts (221 fichiers).
 
+## Lot 293 — Monitoring d'erreurs interne (2026-10-12)
+
+**Livré**
+- Table `ErrorLog` (Prisma) : stocke les erreurs serveur, client et violations CSP avec empreinte SHA-256 (fingerprint) pour regrouper les occurrences identiques.
+- Module `src/lib/error-log.ts` : `logError()` (jamais d'exception), `errorFingerprint()`, `sweepOldErrorLogs()` (rétention 30 jours, cap 10 000 lignes).
+- Persistance serveur : `server-error-alerts.ts` envoie chaque erreur captée par `apiHandler()`/`instrumentation.ts` vers `logError()`.
+- Persistance client : les 12 error boundaries appellent `reportClientError()` → `POST /api/errors/report` (rate-limited 10/min/IP, toujours 204).
+- Persistance CSP : la route `/api/security/csp-report` persiste les violations non triviales via `logError({ kind: "csp" })`.
+- Page admin `/admin/erreurs` (réservée ADMIN) : liste paginée, filtres par type (serveur/client/CSP), stack trace dépliable, empreinte affichée.
+- Lien « Erreurs » dans la navigation admin, clés i18n FR/AR (`Admin.navErrors`, `AdminErrors.*`).
+- Purge automatique dans le cron sweep (`/api/cron/sweep`).
+- `/admin/erreurs` ajouté aux chemins e2e (`e2e/public-paths.ts`).
+- 8 tests unitaires (`errorFingerprint` : stabilité, séparation kind/route, première ligne, null/undefined).
+
+**Vérifié** : `tsc --noEmit` zéro erreur, 8/8 tests passent.
+
 ## Lot 292 — Fix tests backup-chain (2026-10-12)
 
 **Livré**
