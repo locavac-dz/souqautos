@@ -1258,7 +1258,10 @@
     "filterSubmit": "Filtrer",
     "resultsCount": "Résultats : {count}",
     "empty": "Aucun professionnel n'a encore d'annonce publiée.",
-    "emptyFiltered": "Aucun professionnel avec une annonce publiée dans cette wilaya."
+    "emptyFiltered": "Aucun professionnel avec une annonce publiée dans cette wilaya.",
+    "viewList": "Liste",
+    "viewMap": "Carte",
+    "mapLoading": "Chargement de la carte…"
   },
   "ProLanding": {
     "breadcrumbHome": "Accueil",

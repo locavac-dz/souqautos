@@ -8,6 +8,8 @@ import { localizedAlternates } from "@/lib/seo-alternates";
 import { buildBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Pagination } from "@/components/search/Pagination";
+import { DealerMap } from "@/components/DealerMap";
+import { DirectoryViewToggle } from "@/components/DirectoryViewToggle";
 import {
   DIRECTORY_PAGE_SIZE,
   countByWilaya,
@@ -72,8 +74,10 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
 
   const [entries, wilayas] = await Promise.all([
     getDirectoryEntries(),
-    prisma.wilaya.findMany({ orderBy: { nomFr: "asc" }, select: { id: true, slug: true, nomFr: true, nomAr: true } }),
+    prisma.wilaya.findMany({ orderBy: { nomFr: "asc" }, select: { id: true, slug: true, nomFr: true, nomAr: true, latitude: true, longitude: true } }),
   ]);
+
+  const currentView = params.view === "map" ? "map" : "list";
 
   const sorted = sortDirectoryEntries(entries);
   const wilayaCounts = countByWilaya(sorted);
@@ -145,67 +149,99 @@ export default async function ProDirectoryPage({ searchParams }: { searchParams:
         </p>
       ) : (
         <>
-          <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">{t("resultsCount", { count: pageData.totalCount })}</p>
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pageData.items.map((entry) => {
-              const wilaya = entry.wilayaId ? wilayaById.get(entry.wilayaId) : undefined;
-              return (
-                <Link
-                  key={entry.id}
-                  href={`/pro/${entry.id}`}
-                  className="flex gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 hover:border-slate-300 dark:hover:border-slate-600"
-                >
-                  {entry.logoUrl ? (
-                    <div className="relative h-12 w-12 shrink-0">
-                      <Image
-                        src={entry.logoUrl}
-                        alt=""
-                        fill
-                        sizes="48px"
-                        className="rounded-full object-cover border border-slate-200 dark:border-slate-700"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 text-lg font-medium text-slate-500 dark:text-slate-400">
-                      {entry.nomCommercial.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-medium text-slate-900 dark:text-slate-100">
-                      {entry.nomCommercial}
-                      {entry.badgeVerifie && (
-                        <span className="ms-2 text-xs font-normal text-emerald-700">
-                          {tPro("verifiedBadge")}
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {entry.categoryPro && <span>{tPro(`categoryPro_${entry.categoryPro}`)}{wilaya ? " · " : ""}</span>}
-                      {wilaya && wilayaLabel(wilaya)}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      {tCatalogue("statsCount", { count: entry.listingCount })}
-                    </p>
-                    <p className="mt-0.5 text-xs">
-                      {entry.ratingCount > 0 ? (
-                        <span className="text-amber-600">
-                          ★ {tReview("averageRating", { average: entry.ratingAverage, count: entry.ratingCount })}
-                        </span>
-                      ) : (
-                        <span className="text-slate-500 dark:text-slate-400">{tReview("noReviews")}</span>
-                      )}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="mt-6 flex items-center justify-between">
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t("resultsCount", { count: pageData.totalCount })}</p>
+            <DirectoryViewToggle currentView={currentView} />
           </div>
-          <Pagination
-            page={pageData.page}
-            totalPages={pageData.totalPages}
-            searchParams={{ wilaya: selectedWilaya?.slug, category: selectedCategory }}
-            basePath="/concessionnaires"
-          />
+
+          {currentView === "map" ? (
+            <div className="mt-3">
+              <DealerMap
+                locale={locale}
+                dealers={filtered
+                  .filter((e) => {
+                    if (!e.wilayaId) return false;
+                    const w = wilayaById.get(e.wilayaId);
+                    return w?.latitude != null && w?.longitude != null;
+                  })
+                  .map((e) => {
+                    const w = wilayaById.get(e.wilayaId!)!;
+                    return {
+                      id: e.id,
+                      nomCommercial: e.nomCommercial,
+                      wilayaLabel: wilayaLabel(w),
+                      latitude: w.latitude!,
+                      longitude: w.longitude!,
+                      listingCount: e.listingCount,
+                      badgeVerifie: e.badgeVerifie,
+                    };
+                  })}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pageData.items.map((entry) => {
+                  const wilaya = entry.wilayaId ? wilayaById.get(entry.wilayaId) : undefined;
+                  return (
+                    <Link
+                      key={entry.id}
+                      href={`/pro/${entry.id}`}
+                      className="flex gap-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 hover:border-slate-300 dark:hover:border-slate-600"
+                    >
+                      {entry.logoUrl ? (
+                        <div className="relative h-12 w-12 shrink-0">
+                          <Image
+                            src={entry.logoUrl}
+                            alt=""
+                            fill
+                            sizes="48px"
+                            className="rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 text-lg font-medium text-slate-500 dark:text-slate-400">
+                          {entry.nomCommercial.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-900 dark:text-slate-100">
+                          {entry.nomCommercial}
+                          {entry.badgeVerifie && (
+                            <span className="ms-2 text-xs font-normal text-emerald-700">
+                              {tPro("verifiedBadge")}
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          {entry.categoryPro && <span>{tPro(`categoryPro_${entry.categoryPro}`)}{wilaya ? " · " : ""}</span>}
+                          {wilaya && wilayaLabel(wilaya)}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          {tCatalogue("statsCount", { count: entry.listingCount })}
+                        </p>
+                        <p className="mt-0.5 text-xs">
+                          {entry.ratingCount > 0 ? (
+                            <span className="text-amber-600">
+                              ★ {tReview("averageRating", { average: entry.ratingAverage, count: entry.ratingCount })}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 dark:text-slate-400">{tReview("noReviews")}</span>
+                          )}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              <Pagination
+                page={pageData.page}
+                totalPages={pageData.totalPages}
+                searchParams={{ wilaya: selectedWilaya?.slug, category: selectedCategory }}
+                basePath="/concessionnaires"
+              />
+            </>
+          )}
         </>
       )}
     </div>

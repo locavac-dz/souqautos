@@ -44,6 +44,7 @@ export const CLIENT_NAMESPACES = [
   "PreviewLinks",
   "PriceBadge",
   "Pro",
+  "ProDirectory",
   "ProProspects",
   "ProfileEdit",
   "PushNotifications",

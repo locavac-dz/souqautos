@@ -60,8 +60,8 @@ export function buildContentSecurityPolicy({ nonce, isDev, imageOrigins = [], re
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     // En développement, next/font/google charge la feuille de style depuis fonts.googleapis.com.
     // En production, la police est auto-hébergée via /_next/static/media/.
-    `style-src 'self' 'unsafe-inline'${isDev ? " https://fonts.googleapis.com" : ""}`,
-    `img-src 'self' data: blob:${imageOrigins.length ? ` ${imageOrigins.join(" ")}` : ""}`,
+    `style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com${isDev ? " https://fonts.googleapis.com" : ""}`,
+    `img-src 'self' data: blob: https://*.tile.openstreetmap.org${imageOrigins.length ? ` ${imageOrigins.join(" ")}` : ""}`,
     `font-src 'self'${isDev ? " https://fonts.gstatic.com" : ""}`,
     // En développement, le rechargement à chaud passe par une connexion WebSocket.
     `connect-src 'self'${isDev ? " ws: wss:" : ""}`,

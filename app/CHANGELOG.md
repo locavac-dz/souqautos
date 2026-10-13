@@ -1,5 +1,16 @@
 # Souq Auto — journal des lots
 
+## Lot 308 — Carte des concessionnaires (2026-10-13)
+
+**Livré**
+- **Coordonnées GPS des wilayas** : champs `latitude` / `longitude` ajoutés au modèle `Wilaya`. Migration avec les coordonnées des 69 chefs-lieux de wilaya (découpage 2019 + loi 2026).
+- **Vue carte** sur la page `/concessionnaires` : bascule Liste / Carte. La carte (Leaflet chargé depuis cdnjs, zéro dépendance npm) affiche un marqueur par wilaya avec le nombre de concessionnaires ; le popup liste les professionnels avec lien vers leur vitrine.
+- **Composant `DealerMap`** (client) : chargement dynamique de Leaflet CSS + JS, regroupement des concessionnaires par wilaya, marqueurs circulaires émeraude, popup scrollable avec liens.
+- **Composant `DirectoryViewToggle`** (client) : bouton bascule Liste / Carte, conserve les filtres wilaya/catégorie dans l'URL.
+- Paramètre `view=map` ajouté au schéma zod `directoryParamsSchema`.
+- i18n FR/AR (3 clés : viewList, viewMap, mapLoading). `ProDirectory` ajouté à `CLIENT_NAMESPACES`.
+- 3 nouveaux tests (coordonnées présentes, bounding box Algérie, Alger ≈ 36.75N 3.04E).
+
 ## Lot 307 — Prise de rendez-vous visite / essai (2026-10-13)
 
 **Livré**

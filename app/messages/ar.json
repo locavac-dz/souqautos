@@ -1258,7 +1258,10 @@
     "filterSubmit": "تصفية",
     "resultsCount": "النتائج: {count}",
     "empty": "لا يوجد بعد أي مهني لديه إعلان منشور.",
-    "emptyFiltered": "لا يوجد أي مهني لديه إعلان منشور في هذه الولاية."
+    "emptyFiltered": "لا يوجد أي مهني لديه إعلان منشور في هذه الولاية.",
+    "viewList": "القائمة",
+    "viewMap": "الخريطة",
+    "mapLoading": "جاري تحميل الخريطة…"
   },
   "ProLanding": {
     "breadcrumbHome": "الرئيسية",

@@ -12,6 +12,7 @@ export const directoryParamsSchema = z.object({
   wilaya: z.string().trim().max(80).optional().catch(undefined),
   category: z.enum(PRO_CATEGORIES).optional().catch(undefined),
   page: numeric(),
+  view: z.enum(["list", "map"]).optional().catch(undefined),
 });
 
 export type DirectoryEntry = {

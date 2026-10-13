@@ -25,15 +25,13 @@ describe("buildContentSecurityPolicy — production", () => {
     expect(policy.split("ABC123==")).toHaveLength(2); // le nonce n'apparaît qu'à UN endroit
   });
 
-  it("allows nothing from outside the site by default", () => {
+  it("allows nothing from outside the site by default, except map tiles and Leaflet CSS", () => {
     expect(valueOf(policy, "default-src")).toEqual(["'self'"]);
-    expect(valueOf(policy, "img-src")).toEqual(["'self'", "data:", "blob:"]);
+    expect(valueOf(policy, "img-src")).toEqual(["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org"]);
     expect(valueOf(policy, "connect-src")).toEqual(["'self'"]);
     expect(valueOf(policy, "font-src")).toEqual(["'self'"]);
     expect(valueOf(policy, "worker-src")).toEqual(["'self'"]);
     expect(valueOf(policy, "manifest-src")).toEqual(["'self'"]);
-    expect(policy).not.toMatch(/https?:\/\//);
-    expect(policy).not.toContain("*");
   });
 
   it("forbids frames, plugins, a rewritten base address, other sites' forms, and being framed", () => {
@@ -44,8 +42,8 @@ describe("buildContentSecurityPolicy — production", () => {
     expect(directive(policy, "frame-ancestors")).toBe("frame-ancestors 'none'");
   });
 
-  it("accepts inline styles (React style attributes) but only for styles", () => {
-    expect(valueOf(policy, "style-src")).toEqual(["'self'", "'unsafe-inline'"]);
+  it("accepts inline styles (React style attributes) and Leaflet CSS from cdnjs", () => {
+    expect(valueOf(policy, "style-src")).toEqual(["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"]);
   });
 
   it("promotes http to https, and reports violations to the site's own endpoint", () => {
@@ -80,7 +78,7 @@ describe("buildContentSecurityPolicy — development", () => {
 describe("photo storage origin", () => {
   it("is added to img-src only, and nowhere else", () => {
     const policy = buildContentSecurityPolicy({ nonce: "N", isDev: false, imageOrigins: ["https://photos.example.dz"] });
-    expect(valueOf(policy, "img-src")).toEqual(["'self'", "data:", "blob:", "https://photos.example.dz"]);
+    expect(valueOf(policy, "img-src")).toEqual(["'self'", "data:", "blob:", "https://*.tile.openstreetmap.org", "https://photos.example.dz"]);
     expect(policy.split("https://photos.example.dz")).toHaveLength(2);
   });
 
