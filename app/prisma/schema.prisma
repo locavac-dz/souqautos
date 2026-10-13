@@ -122,6 +122,9 @@ model User {
   groupsCreated    GroupConversation[] @relation("GroupCreator")
   groupMemberships GroupMember[]
   groupMessages    GroupMessage[]
+  // Lot 307 — rendez-vous visite / essai
+  visitRequestsAsBuyer  VisitRequest[] @relation("BuyerVisits")
+  visitRequestsAsSeller VisitRequest[] @relation("SellerVisits")
 }
 
 model Profile {
@@ -135,15 +138,17 @@ model Profile {
 }
 
 model Wilaya {
-  id       Int       @id
-  code     String    @unique
+  id        Int       @id
+  code      String    @unique
   // Lot 75 — page SEO /wilaya/{slug} (docs/ARCHITECTURE.md §2, ex. « /wilaya/alger »),
   // prévue depuis le cahier des charges mais jamais construite. Calculé une fois via
   // slugify(nomFr) (même fonction que Brand/Model/Equipment), pas géré par le seed
   // idempotent des wilayas elles-mêmes (référentiel figé, cf. Lot 25).
-  slug     String    @unique
-  nomFr    String
-  nomAr    String
+  slug      String    @unique
+  nomFr     String
+  nomAr     String
+  latitude  Float?
+  longitude Float?
   profiles Profile[]
   listings Listing[]
   professionalAccounts ProfessionalAccount[]
@@ -487,6 +492,7 @@ model Listing {
   @@index([vin])
   contactEvents    ContactEvent[]
   callbackRequests CallbackRequest[]
+  visitRequests    VisitRequest[]
 }
 
 // Lot 45 — historique des prix (écart documenté depuis le Lot 4). Une entrée
@@ -1568,6 +1574,9 @@ enum NotificationKind {
   FAVORITE_PRICE_DROP
   ASSURANCE_EXPIRING
   CT_EXPIRING
+  VISIT_REQUESTED
+  VISIT_CONFIRMED
+  VISIT_DECLINED
 }
 
 model UserNotification {
@@ -1800,4 +1809,34 @@ model MarketPriceSnapshot {
 
   @@index([modelId, year, snapshotAt])
   @@index([brandId, snapshotAt])
+}
+
+// Lot 307 — rendez-vous visite / essai : un acheteur propose une date au vendeur,
+// qui confirme, décline ou laisse expirer. Ouvert à tous les vendeurs, pas seulement les pro.
+enum VisitRequestStatus {
+  EN_ATTENTE
+  CONFIRMEE
+  DECLINEE
+  ANNULEE
+  TERMINEE
+}
+
+model VisitRequest {
+  id         String             @id @default(cuid())
+  listingId  String
+  listing    Listing            @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId    String
+  buyer      User               @relation("BuyerVisits", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId   String
+  seller     User               @relation("SellerVisits", fields: [sellerId], references: [id], onDelete: Cascade)
+  proposedAt DateTime
+  message    String?            @db.VarChar(500)
+  sellerNote String?            @db.VarChar(500)
+  status     VisitRequestStatus @default(EN_ATTENTE)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@index([sellerId, status])
+  @@index([buyerId, status])
+  @@index([listingId])
 }

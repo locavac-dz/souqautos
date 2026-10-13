@@ -1258,7 +1258,10 @@
     "filterSubmit": "Filtrer",
     "resultsCount": "Résultats : {count}",
     "empty": "Aucun professionnel n'a encore d'annonce publiée.",
-    "emptyFiltered": "Aucun professionnel avec une annonce publiée dans cette wilaya."
+    "emptyFiltered": "Aucun professionnel avec une annonce publiée dans cette wilaya.",
+    "viewList": "Liste",
+    "viewMap": "Carte",
+    "mapLoading": "Chargement de la carte…"
   },
   "ProLanding": {
     "breadcrumbHome": "Accueil",
@@ -2475,5 +2478,40 @@
     "errorRateLimit": "Trop de demandes. Veuillez réessayer dans une heure.",
     "errorValidation": "Veuillez vérifier les informations saisies.",
     "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "VisitRequest": {
+    "buttonLabel": "Demander une visite",
+    "modalTitle": "Planifier une visite / essai",
+    "dateLabel": "Date souhaitée",
+    "timeLabel": "Heure souhaitée",
+    "messageLabel": "Message (facultatif)",
+    "messagePlaceholder": "Précisez vos attentes (essai routier, inspection…)",
+    "submit": "Envoyer la demande",
+    "sending": "Envoi…",
+    "success": "Votre demande de visite a été envoyée. Le vendeur vous répondra bientôt.",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "errorTooSoon": "La date proposée est trop proche (au moins 4 h à l'avance).",
+    "errorTooFar": "La date proposée est trop éloignée (60 jours max).",
+    "errorAlreadyPending": "Vous avez déjà une demande en attente pour cette annonce.",
+    "errorTooManyPending": "Vous avez trop de demandes en attente. Attendez qu'une soit traitée.",
+    "errorSelfVisit": "Vous ne pouvez pas demander une visite pour votre propre annonce.",
+    "errorRateLimited": "Trop de demandes. Veuillez réessayer plus tard.",
+    "errorGeneric": "Erreur lors de l'envoi, veuillez réessayer.",
+    "statusEN_ATTENTE": "En attente",
+    "statusCONFIRMEE": "Confirmée",
+    "statusDECLINEE": "Déclinée",
+    "statusANNULEE": "Annulée",
+    "statusTERMINEE": "Terminée",
+    "noVisits": "Aucune demande de visite",
+    "proposedAt": "Proposée le {date} à {time}",
+    "confirm": "Confirmer",
+    "decline": "Décliner",
+    "cancelVisit": "Annuler la visite",
+    "sellerNoteLabel": "Note pour l'acheteur (facultatif)",
+    "sellerNotePlaceholder": "Adresse, point de repère, consignes…",
+    "buyerLabel": "Acheteur",
+    "sellerLabel": "Vendeur",
+    "visitsPageTitle": "Mes visites"
   }
 }

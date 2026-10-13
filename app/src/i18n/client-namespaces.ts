@@ -44,6 +44,7 @@ export const CLIENT_NAMESPACES = [
   "PreviewLinks",
   "PriceBadge",
   "Pro",
+  "ProDirectory",
   "ProProspects",
   "ProfileEdit",
   "PushNotifications",
@@ -55,6 +56,7 @@ export const CLIENT_NAMESPACES = [
   "TrustScore",
   "TwoFactor",
   "Verification",
+  "VisitRequest",
   "Wizard",
 ] as const;
 
