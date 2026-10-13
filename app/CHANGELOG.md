@@ -1,5 +1,18 @@
 # Souq Auto — journal des lots
 
+## Lot 307 — Prise de rendez-vous visite / essai (2026-10-13)
+
+**Livré**
+- **Modèle `VisitRequest`** : demande de visite/essai entre acheteur et vendeur, avec date/heure proposée, message facultatif, note du vendeur, statut EN_ATTENTE → CONFIRMEE / DECLINEE / ANNULEE / TERMINEE. Indexes sur sellerId+status, buyerId+status, listingId. 3 nouvelles valeurs `NotificationKind` (VISIT_REQUESTED, VISIT_CONFIRMED, VISIT_DECLINED).
+- **Module pur `visit-request.ts`** : validation de la date proposée (4 h min, 60 j max), contrôle d'éligibilité (pas d'auto-visite, annonce publiée, 1 demande en attente par annonce, 10 max par acheteur), vérification des transitions de statut.
+- **API REST** : `POST /api/visit-requests` (acheteur authentifié, rate limit 10/h, validation Zod, notification push+in-app au vendeur), `PATCH /api/visit-requests/[id]` (confirm/decline par le vendeur, cancel par l'acheteur, notification push+in-app à l'autre partie).
+- **Bouton « Demander une visite »** (`RequestVisitButton`) sur la page d'annonce : modal avec date, heure, message optionnel. Gestion des erreurs détaillée (trop tôt, trop tard, déjà en attente, trop de demandes). Redirige vers la connexion si non authentifié.
+- **Page `/compte/visites`** : liste des demandes reçues (vendeur) et envoyées (acheteur), avec statut coloré, actions confirmer/décliner/annuler, note du vendeur.
+- **Tableau de bord enrichi** : compteur de visites en attente avec badge sur le lien vers la page visites.
+- **Composant `VisitRequestActions`** : actions confirmer (avec champ note optionnel) / décliner pour le vendeur, annuler pour l'acheteur, avec refresh automatique.
+- i18n FR/AR (namespace `VisitRequest`, 30 clés : bouton, modal, statuts, erreurs, labels, page visites).
+- 16 nouveaux tests (checkProposedDate, checkCanRequestVisit, checkCanRespond, checkCanCancel).
+
 ## Lot 306 — Statistiques vendeur (2026-10-12)
 
 **Livré**

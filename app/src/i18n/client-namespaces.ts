@@ -55,6 +55,7 @@ export const CLIENT_NAMESPACES = [
   "TrustScore",
   "TwoFactor",
   "Verification",
+  "VisitRequest",
   "Wizard",
 ] as const;
 
