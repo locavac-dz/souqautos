@@ -14,7 +14,16 @@ export async function overflowCulprits(page: Page, limit = 6): Promise<string> {
       if (style.position === "fixed" || style.display === "none" || style.visibility === "hidden") continue;
       const rect = element.getBoundingClientRect();
       if (rect.width <= 1 || rect.height === 0) continue; // sr-only, lien d'évitement…
-      if (rect.right > viewport + 0.5 || rect.left < -0.5) offending.add(element);
+      if (rect.right <= viewport + 0.5 && rect.left >= -0.5) continue;
+      // Rogné par un conteneur à défilement (tableau dans `overflow-x-auto`, par exemple) : il n'élargit pas la page.
+      let clipped = false;
+      for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+        if (getComputedStyle(parent).overflowX !== "visible") {
+          clipped = true;
+          break;
+        }
+      }
+      if (!clipped) offending.add(element);
     }
     const overshoot = (element: Element) => {
       const rect = element.getBoundingClientRect();
