@@ -72,7 +72,9 @@ test.describe("en-têtes envoyés", () => {
     const response = await request.get("/fr", { headers: { "content-security-policy": "script-src * 'unsafe-inline'", "content-security-policy-report-only": "default-src *", "x-nonce": "nonce-du-pirate" } });
     const headers = response.headers();
     expect(policyOf(headers)).toContain("script-src 'self' 'nonce-");
-    expect(policyOf(headers)).not.toContain("*");
+    // Le joker du visiteur (`script-src *`, `default-src *`) n'est jamais repris : aucune source « * » seule, dans aucune
+    // directive. Un hôte précis à sous-domaine joker reste admis (https://*.tile.openstreetmap.org, carte du lot 308).
+    expect(policyOf(headers)).not.toMatch(/(^|[\s;])\*($|[\s;])/);
     expect(policyOf(headers)).not.toContain("nonce-du-pirate");
     expect(headers["content-security-policy-report-only"]).toBeUndefined();
     expect(await response.text()).not.toContain("nonce-du-pirate");
