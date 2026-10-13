@@ -130,7 +130,8 @@ export function ModerationActions({
 function ChecklistItem({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
   return (
     <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-      <input type="checkbox" checked={checked} onChange={onChange} className="rounded border-slate-300 text-emerald-600 dark:border-slate-600" />
+      {/* 24 px au moins (WCAG 2.5.8, règle axe « target-size ») : la case par défaut, à 16 px, échouait à l'audit. */}
+      <input type="checkbox" checked={checked} onChange={onChange} className="h-6 w-6 shrink-0 rounded border-slate-300 text-emerald-600 dark:border-slate-600" />
       {label}
     </label>
   );
