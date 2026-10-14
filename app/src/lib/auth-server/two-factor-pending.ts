@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { expireAuthCookie } from "./cookie-expiry";
 
 // Lot 138 — « connexion en attente du second facteur ». Quand le mot de passe (ou Google) est correct MAIS que le compte a la
 // double authentification, on ne crée PAS de session : on pose ce cookie court, qui prouve seulement « cette personne a passé la
@@ -54,8 +55,7 @@ export async function setPendingCookie(token: string) {
 }
 
 export async function clearPendingCookie() {
-  const store = await cookies();
-  store.delete(PENDING_COOKIE);
+  await expireAuthCookie(PENDING_COOKIE);
 }
 
 export async function getPendingFromCookies(): Promise<PendingLogin | null> {

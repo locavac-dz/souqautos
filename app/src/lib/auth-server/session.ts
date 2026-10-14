@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { expireAuthCookie } from "./cookie-expiry";
 
 export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-souq_auto_session" : "souq_auto_session";
 const SESSION_DURATION_SECONDS = 60 * 15; // 15 minutes (le refresh token prend le relais pour la persistance)
@@ -68,8 +69,7 @@ export async function setSessionCookie(token: string) {
 }
 
 export async function clearSessionCookie() {
-  const store = await cookies();
-  store.delete(SESSION_COOKIE);
+  await expireAuthCookie(SESSION_COOKIE);
 }
 
 export async function getSessionFromCookies(): Promise<VerifiedSession | null> {

@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
+import { expireAuthCookie } from "./cookie-expiry";
 import { prisma } from "@/lib/prisma";
 
 export const REFRESH_COOKIE = process.env.NODE_ENV === "production" ? "__Host-souq_auto_refresh" : "souq_auto_refresh";
@@ -119,8 +120,7 @@ export async function setRefreshCookie(token: string) {
 }
 
 export async function clearRefreshCookie() {
-  const store = await cookies();
-  store.delete(REFRESH_COOKIE);
+  await expireAuthCookie(REFRESH_COOKIE);
 }
 
 export async function getRefreshTokenFromCookies(): Promise<string | null> {
