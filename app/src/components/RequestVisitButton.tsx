@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 type Props = {
   listingId: string;
@@ -65,13 +66,13 @@ export function RequestVisitButton({ listingId, isLoggedIn }: Props) {
 
   if (!isLoggedIn) {
     return (
-      <a
-        href="/fr/connexion"
+      <Link
+        href="/connexion"
         className="flex w-full items-center justify-center gap-1.5 rounded-md border border-emerald-600 dark:border-emerald-500 px-4 py-2.5 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950"
       >
         <span aria-hidden="true">📅</span>
         {t("buttonLabel")}
-      </a>
+      </Link>
     );
   }
 

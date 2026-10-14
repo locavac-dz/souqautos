@@ -9,7 +9,10 @@ import { getE2eDatabaseUrl } from "./e2e/e2e-database";
 // `npm run test:e2e:pwa` : compilation puis démarrage de production sur un port dédié, avec la
 // base de test (jamais les données de démonstration).
 const PORT = 5186;
-const env = { DATABASE_URL: getE2eDatabaseUrl(), REDIS_URL: "", S3_BUCKET: "" };
+// NEXT_PUBLIC_SITE_URL : l'origine de CE serveur. La CI définit celle du serveur de développement (5185) pour tout le job ;
+  // héritée ici, la vérification CSRF d'origine (src/lib/csrf.ts) refusait en 403 chaque requête mutatrice du navigateur
+  // (connexion, suivi des pages…) venue de http://localhost:5186, et `next build` l'incorporait au code client.
+const env = { DATABASE_URL: getE2eDatabaseUrl(), REDIS_URL: "", S3_BUCKET: "", NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}` };
 
 export default defineConfig({
   testDir: "./e2e-pwa",

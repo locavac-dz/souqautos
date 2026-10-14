@@ -2,6 +2,7 @@ import { test, expect, type Browser, type BrowserContext, type Page } from "@pla
 import { uniqueAccount, registerAndLogin } from "./fixtures";
 import { createListing } from "./api-helpers";
 import { disconnectE2eDb, e2eDb, setProSubscription, userIdOf } from "./db";
+import { overflowCulprits } from "./overflow";
 import fr from "../messages/fr.json";
 
 // Lot 131 — les outils d'un vendeur professionnel, avec un vrai visiteur et un vrai acheteur : les statistiques (vues,
@@ -133,7 +134,8 @@ test.describe("statistiques du compte professionnel", () => {
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await page.setViewportSize({ width: 375, height: 812 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, `déborde de ${overflow}px sur 375px — ${overflow > 0 ? await overflowCulprits(page) : ""}`).toBeLessThanOrEqual(0);
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 

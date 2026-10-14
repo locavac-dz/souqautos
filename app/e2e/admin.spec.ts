@@ -3,6 +3,7 @@ import { uniqueAccount, registerAndLogin } from "./fixtures";
 import { createListing } from "./api-helpers";
 import { disconnectE2eDb, e2eDb, makeAdmin } from "./db";
 import { ADMIN_PAGES } from "./public-paths";
+import { overflowCulprits } from "./overflow";
 import fr from "../messages/fr.json";
 
 // Lot 131 — l'espace d'administration : qui y entre, ce que voit chaque rôle, chaque écran s'ouvre sans erreur (dans les
@@ -88,7 +89,7 @@ test.describe("écrans d'administration", () => {
       if ((await page.locator("html").getAttribute("dir")) !== "rtl") problems.push(`${path} : pas de droite à gauche`);
       await page.setViewportSize({ width: 375, height: 812 });
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      if (overflow > 0) problems.push(`${path} : déborde de ${overflow}px sur 375px`);
+      if (overflow > 0) problems.push(`${path} : déborde de ${overflow}px sur 375px — ${await overflowCulprits(page)}`);
       await page.setViewportSize({ width: 1280, height: 800 });
     }
     expect(problems).toEqual([]);
@@ -124,6 +125,8 @@ test.describe("modération d'une annonce", () => {
     await adminPage.goto("/fr/admin/annonces");
     const row = adminPage.locator("li, tr, div").filter({ hasText: title }).filter({ has: adminPage.getByRole("button", { name: fr.Admin.approve }) }).last();
     await expect(row).toBeVisible();
+    // Lot 296 : l'approbation exige que la checklist de vérification soit entièrement cochée.
+    for (const box of await row.getByRole("checkbox").all()) await box.check();
     await row.getByRole("button", { name: fr.Admin.approve }).click();
     await expect.poll(async () => (await e2eDb().listing.findUniqueOrThrow({ where: { id } })).status, { timeout: 15_000 }).toBe("PUBLIEE");
 

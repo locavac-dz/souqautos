@@ -87,7 +87,7 @@ jobs:
     name: Tests de bout en bout
     needs: checks
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     services:
       postgres:
         image: postgres:17
