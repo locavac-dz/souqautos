@@ -65,6 +65,12 @@ export default defineConfig({
     // intermittents par épuisement de quota (trouvé en écrivant ce lot).
     // Repli mémoire honnête forcé, comme prévu.
     env: {
+      // Mémoire du serveur de développement. Next.js le REDÉMARRE de lui-même quand le tas dépasse 80 % de sa limite
+      // (« Server is approaching the used memory threshold, restarting… ») ; sur 220 tests, la compilation à la volée
+      // y arrive, et les requêtes en cours reçoivent ECONNRESET ou restent pendantes : échecs et instabilités d'un run
+      // à l'autre sur /fr/inscription, la création d'annonce, etc. Limite relevée : le redémarrage reste actif comme
+      // filet de sécurité, mais n'a plus lieu en fonctionnement normal (runners de 16 Go).
+      NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=6144"].filter(Boolean).join(" "),
       DATABASE_URL: getE2eDatabaseUrl(),
       REDIS_URL: "",
       S3_BUCKET: "",
