@@ -23,8 +23,12 @@ test.describe("politique de sécurité en production", () => {
     expect(policy).toContain("base-uri 'self'");
     expect(policy).toContain("report-uri /api/security/csp-report");
 
-    // Uniquement des origines du site lui-même, sauf éventuellement le stockage de photos (img-src).
-    const others = policy.replace(/img-src[^;]*/, "");
+    // Uniquement des origines du site lui-même, sauf : le stockage de photos et les tuiles de la carte (img-src), et la
+    // feuille de style de Leaflet servie par cdnjs (style-src, carte des concessionnaires du lot 308). Cette seule origine
+    // est admise, et seulement pour les styles : toute autre origine, ou cdnjs ailleurs, reste refusée.
+    const others = policy
+      .replace(/img-src[^;]*/, "")
+      .replace(/style-src[^;]*/, (directive) => directive.replace("https://cdnjs.cloudflare.com", ""));
     expect(others).not.toMatch(/https?:\/\//);
 
     expect(h["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");

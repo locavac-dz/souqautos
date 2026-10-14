@@ -33,7 +33,8 @@ async function apiLogin(page: Page, email: string) {
 }
 
 async function enableViaApi(page: Page) {
-  const setup = await (await page.request.post("/api/account/two-factor/setup")).json();
+  // Lot 229 : le mot de passe est exigé pour commencer l'activation (sans lui : invalid_password, puis 409 « no_pending »).
+  const setup = await (await page.request.post("/api/account/two-factor/setup", { data: { password: PASSWORD } })).json();
   const secret = String(setup.secret).replace(/\s/g, "");
   const enabled = await page.request.post("/api/account/two-factor/enable", { data: { code: codeNow(secret) } });
   expect(enabled.status()).toBe(200);
