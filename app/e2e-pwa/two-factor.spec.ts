@@ -93,8 +93,9 @@ test.describe("l'équipe en production", () => {
     const login = await other.request.post("/api/auth/login", { data: { email: admin.email, password: PASSWORD }, headers: { "x-forwarded-for": randomIp() } });
     expect((await login.json()).twoFactorRequired).toBe(true);
     const cookies = await context.cookies();
-    expect(cookies.map((c) => c.name)).not.toContain("souq_auto_session");
-    const pending = cookies.find((c) => c.name === "souq_auto_2fa")!;
+    // En production les cookies portent le préfixe __Host- (secure, sans Domain, Path=/ : src/lib/auth-server/*.ts).
+    expect(cookies.map((c) => c.name)).not.toContain("__Host-souq_auto_session");
+    const pending = cookies.find((c) => c.name === "__Host-souq_auto_2fa")!;
     expect(pending).toMatchObject({ httpOnly: true, secure: true, sameSite: "Lax", path: "/" });
     const lifetime = pending.expires - Date.now() / 1000;
     expect(lifetime).toBeGreaterThan(200);
@@ -103,9 +104,9 @@ test.describe("l'équipe en production", () => {
     expect((await other.request.get("/api/auth/me")).status()).toBe(401);
     const verified = await other.request.post("/api/auth/two-factor/verify", { data: { code: codeNow(secret, 1) } });
     expect(verified.status()).toBe(200);
-    const session = (await context.cookies()).find((c) => c.name === "souq_auto_session")!;
+    const session = (await context.cookies()).find((c) => c.name === "__Host-souq_auto_session")!;
     expect(session).toMatchObject({ httpOnly: true, secure: true, sameSite: "Lax" });
-    expect((await context.cookies()).map((c) => c.name)).not.toContain("souq_auto_2fa");
+    expect((await context.cookies()).map((c) => c.name)).not.toContain("__Host-souq_auto_2fa");
     await context.close();
   });
 
@@ -128,6 +129,8 @@ test.describe("l'équipe en production", () => {
     await expect(page).toHaveURL(/\/fr\/compte\/tableau-de-bord/);
 
     await page.goto("/fr/compte/securite");
+    // Lot 229 : le mot de passe est demandé avant de montrer le secret.
+    await page.locator("#two-factor-setup-password").fill(PASSWORD);
     await page.getByRole("button", { name: T.enable }).click();
     await expect(page.getByRole("img", { name: T.qrAlt })).toBeVisible(); // le code QR (SVG construit par React) s'affiche malgré la politique
     const secret = (await page.getByTestId("two-factor-secret").innerText()).replace(/\s/g, "");
@@ -173,7 +176,8 @@ test.describe("l'équipe en production", () => {
     expect(await e2eDb().twoFactorRecoveryCode.count({ where: { userId: admin.id } })).toBe(0);
     const log = await e2eDb().auditLog.findFirst({ where: { action: "two_factor.reset", targetId: admin.id } });
     expect(JSON.parse(log!.details!)).toEqual({ by: "commande" });
-    expect((await adminApi(page)).status(), "la session est révoquée").toBe(403);
+    // Session révoquée : plus de session valide, donc « non authentifié » (401, lot 279) et non « rôle insuffisant » (403).
+    expect((await adminApi(page)).status(), "la session est révoquée").toBe(401);
 
     // Il se reconnecte : plus de code, mais aussi plus de pouvoirs d'équipe, jusqu'à ce qu'il réactive la fonction.
     await apiLogin(page, admin.email);
