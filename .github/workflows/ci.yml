@@ -87,7 +87,10 @@ jobs:
     name: Tests de bout en bout
     needs: checks
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # Durées mesurées de ce job (suite principale + version de production) : 32 à 57 min, 49 min en moyenne sur une
+    # exécution saine. 75 min laisse de la marge sans masquer un blocage ; 60 min coupait parfois une exécution avant que
+    # Playwright n'imprime son résumé (donc sans message d'erreur exploitable).
+    timeout-minutes: 75
     services:
       postgres:
         image: postgres:17
