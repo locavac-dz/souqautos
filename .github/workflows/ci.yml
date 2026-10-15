@@ -119,10 +119,18 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Créer la base des tests de bout en bout
         run: PGPASSWORD="$POSTGRES_PASSWORD" psql -h localhost -U souq_auto -d souq_auto -c "CREATE DATABASE souq_auto_e2e"
+      - name: Mesure de la mémoire (information)
+        # Échantillonne la mémoire toutes les 30 s pendant les deux suites ; affichée à la fin du job. Aucun effet sur les tests.
+        run: nohup bash scripts/ci-memory-sampler.sh "$RUNNER_TEMP/memoire.log" 30 > /dev/null 2>&1 &
       - name: Tests de bout en bout
         run: npm run test:e2e
       - name: Application installable (version de production)
         run: npm run test:e2e:pwa
+      - name: Mémoire pendant les tests (information)
+        if: always()
+        run: |
+          echo "heure UTC | mémoire du système | processus les plus gourmands (taille résidente)"
+          cat "$RUNNER_TEMP/memoire.log" || true
       - name: Conserver les traces en cas d'échec
         if: failure()
         uses: actions/upload-artifact@v4
