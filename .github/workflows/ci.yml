@@ -84,10 +84,27 @@ jobs:
         continue-on-error: true
 
   e2e:
-    name: Tests de bout en bout
+    # Suite découpée en jobs courts + la version de production : chaque job a son serveur et sa base. Le serveur de
+    # développement de test (`next dev`) FUIT de la mémoire (mesuré : ~0,2 Go/min de données vivantes ; Next.js le redémarre
+    # à 80 % du tas vers 20-25 min, ce qui coupe les requêtes en cours, et sans ce garde-fou il plante par « JavaScript
+    # heap out of memory » vers 32 min). Un serveur qui vit moins de ~15 min n'atteint jamais le seuil.
+    #  - « accessibilite » : les audits axe (accessibility.spec.ts, 12 tests, ~15 min à eux seuls), un job par langue ;
+    #  - « principale »    : tout le reste, en 3 tranches (Playwright --shard), accessibility.spec.ts exclu par --grep-invert.
+    # (Playwright 1.63 découpe en blocs contigus de tests : un fichier lourd et unique ne peut pas être réparti autrement.)
+    name: Tests de bout en bout (${{ matrix.suite }} ${{ matrix.shard }}${{ matrix.langue }})
     needs: checks
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { suite: principale, shard: "1/3" }
+          - { suite: principale, shard: "2/3" }
+          - { suite: principale, shard: "3/3" }
+          - { suite: accessibilite, langue: "en français" }
+          - { suite: accessibilite, langue: "en arabe" }
+          - { suite: production }
     services:
       postgres:
         image: postgres:17
@@ -122,9 +139,14 @@ jobs:
       - name: Mesure de la mémoire (information)
         # Échantillonne la mémoire toutes les 30 s pendant les deux suites ; affichée à la fin du job. Aucun effet sur les tests.
         run: nohup bash scripts/ci-memory-sampler.sh "$RUNNER_TEMP/memoire.log" 30 > /dev/null 2>&1 &
-      - name: Tests de bout en bout
-        run: npm run test:e2e
+      - name: Tests de bout en bout (tranche ${{ matrix.shard }})
+        if: matrix.suite == 'principale'
+        run: npm run test:e2e -- --grep-invert 'accessibility\.spec\.ts' --shard=${{ matrix.shard }}
+      - name: Audits d'accessibilité (${{ matrix.langue }})
+        if: matrix.suite == 'accessibilite'
+        run: npm run test:e2e -- --grep 'accessibility\.spec\.ts.*${{ matrix.langue }}'
       - name: Application installable (version de production)
+        if: matrix.suite == 'production'
         run: npm run test:e2e:pwa
       - name: Mémoire pendant les tests (information)
         if: always()
@@ -135,7 +157,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: traces-playwright
+          name: traces-playwright-${{ strategy.job-index }}
           path: |
             app/test-results/
             app/playwright-report/

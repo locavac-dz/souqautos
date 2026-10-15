@@ -96,6 +96,48 @@ describe("workflow CI — commands", () => {
     expect(runs.some((r) => r.includes("npm run test:e2e:pwa"))).toBe(true);
   });
 
+  it("splits the end-to-end suite into short jobs, so no development server lives long enough to leak", () => {
+    // Mesuré en CI : le serveur de développement de test fuit ~0,2 Go/min ; Next.js le redémarre vers 20-25 min (requêtes
+    // coupées, instabilités) et, sans ce garde-fou, il plante par manque de mémoire vers 32 min. Chaque job doit rester court.
+    type Entry = { suite: string; shard?: string; langue?: string };
+    const job = wf.jobs.e2e as Job & { strategy?: { "fail-fast"?: boolean; matrix?: { include?: Entry[] } } };
+    const entries = job.strategy?.matrix?.include ?? [];
+    const principal = entries.filter((e) => e.suite === "principale");
+    const accessibility = entries.filter((e) => e.suite === "accessibilite");
+    expect(principal.length, "au moins 3 tranches de la suite principale").toBeGreaterThanOrEqual(3);
+    expect(entries.some((e) => e.suite === "production")).toBe(true);
+    expect(job.strategy?.["fail-fast"], "une tranche en échec ne doit pas interrompre les autres").toBe(false);
+    // Les tranches sont `i/N` avec le même N, et couvrent 1..N exactement une fois.
+    const shards = principal.map((e) => (e.shard ?? "").split("/").map(Number));
+    const total = shards[0][1];
+    expect(shards.every(([, n]) => n === total)).toBe(true);
+    expect(shards.map(([i]) => i).sort((a, b) => a - b)).toEqual(Array.from({ length: total }, (_, i) => i + 1));
+    // Un délai court : un serveur bloqué ne doit pas brûler une heure.
+    expect(job["timeout-minutes"]).toBeLessThanOrEqual(45);
+
+    // Les commandes passent bien la tranche et le filtre à Playwright.
+    const principalRun = runs.find((r) => r.includes("--shard=${{ matrix.shard }}")) ?? "";
+    expect(principalRun, "la suite principale reçoit sa tranche").toContain("npm run test:e2e");
+    if (accessibility.length === 0) return;
+
+    // Les audits d'accessibilité forment des jobs à part (un fichier lourd et unique ne se répartit pas en blocs contigus) :
+    // la suite principale doit les EXCLURE, et chaque job les sélectionne par la langue de son describe. Sans cela, des tests
+    // seraient exécutés deux fois, ou jamais.
+    expect(principalRun).toContain("--grep-invert 'accessibility\\.spec\\.ts'");
+    const accessibilityRun = runs.find((r) => r.includes("--grep 'accessibility\\.spec\\.ts.*${{ matrix.langue }}'")) ?? "";
+    expect(accessibilityRun, "les audits sont sélectionnés par langue").toContain("npm run test:e2e");
+
+    // Chaque test de accessibility.spec.ts doit se trouver dans un `describe` dont le titre se termine par « en <langue> » :
+    // un test hors de ces blocs ne serait sélectionné par aucun job d'accessibilité, et exclu de la suite principale.
+    const spec = readFileSync(path.join(APP, "e2e", "accessibility.spec.ts"), "utf8");
+    expect(spec.match(/^test\(/gm), "aucun test au niveau supérieur de accessibility.spec.ts").toBeNull();
+    const describes = [...spec.matchAll(/test\.describe\(`([^`]+)`/g)].map((m) => m[1]);
+    expect(describes.length).toBeGreaterThan(0);
+    const label = (languageWord: string) => accessibility.some((e) => e.langue === `en ${languageWord}`);
+    expect(label("français") && label("arabe"), "un job par langue").toBe(true);
+    for (const title of describes) expect(title, title).toMatch(/ en \$\{[^}]*"français"[^}]*"arabe"[^}]*\}$/);
+  });
+
   it("keeps the traces when the end-to-end tests fail", () => {
     const upload = wf.jobs.e2e.steps.find((s) => s.uses?.startsWith("actions/upload-artifact"));
     expect(upload?.if).toBe("failure()");
