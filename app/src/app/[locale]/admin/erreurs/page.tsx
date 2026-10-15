@@ -82,10 +82,10 @@ export default async function AdminErrorsPage({
                       {err.kind}
                     </span>
                     {err.context && (
-                      <span className="text-xs text-slate-400 dark:text-slate-500">{err.context}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{err.context}</span>
                     )}
                     {err.statusCode && (
-                      <span className="text-xs text-slate-400 dark:text-slate-500">{err.statusCode}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{err.statusCode}</span>
                     )}
                   </div>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100 break-words">
@@ -108,7 +108,7 @@ export default async function AdminErrorsPage({
                   )}
                 </div>
                 <div className="shrink-0 text-right">
-                  <time className="text-xs text-slate-400 dark:text-slate-500" dateTime={err.createdAt.toISOString()}>
+                  <time className="text-xs text-slate-500 dark:text-slate-400" dateTime={err.createdAt.toISOString()}>
                     {err.createdAt.toLocaleDateString(locale === "ar" ? "ar-DZ" : "fr-DZ", {
                       day: "2-digit",
                       month: "2-digit",
@@ -116,7 +116,7 @@ export default async function AdminErrorsPage({
                       minute: "2-digit",
                     })}
                   </time>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-mono">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
                     {err.fingerprint.slice(0, 8)}
                   </p>
                 </div>
