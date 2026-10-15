@@ -96,6 +96,26 @@ describe("workflow CI — commands", () => {
     expect(runs.some((r) => r.includes("npm run test:e2e:pwa"))).toBe(true);
   });
 
+  it("splits the end-to-end suite into shards, so no development server lives long enough to leak", () => {
+    // Mesuré en CI : le serveur de développement de test fuit ~0,2 Go/min ; Next.js le redémarre vers 20-25 min (requêtes
+    // coupées, instabilités) et, sans ce garde-fou, il plante par manque de mémoire vers 32 min. Chaque tranche doit rester courte.
+    const job = wf.jobs.e2e as Job & { strategy?: { "fail-fast"?: boolean; matrix?: { include?: { suite: string; shard: string }[] } } };
+    const entries = job.strategy?.matrix?.include ?? [];
+    const principal = entries.filter((e) => e.suite === "principale");
+    expect(principal.length, "au moins 3 tranches de la suite principale").toBeGreaterThanOrEqual(3);
+    expect(entries.some((e) => e.suite === "production")).toBe(true);
+    expect(job.strategy?.["fail-fast"], "une tranche en échec ne doit pas interrompre les autres").toBe(false);
+    // Les tranches sont `i/N` avec le même N, et couvrent 1..N exactement une fois.
+    const shards = principal.map((e) => e.shard.split("/").map(Number));
+    const total = shards[0][1];
+    expect(shards.every(([, n]) => n === total)).toBe(true);
+    expect(shards.map(([i]) => i).sort((a, b) => a - b)).toEqual(Array.from({ length: total }, (_, i) => i + 1));
+    // La commande passe bien la tranche à Playwright.
+    expect(runs.some((r) => r.includes("npm run test:e2e -- --shard=${{ matrix.shard }}"))).toBe(true);
+    // Un délai de tranche court : un serveur bloqué ne doit pas brûler une heure.
+    expect(job["timeout-minutes"]).toBeLessThanOrEqual(45);
+  });
+
   it("keeps the traces when the end-to-end tests fail", () => {
     const upload = wf.jobs.e2e.steps.find((s) => s.uses?.startsWith("actions/upload-artifact"));
     expect(upload?.if).toBe("failure()");
