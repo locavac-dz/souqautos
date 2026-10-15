@@ -65,6 +65,8 @@ export default defineConfig({
     // intermittents par épuisement de quota (trouvé en écrivant ce lot).
     // Repli mémoire honnête forcé, comme prévu.
     env: {
+      // Pas de redémarrage automatique du serveur de test en cours de suite (voir next.config.mjs).
+      E2E_NO_MEMORY_RESTART: "1",
       DATABASE_URL: getE2eDatabaseUrl(),
       REDIS_URL: "",
       S3_BUCKET: "",

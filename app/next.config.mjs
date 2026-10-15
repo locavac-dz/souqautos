@@ -29,6 +29,12 @@ function staticSecurityHeaders(production) {
 
 const nextConfig = {
   ...(process.env.BUILD_STANDALONE === "1" ? { output: "standalone", outputFileTracingRoot: __dirname } : {}),
+  // Serveur de développement des tests de bout en bout (playwright.config.ts) : pas de redémarrage automatique.
+  // Next.js (dev) redémarre le serveur quand le tas dépasse 80 % de sa limite ; V8 remplit volontiers un tas de
+  // 4,3 Go sans que les données soient vivantes (mesuré en CI : mémoire du serveur de test 4 → 8 Go sur ~20 min, un
+  // redémarrage par run, requêtes en cours coupées). Le tas reste borné par V8, qui collecte plus fort près de sa limite.
+  // `undefined` hors tests : le comportement par défaut de Next.js est conservé pour le développement ordinaire.
+  ...(process.env.E2E_NO_MEMORY_RESTART === "1" ? { experimental: { devMemoryThresholdRestart: false } } : {}),
   // Packages that use Node.js built-ins (stream, net, tls…) must not be bundled by webpack.
   // Turbopack resolves these natively; webpack needs them listed both here (for RSC/route handlers)
   // and in the webpack() hook below (for instrumentation.ts which is bundled separately).
