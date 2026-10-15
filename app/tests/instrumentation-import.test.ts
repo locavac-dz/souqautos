@@ -12,7 +12,15 @@ describe("instrumentation.ts", () => {
   it("importe le module d'alertes par l'alias, résolu par webpack (pas de webpackIgnore)", () => {
     const source = read("instrumentation.ts");
     expect(source).toMatch(/import\(\s*"@\/lib\/server-error-alerts"\s*\)/);
-    expect(source).not.toMatch(/webpackIgnore/);
+    // L'annotation elle-même (le mot figure légitimement dans les commentaires qui expliquent pourquoi elle est bannie).
+    expect(source).not.toMatch(/\/\*\s*webpackIgnore\s*:/);
+  });
+
+  it("garde l'import DANS un bloc « if (NEXT_RUNTIME === \"nodejs\") », que webpack supprime du bundle edge", () => {
+    // Un retour anticipé (`!== "nodejs"` puis `return`) laisse l'import compilé pour l'edge : node:crypto y est introuvable
+    // et le serveur de développement ne démarre plus (constaté en CI, PR n° 13, premier essai).
+    const source = read("instrumentation.ts");
+    expect(source).toMatch(/if\s*\(\s*process\.env\.NEXT_RUNTIME\s*===\s*"nodejs"\s*\)\s*\{[^}]*import\(\s*"@\/lib\/server-error-alerts"\s*\)[^}]*\}/);
   });
 
   it("aucun fichier de src n'ignore webpack pour importer un module par alias « @/ »", () => {
