@@ -8,5 +8,5 @@ import type { Instrumentation } from "next";
 // retarder la réponse d'erreur faite au visiteur.
 export const onRequestError: Instrumentation.onRequestError = (error, request, context) => {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  void import(/* webpackIgnore: true */ "@/lib/server-error-alerts").then(({ reportServerError }) => reportServerError(error, request, context));
+  void import("@/lib/server-error-alerts").then(({ reportServerError }) => reportServerError(error, request, context));
 };
