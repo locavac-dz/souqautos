@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   description: "Gestion intégrée du patrimoine, des projets et des réclamations des OPGI.",
 };
 
+// CSP par nonce (mode par défaut) : le nonce est généré par requête dans le proxy
+// et Next ne peut l'injecter dans ses scripts que lors d'un rendu dynamique. On
+// force donc le rendu dynamique pour TOUTE l'application (sinon les pages
+// statiques, dépourvues de nonce, verraient leurs scripts bloqués par la CSP).
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
   const messages = await getMessages();
