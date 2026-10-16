@@ -15,6 +15,8 @@ export interface Services {
   secret: string;
   secure: boolean;
   lockout: LockoutPolicy;
+  /** Répertoire de base du stockage local des pièces jointes. */
+  storageDir: string;
 }
 
 export function buildServices(env: Record<string, string | undefined> = process.env): Services {
@@ -40,6 +42,7 @@ export function buildServices(env: Record<string, string | undefined> = process.
     secret,
     secure,
     lockout,
+    storageDir: env.FILE_STORAGE_DIR ?? ".data/uploads",
   };
 }
 

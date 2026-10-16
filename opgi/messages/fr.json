@@ -219,6 +219,13 @@
     "aucune": "Aucune réclamation.",
     "aucunCommentaire": "Aucun commentaire.",
     "aucunOrdre": "Aucun ordre de travail.",
+    "pieces": "Pièces jointes",
+    "ajouterPiece": "Ajouter une pièce",
+    "fichier": "Fichier (jpeg, png, pdf — 10 Mo max)",
+    "telecharger": "Télécharger",
+    "aucunePiece": "Aucune pièce jointe.",
+    "pieceTropGrande": "Fichier trop volumineux (10 Mo max).",
+    "pieceType": "Type de fichier non autorisé (jpeg, png, pdf).",
     "coutAide": "Saisie libre — aucun calcul automatique.",
     "voir": "Ouvrir"
   },

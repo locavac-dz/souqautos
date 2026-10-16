@@ -39,6 +39,7 @@ export default async function setup() {
     await owner.paiement.deleteMany();
     await owner.appelLoyer.deleteMany();
     await owner.actionRecouvrement.deleteMany();
+    await owner.pieceJointe.deleteMany();
     await owner.commentaireReclamation.deleteMany();
     await owner.ordreTravail.deleteMany();
     await owner.reclamation.deleteMany();

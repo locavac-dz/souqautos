@@ -199,6 +199,7 @@ model Organisation {
   situations   SituationTravaux[]
   receptions   Reception[]
   auditLogs    AuditLog[]
+  piecesJointes PieceJointe[]
 
   @@map("organisation")
 }
@@ -451,12 +452,39 @@ model Reclamation {
   doublons     Reclamation[] @relation("doublons")
   commentaires CommentaireReclamation[]
   ordres       OrdreTravail[]
+  pieces       PieceJointe[]
 
   @@unique([organisationId, reference])
   @@index([organisationId])
   @@index([bienId])
   @@index([declarantUtilisateurId])
   @@map("reclamation")
+}
+
+// --- Pièce jointe d'une réclamation (accès MÉDIÉ) ---------------------------
+// Le contenu est stocké hors base sous une clé OPAQUE préfixée par l'organisme
+// (voir src/lib/storage) ; aucun accès direct public. La ligne est cloisonnée
+// par RLS et le téléchargement passe par un contrôle d'autorisation + propriété
+// (brief §7). Type MIME et taille contrôlés à l'upload.
+
+model PieceJointe {
+  id                  String   @id @default(cuid())
+  organisationId      String
+  reclamationId       String
+  nomFichier          String
+  typeMime            String
+  tailleOctets        Int
+  // Clé de stockage opaque « <organisationId>/<uuid> » (non devinable, non publique).
+  cleStockage         String   @unique
+  auteurUtilisateurId String?
+  createdAt           DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  reclamation  Reclamation  @relation(fields: [reclamationId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+  @@index([reclamationId])
+  @@map("piece_jointe")
 }
 
 // --- Commentaire / échange sur une réclamation ------------------------------

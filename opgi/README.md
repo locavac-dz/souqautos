@@ -155,7 +155,18 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   des tentatives ». Pendant le verrou, même le bon mot de passe est refusé ; une connexion réussie
   remet le compteur à zéro. Message d'erreur **générique** (aucun oracle sur la cause).
 
-### Tests — **109 verts** (`npm test`)
+### Incrément 12 — Pièces jointes à accès médié
+
+- **Pièces jointes de réclamations** (brief §7/§C) : contenu stocké **hors base** sous une clé
+  **opaque préfixée par l'organisme**, **aucun accès direct** — le téléchargement passe par un
+  handler qui vérifie **autorisation + propriété** (occupant → sa réclamation uniquement).
+- **Contrôle du type** (jpeg/png/pdf → 415 sinon) et de la **taille** (10 Mo → 413) à l'upload.
+- Cloisonnement RLS par organisme ; stockage local abstrait (interface `put/get/remove`,
+  bascule S3 prévue) ; upload tracé au journal d'audit. Anti path‑traversal sur la clé.
+- API `POST/GET /api/reclamations/:id/pieces`, `GET /api/pieces/:id` (téléchargement médié) ;
+  UI : section « Pièces jointes » (liste + upload) sur la fiche de réclamation.
+
+### Tests — **118 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -183,6 +194,8 @@ réclamations ouvertes, engagé/constaté agrégés, dépassement et retard dét
 sérialiseur CSV (échappements), export réservé au droit `exporter` (AGENT_LOCATIF → 403,
 AGENT_RECOUVREMENT → 200), contenu attendu, isolation inter‑OPGI, trace d'audit. **Verrouillage** :
 5 échecs → compte verrouillé (bon mot de passe refusé), succès remet le compteur à zéro.
+**Pièces jointes** : upload (type → 415), téléchargement médié par le propriétaire, refus d'un autre
+occupant et d'un autre OPGI (404), liste cloisonnée, upload tracé à l'audit.
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -261,9 +274,10 @@ place. Ne sont **pas** encore livrés :
   pièces justificatives, écrans d'édition dédiés (le `PATCH` existe en API), exports.
 - **Audit — compléments** : instrumentation des créations de compte/permissions et des exports
   (à venir avec ces fonctions), pagination/filtres du journal, politique de conservation (après C5).
-- **Gestion des fichiers à accès médié**, notifications, pagination, recherche. Exports : états/
-  reçus en PDF (le CSV est livré). Import : extension aux marchés/projets et modèle téléchargeable.
-  Tableaux de bord : séries temporelles et graphiques (au-delà des valeurs instantanées actuelles).
+- **Notifications** (internes, puis email/SMS optionnels), pagination/recherche. Pièces jointes :
+  extension aux autres modules (documents de contrats, marchés) et analyse antivirus selon
+  l'environnement. Exports : états/reçus en PDF (le CSV est livré). Import : extension aux
+  marchés/projets. Tableaux de bord : séries temporelles et graphiques.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - Rotation/révocation de session, 2FA (le **verrouillage anti‑bruteforce** est livré).
 - **Rôle `opgi_app` portable en CI** (aujourd'hui prérequis documenté) et workflow CI dédié.

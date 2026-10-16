@@ -1,6 +1,8 @@
 node_modules/
 .env
 .env.local
+# Stockage local des pièces jointes (dev/test) — jamais commité.
+.data/
 /prisma/*.db
 dist/
 # Artefacts générés par Next (recréés par `next build`) :

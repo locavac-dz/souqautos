@@ -4,9 +4,11 @@ import { getTranslations } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { getReclamation, listCommentaires, listOrdres, type Acteur } from "@/lib/modules/c/service";
+import { listPieces } from "@/lib/modules/c/pieces";
 import { can, type RoleName } from "@/lib/authz/permissions";
 import { Nav } from "@/app/_components/Nav";
 import { ReclamationActions } from "@/app/reclamations/[id]/_ReclamationActions";
+import { UploadPiece } from "@/app/reclamations/[id]/_UploadPiece";
 
 export const dynamic = "force-dynamic";
 
@@ -38,11 +40,12 @@ export default async function ReclamationDetail({ params }: { params: Promise<{ 
       reclamation,
       commentaires: (await listCommentaires(tx, ctx.organisationId, acteur, id)) ?? [],
       ordres: await listOrdres(tx, ctx.organisationId, acteur, { reclamationId: id }),
+      pieces: (await listPieces(tx, ctx.organisationId, acteur, id)) ?? [],
     };
   });
 
   if (!data) notFound();
-  const { reclamation, commentaires, ordres } = data;
+  const { reclamation, commentaires, ordres, pieces } = data;
 
   return (
     <main>
@@ -109,6 +112,25 @@ export default async function ReclamationDetail({ params }: { params: Promise<{ 
             </tbody>
           </table>
         )}
+      </section>
+
+      <section className="card" aria-label={t("pieces")} style={{ marginTop: 16 }}>
+        <h2>{t("pieces")}</h2>
+        {pieces.length === 0 ? (
+          <p>{t("aucunePiece")}</p>
+        ) : (
+          <ul>
+            {pieces.map((p) => (
+              <li key={p.id}>
+                <a href={`/api/pieces/${p.id}`}>{p.nomFichier}</a>{" "}
+                <span className="meta">
+                  ({p.typeMime}, {Math.ceil(p.tailleOctets / 1024)} Ko)
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {can(role, "C", "creer") && <UploadPiece reclamationId={reclamation.id} />}
       </section>
 
       <ReclamationActions
