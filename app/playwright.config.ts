@@ -23,7 +23,10 @@ export default defineConfig({
   // débit en mémoire). Suffisant pour la taille actuelle de la suite.
   fullyParallel: false,
   workers: 1,
-  retries: 1,
+  // Le serveur de test est un `next dev` : il lui arrive de répondre 500 « Manifest file is empty » quand une route se
+  // compile pendant qu'une autre requête lit les manifestes (course du mode développement, mesurée en CI sur la fiche
+  // annonce et le tableau de bord ; elle a résisté à une seule reprise). Deux reprises en CI ; une seule en local.
+  retries: process.env.CI ? 2 : 1,
   reporter: "list",
   // La base de test (E2E_DATABASE_URL) est réinitialisée par le hook npm
   // `pretest:e2e` (package.json, exécute e2e/reset-db.ts) AVANT que
