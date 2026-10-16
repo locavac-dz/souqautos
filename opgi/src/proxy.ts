@@ -5,12 +5,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isSameOriginRequest } from "@/lib/http/csrf";
+import { readSecurityConfig, applySecurityHeaders } from "@/lib/http/security-headers";
 
 export function proxy(request: NextRequest) {
-  if (!isSameOriginRequest(request)) {
-    return NextResponse.json({ error: "Origine non autorisée." }, { status: 403 });
-  }
-  return NextResponse.next();
+  const config = readSecurityConfig();
+  const response = isSameOriginRequest(request)
+    ? NextResponse.next()
+    : NextResponse.json({ error: "Origine non autorisée." }, { status: 403 });
+  applySecurityHeaders(response.headers, config);
+  return response;
 }
 
 export const config = {
