@@ -129,7 +129,18 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - Insertion atomique dans une transaction `withTenant` (RLS) ; import **tracé au journal d'audit**.
   API `POST /api/import`, UI `/patrimoine/import` (coller du CSV ou choisir un fichier, rapport affiché).
 
-### Tests — **96 verts** (`npm test`)
+### Incrément 9 — Tableaux de bord d'indicateurs
+
+- **Indicateurs calculés en direct** (aucun chiffre figé/fictif), **isolés par organisme** et
+  **gated par rôle** (chaque section n'apparaît que si le rôle a le droit `lire` sur le module).
+- **Patrimoine & locatif** : biens actifs, taux d'occupation, contrats actifs, total dû, encaissé
+  (imputé), solde, **taux de recouvrement**, appels impayés.
+- **Réclamations** : ouvertes, répartition par statut, ordres de travail par statut.
+- **Projets & marchés** : projets/marchés actifs, **engagé vs constaté**, avancement financier,
+  marchés en **dépassement** et en **retard** (indicatifs).
+- **Chaque indicateur affiche sa définition** (brief §11). Page `/tableau-de-bord` (server‑rendue).
+
+### Tests — **100 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -151,7 +162,9 @@ sensible crée une entrée tracée (auteur inclus), journal isolé par organisme
 (technicien → 403, auditeur → 200), **append‑only vérifié** (UPDATE/DELETE par le rôle applicatif
 rejetés). **Import** : analyseur CSV (guillemets, virgules/sauts protégés), rapport (insérés/
 ignorés), doublon dans le fichier et doublon en base détectés, ligne invalide rejetée, import isolé
-par organisme, refusé à un AUDITEUR (403), tracé au journal d'audit.
+par organisme, refusé à un AUDITEUR (403), tracé au journal d'audit. **Indicateurs** : scénario
+contrôlé (organisme dédié) → taux d'occupation 60 %, dû/imputé/solde et taux de recouvrement 30 %,
+réclamations ouvertes, engagé/constaté agrégés, dépassement et retard détectés.
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -230,8 +243,9 @@ place. Ne sont **pas** encore livrés :
   pièces justificatives, écrans d'édition dédiés (le `PATCH` existe en API), exports.
 - **Audit — compléments** : instrumentation des créations de compte/permissions et des exports
   (à venir avec ces fonctions), pagination/filtres du journal, politique de conservation (après C5).
-- **Gestion des fichiers à accès médié**, notifications, pagination, recherche, tableaux de bord
-  transverses. Import : extension aux marchés/projets et modèle de fichier téléchargeable.
+- **Gestion des fichiers à accès médié**, notifications, pagination, recherche, exports tracés
+  (CSV/PDF des états et indicateurs). Import : extension aux marchés/projets et modèle téléchargeable.
+  Tableaux de bord : séries temporelles et graphiques (au-delà des valeurs instantanées actuelles).
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - **Verrouillage de connexion** (anti‑bruteforce), rotation/révocation de session, 2FA.
 - **Rôle `opgi_app` portable en CI** (aujourd'hui prérequis documenté) et workflow CI dédié.
