@@ -30,8 +30,12 @@ export default async function setup() {
       `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO opgi_app`,
     );
 
-    // 3. Réensemencement déterministe (données fictives).
+    // 3. Réensemencement déterministe (données fictives). Ordre de suppression
+    //    respectant les clés étrangères : contrat → bien/occupant → utilisateur
+    //    → organisation.
+    await owner.contrat.deleteMany();
     await owner.bien.deleteMany();
+    await owner.occupant.deleteMany();
     await owner.utilisateur.deleteMany();
     await owner.organisation.deleteMany();
 
@@ -46,6 +50,7 @@ export default async function setup() {
           create: [
             { email: "agent@opgi-alger.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
             { email: "chef@opgi-alger.demo", role: "CHEF_PROJET", passwordHash: pwd },
+            { email: "auditeur@opgi-alger.demo", role: "AUDITEUR", passwordHash: pwd },
           ],
         },
       },

@@ -37,12 +37,31 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   aux handlers, **proxy unique** `src/proxy.ts` (CSRF d'origine), en‑têtes de sécurité + CSP
   (`next.config.mjs`), i18n next-intl (FR par défaut, AR/RTL préparé).
 
-### Tests — **41 verts** (`npm test`)
+### Incrément 3 — Module A (patrimoine : CRUD + occupants + contrats)
+
+- **Modèle** : `Bien` (patrimoine), `Occupant` (physique/morale), `Contrat` (lie bien + occupant),
+  tous cloisonnés par `organisationId` + RLS (migration `rls_module_a`). **Archivage logique**
+  (jamais de suppression physique).
+- **CRUD complet** via API (`src/http/` + services `src/lib/modules/a/`) :
+  `GET/POST /api/biens`, `GET/PATCH/DELETE /api/biens/:id`, idem `occupants` et `contrats`.
+  Validation zod (`schemas.ts`), erreurs traduites (400 invalide, 409 code dupliqué, 404 introuvable).
+- **Lien contrat → bien/occupant vérifié DANS le tenant** : une clé étrangère seule ne suffit pas
+  (la vérification FK de PostgreSQL contourne la RLS), donc le service refuse (400) un contrat
+  pointant vers un bien/occupant d'un autre organisme.
+- **Aucun calcul** : le loyer (`montantLoyerCentimes`) est une saisie libre ; aucun taux, pénalité
+  ou règle inventé. Les statuts de contrat sont un point de départ configurable.
+- **UI FR** : pages liste + création pour patrimoine, occupants, contrats ; navigation ;
+  bouton d'archivage. Autorisations reflétées dans l'UI (création masquée sans le droit).
+
+### Tests — **49 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
 (WITH CHECK), fail‑closed sans organisme, login (bon/mauvais/CSRF), isolation de bout en bout
-(agent d'Alger ≠ agent d'Oran), rôle sans droit → 403.
+(agent d'Alger ≠ agent d'Oran), rôle sans droit → 403. **Module A** : CRUD complet d'un bien,
+code dupliqué → 409, données invalides → 400, AUDITEUR lit mais ne crée pas (403), bien d'Alger
+introuvable pour Oran (404), contrat liant un bien d'un autre organisme → 400, période incohérente
+→ 400.
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -97,12 +116,15 @@ Les tests préparent automatiquement la base `opgi_test` (migrations + droits + 
 
 ## Ce qui reste à faire (honnêtement)
 
-Le socle d'isolation et l'authentification sont en place. Ne sont **pas** encore livrés :
+Le socle d'isolation, l'authentification et le Module A (patrimoine/occupants/contrats) sont en
+place. Ne sont **pas** encore livrés :
 
-- **Modules A/B/C** (patrimoine complet, projets/marchés, réclamations) — Phases 2‑4. Seule une
-  lecture minimale des `Bien` existe aujourd'hui, pour démontrer la chaîne d'accès isolée.
-- **Journal d'audit persistant**, gestion des fichiers à accès médié, notifications.
-- **CRUD complet** (création/édition via formulaires), pagination, recherche.
+- **Module A — compléments** : hiérarchie du patrimoine (sites → bâtiments → cages → niveaux),
+  appels de loyers / échéanciers / paiements / recouvrement, édition via formulaires (seule la
+  création + l'archivage ont une UI ; la mise à jour est exposée par l'API `PATCH`), import initial,
+  reçus/états, indicateurs.
+- **Modules B et C** (projets/marchés, réclamations) — Phases 4 et 3.
+- **Journal d'audit persistant**, gestion des fichiers à accès médié, notifications, pagination, recherche.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - **Verrouillage de connexion** (anti‑bruteforce), rotation/révocation de session, 2FA.
 - **Rôle `opgi_app` portable en CI** (aujourd'hui prérequis documenté) et workflow CI dédié.

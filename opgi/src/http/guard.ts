@@ -1,0 +1,50 @@
+// Garde HTTP commune : session → organisme → autorisation. Renvoie soit le
+// contexte autorisé, soit une Response d'erreur (401/403) à retourner telle quelle.
+import { sessionFromCookieHeader } from "@/lib/auth/current-session";
+import { resolveTenant } from "@/lib/tenant/resolve";
+import {
+  TenantResolutionError,
+  type TenantContext,
+  type VerifiedSession,
+} from "@/lib/tenant/context";
+import {
+  assertCan,
+  AuthorizationError,
+  type Action,
+  type ModuleKey,
+  type RoleName,
+} from "@/lib/authz/permissions";
+import type { Services } from "@/lib/services";
+import { json } from "@/http/respond";
+
+export interface AuthorizedContext {
+  session: VerifiedSession;
+  ctx: TenantContext;
+}
+
+export async function authorize(
+  request: Request,
+  s: Services,
+  module: ModuleKey,
+  action: Action,
+): Promise<AuthorizedContext | Response> {
+  const session = await sessionFromCookieHeader(request.headers.get("cookie"), s.secret, s.secure);
+  if (!session) return json(401, { error: "Non authentifié." });
+
+  let ctx: TenantContext;
+  try {
+    ctx = resolveTenant(session, s.config);
+  } catch (e) {
+    if (e instanceof TenantResolutionError) return json(403, { error: "Organisme refusé." });
+    throw e;
+  }
+
+  try {
+    assertCan(session.role as RoleName, module, action);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return json(403, { error: "Accès refusé." });
+    throw e;
+  }
+
+  return { session, ctx };
+}

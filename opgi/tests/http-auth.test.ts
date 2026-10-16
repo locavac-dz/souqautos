@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildServices, type Services } from "@/lib/services.js";
 import { handleLogin } from "@/http/auth.js";
-import { handleListBiens } from "@/http/biens.js";
+import { handleBiens as handleListBiens } from "@/http/patrimoine.js";
 import { loadEnv, requireEnv } from "./_env.js";
 import { DEMO_PASSWORD } from "./global-setup.js";
 

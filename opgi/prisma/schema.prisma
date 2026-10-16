@@ -58,6 +58,18 @@ enum EtatOccupation {
   INDISPONIBLE
 }
 
+enum TypeOccupant {
+  PHYSIQUE // personne physique
+  MORALE // personne morale (entreprise, administration)
+}
+
+enum StatutContrat {
+  BROUILLON
+  ACTIF
+  SUSPENDU
+  RESILIE
+}
+
 // --- Organisme (tenant) -----------------------------------------------------
 
 model Organisation {
@@ -73,6 +85,8 @@ model Organisation {
 
   utilisateurs Utilisateur[]
   biens        Bien[]
+  occupants    Occupant[]
+  contrats     Contrat[]
 
   @@map("organisation")
 }
@@ -115,9 +129,66 @@ model Bien {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
+  // Archivage LOGIQUE (jamais de suppression physique — préserve l'historique).
+  archiveLe DateTime?
+
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  contrats     Contrat[]
 
   @@unique([organisationId, code])
   @@index([organisationId])
   @@map("bien")
+}
+
+// --- Occupant (personne physique ou morale — Module A) ----------------------
+
+model Occupant {
+  id             String       @id @default(cuid())
+  organisationId String
+  type           TypeOccupant @default(PHYSIQUE)
+  // Nom de famille (physique) ou raison sociale (morale).
+  nom            String
+  prenom         String?
+  telephone      String?
+  email          String?
+  archiveLe      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  contrats     Contrat[]
+
+  @@index([organisationId])
+  @@map("occupant")
+}
+
+// --- Contrat de location (Module A) -----------------------------------------
+// Aucun calcul de loyer/pénalité : `montantLoyerCentimes` est une saisie libre
+// (devise DZD, granularité centime), paramétrable ultérieurement. Les statuts
+// sont un point de départ configurable.
+
+model Contrat {
+  id             String        @id @default(cuid())
+  organisationId String
+  // Référence métier du contrat, unique PAR organisme.
+  reference      String
+  bienId         String
+  occupantId     String
+  statut         StatutContrat @default(BROUILLON)
+  dateDebut      DateTime
+  dateFin        DateTime?
+  montantLoyerCentimes Int?
+  archiveLe      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  bien         Bien         @relation(fields: [bienId], references: [id], onDelete: Restrict)
+  occupant     Occupant     @relation(fields: [occupantId], references: [id], onDelete: Restrict)
+
+  @@unique([organisationId, reference])
+  @@index([organisationId])
+  @@index([bienId])
+  @@index([occupantId])
+  @@map("contrat")
 }

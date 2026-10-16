@@ -26,5 +26,58 @@
     "colType": "Type",
     "colEtat": "État d'occupation",
     "colAdresse": "Adresse"
+  },
+  "nav": {
+    "tableauDeBord": "Tableau de bord",
+    "patrimoine": "Patrimoine",
+    "occupants": "Occupants",
+    "contrats": "Contrats"
+  },
+  "commun": {
+    "nouveau": "Nouveau",
+    "creer": "Créer",
+    "enregistrement": "Enregistrement…",
+    "archiver": "Archiver",
+    "retour": "Retour à la liste",
+    "accesRefuse": "Votre rôle ne permet pas d'accéder à cette ressource (module A).",
+    "aucun": "Aucun élément.",
+    "erreur": "Une erreur est survenue.",
+    "actions": "Actions"
+  },
+  "patrimoine": {
+    "titre": "Patrimoine",
+    "nouveauTitre": "Nouveau bien",
+    "code": "Code du bien",
+    "type": "Type",
+    "etat": "État d'occupation",
+    "adresse": "Adresse",
+    "typeLOGEMENT": "Logement",
+    "typeLOCAL_COMMERCIAL": "Local commercial",
+    "typeGARAGE": "Garage",
+    "typeAUTRE": "Autre"
+  },
+  "occupants": {
+    "titre": "Occupants",
+    "nouveauTitre": "Nouvel occupant",
+    "type": "Type",
+    "typePHYSIQUE": "Personne physique",
+    "typeMORALE": "Personne morale",
+    "nom": "Nom / Raison sociale",
+    "prenom": "Prénom",
+    "telephone": "Téléphone",
+    "email": "Adresse e-mail"
+  },
+  "contrats": {
+    "titre": "Contrats",
+    "nouveauTitre": "Nouveau contrat",
+    "reference": "Référence",
+    "bien": "Bien",
+    "occupant": "Occupant",
+    "statut": "Statut",
+    "dateDebut": "Date de début",
+    "dateFin": "Date de fin",
+    "loyer": "Loyer (DZD)",
+    "loyerAide": "Montant saisi librement — aucun calcul automatique.",
+    "aucunBienOccupant": "Créez d'abord un bien et un occupant pour pouvoir saisir un contrat."
   }
 }

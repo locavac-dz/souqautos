@@ -5,7 +5,7 @@ import { getServices } from "@/lib/services";
 import { resolveTenant } from "@/lib/tenant/resolve";
 import { withTenant } from "@/lib/tenant/prisma";
 import { can, type RoleName } from "@/lib/authz/permissions";
-import { BoutonDeconnexion } from "@/app/_components/BoutonDeconnexion";
+import { Nav } from "@/app/_components/Nav";
 
 // Dépend de la session/base : jamais prérendu.
 export const dynamic = "force-dynamic";
@@ -30,10 +30,8 @@ export default async function TableauDeBord() {
 
   return (
     <main>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-        <h1>{t("titre")}</h1>
-        <BoutonDeconnexion />
-      </header>
+      <Nav />
+      <h1>{t("titre")}</h1>
 
       <p className="meta">
         {t("organismeActif")} : <strong>{ctx.organisationId}</strong> — {t("role")} :{" "}
