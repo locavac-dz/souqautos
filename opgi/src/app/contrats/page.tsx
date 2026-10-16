@@ -72,7 +72,9 @@ export default async function ContratsPage() {
             <tbody>
               {contrats.map((c) => (
                 <tr key={c.id}>
-                  <td>{c.reference}</td>
+                  <td>
+                    <Link href={`/contrats/${c.id}`}>{c.reference}</Link>
+                  </td>
                   <td>{c.bien.code}</td>
                   <td>{c.occupant.nom}</td>
                   <td>{c.statut}</td>

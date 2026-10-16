@@ -23,6 +23,14 @@ export class ReferenceInvalideError extends Error {
   }
 }
 
+/** Erreur de règle métier d'intégrité (ex. imputation dépassant le dû). */
+export class RegleMetierError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RegleMetierError";
+  }
+}
+
 // --- Bien -------------------------------------------------------------------
 
 export function listBiens(tx: Tx, organisationId: string, inclureArchives = false) {

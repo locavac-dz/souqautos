@@ -53,7 +53,25 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - **UI FR** : pages liste + création pour patrimoine, occupants, contrats ; navigation ;
   bouton d'archivage. Autorisations reflétées dans l'UI (création masquée sans le droit).
 
-### Tests — **49 verts** (`npm test`)
+### Incrément 4 — Module A financier (appels de loyers, paiements, recouvrement)
+
+- **Modèle** : `AppelLoyer` (montant dû par période), `Paiement` (encaissement constaté),
+  `Imputation` (affectation paiement → appel), `ActionRecouvrement` (journal des relances/mises en
+  demeure…). Tous cloisonnés par `organisationId` + RLS (migration dédiée).
+- **Montants en centimes entiers — aucun flottant, aucun calcul inventé** : pas de pénalité ni
+  d'intérêt. Le **solde** d'un appel et le **reste** d'un paiement sont calculés par différence avec
+  les imputations (jamais stockés, donc jamais incohérents).
+- **Suivi distinct engagement / encaissement** : un appel (dû) n'est jamais confondu avec un
+  paiement (reçu) ; le lien passe par une imputation explicite.
+- **Règles d'intégrité** (données, pas droit) : une imputation ne peut dépasser le solde de l'appel
+  ni le reste du paiement (→ 409), et ne lie que des éléments du **même contrat** et du **même
+  organisme**.
+- **Recouvrement** : liste des **impayés** (appels à solde > 0) avec jours de retard **indicatifs**
+  (aucune échéance réglementaire présumée) ; enregistrement d'actions (type, date, note, pièce).
+- **UI FR** : fiche de contrat (appels/soldes, paiements/restes, actions) avec formulaires d'appel,
+  de paiement, d'imputation et d'action ; page **Recouvrement — impayés**.
+
+### Tests — **59 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -61,7 +79,9 @@ PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écritu
 (agent d'Alger ≠ agent d'Oran), rôle sans droit → 403. **Module A** : CRUD complet d'un bien,
 code dupliqué → 409, données invalides → 400, AUDITEUR lit mais ne crée pas (403), bien d'Alger
 introuvable pour Oran (404), contrat liant un bien d'un autre organisme → 400, période incohérente
-→ 400.
+→ 400. **Finances** : appel au montant du loyer par défaut, imputation mettant à jour solde/reste,
+imputation dépassant le solde ou le reste → 409, imputation inter‑contrat → 409, imputation
+inter‑organisme → 400, liste d'impayés, action de recouvrement isolée par organisme.
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -120,9 +140,9 @@ Le socle d'isolation, l'authentification et le Module A (patrimoine/occupants/co
 place. Ne sont **pas** encore livrés :
 
 - **Module A — compléments** : hiérarchie du patrimoine (sites → bâtiments → cages → niveaux),
-  appels de loyers / échéanciers / paiements / recouvrement, édition via formulaires (seule la
-  création + l'archivage ont une UI ; la mise à jour est exposée par l'API `PATCH`), import initial,
-  reçus/états, indicateurs.
+  génération en masse des appels par échéancier, édition via formulaires (la mise à jour est
+  exposée par l'API `PATCH` mais sans écran dédié), import initial, reçus/états de compte,
+  indicateurs (occupation, encaissements, taux de recouvrement) avec définitions visibles.
 - **Modules B et C** (projets/marchés, réclamations) — Phases 4 et 3.
 - **Journal d'audit persistant**, gestion des fichiers à accès médié, notifications, pagination, recherche.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).

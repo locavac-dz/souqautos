@@ -59,3 +59,51 @@ export const statutContratSchema = z.object({ statut: z.enum(STATUT_CONTRAT) });
 
 export type ContratCreate = z.infer<typeof contratCreateSchema>;
 export type ContratUpdate = z.infer<typeof contratUpdateSchema>;
+
+// --- Finances : appels, paiements, imputations, recouvrement ----------------
+const MODE_PAIEMENT = ["ESPECES", "VIREMENT", "CHEQUE", "AUTRE"] as const;
+const TYPE_ACTION = [
+  "RELANCE",
+  "MISE_EN_DEMEURE",
+  "ECHEANCIER",
+  "CONTENTIEUX",
+  "AUTRE",
+] as const;
+
+export const appelCreateSchema = z.object({
+  contratId: z.string().min(1),
+  periode: z.string().trim().min(1).max(20),
+  libelle: z.string().trim().max(200).nullish(),
+  // Facultatif : par défaut le loyer du contrat. Aucun calcul de pénalité.
+  montantCentimes: z.number().int().positive().optional(),
+  dateEcheance: z.coerce.date(),
+});
+export type AppelCreate = z.infer<typeof appelCreateSchema>;
+
+export const paiementCreateSchema = z.object({
+  contratId: z.string().min(1),
+  montantCentimes: z.number().int().positive(),
+  datePaiement: z.coerce.date(),
+  mode: z.enum(MODE_PAIEMENT).optional(),
+  reference: z.string().trim().max(120).nullish(),
+  note: z.string().trim().max(500).nullish(),
+});
+export type PaiementCreate = z.infer<typeof paiementCreateSchema>;
+
+export const imputationCreateSchema = z.object({
+  paiementId: z.string().min(1),
+  appelId: z.string().min(1),
+  montantCentimes: z.number().int().positive(),
+});
+export type ImputationCreate = z.infer<typeof imputationCreateSchema>;
+
+export const actionRecouvrementCreateSchema = z.object({
+  contratId: z.string().min(1),
+  type: z.enum(TYPE_ACTION),
+  date: z.coerce.date(),
+  montantConcerneCentimes: z.number().int().nonnegative().nullish(),
+  note: z.string().trim().max(1000).nullish(),
+  pieceReference: z.string().trim().max(200).nullish(),
+  responsableUtilisateurId: z.string().trim().max(60).nullish(),
+});
+export type ActionRecouvrementCreate = z.infer<typeof actionRecouvrementCreateSchema>;

@@ -31,7 +31,8 @@
     "tableauDeBord": "Tableau de bord",
     "patrimoine": "Patrimoine",
     "occupants": "Occupants",
-    "contrats": "Contrats"
+    "contrats": "Contrats",
+    "recouvrement": "Recouvrement"
   },
   "commun": {
     "nouveau": "Nouveau",
@@ -78,6 +79,49 @@
     "dateFin": "Date de fin",
     "loyer": "Loyer (DZD)",
     "loyerAide": "Montant saisi librement — aucun calcul automatique.",
-    "aucunBienOccupant": "Créez d'abord un bien et un occupant pour pouvoir saisir un contrat."
+    "aucunBienOccupant": "Créez d'abord un bien et un occupant pour pouvoir saisir un contrat.",
+    "detail": "Fiche du contrat",
+    "voir": "Ouvrir"
+  },
+  "finances": {
+    "appels": "Appels de loyers",
+    "paiements": "Paiements",
+    "imputations": "Imputations",
+    "recouvrement": "Actions de recouvrement",
+    "periode": "Période",
+    "libelle": "Libellé",
+    "montant": "Montant (DZD)",
+    "echeance": "Échéance",
+    "impute": "Imputé",
+    "solde": "Solde",
+    "reste": "Reste",
+    "date": "Date",
+    "mode": "Mode",
+    "reference": "Référence",
+    "ajouterAppel": "Ajouter un appel",
+    "ajouterPaiement": "Enregistrer un paiement",
+    "ajouterImputation": "Imputer un paiement",
+    "ajouterAction": "Ajouter une action",
+    "choisirPaiement": "Paiement (reste disponible)",
+    "choisirAppel": "Appel (solde dû)",
+    "type": "Type",
+    "note": "Note",
+    "piece": "Référence de pièce",
+    "aucunAppel": "Aucun appel.",
+    "aucunPaiement": "Aucun paiement.",
+    "aucuneAction": "Aucune action de recouvrement.",
+    "montantAide": "Saisie libre — aucun calcul de pénalité ni d'intérêt."
+  },
+  "recouvrement": {
+    "titre": "Recouvrement — impayés",
+    "aucunImpaye": "Aucun impayé.",
+    "contrat": "Contrat",
+    "bien": "Bien",
+    "occupant": "Occupant",
+    "periode": "Période",
+    "echeance": "Échéance",
+    "solde": "Solde dû",
+    "joursRetard": "Jours de retard",
+    "joursRetardAide": "Indicatif — aucune échéance réglementaire présumée."
   }
 }

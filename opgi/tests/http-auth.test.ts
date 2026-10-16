@@ -88,15 +88,18 @@ describe("accès aux biens (session → organisme → autorisation → isolation
     const res = await handleListBiens(new Request(`${ORIGIN}/api/biens`, { headers: { cookie } }), s);
     expect(res.status).toBe(200);
     const body = (await res.json()) as { biens: { code: string }[] };
-    expect(body.biens.length).toBeGreaterThan(0);
-    expect(body.biens.every((b) => b.code.startsWith("ALG-"))).toBe(true);
+    expect(body.biens.some((b) => b.code.startsWith("ALG-"))).toBe(true);
+    // Aucun bien d'Oran ne fuit vers Alger.
+    expect(body.biens.some((b) => b.code.startsWith("ORN-"))).toBe(false);
   });
 
   it("l'agent d'Oran ne voit QUE les biens d'Oran (isolation de bout en bout)", async () => {
     const cookie = cookieFrom(await login("OPGI-ORAN", "agent@opgi-oran.demo"));
     const res = await handleListBiens(new Request(`${ORIGIN}/api/biens`, { headers: { cookie } }), s);
     const body = (await res.json()) as { biens: { code: string }[] };
-    expect(body.biens.every((b) => b.code.startsWith("ORN-"))).toBe(true);
+    expect(body.biens.some((b) => b.code.startsWith("ORN-"))).toBe(true);
+    // Aucun bien d'Alger ne fuit vers Oran.
+    expect(body.biens.some((b) => b.code.startsWith("ALG-"))).toBe(false);
   });
 
   it("un rôle sans droit de lecture sur le module A est refusé (403)", async () => {

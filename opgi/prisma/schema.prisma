@@ -70,6 +70,22 @@ enum StatutContrat {
   RESILIE
 }
 
+enum ModePaiement {
+  ESPECES
+  VIREMENT
+  CHEQUE
+  AUTRE
+}
+
+// Points de départ configurables — jamais une procédure réglementaire confirmée.
+enum TypeActionRecouvrement {
+  RELANCE
+  MISE_EN_DEMEURE
+  ECHEANCIER
+  CONTENTIEUX
+  AUTRE
+}
+
 // --- Organisme (tenant) -----------------------------------------------------
 
 model Organisation {
@@ -87,6 +103,10 @@ model Organisation {
   biens        Bien[]
   occupants    Occupant[]
   contrats     Contrat[]
+  appels       AppelLoyer[]
+  paiements    Paiement[]
+  imputations  Imputation[]
+  actions      ActionRecouvrement[]
 
   @@map("organisation")
 }
@@ -185,10 +205,113 @@ model Contrat {
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   bien         Bien         @relation(fields: [bienId], references: [id], onDelete: Restrict)
   occupant     Occupant     @relation(fields: [occupantId], references: [id], onDelete: Restrict)
+  appels       AppelLoyer[]
+  paiements    Paiement[]
+  actions      ActionRecouvrement[]
 
   @@unique([organisationId, reference])
   @@index([organisationId])
   @@index([bienId])
   @@index([occupantId])
   @@map("contrat")
+}
+
+// --- Appel de loyer (Module A — locatif/financier) --------------------------
+// Montant dû pour une période donnée. `montantCentimes` est une saisie libre
+// (par défaut, le loyer du contrat au moment de la création) — aucun calcul de
+// pénalité ou d'intérêt n'est effectué. Le solde se calcule par différence avec
+// les imputations (jamais stocké pour éviter toute incohérence).
+
+model AppelLoyer {
+  id             String   @id @default(cuid())
+  organisationId String
+  contratId      String
+  // Période libre (ex. « 2026-01 »), format paramétrable par l'organisme.
+  periode        String
+  libelle        String?
+  montantCentimes Int
+  dateEcheance   DateTime
+  archiveLe      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  contrat      Contrat      @relation(fields: [contratId], references: [id], onDelete: Restrict)
+  imputations  Imputation[]
+
+  @@unique([organisationId, contratId, periode])
+  @@index([organisationId])
+  @@index([contratId])
+  @@map("appel_loyer")
+}
+
+// --- Paiement (encaissement) ------------------------------------------------
+// Encaissement constaté, RÉELLEMENT reçu. Jamais confondu avec un engagement :
+// un paiement est rattaché à des appels par des imputations.
+
+model Paiement {
+  id             String       @id @default(cuid())
+  organisationId String
+  contratId      String
+  montantCentimes Int
+  datePaiement   DateTime
+  mode           ModePaiement @default(VIREMENT)
+  reference      String?
+  note           String?
+  archiveLe      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  contrat      Contrat      @relation(fields: [contratId], references: [id], onDelete: Restrict)
+  imputations  Imputation[]
+
+  @@index([organisationId])
+  @@index([contratId])
+  @@map("paiement")
+}
+
+// --- Imputation (affectation d'un paiement à un appel) ----------------------
+
+model Imputation {
+  id             String   @id @default(cuid())
+  organisationId String
+  paiementId     String
+  appelId        String
+  montantCentimes Int
+  createdAt      DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  paiement     Paiement     @relation(fields: [paiementId], references: [id], onDelete: Cascade)
+  appel        AppelLoyer   @relation(fields: [appelId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+  @@index([paiementId])
+  @@index([appelId])
+  @@map("imputation")
+}
+
+// --- Action de recouvrement -------------------------------------------------
+// Trace une action (statut via le type + responsable + date + pièce). Aucune
+// automatisation de décision : simple journal des actions menées par l'agent.
+
+model ActionRecouvrement {
+  id             String                 @id @default(cuid())
+  organisationId String
+  contratId      String
+  type           TypeActionRecouvrement
+  date           DateTime
+  montantConcerneCentimes Int?
+  note           String?
+  pieceReference String?
+  responsableUtilisateurId String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  contrat      Contrat      @relation(fields: [contratId], references: [id], onDelete: Restrict)
+
+  @@index([organisationId])
+  @@index([contratId])
+  @@map("action_recouvrement")
 }

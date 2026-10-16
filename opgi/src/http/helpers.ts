@@ -3,7 +3,7 @@
 import { Prisma } from "@prisma/client";
 import { ZodError, type ZodType } from "zod";
 import { isSameOriginRequest } from "@/lib/http/csrf";
-import { ReferenceInvalideError } from "@/lib/modules/a/service";
+import { ReferenceInvalideError, RegleMetierError } from "@/lib/modules/a/service";
 import { json } from "@/http/respond";
 
 /** Vérifie l'origine (CSRF) pour les requêtes mutantes ; null si OK. */
@@ -38,6 +38,7 @@ function fieldErrors(e: ZodError): Record<string, string> {
 /** Traduit une erreur connue en Response, ou la relance. */
 export function mapError(e: unknown): Response {
   if (e instanceof ReferenceInvalideError) return json(400, { error: e.message });
+  if (e instanceof RegleMetierError) return json(409, { error: e.message });
   if (e instanceof Prisma.PrismaClientKnownRequestError) {
     if (e.code === "P2002") return json(409, { error: "Référence déjà utilisée." });
     if (e.code === "P2025") return json(404, { error: "Introuvable." });
