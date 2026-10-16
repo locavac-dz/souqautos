@@ -161,7 +161,7 @@ jobs:
           path: |
             app/test-results/
             app/playwright-report/
-          retention-days: 7
+          retention-days: 3
 
   docker:
     name: Construction de l'image Docker
