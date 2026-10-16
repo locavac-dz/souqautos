@@ -55,10 +55,13 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-    command: `npx next dev --webpack -p ${PORT}`,
-    url: `http://localhost:${PORT}`,
+    // `next dev` préchauffé (e2e/dev-server.mjs) : toutes les routes sont compilées une par une avant le premier test, ce qui
+    // supprime la course « Manifest file is empty ». Playwright attend le point de santé du script (5190), ouvert à la fin
+    // du préchauffage — pas le site lui-même, qui répond dès le démarrage.
+    command: "node e2e/dev-server.mjs",
+    url: "http://localhost:5190",
     reuseExistingServer: false,
-    timeout: 180_000,
+    timeout: 600_000,
     // REDIS_URL/S3_BUCKET explicitement vidées : Next.js charge .env tel
     // quel (dotenv n'écrase jamais une variable déjà définie, mais complète
     // les absentes), et ce poste a un vrai Redis local qui tourne pour la
