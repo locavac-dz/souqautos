@@ -164,6 +164,11 @@ enum TypeReception {
   DEFINITIVE
 }
 
+enum ResultatAudit {
+  SUCCES
+  ECHEC
+}
+
 // --- Organisme (tenant) -----------------------------------------------------
 
 model Organisation {
@@ -193,6 +198,7 @@ model Organisation {
   marches      Marche[]
   situations   SituationTravaux[]
   receptions   Reception[]
+  auditLogs    AuditLog[]
 
   @@map("organisation")
 }
@@ -629,4 +635,30 @@ model Reception {
   @@index([organisationId])
   @@index([marcheId])
   @@map("reception")
+}
+
+// --- Journal d'audit (transverse) -------------------------------------------
+// APPEND-ONLY : le rôle applicatif ne dispose que de SELECT + INSERT (UPDATE et
+// DELETE révoqués — voir la migration rls_audit). Aucune donnée personnelle
+// sensible dans `resume` (minimisation, brief §9). Isolé par organisme (RLS).
+// Pas de updatedAt : une ligne d'audit est immuable.
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  organisationId String
+  // Auteur de l'action (null pour une action système).
+  utilisateurId  String?
+  // Action normalisée, ex. « situation.validee », « paiement.create ».
+  action         String
+  objetType      String
+  objetId        String?
+  resultat       ResultatAudit @default(SUCCES)
+  // Résumé court, SANS donnée personnelle (références/montants uniquement).
+  resume         String?
+  createdAt      DateTime      @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId, createdAt])
+  @@map("audit_log")
 }

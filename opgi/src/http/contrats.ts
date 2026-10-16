@@ -5,6 +5,7 @@ import { authorize } from "@/http/guard";
 import { csrfGuard, parseBody, mapError } from "@/http/helpers";
 import { json } from "@/http/respond";
 import { contratCreateSchema, contratUpdateSchema } from "@/lib/modules/a/schemas";
+import { recordAudit } from "@/lib/audit";
 import {
   listContrats,
   createContrat,
@@ -22,9 +23,17 @@ export async function handleContrats(request: Request, s: Services): Promise<Res
     const body = await parseBody(request, contratCreateSchema);
     if (body instanceof Response) return body;
     try {
-      const contrat = await withTenant(s.app, auth.ctx, (tx) =>
-        createContrat(tx, auth.ctx.organisationId, body),
-      );
+      const contrat = await withTenant(s.app, auth.ctx, async (tx) => {
+        const r = await createContrat(tx, auth.ctx.organisationId, body);
+        await recordAudit(tx, auth.ctx.organisationId, {
+          utilisateurId: auth.session.utilisateurId,
+          action: "contrat.create",
+          objetType: "Contrat",
+          objetId: r.id,
+          resume: r.reference,
+        });
+        return r;
+      });
       return json(201, { contrat });
     } catch (e) {
       return mapError(e);

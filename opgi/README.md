@@ -105,7 +105,20 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - **API REST + UI FR** : listes + création projets/entreprises/marchés ; fiche de marché
   (avancement, situations avec dépôt/décision, réceptions).
 
-### Tests — **81 verts** (`npm test`)
+### Incrément 7 — Journal d'audit persistant (transverse)
+
+- **Modèle** `AuditLog` : auteur, organisme, action normalisée, type/identifiant d'objet, résultat,
+  date, résumé **sans donnée personnelle** (minimisation, brief §9). Cloisonné par organisme (RLS).
+- **Append‑only** : le rôle applicatif `opgi_app` n'a que **SELECT + INSERT** sur `audit_log`
+  (UPDATE/DELETE **révoqués** — migration `rls_audit` + `provision-roles.sql`). Le journal ne peut
+  donc être ni modifié ni effacé par l'application.
+- **Écriture atomique** : l'entrée d'audit est insérée **dans la même transaction `withTenant`** que
+  l'action auditée (validées ou annulées ensemble).
+- **Opérations sensibles tracées** (brief §9) : création de contrat, de paiement, d'imputation, de
+  marché, **décision sur situation de travaux** (dont la validation), création de réception.
+- **Consultation réservée** (`ADMIN_OPGI`, `DIRECTION`, `AUDITEUR`) — page `/audit` + `GET /api/audit`.
+
+### Tests — **85 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -122,7 +135,10 @@ regroupement de doublons, notes internes masquées au déclarant, OT visible/mod
 par le technicien affecté (404 sinon), isolation inter‑OPGI. **Module B** : projet/entreprise/
 marché, marché référençant un projet d'un autre organisme → 400, dépôt de situation, CHEF_PROJET
 vérifie mais ne valide pas (403), GESTIONNAIRE_MARCHES valide, avancement reflétant le constaté
-(≠ engagé), alerte dépassement, réception, isolation inter‑OPGI (404).
+(≠ engagé), alerte dépassement, réception, isolation inter‑OPGI (404). **Audit** : une action
+sensible crée une entrée tracée (auteur inclus), journal isolé par organisme, consultation réservée
+(technicien → 403, auditeur → 200), **append‑only vérifié** (UPDATE/DELETE par le rôle applicatif
+rejetés).
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -189,8 +205,10 @@ place. Ne sont **pas** encore livrés :
   **prestataire externe** (nécessite un modèle de compte prestataire), indicateurs par zone/délai.
 - **Module B — compléments** : planning (jalons/tâches), ordres de service et avenants, lots,
   pièces justificatives, écrans d'édition dédiés (le `PATCH` existe en API), exports.
-- **Journal d'audit persistant**, gestion des fichiers à accès médié, notifications, pagination,
-  recherche, tableaux de bord transverses.
+- **Audit — compléments** : instrumentation des créations de compte/permissions et des exports
+  (à venir avec ces fonctions), pagination/filtres du journal, politique de conservation (après C5).
+- **Gestion des fichiers à accès médié**, notifications, pagination, recherche, tableaux de bord
+  transverses, **import initial**, **CI avec PostgreSQL** rejouant les tests.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - **Verrouillage de connexion** (anti‑bruteforce), rotation/révocation de session, 2FA.
 - **Rôle `opgi_app` portable en CI** (aujourd'hui prérequis documenté) et workflow CI dédié.

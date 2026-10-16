@@ -11,6 +11,7 @@ import {
   situationDecisionSchema,
   receptionCreateSchema,
 } from "@/lib/modules/b/schemas";
+import { recordAudit } from "@/lib/audit";
 import {
   listMarches,
   createMarche,
@@ -34,7 +35,17 @@ export async function handleMarches(request: Request, s: Services): Promise<Resp
     const body = await parseBody(request, marcheCreateSchema);
     if (body instanceof Response) return body;
     try {
-      const marche = await withTenant(s.app, auth.ctx, (tx) => createMarche(tx, auth.ctx.organisationId, body));
+      const marche = await withTenant(s.app, auth.ctx, async (tx) => {
+        const r = await createMarche(tx, auth.ctx.organisationId, body);
+        await recordAudit(tx, auth.ctx.organisationId, {
+          utilisateurId: auth.session.utilisateurId,
+          action: "marche.create",
+          objetType: "Marche",
+          objetId: r.id,
+          resume: `${r.reference} — ${r.montantCentimes} centimes`,
+        });
+        return r;
+      });
       return json(201, { marche });
     } catch (e) {
       return mapError(e);
@@ -112,9 +123,26 @@ export async function handleSituationDecision(request: Request, s: Services, id:
   const auth = await authorize(request, s, "B", action);
   if (auth instanceof Response) return auth;
 
-  const situation = await withTenant(s.app, auth.ctx, (tx) =>
-    deciderSituation(tx, auth.ctx.organisationId, id, body.decision, auth.session.utilisateurId, body.observations),
-  );
+  const situation = await withTenant(s.app, auth.ctx, async (tx) => {
+    const r = await deciderSituation(
+      tx,
+      auth.ctx.organisationId,
+      id,
+      body.decision,
+      auth.session.utilisateurId,
+      body.observations,
+    );
+    if (r) {
+      await recordAudit(tx, auth.ctx.organisationId, {
+        utilisateurId: auth.session.utilisateurId,
+        action: `situation.${body.decision.toLowerCase()}`,
+        objetType: "SituationTravaux",
+        objetId: r.id,
+        resume: `n°${r.numero} — ${r.montantTravauxCentimes} centimes`,
+      });
+    }
+    return r;
+  });
   return situation ? json(200, { situation }) : json(404, { error: "Introuvable." });
 }
 
@@ -128,9 +156,17 @@ export async function handleReceptions(request: Request, s: Services, marcheId: 
     const body = await parseBody(request, receptionCreateSchema);
     if (body instanceof Response) return body;
     try {
-      const reception = await withTenant(s.app, auth.ctx, (tx) =>
-        createReception(tx, auth.ctx.organisationId, marcheId, body),
-      );
+      const reception = await withTenant(s.app, auth.ctx, async (tx) => {
+        const r = await createReception(tx, auth.ctx.organisationId, marcheId, body);
+        await recordAudit(tx, auth.ctx.organisationId, {
+          utilisateurId: auth.session.utilisateurId,
+          action: "reception.create",
+          objetType: "Reception",
+          objetId: r.id,
+          resume: `${r.type}${r.avecReserves ? " (avec réserves)" : ""}`,
+        });
+        return r;
+      });
       return json(201, { reception });
     } catch (e) {
       return mapError(e);

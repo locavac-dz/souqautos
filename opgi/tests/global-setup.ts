@@ -29,9 +29,12 @@ export default async function setup() {
     await owner.$executeRawUnsafe(
       `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO opgi_app`,
     );
+    // Le journal d'audit reste APPEND-ONLY même après le GRANT ci-dessus.
+    await owner.$executeRawUnsafe(`REVOKE UPDATE, DELETE ON "audit_log" FROM opgi_app`);
 
     // 3. Réensemencement déterministe (données fictives). Ordre de suppression
     //    respectant les clés étrangères.
+    await owner.auditLog.deleteMany();
     await owner.imputation.deleteMany();
     await owner.paiement.deleteMany();
     await owner.appelLoyer.deleteMany();
@@ -82,6 +85,7 @@ export default async function setup() {
           create: [
             { email: "agent@opgi-oran.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
             { email: "gest@opgi-oran.demo", role: "GESTIONNAIRE_MARCHES", passwordHash: pwd },
+            { email: "admin@opgi-oran.demo", role: "ADMIN_OPGI", passwordHash: pwd },
           ],
         },
       },

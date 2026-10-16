@@ -12,6 +12,7 @@ import {
   imputationCreateSchema,
   actionRecouvrementCreateSchema,
 } from "@/lib/modules/a/schemas";
+import { recordAudit } from "@/lib/audit";
 import {
   createAppel,
   listAppels,
@@ -80,9 +81,17 @@ export async function handlePaiements(request: Request, s: Services): Promise<Re
     const body = await parseBody(request, paiementCreateSchema);
     if (body instanceof Response) return body;
     try {
-      const paiement = await withTenant(s.app, auth.ctx, (tx) =>
-        createPaiement(tx, auth.ctx.organisationId, body),
-      );
+      const paiement = await withTenant(s.app, auth.ctx, async (tx) => {
+        const r = await createPaiement(tx, auth.ctx.organisationId, body);
+        await recordAudit(tx, auth.ctx.organisationId, {
+          utilisateurId: auth.session.utilisateurId,
+          action: "paiement.create",
+          objetType: "Paiement",
+          objetId: r.id,
+          resume: `${r.montantCentimes} centimes`,
+        });
+        return r;
+      });
       return json(201, { paiement });
     } catch (e) {
       return mapError(e);
@@ -120,9 +129,17 @@ export async function handleImputations(request: Request, s: Services): Promise<
   const body = await parseBody(request, imputationCreateSchema);
   if (body instanceof Response) return body;
   try {
-    const imputation = await withTenant(s.app, auth.ctx, (tx) =>
-      createImputation(tx, auth.ctx.organisationId, body),
-    );
+    const imputation = await withTenant(s.app, auth.ctx, async (tx) => {
+      const r = await createImputation(tx, auth.ctx.organisationId, body);
+      await recordAudit(tx, auth.ctx.organisationId, {
+        utilisateurId: auth.session.utilisateurId,
+        action: "imputation.create",
+        objetType: "Imputation",
+        objetId: r.id,
+        resume: `${r.montantCentimes} centimes`,
+      });
+      return r;
+    });
     return json(201, { imputation });
   } catch (e) {
     return mapError(e);

@@ -36,3 +36,14 @@ ALTER DEFAULT PRIVILEGES FOR ROLE opgi IN SCHEMA public
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO opgi_app;
 ALTER DEFAULT PRIVILEGES FOR ROLE opgi IN SCHEMA public
   GRANT USAGE, SELECT ON SEQUENCES TO opgi_app;
+
+-- Le journal d'audit est APPEND-ONLY : le rôle applicatif n'a que SELECT+INSERT
+-- (révocation après les GRANT ci-dessus). À rejouer après toute nouvelle
+-- exécution d'un GRANT large sur le schéma.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='audit_log') THEN
+    REVOKE UPDATE, DELETE ON "audit_log" FROM opgi_app;
+  END IF;
+END
+$$;

@@ -36,7 +36,8 @@
     "recouvrement": "Recouvrement",
     "projets": "Projets",
     "entreprises": "Entreprises",
-    "marches": "Marchés"
+    "marches": "Marchés",
+    "audit": "Journal d'audit"
   },
   "commun": {
     "nouveau": "Nouveau",
@@ -214,6 +215,18 @@
     "ajouterReception": "Enregistrer une réception",
     "aucuneSituation": "Aucune situation.",
     "aucuneReception": "Aucune réception."
+  },
+  "audit": {
+    "titre": "Journal d'audit",
+    "date": "Date",
+    "auteur": "Auteur",
+    "action": "Action",
+    "objet": "Objet",
+    "resultat": "Résultat",
+    "resume": "Résumé",
+    "aucun": "Aucune entrée d'audit.",
+    "accesRefuse": "Votre rôle ne permet pas de consulter le journal d'audit.",
+    "note": "Journal en lecture seule — append-only, protégé contre la modification."
   },
   "recouvrement": {
     "titre": "Recouvrement — impayés",
