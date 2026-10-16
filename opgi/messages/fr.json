@@ -1,0 +1,30 @@
+{
+  "app": {
+    "titre": "Plateforme OPGI",
+    "sousTitre": "Gestion intégrée du patrimoine, des projets et des réclamations"
+  },
+  "connexion": {
+    "titre": "Connexion",
+    "codeOpgi": "Code de l'OPGI",
+    "codeAide": "Ex. OPGI-ALGER",
+    "email": "Adresse e-mail",
+    "motDePasse": "Mot de passe",
+    "valider": "Se connecter",
+    "enCours": "Connexion…",
+    "echec": "Identifiants invalides.",
+    "erreurReseau": "Erreur réseau, réessayez."
+  },
+  "tableauDeBord": {
+    "titre": "Tableau de bord",
+    "organismeActif": "Organisme actif",
+    "role": "Rôle",
+    "deconnexion": "Se déconnecter",
+    "biens": "Biens du patrimoine",
+    "accesRefuse": "Votre rôle ne permet pas de consulter le patrimoine (module A).",
+    "aucunBien": "Aucun bien.",
+    "colCode": "Code",
+    "colType": "Type",
+    "colEtat": "État d'occupation",
+    "colAdresse": "Adresse"
+  }
+}

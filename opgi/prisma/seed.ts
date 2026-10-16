@@ -9,13 +9,19 @@
 // ============================================================================
 
 import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/lib/auth/password.js";
 
 const url = process.env.DIRECT_DATABASE_URL;
 if (!url) throw new Error("DIRECT_DATABASE_URL requis pour le seed (rôle propriétaire).");
 
 const prisma = new PrismaClient({ datasources: { db: { url } } });
 
+// Mot de passe des comptes de DÉMONSTRATION (jamais en production).
+const DEMO_PASSWORD = "Demo-1234!";
+
 async function main() {
+  const pwd = await hashPassword(DEMO_PASSWORD);
+
   // Idempotent : on repart propre sur les organismes de démonstration.
   await prisma.organisation.deleteMany({ where: { code: { in: ["OPGI-ALGER", "OPGI-ORAN"] } } });
 
@@ -26,8 +32,8 @@ async function main() {
       modules: ["A", "B", "C"],
       utilisateurs: {
         create: [
-          { email: "admin@opgi-alger.demo", role: "ADMIN_OPGI" },
-          { email: "agent.locatif@opgi-alger.demo", role: "AGENT_LOCATIF" },
+          { email: "admin@opgi-alger.demo", role: "ADMIN_OPGI", passwordHash: pwd },
+          { email: "agent.locatif@opgi-alger.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
         ],
       },
       biens: {
@@ -46,8 +52,8 @@ async function main() {
       modules: ["A", "C"],
       utilisateurs: {
         create: [
-          { email: "admin@opgi-oran.demo", role: "ADMIN_OPGI" },
-          { email: "agent.locatif@opgi-oran.demo", role: "AGENT_LOCATIF" },
+          { email: "admin@opgi-oran.demo", role: "ADMIN_OPGI", passwordHash: pwd },
+          { email: "agent.locatif@opgi-oran.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
         ],
       },
       biens: {

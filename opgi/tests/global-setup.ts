@@ -8,6 +8,10 @@
 import { execSync } from "node:child_process";
 import { PrismaClient } from "@prisma/client";
 import { loadEnv, requireEnv } from "./_env.js";
+import { hashPassword } from "../src/lib/auth/password.js";
+
+/** Mot de passe des comptes de DÉMONSTRATION (jamais en production). */
+export const DEMO_PASSWORD = "Demo-1234!";
 
 export default async function setup() {
   loadEnv();
@@ -31,12 +35,19 @@ export default async function setup() {
     await owner.utilisateur.deleteMany();
     await owner.organisation.deleteMany();
 
+    const pwd = await hashPassword(DEMO_PASSWORD);
     await owner.organisation.create({
       data: {
         code: "OPGI-ALGER",
         nom: "OPGI Alger (DÉMO)",
         modules: ["A", "B", "C"],
         biens: { create: [{ code: "ALG-LOG-0001", type: "LOGEMENT", etatOccupation: "OCCUPE" }] },
+        utilisateurs: {
+          create: [
+            { email: "agent@opgi-alger.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
+            { email: "chef@opgi-alger.demo", role: "CHEF_PROJET", passwordHash: pwd },
+          ],
+        },
       },
     });
     await owner.organisation.create({
@@ -45,6 +56,9 @@ export default async function setup() {
         nom: "OPGI Oran (DÉMO)",
         modules: ["A", "C"],
         biens: { create: [{ code: "ORN-LOG-0001", type: "LOGEMENT", etatOccupation: "OCCUPE" }] },
+        utilisateurs: {
+          create: [{ email: "agent@opgi-oran.demo", role: "AGENT_LOCATIF", passwordHash: pwd }],
+        },
       },
     });
   } finally {

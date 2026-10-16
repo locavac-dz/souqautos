@@ -7,7 +7,7 @@
 // cet organisme — même si une requête applicative oublie son filtre.
 
 import { PrismaClient } from "@prisma/client";
-import type { TenantContext } from "./context.js";
+import type { TenantContext } from "@/lib/tenant/context";
 
 export type { PrismaClient };
 

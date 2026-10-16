@@ -9,7 +9,7 @@ import {
   type TenantContext,
   type VerifiedSession,
   TenantResolutionError,
-} from "./context.js";
+} from "@/lib/tenant/context";
 
 /**
  * Détermine l'organisme effectif d'une requête.
