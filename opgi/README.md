@@ -184,7 +184,7 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - Canal externe (email/SMS) **désactivé par défaut** (adaptateur à brancher, avec journalisation
   d'envoi/échec sans donnée sensible) — documenté, non activé.
 
-### Tests — **141 verts** (`npm test`)
+### Tests — **143 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -230,7 +230,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 141 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 143 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -271,7 +271,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 141 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 143 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via

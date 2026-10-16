@@ -5,8 +5,9 @@ import { authorize, type AuthorizedContext } from "@/http/guard";
 import { csrfGuard, parseBody, mapError } from "@/http/helpers";
 import { json } from "@/http/respond";
 import { ordreCreateSchema, ordreUpdateSchema } from "@/lib/modules/c/schemas";
-import { createOrdre, listOrdres, getOrdre, updateOrdre, type Acteur } from "@/lib/modules/c/service";
+import { createOrdre, listOrdres, countOrdres, getOrdre, updateOrdre, type Acteur } from "@/lib/modules/c/service";
 import { notifier } from "@/lib/modules/notifications";
+import { parseListParams, pageHeaders } from "@/http/pagination";
 
 function acteurDe(auth: AuthorizedContext): Acteur {
   return { utilisateurId: auth.session.utilisateurId, role: auth.session.role };
@@ -43,10 +44,14 @@ export async function handleOrdres(request: Request, s: Services): Promise<Respo
   const auth = await authorize(request, s, "C", "lire");
   if (auth instanceof Response) return auth;
   const reclamationId = new URL(request.url).searchParams.get("reclamation") ?? undefined;
-  const ordres = await withTenant(s.app, auth.ctx, (tx) =>
-    listOrdres(tx, auth.ctx.organisationId, acteurDe(auth), { reclamationId }),
-  );
-  return json(200, { ordres });
+  const p = parseListParams(request.url);
+  const opts = { reclamationId, q: p.q, skip: p.skip, take: p.take };
+  const acteur = acteurDe(auth);
+  const [ordres, total] = await withTenant(s.app, auth.ctx, async (tx) => [
+    await listOrdres(tx, auth.ctx.organisationId, acteur, opts),
+    await countOrdres(tx, auth.ctx.organisationId, acteur, opts),
+  ]);
+  return json(200, { ordres }, { headers: pageHeaders(total, p) });
 }
 
 export async function handleOrdre(request: Request, s: Services, id: string): Promise<Response> {

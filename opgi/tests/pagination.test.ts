@@ -5,6 +5,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildServices, type Services } from "@/lib/services.js";
 import { handleLogin } from "@/http/auth.js";
 import { handleBiens } from "@/http/patrimoine.js";
+import { handleProjets } from "@/http/projets.js";
 import { loadEnv, requireEnv } from "./_env.js";
 import { DEMO_PASSWORD } from "./global-setup.js";
 
@@ -116,5 +117,49 @@ describe("pagination + recherche des biens", () => {
   it("perPage est borné à [1,100] (valeur hors limite ramenée à 100)", async () => {
     const res = await lister(cookie, "?perPage=9999&page=1");
     expect(res.headers.get("x-per-page")).toBe("100");
+  });
+});
+
+describe("pagination + recherche des projets (module B)", () => {
+  const PP = "PROJ-PGT-";
+  let cookie: string;
+
+  beforeAll(async () => {
+    // OPGI-ORAN, gestionnaire des marchés (droit B.creer).
+    cookie = await login("OPGI-ORAN", "gest@opgi-oran.demo");
+    for (let i = 1; i <= 4; i++) {
+      const res = await handleProjets(
+        new Request(`${ORIGIN}/api/projets`, {
+          method: "POST",
+          headers: { origin: ORIGIN, host: HOST, cookie, "content-type": "application/json" },
+          body: JSON.stringify({ code: `${PP}${String(i).padStart(3, "0")}`, intitule: `Projet test ${i}` }),
+        }),
+        s,
+      );
+      expect(res.status).toBe(201);
+    }
+  });
+
+  it("q filtre les projets et le total reflète le filtre", async () => {
+    const res = await handleProjets(
+      new Request(`${ORIGIN}/api/projets?q=${PP}`, { headers: { cookie } }),
+      s,
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-total-count")).toBe("4");
+    const body = (await res.json()) as { projets: { code: string }[] };
+    expect(body.projets.length).toBe(4);
+    expect(body.projets.every((p) => p.code.startsWith(PP))).toBe(true);
+  });
+
+  it("page/perPage borne la page, total filtré conservé", async () => {
+    const res = await handleProjets(
+      new Request(`${ORIGIN}/api/projets?q=${PP}&page=1&perPage=3`, { headers: { cookie } }),
+      s,
+    );
+    expect(res.headers.get("x-total-count")).toBe("4");
+    expect(res.headers.get("x-per-page")).toBe("3");
+    const body = (await res.json()) as { projets: unknown[] };
+    expect(body.projets.length).toBe(3);
   });
 });

@@ -14,6 +14,7 @@ import {
 import { recordAudit } from "@/lib/audit";
 import {
   listMarches,
+  countMarches,
   createMarche,
   getMarcheDetail,
   updateMarche,
@@ -24,6 +25,7 @@ import {
   listReceptions,
   createReception,
 } from "@/lib/modules/b/service";
+import { parseListParams, pageHeaders } from "@/http/pagination";
 
 // --- Marchés ----------------------------------------------------------------
 export async function handleMarches(request: Request, s: Services): Promise<Response> {
@@ -54,8 +56,13 @@ export async function handleMarches(request: Request, s: Services): Promise<Resp
   const auth = await authorize(request, s, "B", "lire");
   if (auth instanceof Response) return auth;
   const projetId = new URL(request.url).searchParams.get("projet") ?? undefined;
-  const marches = await withTenant(s.app, auth.ctx, (tx) => listMarches(tx, auth.ctx.organisationId, { projetId }));
-  return json(200, { marches });
+  const p = parseListParams(request.url);
+  const opts = { projetId, q: p.q, skip: p.skip, take: p.take };
+  const [marches, total] = await withTenant(s.app, auth.ctx, async (tx) => [
+    await listMarches(tx, auth.ctx.organisationId, opts),
+    await countMarches(tx, auth.ctx.organisationId, opts),
+  ]);
+  return json(200, { marches }, { headers: pageHeaders(total, p) });
 }
 
 export async function handleMarche(request: Request, s: Services, id: string): Promise<Response> {

@@ -5,7 +5,8 @@ import { authorize } from "@/http/guard";
 import { csrfGuard, parseBody, mapError } from "@/http/helpers";
 import { json } from "@/http/respond";
 import { projetCreateSchema, projetUpdateSchema } from "@/lib/modules/b/schemas";
-import { listProjets, createProjet, getProjet, updateProjet, archiveProjet } from "@/lib/modules/b/service";
+import { listProjets, countProjets, createProjet, getProjet, updateProjet, archiveProjet } from "@/lib/modules/b/service";
+import { parseListParams, pageHeaders } from "@/http/pagination";
 
 export async function handleProjets(request: Request, s: Services): Promise<Response> {
   if (request.method === "POST") {
@@ -24,8 +25,18 @@ export async function handleProjets(request: Request, s: Services): Promise<Resp
   }
   const auth = await authorize(request, s, "B", "lire");
   if (auth instanceof Response) return auth;
-  const projets = await withTenant(s.app, auth.ctx, (tx) => listProjets(tx, auth.ctx.organisationId));
-  return json(200, { projets });
+  const p = parseListParams(request.url);
+  const opts = {
+    inclureArchives: new URL(request.url).searchParams.get("archives") === "1",
+    q: p.q,
+    skip: p.skip,
+    take: p.take,
+  };
+  const [projets, total] = await withTenant(s.app, auth.ctx, async (tx) => [
+    await listProjets(tx, auth.ctx.organisationId, opts),
+    await countProjets(tx, auth.ctx.organisationId, opts),
+  ]);
+  return json(200, { projets }, { headers: pageHeaders(total, p) });
 }
 
 export async function handleProjet(request: Request, s: Services, id: string): Promise<Response> {

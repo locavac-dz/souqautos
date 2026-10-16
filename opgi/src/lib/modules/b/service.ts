@@ -6,7 +6,7 @@
 //  - constaté = somme des situations VALIDÉES ;
 //  - payé     = HORS PÉRIMÈTRE (aucun paiement exécuté ici).
 // Aucun calcul réglementaire : l'avancement et les alertes sont indicatifs.
-import { ReferenceInvalideError, type Tx } from "@/lib/modules/a/service";
+import { ReferenceInvalideError, type Tx, type ListeOpts } from "@/lib/modules/a/service";
 import type {
   ProjetCreate,
   ProjetUpdate,
@@ -19,11 +19,30 @@ import type {
 } from "@/lib/modules/b/schemas";
 
 // --- Projets ----------------------------------------------------------------
-export function listProjets(tx: Tx, organisationId: string, inclureArchives = false) {
+function whereProjets(organisationId: string, o: ListeOpts) {
+  return {
+    organisationId,
+    ...(o.inclureArchives ? {} : { archiveLe: null }),
+    ...(o.q
+      ? {
+          OR: [
+            { code: { contains: o.q, mode: "insensitive" as const } },
+            { intitule: { contains: o.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+export function listProjets(tx: Tx, organisationId: string, o: ListeOpts = {}) {
   return tx.projet.findMany({
-    where: { organisationId, ...(inclureArchives ? {} : { archiveLe: null }) },
+    where: whereProjets(organisationId, o),
     orderBy: { code: "asc" },
+    skip: o.skip,
+    take: o.take,
   });
+}
+export function countProjets(tx: Tx, organisationId: string, o: ListeOpts = {}) {
+  return tx.projet.count({ where: whereProjets(organisationId, o) });
 }
 export function getProjet(tx: Tx, organisationId: string, id: string) {
   return tx.projet.findFirst({ where: { id, organisationId } });
@@ -57,11 +76,31 @@ export async function archiveProjet(tx: Tx, organisationId: string, id: string) 
 }
 
 // --- Entreprises ------------------------------------------------------------
-export function listEntreprises(tx: Tx, organisationId: string, inclureArchives = false) {
+function whereEntreprises(organisationId: string, o: ListeOpts) {
+  return {
+    organisationId,
+    ...(o.inclureArchives ? {} : { archiveLe: null }),
+    ...(o.q
+      ? {
+          OR: [
+            { raisonSociale: { contains: o.q, mode: "insensitive" as const } },
+            { nif: { contains: o.q, mode: "insensitive" as const } },
+            { rc: { contains: o.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+export function listEntreprises(tx: Tx, organisationId: string, o: ListeOpts = {}) {
   return tx.entreprise.findMany({
-    where: { organisationId, ...(inclureArchives ? {} : { archiveLe: null }) },
+    where: whereEntreprises(organisationId, o),
     orderBy: { raisonSociale: "asc" },
+    skip: o.skip,
+    take: o.take,
   });
+}
+export function countEntreprises(tx: Tx, organisationId: string, o: ListeOpts = {}) {
+  return tx.entreprise.count({ where: whereEntreprises(organisationId, o) });
 }
 export function getEntreprise(tx: Tx, organisationId: string, id: string) {
   return tx.entreprise.findFirst({ where: { id, organisationId } });
@@ -91,15 +130,34 @@ export async function archiveEntreprise(tx: Tx, organisationId: string, id: stri
 }
 
 // --- Marchés ----------------------------------------------------------------
-export function listMarches(tx: Tx, organisationId: string, opts: { projetId?: string; inclureArchives?: boolean } = {}) {
+export interface MarcheListeOpts extends ListeOpts {
+  projetId?: string;
+}
+function whereMarches(organisationId: string, opts: MarcheListeOpts) {
+  return {
+    organisationId,
+    ...(opts.projetId ? { projetId: opts.projetId } : {}),
+    ...(opts.inclureArchives ? {} : { archiveLe: null }),
+    ...(opts.q
+      ? {
+          OR: [
+            { reference: { contains: opts.q, mode: "insensitive" as const } },
+            { objet: { contains: opts.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+export function listMarches(tx: Tx, organisationId: string, opts: MarcheListeOpts = {}) {
   return tx.marche.findMany({
-    where: {
-      organisationId,
-      ...(opts.projetId ? { projetId: opts.projetId } : {}),
-      ...(opts.inclureArchives ? {} : { archiveLe: null }),
-    },
+    where: whereMarches(organisationId, opts),
     orderBy: { reference: "asc" },
+    skip: opts.skip,
+    take: opts.take,
   });
+}
+export function countMarches(tx: Tx, organisationId: string, opts: MarcheListeOpts = {}) {
+  return tx.marche.count({ where: whereMarches(organisationId, opts) });
 }
 
 export async function createMarche(tx: Tx, organisationId: string, input: MarcheCreate) {

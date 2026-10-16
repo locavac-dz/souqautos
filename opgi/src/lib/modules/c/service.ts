@@ -219,21 +219,50 @@ export async function createOrdre(tx: Tx, organisationId: string, input: OrdreCr
   });
 }
 
+export interface OrdreListeOpts {
+  reclamationId?: string;
+  inclureArchives?: boolean;
+  q?: string;
+  skip?: number;
+  take?: number;
+}
+function whereOrdres(organisationId: string, acteur: Acteur, opts: OrdreListeOpts) {
+  return {
+    organisationId,
+    ...ordreOwnership(acteur),
+    ...(opts.reclamationId ? { reclamationId: opts.reclamationId } : {}),
+    ...(opts.inclureArchives ? {} : { archiveLe: null }),
+    ...(opts.q
+      ? {
+          OR: [
+            { reference: { contains: opts.q, mode: "insensitive" as const } },
+            { prestataireNom: { contains: opts.q, mode: "insensitive" as const } },
+            { compteRendu: { contains: opts.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
 export function listOrdres(
   tx: Tx,
   organisationId: string,
   acteur: Acteur,
-  opts: { reclamationId?: string; inclureArchives?: boolean } = {},
+  opts: OrdreListeOpts = {},
 ) {
   return tx.ordreTravail.findMany({
-    where: {
-      organisationId,
-      ...ordreOwnership(acteur),
-      ...(opts.reclamationId ? { reclamationId: opts.reclamationId } : {}),
-      ...(opts.inclureArchives ? {} : { archiveLe: null }),
-    },
+    where: whereOrdres(organisationId, acteur, opts),
     orderBy: { createdAt: "desc" },
+    skip: opts.skip,
+    take: opts.take,
   });
+}
+export function countOrdres(
+  tx: Tx,
+  organisationId: string,
+  acteur: Acteur,
+  opts: OrdreListeOpts = {},
+) {
+  return tx.ordreTravail.count({ where: whereOrdres(organisationId, acteur, opts) });
 }
 
 export function getOrdre(tx: Tx, organisationId: string, acteur: Acteur, id: string) {
