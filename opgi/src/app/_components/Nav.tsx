@@ -43,6 +43,7 @@ export async function Nav() {
         {t("notifications")}
         {nonLues > 0 ? ` (${nonLues})` : ""}
       </Link>
+      <Link href="/compte">{t("compte")}</Link>
       <span style={{ marginInlineStart: "auto" }}>
         <BoutonDeconnexion />
       </span>

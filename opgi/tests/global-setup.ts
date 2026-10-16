@@ -76,6 +76,8 @@ export default async function setup() {
             { email: "recouv@opgi-alger.demo", role: "AGENT_RECOUVREMENT", passwordHash: pwd },
             // Compte dédié aux tests de verrouillage (jamais utilisé ailleurs).
             { email: "lockme@opgi-alger.demo", role: "AUDITEUR", passwordHash: pwd },
+            // Compte dédié au test de changement de mot de passe (muté par ce test).
+            { email: "mdp@opgi-alger.demo", role: "AUDITEUR", passwordHash: pwd },
           ],
         },
       },

@@ -82,7 +82,18 @@
     "entreprises": "Entreprises",
     "marches": "Marchés",
     "audit": "Journal d'audit",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "compte": "Mon compte"
+  },
+  "compte": {
+    "titre": "Mon compte",
+    "motDePasseTitre": "Changer mon mot de passe",
+    "ancien": "Mot de passe actuel",
+    "nouveau": "Nouveau mot de passe",
+    "confirmation": "Confirmer le nouveau mot de passe",
+    "changer": "Changer le mot de passe",
+    "succes": "Mot de passe mis à jour.",
+    "nonConcordants": "La confirmation ne correspond pas au nouveau mot de passe."
   },
   "notifications": {
     "titre": "Mes notifications",

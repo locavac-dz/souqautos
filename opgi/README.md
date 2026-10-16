@@ -184,7 +184,19 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - Canal externe (email/SMS) **désactivé par défaut** (adaptateur à brancher, avec journalisation
   d'envoi/échec sans donnée sensible) — documenté, non activé.
 
-### Tests — **143 verts** (`npm test`)
+### Incrément 14 — Changement de mot de passe (self-service)
+
+- **Tout utilisateur authentifié** change **son** mot de passe (`PATCH /api/compte/motdepasse`,
+  page `/compte`) : vérification du mot de passe actuel (bcrypt), longueur minimale **configurable**
+  (`PASSWORD_MIN_LENGTH`, défaut 12 — **aucune règle de complexité imposée**, « à valider »),
+  confirmation côté client, et le nouveau doit différer de l'ancien.
+- Opère via le rôle restreint `opgi_app` + `withTenant` : l'utilisateur n'agit que sur **sa** ligne,
+  dans **son** organisme (borné par `id`+`organisationId`). Un changement réussi **remet à zéro** le
+  compteur de verrouillage (lève un verrou éventuel) et est **tracé au journal d'audit**. Message
+  d'erreur générique sur le mot de passe actuel. Garde « session seule » (aucune permission de
+  module requise pour son propre compte).
+
+### Tests — **149 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -230,7 +242,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 143 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 149 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -271,7 +283,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 143 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 149 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via

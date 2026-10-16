@@ -22,6 +22,27 @@ export interface AuthorizedContext {
   ctx: TenantContext;
 }
 
+/**
+ * Garde « session seule » : vérifie la session et résout l'organisme, SANS
+ * exiger de permission de module. Pour les endpoints propres au compte de
+ * l'utilisateur courant (ex. changement de son mot de passe), que tout
+ * utilisateur authentifié peut effectuer sur lui-même.
+ */
+export async function authenticateSession(
+  request: Request,
+  s: Services,
+): Promise<AuthorizedContext | Response> {
+  const session = await sessionFromCookieHeader(request.headers.get("cookie"), s.secret, s.secure);
+  if (!session) return json(401, { error: "Non authentifié." });
+  try {
+    const ctx = resolveTenant(session, s.config);
+    return { session, ctx };
+  } catch (e) {
+    if (e instanceof TenantResolutionError) return json(403, { error: "Organisme refusé." });
+    throw e;
+  }
+}
+
 export async function authorize(
   request: Request,
   s: Services,

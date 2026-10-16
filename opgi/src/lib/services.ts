@@ -17,6 +17,8 @@ export interface Services {
   lockout: LockoutPolicy;
   /** Répertoire de base du stockage local des pièces jointes. */
   storageDir: string;
+  /** Longueur minimale d'un mot de passe (configurable, « à valider »). */
+  passwordMinLength: number;
 }
 
 export function buildServices(env: Record<string, string | undefined> = process.env): Services {
@@ -43,6 +45,9 @@ export function buildServices(env: Record<string, string | undefined> = process.
     secure,
     lockout,
     storageDir: env.FILE_STORAGE_DIR ?? ".data/uploads",
+    // Défaut prudent (12), SANS règle de complexité imposée — à valider selon la
+    // politique de l'organisme (voir ../../docs/opgi/05).
+    passwordMinLength: env.PASSWORD_MIN_LENGTH ? Math.max(Number(env.PASSWORD_MIN_LENGTH), 1) : 12,
   };
 }
 
