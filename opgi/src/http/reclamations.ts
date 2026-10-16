@@ -20,6 +20,7 @@ import {
   listCommentaires,
   type Acteur,
 } from "@/lib/modules/c/service";
+import { notifier } from "@/lib/modules/notifications";
 
 function acteurDe(auth: AuthorizedContext): Acteur {
   return { utilisateurId: auth.session.utilisateurId, role: auth.session.role };
@@ -69,9 +70,19 @@ export async function handleReclamation(request: Request, s: Services, id: strin
     if (auth instanceof Response) return auth;
     const body = await parseBody(request, reclamationQualifierSchema);
     if (body instanceof Response) return body;
-    const reclamation = await withTenant(s.app, auth.ctx, (tx) =>
-      qualifierReclamation(tx, auth.ctx.organisationId, id, body),
-    );
+    const reclamation = await withTenant(s.app, auth.ctx, async (tx) => {
+      const r = await qualifierReclamation(tx, auth.ctx.organisationId, id, body);
+      // Notifie le déclarant (occupant) du changement de statut de SA réclamation.
+      if (r && r.declarantUtilisateurId) {
+        await notifier(tx, auth.ctx.organisationId, {
+          destinataireUtilisateurId: r.declarantUtilisateurId,
+          type: "reclamation.statut",
+          titre: `Réclamation ${r.reference} : ${r.statut}`,
+          lien: `/reclamations/${r.id}`,
+        });
+      }
+      return r;
+    });
     return reclamation ? json(200, { reclamation }) : json(404, { error: "Introuvable." });
   }
 

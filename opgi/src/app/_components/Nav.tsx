@@ -1,9 +1,29 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { BoutonDeconnexion } from "@/app/_components/BoutonDeconnexion";
+import { getServerSession } from "@/lib/auth/next-session";
+import { getServices } from "@/lib/services";
+import { resolveTenant } from "@/lib/tenant/resolve";
+import { withTenant } from "@/lib/tenant/prisma";
+import { compteNonLues } from "@/lib/modules/notifications";
+
+async function nombreNonLues(): Promise<number> {
+  try {
+    const session = await getServerSession();
+    if (!session) return 0;
+    const s = getServices();
+    const ctx = resolveTenant(session, s.config);
+    return await withTenant(s.app, ctx, (tx) =>
+      compteNonLues(tx, ctx.organisationId, { utilisateurId: session.utilisateurId, role: session.role }),
+    );
+  } catch {
+    return 0;
+  }
+}
 
 export async function Nav() {
   const t = await getTranslations("nav");
+  const nonLues = await nombreNonLues();
   return (
     <nav
       aria-label="Navigation principale"
@@ -19,6 +39,10 @@ export async function Nav() {
       <Link href="/entreprises">{t("entreprises")}</Link>
       <Link href="/marches">{t("marches")}</Link>
       <Link href="/audit">{t("audit")}</Link>
+      <Link href="/notifications">
+        {t("notifications")}
+        {nonLues > 0 ? ` (${nonLues})` : ""}
+      </Link>
       <span style={{ marginInlineStart: "auto" }}>
         <BoutonDeconnexion />
       </span>

@@ -81,7 +81,15 @@
     "projets": "Projets",
     "entreprises": "Entreprises",
     "marches": "Marchés",
-    "audit": "Journal d'audit"
+    "audit": "Journal d'audit",
+    "notifications": "Notifications"
+  },
+  "notifications": {
+    "titre": "Mes notifications",
+    "aucune": "Aucune notification.",
+    "marquerLu": "Marquer comme lu",
+    "ouvrir": "Ouvrir",
+    "nonLue": "Non lue"
   },
   "commun": {
     "nouveau": "Nouveau",

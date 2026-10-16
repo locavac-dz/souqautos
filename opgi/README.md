@@ -166,7 +166,18 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - API `POST/GET /api/reclamations/:id/pieces`, `GET /api/pieces/:id` (téléchargement médié) ;
   UI : section « Pièces jointes » (liste + upload) sur la fiche de réclamation.
 
-### Tests — **118 verts** (`npm test`)
+### Incrément 13 — Notifications internes
+
+- Notifications **persistées**, cloisonnées par organisme (RLS) **et par destinataire** (chacun ne
+  lit/marque que les siennes) — brief §7.
+- **Émises sur événement** : qualification d'une réclamation → **déclarant** ; affectation d'un
+  ordre de travail → **technicien** (émission atomique dans la transaction de l'événement).
+- API `GET /api/notifications` (+ compteur non‑lues), `POST /api/notifications/:id/lu` ; UI : page
+  « Mes notifications » + indicateur de non‑lues dans la navigation.
+- Canal externe (email/SMS) **désactivé par défaut** (adaptateur à brancher, avec journalisation
+  d'envoi/échec sans donnée sensible) — documenté, non activé.
+
+### Tests — **122 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -196,6 +207,8 @@ AGENT_RECOUVREMENT → 200), contenu attendu, isolation inter‑OPGI, trace d'au
 5 échecs → compte verrouillé (bon mot de passe refusé), succès remet le compteur à zéro.
 **Pièces jointes** : upload (type → 415), téléchargement médié par le propriétaire, refus d'un autre
 occupant et d'un autre OPGI (404), liste cloisonnée, upload tracé à l'audit.
+**Notifications** : qualification → notifie le déclarant (pas les autres), affectation d'OT →
+notifie le technicien, marquage « lu » réservé au destinataire, isolation inter‑OPGI.
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -274,9 +287,9 @@ place. Ne sont **pas** encore livrés :
   pièces justificatives, écrans d'édition dédiés (le `PATCH` existe en API), exports.
 - **Audit — compléments** : instrumentation des créations de compte/permissions et des exports
   (à venir avec ces fonctions), pagination/filtres du journal, politique de conservation (après C5).
-- **Notifications** (internes, puis email/SMS optionnels), pagination/recherche. Pièces jointes :
-  extension aux autres modules (documents de contrats, marchés) et analyse antivirus selon
-  l'environnement. Exports : états/reçus en PDF (le CSV est livré). Import : extension aux
+- **Canal de notification externe** (email/SMS) à brancher, pagination/recherche, durcissement CSP
+  (nonces), 2FA, rotation/révocation de session. Pièces jointes : extension aux autres modules et
+  analyse antivirus. Exports : états/reçus en PDF (le CSV est livré). Import : extension aux
   marchés/projets. Tableaux de bord : séries temporelles et graphiques.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - Rotation/révocation de session, 2FA (le **verrouillage anti‑bruteforce** est livré).

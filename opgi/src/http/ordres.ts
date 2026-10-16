@@ -6,6 +6,7 @@ import { csrfGuard, parseBody, mapError } from "@/http/helpers";
 import { json } from "@/http/respond";
 import { ordreCreateSchema, ordreUpdateSchema } from "@/lib/modules/c/schemas";
 import { createOrdre, listOrdres, getOrdre, updateOrdre, type Acteur } from "@/lib/modules/c/service";
+import { notifier } from "@/lib/modules/notifications";
 
 function acteurDe(auth: AuthorizedContext): Acteur {
   return { utilisateurId: auth.session.utilisateurId, role: auth.session.role };
@@ -21,9 +22,19 @@ export async function handleOrdres(request: Request, s: Services): Promise<Respo
     const body = await parseBody(request, ordreCreateSchema);
     if (body instanceof Response) return body;
     try {
-      const ordre = await withTenant(s.app, auth.ctx, (tx) =>
-        createOrdre(tx, auth.ctx.organisationId, body),
-      );
+      const ordre = await withTenant(s.app, auth.ctx, async (tx) => {
+        const r = await createOrdre(tx, auth.ctx.organisationId, body);
+        // Notifie le technicien interne affecté.
+        if (r.technicienUtilisateurId) {
+          await notifier(tx, auth.ctx.organisationId, {
+            destinataireUtilisateurId: r.technicienUtilisateurId,
+            type: "ot.affectation",
+            titre: `Ordre de travail ${r.reference} vous est affecté`,
+            lien: `/reclamations/${r.reclamationId}`,
+          });
+        }
+        return r;
+      });
       return json(201, { ordre });
     } catch (e) {
       return mapError(e);

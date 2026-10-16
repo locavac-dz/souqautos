@@ -200,6 +200,7 @@ model Organisation {
   receptions   Reception[]
   auditLogs    AuditLog[]
   piecesJointes PieceJointe[]
+  notifications Notification[]
 
   @@map("organisation")
 }
@@ -693,4 +694,28 @@ model AuditLog {
 
   @@index([organisationId, createdAt])
   @@map("audit_log")
+}
+
+// --- Notification interne ---------------------------------------------------
+// Destinée à UN utilisateur ; cloisonnée par organisme (RLS) et par destinataire
+// (chacun ne voit que les siennes). Le corps ne contient pas de donnée sensible.
+// Un canal externe (email/SMS) peut être branché en plus, désactivé par défaut.
+
+model Notification {
+  id                     String    @id @default(cuid())
+  organisationId         String
+  destinataireUtilisateurId String
+  type                   String
+  titre                  String
+  corps                  String?
+  // Lien relatif vers la ressource concernée (jamais une URL externe).
+  lien                   String?
+  lu                     Boolean   @default(false)
+  luLe                   DateTime?
+  createdAt              DateTime  @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId, destinataireUtilisateurId, lu])
+  @@map("notification")
 }

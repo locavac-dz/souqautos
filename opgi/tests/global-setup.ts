@@ -34,6 +34,7 @@ export default async function setup() {
 
     // 3. Réensemencement déterministe (données fictives). Ordre de suppression
     //    respectant les clés étrangères.
+    await owner.notification.deleteMany();
     await owner.auditLog.deleteMany();
     await owner.imputation.deleteMany();
     await owner.paiement.deleteMany();
