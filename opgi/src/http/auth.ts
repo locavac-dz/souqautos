@@ -23,7 +23,11 @@ export async function handleLogin(request: Request, s: Services): Promise<Respon
     return json(400, { error: "Identifiants au mauvais format." });
   }
 
-  const session = await authenticate(parsed.data, { adminPrisma: s.admin, config: s.config });
+  const session = await authenticate(parsed.data, {
+    adminPrisma: s.admin,
+    config: s.config,
+    lockout: s.lockout,
+  });
   if (!session) {
     // Message volontairement générique (pas d'oracle sur l'existence du compte).
     return json(401, { error: "Identifiants invalides." });

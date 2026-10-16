@@ -217,6 +217,10 @@ model Utilisateur {
   // Périmètre organisationnel optionnel (service/zone) restreignant les droits.
   perimetre      String?
   actif          Boolean   @default(true)
+  // Verrouillage anti‑bruteforce (brief §9) : compteur d'échecs et date de
+  // déverrouillage. Seuil et durée configurables (voir src/lib/services.ts).
+  echecsConnexion Int       @default(0)
+  verrouilleJusqua DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

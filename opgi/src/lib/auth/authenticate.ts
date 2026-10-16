@@ -21,20 +21,32 @@ export const credentialsSchema = z.object({
 
 export type Credentials = z.infer<typeof credentialsSchema>;
 
+/** Politique de verrouillage anti‑bruteforce (brief §9). Valeurs configurables. */
+export interface LockoutPolicy {
+  maxAttempts: number;
+  lockMs: number;
+}
+export const DEFAULT_LOCKOUT: LockoutPolicy = { maxAttempts: 5, lockMs: 15 * 60 * 1000 };
+
 export interface AuthDeps {
   /** Client PRIVILÉGIÉ (propriétaire) — uniquement pour ce bootstrap. */
   adminPrisma: PrismaClient;
   config: IsolationConfig;
+  lockout?: LockoutPolicy;
 }
 
 /**
  * Renvoie la charge de session si les identifiants sont valides, sinon `null`.
- * Ne divulgue jamais si c'est l'organisme, l'email ou le mot de passe qui est
- * en cause.
+ * Ne divulgue jamais si c'est l'organisme, l'email, le mot de passe ou un
+ * verrouillage qui est en cause (message générique côté handler).
+ *
+ * Verrouillage : après `maxAttempts` échecs consécutifs, le compte est bloqué
+ * pour `lockMs`. Une connexion réussie remet le compteur à zéro. Pendant le
+ * verrouillage, même le bon mot de passe est refusé.
  */
 export async function authenticate(
   creds: Credentials,
-  { adminPrisma, config }: AuthDeps,
+  { adminPrisma, config, lockout = DEFAULT_LOCKOUT }: AuthDeps,
 ): Promise<VerifiedSession | null> {
   let organisationId: string;
 
@@ -54,7 +66,31 @@ export async function authenticate(
 
   // Toujours exécuter la vérification (même sans compte) pour limiter l'oracle temporel.
   const ok = await verifyPassword(creds.password, user?.passwordHash);
-  if (!user || !user.actif || !ok) return null;
+  if (!user || !user.actif) return null;
+
+  const now = new Date();
+  // Compte verrouillé : refus sans incrémenter davantage ni révéler la cause.
+  if (user.verrouilleJusqua && user.verrouilleJusqua > now) return null;
+
+  if (!ok) {
+    const echecs = user.echecsConnexion + 1;
+    await adminPrisma.utilisateur.update({
+      where: { id: user.id },
+      data:
+        echecs >= lockout.maxAttempts
+          ? { echecsConnexion: echecs, verrouilleJusqua: new Date(now.getTime() + lockout.lockMs) }
+          : { echecsConnexion: echecs },
+    });
+    return null;
+  }
+
+  // Succès : remet le compteur à zéro (et lève un éventuel verrou expiré).
+  if (user.echecsConnexion !== 0 || user.verrouilleJusqua) {
+    await adminPrisma.utilisateur.update({
+      where: { id: user.id },
+      data: { echecsConnexion: 0, verrouilleJusqua: null },
+    });
+  }
 
   return {
     utilisateurId: user.id,

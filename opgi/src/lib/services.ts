@@ -6,6 +6,7 @@
 //             au seul bootstrap d'authentification (voir authenticate.ts).
 import { PrismaClient } from "@prisma/client";
 import { loadIsolationConfig, type IsolationConfig } from "@/lib/tenant/context";
+import { DEFAULT_LOCKOUT, type LockoutPolicy } from "@/lib/auth/authenticate";
 
 export interface Services {
   app: PrismaClient;
@@ -13,6 +14,7 @@ export interface Services {
   config: IsolationConfig;
   secret: string;
   secure: boolean;
+  lockout: LockoutPolicy;
 }
 
 export function buildServices(env: Record<string, string | undefined> = process.env): Services {
@@ -26,12 +28,18 @@ export function buildServices(env: Record<string, string | undefined> = process.
       ? env.COOKIE_SECURE === "true"
       : env.NODE_ENV === "production";
 
+  const lockout = {
+    maxAttempts: env.LOGIN_MAX_ATTEMPTS ? Number(env.LOGIN_MAX_ATTEMPTS) : DEFAULT_LOCKOUT.maxAttempts,
+    lockMs: env.LOGIN_LOCK_MINUTES ? Number(env.LOGIN_LOCK_MINUTES) * 60_000 : DEFAULT_LOCKOUT.lockMs,
+  };
+
   return {
     app: new PrismaClient(databaseUrl ? { datasources: { db: { url: databaseUrl } } } : undefined),
     admin: new PrismaClient(directUrl ? { datasources: { db: { url: directUrl } } } : undefined),
     config: loadIsolationConfig(env),
     secret,
     secure,
+    lockout,
   };
 }
 
