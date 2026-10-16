@@ -89,6 +89,7 @@
     "enregistrement": "Enregistrement…",
     "archiver": "Archiver",
     "retour": "Retour à la liste",
+    "exporterCsv": "Exporter (CSV)",
     "accesRefuse": "Votre rôle ne permet pas d'accéder à cette ressource (module A).",
     "aucun": "Aucun élément.",
     "erreur": "Une erreur est survenue.",

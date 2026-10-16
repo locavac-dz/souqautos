@@ -140,7 +140,15 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   marchés en **dépassement** et en **retard** (indicatifs).
 - **Chaque indicateur affiche sa définition** (brief §11). Page `/tableau-de-bord` (server‑rendue).
 
-### Tests — **100 verts** (`npm test`)
+### Incrément 10 — Exports CSV tracés
+
+- **Exports CSV** des biens, contrats et impayés (format ouvert), **contrôlés par le droit
+  `exporter`** du module A (brief §9), **isolés par organisme** et **tracés au journal d'audit**.
+- Sérialiseur CSV conforme RFC 4180 (échappement guillemets/virgules/sauts, BOM UTF‑8).
+- API `GET /api/export?type=biens|contrats|impayes` (téléchargement `attachment`), liens
+  « Exporter (CSV) » sur les pages patrimoine, contrats et recouvrement (affichés selon le droit).
+
+### Tests — **106 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -164,7 +172,9 @@ rejetés). **Import** : analyseur CSV (guillemets, virgules/sauts protégés), r
 ignorés), doublon dans le fichier et doublon en base détectés, ligne invalide rejetée, import isolé
 par organisme, refusé à un AUDITEUR (403), tracé au journal d'audit. **Indicateurs** : scénario
 contrôlé (organisme dédié) → taux d'occupation 60 %, dû/imputé/solde et taux de recouvrement 30 %,
-réclamations ouvertes, engagé/constaté agrégés, dépassement et retard détectés.
+réclamations ouvertes, engagé/constaté agrégés, dépassement et retard détectés. **Exports** :
+sérialiseur CSV (échappements), export réservé au droit `exporter` (AGENT_LOCATIF → 403,
+AGENT_RECOUVREMENT → 200), contenu attendu, isolation inter‑OPGI, trace d'audit.
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -243,8 +253,8 @@ place. Ne sont **pas** encore livrés :
   pièces justificatives, écrans d'édition dédiés (le `PATCH` existe en API), exports.
 - **Audit — compléments** : instrumentation des créations de compte/permissions et des exports
   (à venir avec ces fonctions), pagination/filtres du journal, politique de conservation (après C5).
-- **Gestion des fichiers à accès médié**, notifications, pagination, recherche, exports tracés
-  (CSV/PDF des états et indicateurs). Import : extension aux marchés/projets et modèle téléchargeable.
+- **Gestion des fichiers à accès médié**, notifications, pagination, recherche. Exports : états/
+  reçus en PDF (le CSV est livré). Import : extension aux marchés/projets et modèle téléchargeable.
   Tableaux de bord : séries temporelles et graphiques (au-delà des valeurs instantanées actuelles).
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - **Verrouillage de connexion** (anti‑bruteforce), rotation/révocation de session, 2FA.

@@ -71,6 +71,7 @@ export default async function setup() {
             { email: "occ@opgi-alger.demo", role: "OCCUPANT", passwordHash: pwd },
             { email: "occ2@opgi-alger.demo", role: "OCCUPANT", passwordHash: pwd },
             { email: "gest@opgi-alger.demo", role: "GESTIONNAIRE_MARCHES", passwordHash: pwd },
+            { email: "recouv@opgi-alger.demo", role: "AGENT_RECOUVREMENT", passwordHash: pwd },
           ],
         },
       },

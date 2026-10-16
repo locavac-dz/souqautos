@@ -31,7 +31,10 @@ export default async function RecouvrementPage() {
   return (
     <main>
       <Nav />
-      <h1>{t("titre")}</h1>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+        <h1>{t("titre")}</h1>
+        {can(role, "A", "exporter") && <a href="/api/export?type=impayes">{tc("exporterCsv")}</a>}
+      </header>
       <section className="card" aria-label={t("titre")}>
         {impayes.length === 0 ? (
           <p>{t("aucunImpaye")}</p>

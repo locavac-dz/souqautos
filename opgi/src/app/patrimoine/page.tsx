@@ -32,12 +32,11 @@ export default async function PatrimoinePage() {
       <Nav />
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
         <h1>{t("titre")}</h1>
-        {can(role, "A", "creer") && (
-          <span style={{ display: "flex", gap: 12 }}>
-            <Link href="/patrimoine/import">{t("importer")}</Link>
-            <Link href="/patrimoine/nouveau">{tc("nouveau")}</Link>
-          </span>
-        )}
+        <span style={{ display: "flex", gap: 12 }}>
+          {can(role, "A", "exporter") && <a href="/api/export?type=biens">{tc("exporterCsv")}</a>}
+          {can(role, "A", "creer") && <Link href="/patrimoine/import">{t("importer")}</Link>}
+          {can(role, "A", "creer") && <Link href="/patrimoine/nouveau">{tc("nouveau")}</Link>}
+        </span>
       </header>
 
       <section className="card" aria-label={t("titre")}>
