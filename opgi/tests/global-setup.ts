@@ -36,6 +36,9 @@ export default async function setup() {
     await owner.paiement.deleteMany();
     await owner.appelLoyer.deleteMany();
     await owner.actionRecouvrement.deleteMany();
+    await owner.commentaireReclamation.deleteMany();
+    await owner.ordreTravail.deleteMany();
+    await owner.reclamation.deleteMany();
     await owner.contrat.deleteMany();
     await owner.bien.deleteMany();
     await owner.occupant.deleteMany();
@@ -54,6 +57,11 @@ export default async function setup() {
             { email: "agent@opgi-alger.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
             { email: "chef@opgi-alger.demo", role: "CHEF_PROJET", passwordHash: pwd },
             { email: "auditeur@opgi-alger.demo", role: "AUDITEUR", passwordHash: pwd },
+            { email: "resp@opgi-alger.demo", role: "RESP_RECLAMATIONS", passwordHash: pwd },
+            { email: "tech@opgi-alger.demo", role: "TECHNICIEN", passwordHash: pwd },
+            { email: "tech2@opgi-alger.demo", role: "TECHNICIEN", passwordHash: pwd },
+            { email: "occ@opgi-alger.demo", role: "OCCUPANT", passwordHash: pwd },
+            { email: "occ2@opgi-alger.demo", role: "OCCUPANT", passwordHash: pwd },
           ],
         },
       },

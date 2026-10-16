@@ -13,6 +13,7 @@ export async function Nav() {
       <Link href="/patrimoine">{t("patrimoine")}</Link>
       <Link href="/occupants">{t("occupants")}</Link>
       <Link href="/contrats">{t("contrats")}</Link>
+      <Link href="/reclamations">{t("reclamations")}</Link>
       <Link href="/recouvrement">{t("recouvrement")}</Link>
       <span style={{ marginInlineStart: "auto" }}>
         <BoutonDeconnexion />

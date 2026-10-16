@@ -34,6 +34,9 @@ async function main() {
         create: [
           { email: "admin@opgi-alger.demo", role: "ADMIN_OPGI", passwordHash: pwd },
           { email: "agent.locatif@opgi-alger.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
+          { email: "resp.reclamations@opgi-alger.demo", role: "RESP_RECLAMATIONS", passwordHash: pwd },
+          { email: "technicien@opgi-alger.demo", role: "TECHNICIEN", passwordHash: pwd },
+          { email: "occupant@opgi-alger.demo", role: "OCCUPANT", passwordHash: pwd },
         ],
       },
       biens: {

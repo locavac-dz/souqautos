@@ -86,6 +86,55 @@ enum TypeActionRecouvrement {
   AUTRE
 }
 
+// --- Module C — énumérations (points de départ configurables) ---------------
+enum CategorieReclamation {
+  PLOMBERIE
+  ELECTRICITE
+  MACONNERIE
+  ASCENSEUR
+  CHAUFFAGE
+  PROPRETE
+  AUTRE
+}
+
+enum UrgenceReclamation {
+  FAIBLE
+  NORMALE
+  HAUTE
+  CRITIQUE
+}
+
+enum StatutReclamation {
+  NOUVELLE
+  QUALIFIEE
+  EN_COURS
+  RESOLUE
+  REJETEE
+  DOUBLON
+}
+
+enum CanalReclamation {
+  PORTAIL
+  GUICHET
+  TELEPHONE
+  EMAIL
+  COURRIER
+  AUTRE
+}
+
+enum AffectationType {
+  INTERNE
+  EXTERNE
+}
+
+enum StatutOrdreTravail {
+  OUVERT
+  PLANIFIE
+  EN_COURS
+  CLOTURE
+  ANNULE
+}
+
 // --- Organisme (tenant) -----------------------------------------------------
 
 model Organisation {
@@ -107,6 +156,9 @@ model Organisation {
   paiements    Paiement[]
   imputations  Imputation[]
   actions      ActionRecouvrement[]
+  reclamations Reclamation[]
+  commentaires CommentaireReclamation[]
+  ordres       OrdreTravail[]
 
   @@map("organisation")
 }
@@ -154,6 +206,7 @@ model Bien {
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   contrats     Contrat[]
+  reclamations Reclamation[]
 
   @@unique([organisationId, code])
   @@index([organisationId])
@@ -177,6 +230,7 @@ model Occupant {
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   contrats     Contrat[]
+  reclamations Reclamation[]
 
   @@index([organisationId])
   @@map("occupant")
@@ -314,4 +368,100 @@ model ActionRecouvrement {
   @@index([organisationId])
   @@index([contratId])
   @@map("action_recouvrement")
+}
+
+// ============================================================================
+//  Module C — réclamations, maintenance & interventions
+// ============================================================================
+
+// --- Réclamation ------------------------------------------------------------
+// Rattachée si possible à un bien et/ou un occupant. Le déclarant peut être un
+// occupant du portail (declarantUtilisateurId) ou saisi par un agent au guichet.
+// Les doublons sont REGROUPÉS (statut DOUBLON + doublonDeId), jamais supprimés.
+
+model Reclamation {
+  id             String               @id @default(cuid())
+  organisationId String
+  reference      String
+  bienId         String?
+  occupantId     String?
+  // Déclarant via le portail (compte occupant) — sinon saisie libre ci-dessous.
+  declarantUtilisateurId String?
+  declarantNom     String?
+  declarantContact String?
+  categorie      CategorieReclamation
+  urgence        UrgenceReclamation   @default(NORMALE)
+  statut         StatutReclamation    @default(NOUVELLE)
+  canal          CanalReclamation     @default(PORTAIL)
+  description    String
+  localisation   String?
+  doublonDeId    String?
+  archiveLe      DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  bien         Bien?        @relation(fields: [bienId], references: [id], onDelete: SetNull)
+  occupant     Occupant?    @relation(fields: [occupantId], references: [id], onDelete: SetNull)
+  doublonDe    Reclamation? @relation("doublons", fields: [doublonDeId], references: [id], onDelete: SetNull)
+  doublons     Reclamation[] @relation("doublons")
+  commentaires CommentaireReclamation[]
+  ordres       OrdreTravail[]
+
+  @@unique([organisationId, reference])
+  @@index([organisationId])
+  @@index([bienId])
+  @@index([declarantUtilisateurId])
+  @@map("reclamation")
+}
+
+// --- Commentaire / échange sur une réclamation ------------------------------
+// `interne` = visible des agents uniquement (jamais renvoyé au déclarant).
+
+model CommentaireReclamation {
+  id                 String   @id @default(cuid())
+  organisationId     String
+  reclamationId      String
+  auteurUtilisateurId String?
+  texte              String
+  interne            Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  reclamation  Reclamation  @relation(fields: [reclamationId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+  @@index([reclamationId])
+  @@map("commentaire_reclamation")
+}
+
+// --- Ordre de travail (intervention) ----------------------------------------
+// Issu d'une réclamation ; affecté à un technicien interne OU un prestataire
+// externe. Coûts estimé/constaté distincts. Aucun calcul automatique.
+
+model OrdreTravail {
+  id             String             @id @default(cuid())
+  organisationId String
+  reclamationId  String
+  reference      String
+  statut         StatutOrdreTravail @default(OUVERT)
+  affectationType AffectationType?
+  technicienUtilisateurId String?
+  prestataireNom String?
+  datePlanifiee  DateTime?
+  coutEstimeCentimes   Int?
+  coutConstateCentimes Int?
+  compteRendu    String?
+  archiveLe      DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  reclamation  Reclamation  @relation(fields: [reclamationId], references: [id], onDelete: Restrict)
+
+  @@unique([organisationId, reference])
+  @@index([organisationId])
+  @@index([reclamationId])
+  @@index([technicienUtilisateurId])
+  @@map("ordre_travail")
 }

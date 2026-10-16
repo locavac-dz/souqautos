@@ -71,7 +71,24 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - **UI FR** : fiche de contrat (appels/soldes, paiements/restes, actions) avec formulaires d'appel,
   de paiement, d'imputation et d'action ; page **Recouvrement — impayés**.
 
-### Tests — **59 verts** (`npm test`)
+### Incrément 5 — Module C (réclamations, maintenance, interventions)
+
+- **Modèle** : `Reclamation` (rattachable à un bien/occupant, déclarant portail ou guichet),
+  `CommentaireReclamation` (échanges, avec notes **internes**), `OrdreTravail` (intervention issue
+  d'une réclamation, affectée à un technicien interne ou un prestataire externe, coûts estimé/
+  constaté). Tous cloisonnés par `organisationId` + RLS (migration dédiée). Références auto‑générées.
+- **Cloisonnement par PROPRIÉTÉ** (au‑delà de l'organisme) :
+  - un **OCCUPANT** ne voit et ne crée que **ses** réclamations (portail) ;
+  - un **TECHNICIEN** ne voit et ne modifie que **ses** ordres de travail (même en écriture) ;
+  - une **note interne** n'est jamais renvoyée à un déclarant.
+- **Cycle** : dépôt → qualification (statut/urgence/catégorie) → ordre de travail → intervention
+  (compte rendu, coûts) ; **détection de doublons** par regroupement (statut `DOUBLON` + lien),
+  **sans suppression d'historique**.
+- **Aucun calcul inventé** ; délais/catégories/statuts configurables, jours de retard indicatifs.
+- **API REST + UI FR** : liste + dépôt de réclamation, fiche (qualification, commentaires, ordres)
+  avec formulaires gated par rôle.
+
+### Tests — **70 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -81,7 +98,11 @@ code dupliqué → 409, données invalides → 400, AUDITEUR lit mais ne crée p
 introuvable pour Oran (404), contrat liant un bien d'un autre organisme → 400, période incohérente
 → 400. **Finances** : appel au montant du loyer par défaut, imputation mettant à jour solde/reste,
 imputation dépassant le solde ou le reste → 409, imputation inter‑contrat → 409, imputation
-inter‑organisme → 400, liste d'impayés, action de recouvrement isolée par organisme.
+inter‑organisme → 400, liste d'impayés, action de recouvrement isolée par organisme. **Module C** :
+dépôt occupant (déclarant forcé, référence auto), un occupant ne voit pas les réclamations d'un
+autre (404), qualification refusée à l'occupant (403), AUDITEUR ne peut pas déposer (403),
+regroupement de doublons, notes internes masquées au déclarant, OT visible/modifiable seulement
+par le technicien affecté (404 sinon), isolation inter‑OPGI.
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -143,7 +164,10 @@ place. Ne sont **pas** encore livrés :
   génération en masse des appels par échéancier, édition via formulaires (la mise à jour est
   exposée par l'API `PATCH` mais sans écran dédié), import initial, reçus/états de compte,
   indicateurs (occupation, encaissements, taux de recouvrement) avec définitions visibles.
-- **Modules B et C** (projets/marchés, réclamations) — Phases 4 et 3.
+- **Module C — compléments** : portail public (déclarant non authentifié avec accusé de réception),
+  photos/pièces jointes des réclamations, planification/visites détaillées, cloisonnement
+  **prestataire externe** (nécessite un modèle de compte prestataire), indicateurs par zone/délai.
+- **Module B** (projets, marchés, chantiers) — Phase 4.
 - **Journal d'audit persistant**, gestion des fichiers à accès médié, notifications, pagination, recherche.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - **Verrouillage de connexion** (anti‑bruteforce), rotation/révocation de session, 2FA.
