@@ -88,7 +88,24 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - **API REST + UI FR** : liste + dépôt de réclamation, fiche (qualification, commentaires, ordres)
   avec formulaires gated par rôle.
 
-### Tests — **70 verts** (`npm test`)
+### Incrément 6 — Module B (projets, marchés, chantiers)
+
+- **Modèle** : `Projet` (opération), `Entreprise`, `Marche` (montant **engagé**),
+  `SituationTravaux` (montant **constaté**, avancement physique), `Reception`
+  (provisoire/définitive, réserves). Tous cloisonnés par `organisationId` + RLS.
+- **Séparation engagé / constaté / payé** : l'engagé (marché) et le constaté (situations
+  **validées**) sont distincts ; le **paiement exécuté est hors périmètre** (suivi, pas système de
+  paiement). Aucun calcul réglementaire.
+- **Workflow des situations + permission `valider`** : dépôt → vérification → **validation**/rejet,
+  avec traçage du décideur et de la date. La **validation** exige la permission `valider`
+  (GESTIONNAIRE_MARCHES) ; un CHEF_PROJET peut déposer/vérifier mais **pas** valider (403) —
+  mise en œuvre concrète d'une délégation.
+- **Indicateurs indicatifs** (non réglementaires) : avancement financier (constaté/engagé),
+  avancement physique, alertes **dépassement** (constaté > engagé) et **retard** (délai dépassé).
+- **API REST + UI FR** : listes + création projets/entreprises/marchés ; fiche de marché
+  (avancement, situations avec dépôt/décision, réceptions).
+
+### Tests — **81 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -102,7 +119,10 @@ inter‑organisme → 400, liste d'impayés, action de recouvrement isolée par 
 dépôt occupant (déclarant forcé, référence auto), un occupant ne voit pas les réclamations d'un
 autre (404), qualification refusée à l'occupant (403), AUDITEUR ne peut pas déposer (403),
 regroupement de doublons, notes internes masquées au déclarant, OT visible/modifiable seulement
-par le technicien affecté (404 sinon), isolation inter‑OPGI.
+par le technicien affecté (404 sinon), isolation inter‑OPGI. **Module B** : projet/entreprise/
+marché, marché référençant un projet d'un autre organisme → 400, dépôt de situation, CHEF_PROJET
+vérifie mais ne valide pas (403), GESTIONNAIRE_MARCHES valide, avancement reflétant le constaté
+(≠ engagé), alerte dépassement, réception, isolation inter‑OPGI (404).
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -167,8 +187,10 @@ place. Ne sont **pas** encore livrés :
 - **Module C — compléments** : portail public (déclarant non authentifié avec accusé de réception),
   photos/pièces jointes des réclamations, planification/visites détaillées, cloisonnement
   **prestataire externe** (nécessite un modèle de compte prestataire), indicateurs par zone/délai.
-- **Module B** (projets, marchés, chantiers) — Phase 4.
-- **Journal d'audit persistant**, gestion des fichiers à accès médié, notifications, pagination, recherche.
+- **Module B — compléments** : planning (jalons/tâches), ordres de service et avenants, lots,
+  pièces justificatives, écrans d'édition dédiés (le `PATCH` existe en API), exports.
+- **Journal d'audit persistant**, gestion des fichiers à accès médié, notifications, pagination,
+  recherche, tableaux de bord transverses.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - **Verrouillage de connexion** (anti‑bruteforce), rotation/révocation de session, 2FA.
 - **Rôle `opgi_app` portable en CI** (aujourd'hui prérequis documenté) et workflow CI dédié.

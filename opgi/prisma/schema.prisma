@@ -135,6 +135,35 @@ enum StatutOrdreTravail {
   ANNULE
 }
 
+// --- Module B — énumérations (points de départ configurables) ---------------
+enum StatutProjet {
+  EN_PREPARATION
+  EN_COURS
+  SUSPENDU
+  CLOTURE
+}
+
+enum StatutMarche {
+  EN_PREPARATION
+  NOTIFIE
+  EN_COURS
+  RECEPTIONNE
+  RESILIE
+  CLOTURE
+}
+
+enum StatutSituation {
+  DEPOSEE
+  VERIFIEE
+  VALIDEE
+  REJETEE
+}
+
+enum TypeReception {
+  PROVISOIRE
+  DEFINITIVE
+}
+
 // --- Organisme (tenant) -----------------------------------------------------
 
 model Organisation {
@@ -159,6 +188,11 @@ model Organisation {
   reclamations Reclamation[]
   commentaires CommentaireReclamation[]
   ordres       OrdreTravail[]
+  projets      Projet[]
+  entreprises  Entreprise[]
+  marches      Marche[]
+  situations   SituationTravaux[]
+  receptions   Reception[]
 
   @@map("organisation")
 }
@@ -464,4 +498,135 @@ model OrdreTravail {
   @@index([reclamationId])
   @@index([technicienUtilisateurId])
   @@map("ordre_travail")
+}
+
+// ============================================================================
+//  Module B — projets, marchés & chantiers
+// ============================================================================
+
+// --- Projet / opération -----------------------------------------------------
+model Projet {
+  id               String       @id @default(cuid())
+  organisationId   String
+  code             String
+  intitule         String
+  programme        String?
+  sourceFinancement String?
+  statut           StatutProjet @default(EN_PREPARATION)
+  // Enveloppe prévisionnelle (saisie libre) — aucun calcul.
+  montantInitialCentimes Int?
+  dateDebut        DateTime?
+  dateFinPrevue    DateTime?
+  archiveLe        DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  marches      Marche[]
+
+  @@unique([organisationId, code])
+  @@index([organisationId])
+  @@map("projet")
+}
+
+// --- Entreprise / prestataire de travaux ------------------------------------
+model Entreprise {
+  id             String    @id @default(cuid())
+  organisationId String
+  raisonSociale  String
+  nif            String?
+  rc             String?
+  contact        String?
+  archiveLe      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  marches      Marche[]
+
+  @@index([organisationId])
+  @@map("entreprise")
+}
+
+// --- Marché -----------------------------------------------------------------
+// `montantCentimes` = montant ENGAGÉ (marché notifié). Le montant CONSTATÉ
+// (avancement) provient des situations de travaux validées. La plateforme ne
+// gère AUCUN paiement exécuté : engagement, constatation et paiement restent
+// distincts (le paiement est hors périmètre, suivi par le système financier).
+model Marche {
+  id             String       @id @default(cuid())
+  organisationId String
+  reference      String
+  projetId       String
+  entrepriseId   String
+  objet          String
+  montantCentimes Int
+  dateNotification DateTime?
+  delaiJours     Int?
+  statut         StatutMarche @default(EN_PREPARATION)
+  archiveLe      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  projet       Projet       @relation(fields: [projetId], references: [id], onDelete: Restrict)
+  entreprise   Entreprise   @relation(fields: [entrepriseId], references: [id], onDelete: Restrict)
+  situations   SituationTravaux[]
+  receptions   Reception[]
+
+  @@unique([organisationId, reference])
+  @@index([organisationId])
+  @@index([projetId])
+  @@index([entrepriseId])
+  @@map("marche")
+}
+
+// --- Situation de travaux ---------------------------------------------------
+// Dépôt → vérification → validation/rejet. `montantTravauxCentimes` = montant
+// CONSTATÉ de la situation. `avancementPhysiquePct` = avancement physique (0-100).
+model SituationTravaux {
+  id             String          @id @default(cuid())
+  organisationId String
+  marcheId       String
+  numero         Int
+  periode        String?
+  montantTravauxCentimes Int
+  avancementPhysiquePct  Int?
+  statut         StatutSituation @default(DEPOSEE)
+  observations   String?
+  dateDepot      DateTime
+  dateDecision   DateTime?
+  decideurUtilisateurId String?
+  archiveLe      DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  marche       Marche       @relation(fields: [marcheId], references: [id], onDelete: Cascade)
+
+  @@unique([marcheId, numero])
+  @@index([organisationId])
+  @@index([marcheId])
+  @@map("situation_travaux")
+}
+
+// --- Réception (provisoire / définitive) ------------------------------------
+model Reception {
+  id             String        @id @default(cuid())
+  organisationId String
+  marcheId       String
+  type           TypeReception
+  date           DateTime
+  avecReserves   Boolean       @default(false)
+  observations   String?
+  pvReference    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  marche       Marche       @relation(fields: [marcheId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+  @@index([marcheId])
+  @@map("reception")
 }

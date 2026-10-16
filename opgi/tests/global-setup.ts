@@ -39,6 +39,11 @@ export default async function setup() {
     await owner.commentaireReclamation.deleteMany();
     await owner.ordreTravail.deleteMany();
     await owner.reclamation.deleteMany();
+    await owner.reception.deleteMany();
+    await owner.situationTravaux.deleteMany();
+    await owner.marche.deleteMany();
+    await owner.projet.deleteMany();
+    await owner.entreprise.deleteMany();
     await owner.contrat.deleteMany();
     await owner.bien.deleteMany();
     await owner.occupant.deleteMany();
@@ -62,6 +67,7 @@ export default async function setup() {
             { email: "tech2@opgi-alger.demo", role: "TECHNICIEN", passwordHash: pwd },
             { email: "occ@opgi-alger.demo", role: "OCCUPANT", passwordHash: pwd },
             { email: "occ2@opgi-alger.demo", role: "OCCUPANT", passwordHash: pwd },
+            { email: "gest@opgi-alger.demo", role: "GESTIONNAIRE_MARCHES", passwordHash: pwd },
           ],
         },
       },
@@ -73,7 +79,10 @@ export default async function setup() {
         modules: ["A", "C"],
         biens: { create: [{ code: "ORN-LOG-0001", type: "LOGEMENT", etatOccupation: "OCCUPE" }] },
         utilisateurs: {
-          create: [{ email: "agent@opgi-oran.demo", role: "AGENT_LOCATIF", passwordHash: pwd }],
+          create: [
+            { email: "agent@opgi-oran.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
+            { email: "gest@opgi-oran.demo", role: "GESTIONNAIRE_MARCHES", passwordHash: pwd },
+          ],
         },
       },
     });

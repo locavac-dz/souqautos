@@ -37,6 +37,8 @@ async function main() {
           { email: "resp.reclamations@opgi-alger.demo", role: "RESP_RECLAMATIONS", passwordHash: pwd },
           { email: "technicien@opgi-alger.demo", role: "TECHNICIEN", passwordHash: pwd },
           { email: "occupant@opgi-alger.demo", role: "OCCUPANT", passwordHash: pwd },
+          { email: "chef.projet@opgi-alger.demo", role: "CHEF_PROJET", passwordHash: pwd },
+          { email: "gestionnaire.marches@opgi-alger.demo", role: "GESTIONNAIRE_MARCHES", passwordHash: pwd },
         ],
       },
       biens: {
