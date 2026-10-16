@@ -1,0 +1,123 @@
+// ============================================================================
+//  Plateforme OPGI — schéma de données (socle multi‑organisme, Phase 1)
+//
+//  Invariant central : toute table métier porte `organisationId` NON NULL.
+//  L'isolation est appliquée à DEUX niveaux (défense en profondeur) :
+//    1. couche applicative — requêtes filtrées par l'organisme de la session ;
+//    2. Row-Level Security PostgreSQL — filet si (1) oublie un filtre.
+//  Voir prisma/migrations/*/rls.sql et docs/opgi/02-ISOLATION-MULTI-OPGI.md.
+//
+//  Le schéma est IDENTIQUE pour les deux modes d'exploitation (décision D2) :
+//  hébergement centralisé (base partagée + RLS) et installation chez l'OPGI
+//  (base dédiée). Seule la configuration d'isolation diffère, pas le schéma.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")        // rôle applicatif restreint (soumis RLS)
+  directUrl = env("DIRECT_DATABASE_URL") // rôle propriétaire (migrations, seed)
+}
+
+// --- Référentiels d'énumération --------------------------------------------
+
+enum ModuleOpgi {
+  A // patrimoine & gestion locative
+  B // projets, marchés & chantiers
+  C // réclamations, maintenance & interventions
+}
+
+enum RoleOpgi {
+  ADMIN_PLATEFORME    // technique, tous OPGI, AUCUN accès métier
+  ADMIN_OPGI
+  DIRECTION
+  AGENT_LOCATIF
+  AGENT_RECOUVREMENT
+  CHEF_PROJET
+  GESTIONNAIRE_MARCHES
+  RESP_RECLAMATIONS
+  TECHNICIEN
+  PRESTATAIRE
+  OCCUPANT
+  AUDITEUR
+}
+
+enum TypeBien {
+  LOGEMENT
+  LOCAL_COMMERCIAL
+  GARAGE
+  AUTRE
+}
+
+enum EtatOccupation {
+  OCCUPE
+  VACANT
+  INDISPONIBLE
+}
+
+// --- Organisme (tenant) -----------------------------------------------------
+
+model Organisation {
+  id        String       @id @default(cuid())
+  // Code métier lisible, unique au niveau plateforme (ex. « OPGI-ALGER »).
+  code      String       @unique
+  nom       String
+  actif     Boolean      @default(true)
+  // Modules activés pour cet organisme (décision D5 — activation par config).
+  modules   ModuleOpgi[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  utilisateurs Utilisateur[]
+  biens        Bien[]
+
+  @@map("organisation")
+}
+
+// --- Utilisateur (toujours rattaché à un organisme) -------------------------
+// Note : l'administrateur de plateforme (rôle technique sans accès métier) est
+// géré hors de ce modèle dans les prochains incréments ; il n'apparaît jamais
+// comme porteur de données métier d'un organisme.
+
+model Utilisateur {
+  id             String    @id @default(cuid())
+  organisationId String
+  email          String
+  passwordHash   String?
+  role           RoleOpgi
+  // Périmètre organisationnel optionnel (service/zone) restreignant les droits.
+  perimetre      String?
+  actif          Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  // Un même email peut exister dans deux OPGI distincts : unicité PAR organisme.
+  @@unique([organisationId, email])
+  @@index([organisationId])
+  @@map("utilisateur")
+}
+
+// --- Bien (unité de patrimoine — Module A) ----------------------------------
+
+model Bien {
+  id             String         @id @default(cuid())
+  organisationId String
+  // Code métier du bien, unique PAR organisme.
+  code           String
+  type           TypeBien
+  etatOccupation EtatOccupation @default(VACANT)
+  adresse        String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@unique([organisationId, code])
+  @@index([organisationId])
+  @@map("bien")
+}
