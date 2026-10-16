@@ -73,7 +73,7 @@ async function warmUp() {
     await visit(path);
     done += 1;
   }
-  console.log(`[préchauffage] ${done}/${list.length} routes visitées en ${Math.round((Date.now() - start) / 1000)} s`);
+  console.error(`[préchauffage] ${done}/${list.length} routes visitées en ${Math.round((Date.now() - start) / 1000)} s`);
 }
 
 await warmUp();
