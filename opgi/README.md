@@ -118,7 +118,18 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   marché, **décision sur situation de travaux** (dont la validation), création de réception.
 - **Consultation réservée** (`ADMIN_OPGI`, `DIRECTION`, `AUDITEUR`) — page `/audit` + `GET /api/audit`.
 
-### Tests — **85 verts** (`npm test`)
+### Incrément 8 — Import initial du référentiel (CSV)
+
+- **Import CSV des biens et des occupants** (brief §A/§11) avec les trois garanties : **contrôle des
+  erreurs** (validation zod ligne à ligne), **détection des doublons** (dans le fichier **et** en
+  base), **rapport d'import** (total, insérés, ignorés, et chaque ligne rejetée avec son numéro et
+  son motif : invalide / doublon_fichier / doublon_base).
+- Analyseur CSV maison, sans dépendance (champs entre guillemets, virgules et sauts de ligne
+  protégés, guillemets doublés, BOM, CRLF) — testé unitairement.
+- Insertion atomique dans une transaction `withTenant` (RLS) ; import **tracé au journal d'audit**.
+  API `POST /api/import`, UI `/patrimoine/import` (coller du CSV ou choisir un fichier, rapport affiché).
+
+### Tests — **96 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -138,7 +149,9 @@ vérifie mais ne valide pas (403), GESTIONNAIRE_MARCHES valide, avancement refl�
 (≠ engagé), alerte dépassement, réception, isolation inter‑OPGI (404). **Audit** : une action
 sensible crée une entrée tracée (auteur inclus), journal isolé par organisme, consultation réservée
 (technicien → 403, auditeur → 200), **append‑only vérifié** (UPDATE/DELETE par le rôle applicatif
-rejetés).
+rejetés). **Import** : analyseur CSV (guillemets, virgules/sauts protégés), rapport (insérés/
+ignorés), doublon dans le fichier et doublon en base détectés, ligne invalide rejetée, import isolé
+par organisme, refusé à un AUDITEUR (403), tracé au journal d'audit.
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -218,7 +231,7 @@ place. Ne sont **pas** encore livrés :
 - **Audit — compléments** : instrumentation des créations de compte/permissions et des exports
   (à venir avec ces fonctions), pagination/filtres du journal, politique de conservation (après C5).
 - **Gestion des fichiers à accès médié**, notifications, pagination, recherche, tableaux de bord
-  transverses, **import initial**.
+  transverses. Import : extension aux marchés/projets et modèle de fichier téléchargeable.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - **Verrouillage de connexion** (anti‑bruteforce), rotation/révocation de session, 2FA.
 - **Rôle `opgi_app` portable en CI** (aujourd'hui prérequis documenté) et workflow CI dédié.
