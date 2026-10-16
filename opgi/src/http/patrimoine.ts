@@ -5,7 +5,8 @@ import { authorize } from "@/http/guard";
 import { csrfGuard, parseBody, mapError } from "@/http/helpers";
 import { json } from "@/http/respond";
 import { bienCreateSchema, bienUpdateSchema } from "@/lib/modules/a/schemas";
-import { listBiens, createBien, getBien, updateBien, archiveBien } from "@/lib/modules/a/service";
+import { listBiens, countBiens, createBien, getBien, updateBien, archiveBien } from "@/lib/modules/a/service";
+import { parseListParams, pageHeaders } from "@/http/pagination";
 
 // GET /api/biens — liste ; POST /api/biens — création.
 export async function handleBiens(request: Request, s: Services): Promise<Response> {
@@ -28,11 +29,18 @@ export async function handleBiens(request: Request, s: Services): Promise<Respon
 
   const auth = await authorize(request, s, "A", "lire");
   if (auth instanceof Response) return auth;
-  const inclureArchives = new URL(request.url).searchParams.get("archives") === "1";
-  const biens = await withTenant(s.app, auth.ctx, (tx) =>
-    listBiens(tx, auth.ctx.organisationId, inclureArchives),
-  );
-  return json(200, { organisationId: auth.ctx.organisationId, biens });
+  const p = parseListParams(request.url);
+  const opts = {
+    inclureArchives: new URL(request.url).searchParams.get("archives") === "1",
+    q: p.q,
+    skip: p.skip,
+    take: p.take,
+  };
+  const [biens, total] = await withTenant(s.app, auth.ctx, async (tx) => [
+    await listBiens(tx, auth.ctx.organisationId, opts),
+    await countBiens(tx, auth.ctx.organisationId, opts),
+  ]);
+  return json(200, { organisationId: auth.ctx.organisationId, biens }, { headers: pageHeaders(total, p) });
 }
 
 // GET/PATCH/DELETE /api/biens/:id

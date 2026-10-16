@@ -33,11 +33,39 @@ export class RegleMetierError extends Error {
 
 // --- Bien -------------------------------------------------------------------
 
-export function listBiens(tx: Tx, organisationId: string, inclureArchives = false) {
+export interface ListeOpts {
+  inclureArchives?: boolean;
+  q?: string;
+  skip?: number;
+  take?: number;
+}
+
+function whereBiens(organisationId: string, o: ListeOpts) {
+  return {
+    organisationId,
+    ...(o.inclureArchives ? {} : { archiveLe: null }),
+    ...(o.q
+      ? {
+          OR: [
+            { code: { contains: o.q, mode: "insensitive" as const } },
+            { adresse: { contains: o.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+
+export function listBiens(tx: Tx, organisationId: string, o: ListeOpts = {}) {
   return tx.bien.findMany({
-    where: { organisationId, ...(inclureArchives ? {} : { archiveLe: null }) },
+    where: whereBiens(organisationId, o),
     orderBy: { code: "asc" },
+    skip: o.skip,
+    take: o.take,
   });
+}
+
+export function countBiens(tx: Tx, organisationId: string, o: ListeOpts = {}) {
+  return tx.bien.count({ where: whereBiens(organisationId, o) });
 }
 
 export function getBien(tx: Tx, organisationId: string, id: string) {
@@ -74,11 +102,33 @@ export async function archiveBien(tx: Tx, organisationId: string, id: string) {
 
 // --- Occupant ---------------------------------------------------------------
 
-export function listOccupants(tx: Tx, organisationId: string, inclureArchives = false) {
+function whereOccupants(organisationId: string, o: ListeOpts) {
+  return {
+    organisationId,
+    ...(o.inclureArchives ? {} : { archiveLe: null }),
+    ...(o.q
+      ? {
+          OR: [
+            { nom: { contains: o.q, mode: "insensitive" as const } },
+            { prenom: { contains: o.q, mode: "insensitive" as const } },
+            { email: { contains: o.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+
+export function listOccupants(tx: Tx, organisationId: string, o: ListeOpts = {}) {
   return tx.occupant.findMany({
-    where: { organisationId, ...(inclureArchives ? {} : { archiveLe: null }) },
+    where: whereOccupants(organisationId, o),
     orderBy: { nom: "asc" },
+    skip: o.skip,
+    take: o.take,
   });
+}
+
+export function countOccupants(tx: Tx, organisationId: string, o: ListeOpts = {}) {
+  return tx.occupant.count({ where: whereOccupants(organisationId, o) });
 }
 
 export function getOccupant(tx: Tx, organisationId: string, id: string) {
@@ -119,11 +169,25 @@ export async function archiveOccupant(tx: Tx, organisationId: string, id: string
 
 // --- Contrat ----------------------------------------------------------------
 
-export function listContrats(tx: Tx, organisationId: string, inclureArchives = false) {
+function whereContrats(organisationId: string, o: ListeOpts) {
+  return {
+    organisationId,
+    ...(o.inclureArchives ? {} : { archiveLe: null }),
+    ...(o.q ? { reference: { contains: o.q, mode: "insensitive" as const } } : {}),
+  };
+}
+
+export function listContrats(tx: Tx, organisationId: string, o: ListeOpts = {}) {
   return tx.contrat.findMany({
-    where: { organisationId, ...(inclureArchives ? {} : { archiveLe: null }) },
+    where: whereContrats(organisationId, o),
     orderBy: { reference: "asc" },
+    skip: o.skip,
+    take: o.take,
   });
+}
+
+export function countContrats(tx: Tx, organisationId: string, o: ListeOpts = {}) {
+  return tx.contrat.count({ where: whereContrats(organisationId, o) });
 }
 
 export function getContrat(tx: Tx, organisationId: string, id: string) {

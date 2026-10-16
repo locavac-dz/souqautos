@@ -7,11 +7,13 @@ import { json } from "@/http/respond";
 import { occupantCreateSchema, occupantUpdateSchema } from "@/lib/modules/a/schemas";
 import {
   listOccupants,
+  countOccupants,
   createOccupant,
   getOccupant,
   updateOccupant,
   archiveOccupant,
 } from "@/lib/modules/a/service";
+import { parseListParams, pageHeaders } from "@/http/pagination";
 
 export async function handleOccupants(request: Request, s: Services): Promise<Response> {
   if (request.method === "POST") {
@@ -33,11 +35,18 @@ export async function handleOccupants(request: Request, s: Services): Promise<Re
 
   const auth = await authorize(request, s, "A", "lire");
   if (auth instanceof Response) return auth;
-  const inclureArchives = new URL(request.url).searchParams.get("archives") === "1";
-  const occupants = await withTenant(s.app, auth.ctx, (tx) =>
-    listOccupants(tx, auth.ctx.organisationId, inclureArchives),
-  );
-  return json(200, { occupants });
+  const p = parseListParams(request.url);
+  const opts = {
+    inclureArchives: new URL(request.url).searchParams.get("archives") === "1",
+    q: p.q,
+    skip: p.skip,
+    take: p.take,
+  };
+  const [occupants, total] = await withTenant(s.app, auth.ctx, async (tx) => [
+    await listOccupants(tx, auth.ctx.organisationId, opts),
+    await countOccupants(tx, auth.ctx.organisationId, opts),
+  ]);
+  return json(200, { occupants }, { headers: pageHeaders(total, p) });
 }
 
 export async function handleOccupant(request: Request, s: Services, id: string): Promise<Response> {

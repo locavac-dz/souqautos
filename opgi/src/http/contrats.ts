@@ -8,11 +8,13 @@ import { contratCreateSchema, contratUpdateSchema } from "@/lib/modules/a/schema
 import { recordAudit } from "@/lib/audit";
 import {
   listContrats,
+  countContrats,
   createContrat,
   getContrat,
   updateContrat,
   archiveContrat,
 } from "@/lib/modules/a/service";
+import { parseListParams, pageHeaders } from "@/http/pagination";
 
 export async function handleContrats(request: Request, s: Services): Promise<Response> {
   if (request.method === "POST") {
@@ -42,11 +44,18 @@ export async function handleContrats(request: Request, s: Services): Promise<Res
 
   const auth = await authorize(request, s, "A", "lire");
   if (auth instanceof Response) return auth;
-  const inclureArchives = new URL(request.url).searchParams.get("archives") === "1";
-  const contrats = await withTenant(s.app, auth.ctx, (tx) =>
-    listContrats(tx, auth.ctx.organisationId, inclureArchives),
-  );
-  return json(200, { contrats });
+  const p = parseListParams(request.url);
+  const opts = {
+    inclureArchives: new URL(request.url).searchParams.get("archives") === "1",
+    q: p.q,
+    skip: p.skip,
+    take: p.take,
+  };
+  const [contrats, total] = await withTenant(s.app, auth.ctx, async (tx) => [
+    await listContrats(tx, auth.ctx.organisationId, opts),
+    await countContrats(tx, auth.ctx.organisationId, opts),
+  ]);
+  return json(200, { contrats }, { headers: pageHeaders(total, p) });
 }
 
 export async function handleContrat(request: Request, s: Services, id: string): Promise<Response> {

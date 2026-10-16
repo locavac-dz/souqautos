@@ -67,21 +67,52 @@ export async function createReclamation(
   });
 }
 
+export interface ReclamationListeOpts {
+  statut?: string;
+  inclureArchives?: boolean;
+  q?: string;
+  skip?: number;
+  take?: number;
+}
+
+function whereReclamations(organisationId: string, acteur: Acteur, opts: ReclamationListeOpts) {
+  return {
+    organisationId,
+    ...reclamationOwnership(acteur),
+    ...(opts.statut ? { statut: opts.statut as never } : {}),
+    ...(opts.inclureArchives ? {} : { archiveLe: null }),
+    ...(opts.q
+      ? {
+          OR: [
+            { reference: { contains: opts.q, mode: "insensitive" as const } },
+            { description: { contains: opts.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+
 export function listReclamations(
   tx: Tx,
   organisationId: string,
   acteur: Acteur,
-  opts: { statut?: string; inclureArchives?: boolean } = {},
+  opts: ReclamationListeOpts = {},
 ) {
   return tx.reclamation.findMany({
-    where: {
-      organisationId,
-      ...reclamationOwnership(acteur),
-      ...(opts.statut ? { statut: opts.statut as never } : {}),
-      ...(opts.inclureArchives ? {} : { archiveLe: null }),
-    },
+    where: whereReclamations(organisationId, acteur, opts),
     orderBy: { createdAt: "desc" },
+    skip: opts.skip,
+    take: opts.take,
   });
+}
+
+export function countReclamations(
+  tx: Tx,
+  organisationId: string,
+  acteur: Acteur,
+  opts: ReclamationListeOpts = {},
+) {
+  return tx.reclamation.count({ where: whereReclamations(organisationId, acteur, opts) });
 }
 
 export function getReclamation(tx: Tx, organisationId: string, acteur: Acteur, id: string) {

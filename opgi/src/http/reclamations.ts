@@ -13,6 +13,7 @@ import {
 import {
   createReclamation,
   listReclamations,
+  countReclamations,
   getReclamation,
   qualifierReclamation,
   marquerDoublon,
@@ -21,6 +22,7 @@ import {
   type Acteur,
 } from "@/lib/modules/c/service";
 import { notifier } from "@/lib/modules/notifications";
+import { parseListParams, pageHeaders } from "@/http/pagination";
 
 function acteurDe(auth: AuthorizedContext): Acteur {
   return { utilisateurId: auth.session.utilisateurId, role: auth.session.role };
@@ -46,10 +48,14 @@ export async function handleReclamations(request: Request, s: Services): Promise
   const auth = await authorize(request, s, "C", "lire");
   if (auth instanceof Response) return auth;
   const statut = new URL(request.url).searchParams.get("statut") ?? undefined;
-  const reclamations = await withTenant(s.app, auth.ctx, (tx) =>
-    listReclamations(tx, auth.ctx.organisationId, acteurDe(auth), { statut }),
-  );
-  return json(200, { reclamations });
+  const p = parseListParams(request.url);
+  const opts = { statut, q: p.q, skip: p.skip, take: p.take };
+  const acteur = acteurDe(auth);
+  const [reclamations, total] = await withTenant(s.app, auth.ctx, async (tx) => [
+    await listReclamations(tx, auth.ctx.organisationId, acteur, opts),
+    await countReclamations(tx, auth.ctx.organisationId, acteur, opts),
+  ]);
+  return json(200, { reclamations }, { headers: pageHeaders(total, p) });
 }
 
 export async function handleReclamation(request: Request, s: Services, id: string): Promise<Response> {
