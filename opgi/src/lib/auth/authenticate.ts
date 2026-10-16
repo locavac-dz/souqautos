@@ -11,12 +11,15 @@ import { z } from "zod";
 import type { PrismaClient } from "@prisma/client";
 import type { IsolationConfig, VerifiedSession } from "@/lib/tenant/context";
 import { verifyPassword } from "@/lib/auth/password";
+import { verifierCode } from "@/lib/auth/totp";
 
 export const credentialsSchema = z.object({
   // Code de l'OPGI — requis en mode partagé, ignoré en mode dédié.
   code: z.string().trim().min(1).optional(),
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
+  // Code 2FA (TOTP) — requis seulement si la 2FA est active sur le compte.
+  code2fa: z.string().trim().optional(),
 });
 
 export type Credentials = z.infer<typeof credentialsSchema>;
@@ -35,10 +38,19 @@ export interface AuthDeps {
   lockout?: LockoutPolicy;
 }
 
+/** Résultat d'authentification. `2fa_requis` : mot de passe correct mais la 2FA
+ * exige un code à usage unique (absent ou invalide). */
+export type AuthResult =
+  | { statut: "ok"; session: VerifiedSession }
+  | { statut: "echec" }
+  | { statut: "2fa_requis" };
+
 /**
- * Renvoie la charge de session si les identifiants sont valides, sinon `null`.
+ * Renvoie la charge de session si les identifiants sont valides, sinon un échec.
  * Ne divulgue jamais si c'est l'organisme, l'email, le mot de passe ou un
- * verrouillage qui est en cause (message générique côté handler).
+ * verrouillage qui est en cause (message générique côté handler) — à la seule
+ * exception de `2fa_requis`, qui signale au client d'afficher le champ du code
+ * (le mot de passe était correct) ; compromis UX assumé et documenté.
  *
  * Verrouillage : après `maxAttempts` échecs consécutifs, le compte est bloqué
  * pour `lockMs`. Une connexion réussie remet le compteur à zéro. Pendant le
@@ -47,16 +59,16 @@ export interface AuthDeps {
 export async function authenticate(
   creds: Credentials,
   { adminPrisma, config, lockout = DEFAULT_LOCKOUT }: AuthDeps,
-): Promise<VerifiedSession | null> {
+): Promise<AuthResult> {
   let organisationId: string;
 
   if (config.mode === "dedicated") {
-    if (!config.organisationId) return null;
+    if (!config.organisationId) return { statut: "echec" };
     organisationId = config.organisationId;
   } else {
-    if (!creds.code) return null;
+    if (!creds.code) return { statut: "echec" };
     const org = await adminPrisma.organisation.findUnique({ where: { code: creds.code } });
-    if (!org || !org.actif) return null;
+    if (!org || !org.actif) return { statut: "echec" };
     organisationId = org.id;
   }
 
@@ -66,11 +78,11 @@ export async function authenticate(
 
   // Toujours exécuter la vérification (même sans compte) pour limiter l'oracle temporel.
   const ok = await verifyPassword(creds.password, user?.passwordHash);
-  if (!user || !user.actif) return null;
+  if (!user || !user.actif) return { statut: "echec" };
 
   const now = new Date();
   // Compte verrouillé : refus sans incrémenter davantage ni révéler la cause.
-  if (user.verrouilleJusqua && user.verrouilleJusqua > now) return null;
+  if (user.verrouilleJusqua && user.verrouilleJusqua > now) return { statut: "echec" };
 
   if (!ok) {
     const echecs = user.echecsConnexion + 1;
@@ -81,10 +93,10 @@ export async function authenticate(
           ? { echecsConnexion: echecs, verrouilleJusqua: new Date(now.getTime() + lockout.lockMs) }
           : { echecsConnexion: echecs },
     });
-    return null;
+    return { statut: "echec" };
   }
 
-  // Succès : remet le compteur à zéro (et lève un éventuel verrou expiré).
+  // Mot de passe correct : remet le compteur à zéro (et lève un verrou expiré).
   if (user.echecsConnexion !== 0 || user.verrouilleJusqua) {
     await adminPrisma.utilisateur.update({
       where: { id: user.id },
@@ -92,10 +104,19 @@ export async function authenticate(
     });
   }
 
+  // Second facteur : si la 2FA est active, exiger un code TOTP valide.
+  if (user.totpActiveLe && user.totpSecret) {
+    if (!creds.code2fa) return { statut: "2fa_requis" };
+    if (!verifierCode(user.totpSecret, creds.code2fa, now.getTime())) return { statut: "echec" };
+  }
+
   return {
-    utilisateurId: user.id,
-    organisationId,
-    role: user.role,
-    perimetre: user.perimetre,
+    statut: "ok",
+    session: {
+      utilisateurId: user.id,
+      organisationId,
+      role: user.role,
+      perimetre: user.perimetre,
+    },
   };
 }

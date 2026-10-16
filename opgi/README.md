@@ -196,7 +196,22 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   d'erreur générique sur le mot de passe actuel. Garde « session seule » (aucune permission de
   module requise pour son propre compte).
 
-### Tests — **149 verts** (`npm test`)
+### Incrément 15 — Double authentification (2FA / TOTP)
+
+- **Second facteur optionnel par compte** (RFC 6238, TOTP 30 s / 6 chiffres), implémenté **sans
+  dépendance** (HMAC‑SHA1 via `node:crypto`, base32, fenêtre ±1 pas, comparaison à temps constant) —
+  `src/lib/auth/totp.ts`, validé contre les **vecteurs RFC 6238**.
+- **Enrôlement en deux temps** : `POST /api/compte/2fa/debut` génère un secret **provisoire** +
+  l'URI `otpauth://` ; `POST /api/compte/2fa/activer` n'active qu'après **preuve d'un code**.
+  Désactivation `POST /api/compte/2fa/desactiver` sous **vérification du mot de passe**. Statut
+  `GET /api/compte/2fa`. Activation/désactivation **tracées au journal d'audit**.
+- **Appliqué au login** : si la 2FA est active, `authenticate` exige un code TOTP valide après le
+  mot de passe. Le handler renvoie `twoFactorRequired` (mot de passe correct) pour que l'UI affiche
+  le champ du code ; sinon message générique. Secret et activation cloisonnés par `opgi_app` + RLS,
+  bornés à (id, organisationId) de l'utilisateur. UI : section 2FA sur `/compte`, champ code sur
+  `/connexion`.
+
+### Tests — **162 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -242,7 +257,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 149 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 162 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -283,7 +298,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 149 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 162 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via

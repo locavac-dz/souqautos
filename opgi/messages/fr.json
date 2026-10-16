@@ -12,7 +12,11 @@
     "valider": "Se connecter",
     "enCours": "Connexion…",
     "echec": "Identifiants invalides.",
-    "erreurReseau": "Erreur réseau, réessayez."
+    "erreurReseau": "Erreur réseau, réessayez.",
+    "code2fa": "Code d'authentification (2FA)",
+    "code2faAide": "6 chiffres de votre application",
+    "code2faRequis": "Saisissez le code à usage unique de votre application d'authentification.",
+    "code2faInvalide": "Code d'authentification incorrect."
   },
   "tableauDeBord": {
     "titre": "Tableau de bord",
@@ -93,7 +97,20 @@
     "confirmation": "Confirmer le nouveau mot de passe",
     "changer": "Changer le mot de passe",
     "succes": "Mot de passe mis à jour.",
-    "nonConcordants": "La confirmation ne correspond pas au nouveau mot de passe."
+    "nonConcordants": "La confirmation ne correspond pas au nouveau mot de passe.",
+    "deuxFacteursTitre": "Double authentification (2FA)",
+    "deuxFacteursActif": "La double authentification est activée sur votre compte.",
+    "deuxFacteursInactif": "La double authentification n'est pas activée.",
+    "deuxFacteursActiver": "Activer la 2FA",
+    "deuxFacteursDesactiver": "Désactiver la 2FA",
+    "deuxFacteursSecret": "Clé secrète (à saisir manuellement si besoin)",
+    "deuxFacteursUri": "Lien otpauth (à importer dans votre application)",
+    "deuxFacteursInstructions": "Ajoutez cette clé dans votre application d'authentification, puis saisissez le code généré pour confirmer l'activation.",
+    "deuxFacteursCode": "Code généré (6 chiffres)",
+    "deuxFacteursConfirmer": "Confirmer l'activation",
+    "deuxFacteursMotDePasse": "Mot de passe actuel (pour désactiver)",
+    "deuxFacteursActivee": "Double authentification activée.",
+    "deuxFacteursDesactivee": "Double authentification désactivée."
   },
   "notifications": {
     "titre": "Mes notifications",

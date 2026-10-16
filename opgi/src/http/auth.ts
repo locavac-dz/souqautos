@@ -23,16 +23,21 @@ export async function handleLogin(request: Request, s: Services): Promise<Respon
     return json(400, { error: "Identifiants au mauvais format." });
   }
 
-  const session = await authenticate(parsed.data, {
+  const resultat = await authenticate(parsed.data, {
     adminPrisma: s.admin,
     config: s.config,
     lockout: s.lockout,
   });
-  if (!session) {
+  if (resultat.statut === "2fa_requis") {
+    // Le mot de passe était correct : on invite le client à fournir le code 2FA.
+    return json(401, { error: "Code d'authentification requis.", twoFactorRequired: true });
+  }
+  if (resultat.statut !== "ok") {
     // Message volontairement générique (pas d'oracle sur l'existence du compte).
     return json(401, { error: "Identifiants invalides." });
   }
 
+  const session = resultat.session;
   const token = await signSession(session, s.secret);
   const res = json(200, { organisationId: session.organisationId, role: session.role });
   res.headers.append("Set-Cookie", buildSessionCookie(token, { secure: s.secure }));

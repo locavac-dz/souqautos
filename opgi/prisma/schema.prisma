@@ -223,6 +223,11 @@ model Utilisateur {
   // déverrouillage. Seuil et durée configurables (voir src/lib/services.ts).
   echecsConnexion Int       @default(0)
   verrouilleJusqua DateTime?
+  // 2FA TOTP (RFC 6238) optionnelle par compte. `totpSecret` (base32) est posé à
+  // l'initiation ; `totpActiveLe` passe non‑null à l'activation (après preuve d'un
+  // code). 2FA active ⇔ totpActiveLe non‑null.
+  totpSecret     String?
+  totpActiveLe   DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

@@ -78,6 +78,8 @@ export default async function setup() {
             { email: "lockme@opgi-alger.demo", role: "AUDITEUR", passwordHash: pwd },
             // Compte dédié au test de changement de mot de passe (muté par ce test).
             { email: "mdp@opgi-alger.demo", role: "AUDITEUR", passwordHash: pwd },
+            // Compte dédié au test 2FA/TOTP (muté par ce test).
+            { email: "totp@opgi-alger.demo", role: "AUDITEUR", passwordHash: pwd },
           ],
         },
       },
