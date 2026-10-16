@@ -147,6 +147,16 @@ uniquement les biens de l'organisme de la session, origine étrangère → 403, 
 **Comptes de démonstration** (seed, données fictives) : `OPGI-ALGER` / `OPGI-ORAN`,
 e‑mails `*.demo`, mot de passe `Demo-1234!`.
 
+## Intégration continue
+
+Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque push/PR touchant
+`opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
+le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
+(inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 85 tests, dont
+l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
+secrets.
+
 ## Deux modes d'exploitation (décision D2 — sélection par configuration)
 
 | `ISOLATION_MODE` | Usage | Isolation |
@@ -208,7 +218,7 @@ place. Ne sont **pas** encore livrés :
 - **Audit — compléments** : instrumentation des créations de compte/permissions et des exports
   (à venir avec ces fonctions), pagination/filtres du journal, politique de conservation (après C5).
 - **Gestion des fichiers à accès médié**, notifications, pagination, recherche, tableaux de bord
-  transverses, **import initial**, **CI avec PostgreSQL** rejouant les tests.
+  transverses, **import initial**.
 - **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
 - **Verrouillage de connexion** (anti‑bruteforce), rotation/révocation de session, 2FA.
 - **Rôle `opgi_app` portable en CI** (aujourd'hui prérequis documenté) et workflow CI dédié.
