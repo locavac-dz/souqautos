@@ -48,6 +48,7 @@
   },
   "nav": {
     "tableauDeBord": "لوحة القيادة",
+    "sites": "المواقع",
     "patrimoine": "الأملاك",
     "occupants": "الشاغلون",
     "contrats": "العقود",
@@ -200,6 +201,16 @@
     "raison_doublon_fichier": "تكرار داخل الملف",
     "raison_doublon_base": "تكرار موجود في قاعدة البيانات",
     "aucunRejet": "لا يوجد سطر مرفوض."
+  },
+  "sites": {
+    "titre": "المواقع",
+    "nouveauTitre": "موقع جديد",
+    "code": "رمز الموقع",
+    "nom": "الاسم",
+    "adresse": "العنوان",
+    "aucun": "لا يوجد موقع.",
+    "aucunSite": "— (بدون موقع)",
+    "site": "الموقع"
   },
   "patrimoine": {
     "titre": "الأملاك",

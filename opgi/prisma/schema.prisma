@@ -183,6 +183,7 @@ model Organisation {
   updatedAt DateTime     @updatedAt
 
   utilisateurs Utilisateur[]
+  sites        Site[]
   biens        Bien[]
   occupants    Occupant[]
   contrats     Contrat[]
@@ -252,6 +253,9 @@ model Bien {
   type           TypeBien
   etatOccupation EtatOccupation @default(VACANT)
   adresse        String?
+  // Rattachement hiérarchique optionnel à un site (même organisme). Premier
+  // niveau de la hiérarchie patrimoniale (site → … à étendre).
+  siteId         String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -259,12 +263,33 @@ model Bien {
   archiveLe DateTime?
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  site         Site?         @relation(fields: [siteId], references: [id], onDelete: SetNull)
   contrats     Contrat[]
   reclamations Reclamation[]
 
   @@unique([organisationId, code])
   @@index([organisationId])
+  @@index([siteId])
   @@map("bien")
+}
+
+model Site {
+  id             String    @id @default(cuid())
+  organisationId String
+  // Code métier du site, unique PAR organisme (ex. « CITE-ANNASSERS »).
+  code           String
+  nom            String
+  adresse        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  archiveLe      DateTime?
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  biens        Bien[]
+
+  @@unique([organisationId, code])
+  @@index([organisationId])
+  @@map("site")
 }
 
 // --- Occupant (personne physique ou morale — Module A) ----------------------

@@ -120,6 +120,7 @@
   },
   "nav": {
     "tableauDeBord": "Tableau de bord",
+    "sites": "Sites",
     "patrimoine": "Patrimoine",
     "occupants": "Occupants",
     "contrats": "Contrats",
@@ -200,6 +201,16 @@
     "raison_doublon_fichier": "Doublon dans le fichier",
     "raison_doublon_base": "Doublon déjà en base",
     "aucunRejet": "Aucune ligne rejetée."
+  },
+  "sites": {
+    "titre": "Sites",
+    "nouveauTitre": "Nouveau site",
+    "code": "Code du site",
+    "nom": "Nom",
+    "adresse": "Adresse",
+    "aucun": "Aucun site.",
+    "aucunSite": "— (aucun site)",
+    "site": "Site"
   },
   "patrimoine": {
     "titre": "Patrimoine",

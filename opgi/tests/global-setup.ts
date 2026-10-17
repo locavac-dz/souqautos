@@ -51,6 +51,7 @@ export default async function setup() {
     await owner.entreprise.deleteMany();
     await owner.contrat.deleteMany();
     await owner.bien.deleteMany();
+    await owner.site.deleteMany();
     await owner.occupant.deleteMany();
     await owner.utilisateur.deleteMany();
     await owner.organisation.deleteMany();

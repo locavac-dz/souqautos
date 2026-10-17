@@ -12,10 +12,21 @@ export const bienCreateSchema = z.object({
   type: z.enum(TYPE_BIEN),
   etatOccupation: z.enum(ETAT).optional(),
   adresse: z.string().trim().max(500).nullish(),
+  siteId: z.string().trim().min(1).nullish(),
 });
 export const bienUpdateSchema = bienCreateSchema.partial();
 export type BienCreate = z.infer<typeof bienCreateSchema>;
 export type BienUpdate = z.infer<typeof bienUpdateSchema>;
+
+// --- Site (hiérarchie du patrimoine) ---------------------------------------
+export const siteCreateSchema = z.object({
+  code: z.string().trim().min(1).max(64),
+  nom: z.string().trim().min(1).max(200),
+  adresse: z.string().trim().max(500).nullish(),
+});
+export const siteUpdateSchema = siteCreateSchema.partial();
+export type SiteCreate = z.infer<typeof siteCreateSchema>;
+export type SiteUpdate = z.infer<typeof siteUpdateSchema>;
 
 // --- Occupant ---------------------------------------------------------------
 export const occupantCreateSchema = z.object({

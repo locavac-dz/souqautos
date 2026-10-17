@@ -11,6 +11,8 @@ import type {
   OccupantUpdate,
   ContratCreate,
   ContratUpdate,
+  SiteCreate,
+  SiteUpdate,
 } from "@/lib/modules/a/schemas";
 
 export type Tx = Prisma.TransactionClient;
@@ -72,7 +74,14 @@ export function getBien(tx: Tx, organisationId: string, id: string) {
   return tx.bien.findFirst({ where: { id, organisationId } });
 }
 
-export function createBien(tx: Tx, organisationId: string, input: BienCreate) {
+/** Vérifie qu'un site appartient bien à l'organisme (sinon référence invalide). */
+async function assertSiteDuTenant(tx: Tx, organisationId: string, siteId: string) {
+  const site = await tx.site.findFirst({ where: { id: siteId, organisationId, archiveLe: null } });
+  if (!site) throw new ReferenceInvalideError("Site introuvable dans cet organisme.");
+}
+
+export async function createBien(tx: Tx, organisationId: string, input: BienCreate) {
+  if (input.siteId) await assertSiteDuTenant(tx, organisationId, input.siteId);
   return tx.bien.create({
     data: {
       organisationId,
@@ -80,16 +89,66 @@ export function createBien(tx: Tx, organisationId: string, input: BienCreate) {
       type: input.type,
       etatOccupation: input.etatOccupation ?? "VACANT",
       adresse: input.adresse ?? null,
+      siteId: input.siteId ?? null,
     },
   });
 }
 
 export async function updateBien(tx: Tx, organisationId: string, id: string, input: BienUpdate) {
+  if (input.siteId) await assertSiteDuTenant(tx, organisationId, input.siteId);
   // updateMany applique le filtre organisationId (une mise à jour ciblée par id
   // seul pourrait, sans RLS, toucher une autre ligne). Renvoie null si absent.
   const res = await tx.bien.updateMany({ where: { id, organisationId }, data: input });
   if (res.count === 0) return null;
   return getBien(tx, organisationId, id);
+}
+
+// --- Site (hiérarchie du patrimoine) ---------------------------------------
+
+function whereSites(organisationId: string, o: ListeOpts) {
+  return {
+    organisationId,
+    ...(o.inclureArchives ? {} : { archiveLe: null }),
+    ...(o.q
+      ? {
+          OR: [
+            { code: { contains: o.q, mode: "insensitive" as const } },
+            { nom: { contains: o.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+export function listSites(tx: Tx, organisationId: string, o: ListeOpts = {}) {
+  return tx.site.findMany({
+    where: whereSites(organisationId, o),
+    orderBy: { code: "asc" },
+    skip: o.skip,
+    take: o.take,
+  });
+}
+export function countSites(tx: Tx, organisationId: string, o: ListeOpts = {}) {
+  return tx.site.count({ where: whereSites(organisationId, o) });
+}
+export function getSite(tx: Tx, organisationId: string, id: string) {
+  return tx.site.findFirst({ where: { id, organisationId } });
+}
+export function createSite(tx: Tx, organisationId: string, input: SiteCreate) {
+  return tx.site.create({
+    data: { organisationId, code: input.code, nom: input.nom, adresse: input.adresse ?? null },
+  });
+}
+export async function updateSite(tx: Tx, organisationId: string, id: string, input: SiteUpdate) {
+  const res = await tx.site.updateMany({ where: { id, organisationId }, data: input });
+  if (res.count === 0) return null;
+  return getSite(tx, organisationId, id);
+}
+export async function archiveSite(tx: Tx, organisationId: string, id: string) {
+  const res = await tx.site.updateMany({
+    where: { id, organisationId, archiveLe: null },
+    data: { archiveLe: new Date() },
+  });
+  return res.count > 0;
 }
 
 export async function archiveBien(tx: Tx, organisationId: string, id: string) {

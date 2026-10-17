@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -9,13 +9,24 @@ const ETATS = ["VACANT", "OCCUPE", "INDISPONIBLE"] as const;
 
 export default function NouveauBien() {
   const t = useTranslations("patrimoine");
+  const ts = useTranslations("sites");
   const tc = useTranslations("commun");
   const [code, setCode] = useState("");
   const [type, setType] = useState<string>("LOGEMENT");
   const [etat, setEtat] = useState<string>("VACANT");
   const [adresse, setAdresse] = useState("");
+  const [siteId, setSiteId] = useState<string>("");
+  const [sites, setSites] = useState<{ id: string; code: string; nom: string }[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Charge les sites de l'organisme courant pour le rattachement (facultatif).
+  useEffect(() => {
+    fetch("/api/sites")
+      .then((r) => (r.ok ? r.json() : { sites: [] }))
+      .then((b: { sites?: { id: string; code: string; nom: string }[] }) => setSites(b.sites ?? []))
+      .catch(() => setSites([]));
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -25,7 +36,7 @@ export default function NouveauBien() {
       const res = await fetch("/api/biens", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ code, type, etatOccupation: etat, adresse: adresse || null }),
+        body: JSON.stringify({ code, type, etatOccupation: etat, adresse: adresse || null, siteId: siteId || null }),
       });
       if (res.ok) {
         window.location.assign("/patrimoine");
@@ -64,6 +75,16 @@ export default function NouveauBien() {
           {ETATS.map((v) => (
             <option key={v} value={v}>
               {v}
+            </option>
+          ))}
+        </select>
+
+        <label htmlFor="site">{ts("site")}</label>
+        <select id="site" value={siteId} onChange={(e) => setSiteId(e.target.value)}>
+          <option value="">{ts("aucunSite")}</option>
+          {sites.map((x) => (
+            <option key={x.id} value={x.id}>
+              {x.code} — {x.nom}
             </option>
           ))}
         </select>
