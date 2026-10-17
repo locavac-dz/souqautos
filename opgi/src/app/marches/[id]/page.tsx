@@ -58,6 +58,9 @@ export default async function MarcheDetailPage({ params }: { params: Promise<{ i
       <p className="meta">
         {detail.marche.objet} — {t("statut")} : <strong>{detail.marche.statut}</strong>
       </p>
+      <p>
+        <a href={`/api/marches/${id}/pdf`}>{t("telechargerPdf")}</a>
+      </p>
 
       <section className="card" aria-label={t("avancement")}>
         <h2>{t("avancement")}</h2>

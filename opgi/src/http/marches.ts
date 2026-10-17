@@ -26,6 +26,7 @@ import {
   createReception,
 } from "@/lib/modules/b/service";
 import { parseListParams, pageHeaders } from "@/http/pagination";
+import { documentPdf } from "@/lib/pdf/simple";
 
 // --- Marchés ----------------------------------------------------------------
 export async function handleMarches(request: Request, s: Services): Promise<Response> {
@@ -63,6 +64,48 @@ export async function handleMarches(request: Request, s: Services): Promise<Resp
     await countMarches(tx, auth.ctx.organisationId, opts),
   ]);
   return json(200, { marches }, { headers: pageHeaders(total, p) });
+}
+
+// GET /api/marches/:id/pdf — fiche marché avec indicateurs (indicatifs).
+export async function handleMarchePdf(request: Request, s: Services, id: string): Promise<Response> {
+  if (request.method !== "GET") return json(405, { error: "Méthode non autorisée." });
+  const auth = await authorize(request, s, "B", "lire");
+  if (auth instanceof Response) return auth;
+  const d = await withTenant(s.app, auth.ctx, (tx) => getMarcheDetail(tx, auth.ctx.organisationId, id));
+  if (!d) return json(404, { error: "Introuvable." });
+
+  const dzd = (c: number) => `${(c / 100).toLocaleString("fr-DZ", { minimumFractionDigits: 2 })} DA`;
+  const jour = (dt: Date | null) => (dt ? dt.toISOString().slice(0, 10) : "—");
+  const oui = (b: boolean) => (b ? "oui" : "non");
+  const pdf = documentPdf({
+    titre: `Fiche marché ${d.marche.reference}`,
+    sousTitre: `Édité le ${new Date().toISOString().slice(0, 10)} — indicateurs indicatifs (non réglementaires)`,
+    lignes: [
+      { label: "Référence", valeur: d.marche.reference },
+      { label: "Objet", valeur: d.marche.objet },
+      { label: "Statut", valeur: d.marche.statut },
+      { label: "Date de notification", valeur: jour(d.marche.dateNotification) },
+      { label: "Délai (jours)", valeur: d.marche.delaiJours != null ? String(d.marche.delaiJours) : "—" },
+      { label: "Montant engagé", valeur: dzd(d.montantEngageCentimes) },
+      { label: "Constaté (situations validées)", valeur: dzd(d.montantConstateValideCentimes) },
+      { label: "Avancement financier", valeur: `${d.avancementFinancierPct} %` },
+      {
+        label: "Avancement physique",
+        valeur: d.avancementPhysiquePct != null ? `${d.avancementPhysiquePct} %` : "—",
+      },
+      { label: "Dépassement constaté", valeur: oui(d.depassement) },
+      { label: "Retard (délai dépassé)", valeur: oui(d.retard) },
+    ],
+    pied: "Plateforme OPGI — fiche de données, indicateurs indicatifs.",
+  });
+
+  return new Response(new Uint8Array(pdf), {
+    status: 200,
+    headers: {
+      "content-type": "application/pdf",
+      "content-disposition": `attachment; filename="marche-${d.marche.reference}.pdf"`,
+    },
+  });
 }
 
 export async function handleMarche(request: Request, s: Services, id: string): Promise<Response> {
