@@ -4,7 +4,7 @@ import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { getContrat } from "@/lib/modules/a/service";
-import { listAppels, listPaiements, listActionsRecouvrement } from "@/lib/modules/a/finances";
+import { listAppels, listPaiements, listActionsRecouvrement, etatDeCompte } from "@/lib/modules/a/finances";
 import { can, type RoleName } from "@/lib/authz/permissions";
 import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
@@ -40,16 +40,17 @@ export default async function ContratDetail({ params }: { params: Promise<{ id: 
   const data = await withTenant(s.app, ctx, async (tx) => {
     const contrat = await getContrat(tx, ctx.organisationId, id);
     if (!contrat) return null;
-    const [appels, paiements, actions] = [
+    const [appels, paiements, actions, etat] = [
       await listAppels(tx, ctx.organisationId, { contratId: id }),
       await listPaiements(tx, ctx.organisationId, { contratId: id }),
       await listActionsRecouvrement(tx, ctx.organisationId, id),
+      await etatDeCompte(tx, ctx.organisationId, id),
     ];
-    return { contrat, appels, paiements, actions };
+    return { contrat, appels, paiements, actions, etat };
   });
 
   if (!data) notFound();
-  const { contrat, appels, paiements, actions } = data;
+  const { contrat, appels, paiements, actions, etat } = data;
   const peutCreer = can(role, "A", "creer");
 
   return (
@@ -66,7 +67,43 @@ export default async function ContratDetail({ params }: { params: Promise<{ id: 
         {jour(contrat.dateDebut)}
       </p>
 
-      <section className="card" aria-label={tf("appels")}>
+      {etat && (
+        <section className="card" aria-label={tf("etatCompte")}>
+          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+            <h2>{tf("etatCompte")}</h2>
+            <a href={`/api/contrats/${contrat.id}/etat-compte/pdf`}>{tf("telechargerEtatCompte")}</a>
+          </header>
+          <table>
+            <tbody>
+              <tr>
+                <th scope="row">{tf("totalAppele")}</th>
+                <td>{dzd(etat.totalAppeleCentimes)}</td>
+              </tr>
+              <tr>
+                <th scope="row">{tf("totalImpute")}</th>
+                <td>{dzd(etat.totalImputeCentimes)}</td>
+              </tr>
+              <tr>
+                <th scope="row">{tf("soldeDu")}</th>
+                <td>
+                  <strong>{dzd(etat.soldeDuCentimes)}</strong>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">{tf("totalPaiements")}</th>
+                <td>{dzd(etat.totalPaiementsCentimes)}</td>
+              </tr>
+              <tr>
+                <th scope="row">{tf("avance")}</th>
+                <td>{dzd(etat.avanceCentimes)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="meta">{tf("etatCompteAide")}</p>
+        </section>
+      )}
+
+      <section className="card" aria-label={tf("appels")} style={{ marginTop: 16 }}>
         <h2>{tf("appels")}</h2>
         {appels.length === 0 ? (
           <p>{tf("aucunAppel")}</p>

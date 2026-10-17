@@ -343,7 +343,17 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   **tracé au journal d'audit** (résumé des compteurs), page `/appels` + formulaire client, lien de
   navigation. Renvoie un **récapitulatif** (créés / déjà existants / sans loyer / contrats actifs).
 
-### Tests — **220 verts** (`npm test`)
+### Incrément 30 — État de compte d'un contrat (synthèse + PDF)
+
+- Nouvelle synthèse financière consolidée par contrat : **total appelé, total imputé, solde dû,
+  total des paiements et avance non imputée**. Lecture seule, **calculée par agrégation** (jamais
+  stockée) ; aucun calcul de pénalité ni d'intérêt.
+- `etatDeCompte` (service) réutilise `listAppels`/`listPaiements` ; endpoints `GET
+  /api/contrats/:id/etat-compte` (JSON) et `…/etat-compte/pdf` (**PDF** sans dépendance, via
+  `documentPdf`). Bloc de synthèse ajouté à la page détail du contrat avec lien de téléchargement.
+- Isolation : un contrat d'un autre organisme est introuvable (404), y compris pour le PDF.
+
+### Tests — **223 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -382,6 +392,8 @@ la création (403).
 **Génération d'appels** : un appel par contrat ACTIF au loyer du contrat, contrats sans loyer et
 BROUILLON ignorés, idempotence (seconde génération → 0 créé, aucun doublon), isolation inter‑OPGI
 (la génération d'Oran n'affecte pas Alger), AUDITEUR refusé (403).
+**État de compte** : totaux consolidés (appelé/imputé/solde/paiements/avance) d'un contrat, export
+PDF (en‑tête `%PDF-`, type `application/pdf`), contrat d'un autre organisme introuvable (404).
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -396,7 +408,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 220 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 223 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -437,7 +449,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 220 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 223 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via
@@ -465,7 +477,7 @@ Ne sont **pas** encore livrés :
 - **Module A — compléments** : hiérarchie du patrimoine **au-delà du bâtiment** (cages → niveaux ;
   les niveaux **Site** et **Bâtiment** sont livrés), génération d'un **échéancier complet
   multi-périodes** (la génération d'appels **pour une période** est livrée), **écrans d'édition
-  dédiés** (le `PATCH` existe en API), états de compte/reçus.
+  dédiés** (le `PATCH` existe en API), reçus de paiement (**l'état de compte PDF est livré**).
 - **Module B — compléments** : planning (jalons/tâches), ordres de service et avenants, lots,
   écrans d'édition dédiés (le `PATCH` existe en API), import des marchés/projets.
 - **Module C — compléments** : planification/visites détaillées, indicateurs par zone/délai. (Le

@@ -14,9 +14,11 @@ import {
   actionRecouvrementCreateSchema,
 } from "@/lib/modules/a/schemas";
 import { recordAudit } from "@/lib/audit";
+import { documentPdf } from "@/lib/pdf/simple";
 import {
   createAppel,
   genererAppels,
+  etatDeCompte,
   listAppels,
   archiveAppel,
   createPaiement,
@@ -98,6 +100,62 @@ export async function handleAppel(request: Request, s: Services, id: string): Pr
     return ok ? json(200, { archive: true }) : json(404, { error: "Introuvable." });
   }
   return json(405, { error: "Méthode non autorisée." });
+}
+
+// --- État de compte d'un contrat -------------------------------------------
+export async function handleEtatCompte(request: Request, s: Services, contratId: string): Promise<Response> {
+  if (request.method !== "GET") return json(405, { error: "Méthode non autorisée." });
+  const auth = await authorize(request, s, "A", "lire");
+  if (auth instanceof Response) return auth;
+  const etat = await withTenant(s.app, auth.ctx, (tx) =>
+    etatDeCompte(tx, auth.ctx.organisationId, contratId),
+  );
+  return etat ? json(200, { etat }) : json(404, { error: "Introuvable." });
+}
+
+function dzd(centimes: number): string {
+  return (centimes / 100).toLocaleString("fr-DZ", { minimumFractionDigits: 2 });
+}
+
+export async function handleEtatComptePdf(request: Request, s: Services, contratId: string): Promise<Response> {
+  if (request.method !== "GET") return json(405, { error: "Méthode non autorisée." });
+  const auth = await authorize(request, s, "A", "lire");
+  if (auth instanceof Response) return auth;
+  const etat = await withTenant(s.app, auth.ctx, (tx) =>
+    etatDeCompte(tx, auth.ctx.organisationId, contratId),
+  );
+  if (!etat) return json(404, { error: "Introuvable." });
+
+  const pdf = documentPdf({
+    titre: `État de compte — contrat ${etat.contrat.reference}`,
+    sousTitre: `Édité le ${new Date().toISOString().slice(0, 10)} — document de données (à valider)`,
+    lignes: [
+      { label: "Contrat", valeur: etat.contrat.reference },
+      { label: "Statut", valeur: etat.contrat.statut },
+      { label: "Bien", valeur: etat.contrat.bienCode },
+      { label: "Occupant", valeur: etat.contrat.occupantNom },
+      {
+        label: "Loyer (DZD)",
+        valeur: etat.contrat.montantLoyerCentimes == null ? "—" : dzd(etat.contrat.montantLoyerCentimes),
+      },
+      { label: "Nombre d'appels", valeur: String(etat.nbAppels) },
+      { label: "Nombre de paiements", valeur: String(etat.nbPaiements) },
+      { label: "Total appelé (DZD)", valeur: dzd(etat.totalAppeleCentimes) },
+      { label: "Total imputé (DZD)", valeur: dzd(etat.totalImputeCentimes) },
+      { label: "Solde dû (DZD)", valeur: dzd(etat.soldeDuCentimes) },
+      { label: "Total paiements (DZD)", valeur: dzd(etat.totalPaiementsCentimes) },
+      { label: "Avance non imputée (DZD)", valeur: dzd(etat.avanceCentimes) },
+    ],
+    pied: "Plateforme OPGI — état de compte non contractuel ; aucun calcul de pénalité ni d'intérêt.",
+  });
+
+  return new Response(new Uint8Array(pdf), {
+    status: 200,
+    headers: {
+      "content-type": "application/pdf",
+      "content-disposition": `attachment; filename="etat-compte-${etat.contrat.reference}.pdf"`,
+    },
+  });
 }
 
 // --- Paiements --------------------------------------------------------------

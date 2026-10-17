@@ -171,6 +171,80 @@ export async function listAppels(
   });
 }
 
+// --- État de compte d'un contrat -------------------------------------------
+
+export interface EtatDeCompte {
+  contrat: {
+    id: string;
+    reference: string;
+    statut: string;
+    bienCode: string;
+    occupantNom: string;
+    montantLoyerCentimes: number | null;
+  };
+  nbAppels: number;
+  nbPaiements: number;
+  /** Somme des montants appelés. */
+  totalAppeleCentimes: number;
+  /** Somme des montants imputés sur les appels. */
+  totalImputeCentimes: number;
+  /** Solde restant dû (somme des soldes des appels). */
+  soldeDuCentimes: number;
+  /** Somme des paiements encaissés. */
+  totalPaiementsCentimes: number;
+  /** Paiements encaissés non encore imputés (avance disponible). */
+  avanceCentimes: number;
+}
+
+/**
+ * Situation financière consolidée d'un contrat : totaux appelés, imputés,
+ * solde dû et avance. Lecture seule, calculée par agrégation (jamais stockée) ;
+ * aucun calcul de pénalité ni d'intérêt. Renvoie null si le contrat est absent
+ * de l'organisme.
+ */
+export async function etatDeCompte(
+  tx: Tx,
+  organisationId: string,
+  contratId: string,
+): Promise<EtatDeCompte | null> {
+  const contrat = await tx.contrat.findFirst({
+    where: { id: contratId, organisationId },
+    select: {
+      id: true,
+      reference: true,
+      statut: true,
+      montantLoyerCentimes: true,
+      bien: { select: { code: true } },
+      occupant: { select: { nom: true } },
+    },
+  });
+  if (!contrat) return null;
+
+  const [appels, paiements] = await Promise.all([
+    listAppels(tx, organisationId, { contratId }),
+    listPaiements(tx, organisationId, { contratId }),
+  ]);
+  const somme = <T>(arr: T[], k: (x: T) => number) => arr.reduce((s, x) => s + k(x), 0);
+
+  return {
+    contrat: {
+      id: contrat.id,
+      reference: contrat.reference,
+      statut: contrat.statut,
+      bienCode: contrat.bien.code,
+      occupantNom: contrat.occupant.nom,
+      montantLoyerCentimes: contrat.montantLoyerCentimes,
+    },
+    nbAppels: appels.length,
+    nbPaiements: paiements.length,
+    totalAppeleCentimes: somme(appels, (a) => a.montantCentimes),
+    totalImputeCentimes: somme(appels, (a) => a.imputeCentimes),
+    soldeDuCentimes: somme(appels, (a) => a.soldeCentimes),
+    totalPaiementsCentimes: somme(paiements, (p) => p.montantCentimes),
+    avanceCentimes: somme(paiements, (p) => p.resteCentimes),
+  };
+}
+
 export async function archiveAppel(tx: Tx, organisationId: string, id: string) {
   const res = await tx.appelLoyer.updateMany({
     where: { id, organisationId, archiveLe: null },

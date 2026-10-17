@@ -290,7 +290,15 @@
     "aucunAppel": "لا يوجد طلب.",
     "aucunPaiement": "لا توجد دفعة.",
     "aucuneAction": "لا يوجد إجراء تحصيل.",
-    "montantAide": "إدخال حر — دون حساب غرامة أو فائدة."
+    "montantAide": "إدخال حر — دون حساب غرامة أو فائدة.",
+    "etatCompte": "كشف الحساب",
+    "telechargerEtatCompte": "تنزيل (PDF)",
+    "totalAppele": "إجمالي المطالب به (دج)",
+    "totalImpute": "إجمالي المخصَّص (دج)",
+    "soldeDu": "الرصيد المستحق (دج)",
+    "totalPaiements": "إجمالي المدفوعات (دج)",
+    "avance": "تسبيق غير مخصَّص (دج)",
+    "etatCompteAide": "مجاميع محسوبة بالتجميع — دون غرامة أو فائدة."
   },
   "reclamations": {
     "titre": "الشكاوى",

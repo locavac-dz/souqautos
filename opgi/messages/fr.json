@@ -290,7 +290,15 @@
     "aucunAppel": "Aucun appel.",
     "aucunPaiement": "Aucun paiement.",
     "aucuneAction": "Aucune action de recouvrement.",
-    "montantAide": "Saisie libre — aucun calcul de pénalité ni d'intérêt."
+    "montantAide": "Saisie libre — aucun calcul de pénalité ni d'intérêt.",
+    "etatCompte": "État de compte",
+    "telechargerEtatCompte": "Télécharger (PDF)",
+    "totalAppele": "Total appelé (DZD)",
+    "totalImpute": "Total imputé (DZD)",
+    "soldeDu": "Solde dû (DZD)",
+    "totalPaiements": "Total paiements (DZD)",
+    "avance": "Avance non imputée (DZD)",
+    "etatCompteAide": "Totaux calculés par agrégation — aucune pénalité ni intérêt."
   },
   "reclamations": {
     "titre": "Réclamations",
