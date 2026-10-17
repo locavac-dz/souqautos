@@ -24,6 +24,7 @@ import {
 import { notifier } from "@/lib/modules/notifications";
 import { dispatcherExterne } from "@/lib/notifications/canal";
 import { parseListParams, pageHeaders } from "@/http/pagination";
+import { documentPdf } from "@/lib/pdf/simple";
 
 function acteurDe(auth: AuthorizedContext): Acteur {
   return { utilisateurId: auth.session.utilisateurId, role: auth.session.role };
@@ -105,6 +106,48 @@ export async function handleReclamation(request: Request, s: Services, id: strin
   }
 
   return json(405, { error: "Méthode non autorisée." });
+}
+
+// GET /api/reclamations/:id/pdf — récépissé imprimable (médié par propriété).
+export async function handleReclamationPdf(
+  request: Request,
+  s: Services,
+  id: string,
+): Promise<Response> {
+  if (request.method !== "GET") return json(405, { error: "Méthode non autorisée." });
+  const auth = await authorize(request, s, "C", "lire");
+  if (auth instanceof Response) return auth;
+  const rec = await withTenant(s.app, auth.ctx, (tx) =>
+    getReclamation(tx, auth.ctx.organisationId, acteurDe(auth), id),
+  );
+  if (!rec) return json(404, { error: "Introuvable." });
+
+  const jour = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "—");
+  const pdf = documentPdf({
+    titre: `Récépissé de réclamation ${rec.reference}`,
+    sousTitre: `Édité le ${new Date().toISOString().slice(0, 10)} — document de données (à valider)`,
+    lignes: [
+      { label: "Référence", valeur: rec.reference },
+      { label: "Statut", valeur: rec.statut },
+      { label: "Catégorie", valeur: rec.categorie },
+      { label: "Urgence", valeur: rec.urgence },
+      { label: "Canal", valeur: rec.canal },
+      { label: "Déclaré le", valeur: jour(rec.createdAt) },
+      { label: "Localisation", valeur: rec.localisation ?? "—" },
+      { label: "Déclarant", valeur: rec.declarantNom ?? "—" },
+      { label: "Contact", valeur: rec.declarantContact ?? "—" },
+      { label: "Description", valeur: rec.description },
+    ],
+    pied: "Plateforme OPGI — récépissé non contractuel.",
+  });
+
+  return new Response(new Uint8Array(pdf), {
+    status: 200,
+    headers: {
+      "content-type": "application/pdf",
+      "content-disposition": `attachment; filename="reclamation-${rec.reference}.pdf"`,
+    },
+  });
 }
 
 // POST /api/reclamations/:id/doublon

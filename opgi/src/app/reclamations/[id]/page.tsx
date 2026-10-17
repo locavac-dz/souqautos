@@ -60,6 +60,9 @@ export default async function ReclamationDetail({ params }: { params: Promise<{ 
         {t("categorie")} : <strong>{reclamation.categorie}</strong> — {t("urgence")} :{" "}
         <strong>{reclamation.urgence}</strong> — {t("statut")} : <strong>{reclamation.statut}</strong>
       </p>
+      <p>
+        <a href={`/api/reclamations/${reclamation.id}/pdf`}>{t("telechargerPdf")}</a>
+      </p>
       <section className="card">
         <p>{reclamation.description}</p>
         {reclamation.localisation && (
