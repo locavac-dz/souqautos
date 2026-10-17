@@ -1,7 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { ROLES_LECTURE_AUDIT } from "@/lib/audit";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function AuditPage() {
   const { session, s, ctx } = await requirePageTenant();
   const t = await getTranslations("audit");
+  const enums = (await getMessages()).enums as DictEnums;
 
   if (!ROLES_LECTURE_AUDIT.has(session.role)) {
     return (
@@ -54,7 +56,7 @@ export default async function AuditPage() {
                     {e.objetType}
                     {e.objetId ? ` (${e.objetId.slice(0, 8)})` : ""}
                   </td>
-                  <td>{e.resultat}</td>
+                  <td>{libelleEnum(enums, "resultatAudit", e.resultat)}</td>
                   <td>{e.resume ?? "—"}</td>
                 </tr>
               ))}

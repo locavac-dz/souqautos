@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { can, type RoleName } from "@/lib/authz/permissions";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
 import { BoutonArchiver } from "@/app/_components/BoutonArchiver";
 
@@ -17,6 +18,7 @@ export default async function ContratsPage() {
   const { session, s, ctx } = await requirePageTenant();
   const t = await getTranslations("contrats");
   const tc = await getTranslations("commun");
+  const enums = (await getMessages()).enums as DictEnums;
   const role = session.role as RoleName;
 
   if (!can(role, "A", "lire")) {
@@ -80,7 +82,7 @@ export default async function ContratsPage() {
                   </td>
                   <td>{c.bien.code}</td>
                   <td>{c.occupant.nom}</td>
-                  <td>{c.statut}</td>
+                  <td>{libelleEnum(enums, "statutContrat", c.statut)}</td>
                   <td>{c.dateDebut.toISOString().slice(0, 10)}</td>
                   <td>{loyer(c.montantLoyerCentimes)}</td>
                   {peutModifier && (

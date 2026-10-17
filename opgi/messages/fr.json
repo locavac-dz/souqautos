@@ -80,6 +80,26 @@
     "francais": "Français",
     "arabe": "العربية"
   },
+  "enums": {
+    "typeBien": { "LOGEMENT": "Logement", "LOCAL_COMMERCIAL": "Local commercial", "GARAGE": "Garage", "AUTRE": "Autre" },
+    "etatOccupation": { "OCCUPE": "Occupé", "VACANT": "Vacant", "INDISPONIBLE": "Indisponible" },
+    "typeOccupant": { "PHYSIQUE": "Personne physique", "MORALE": "Personne morale" },
+    "statutContrat": { "BROUILLON": "Brouillon", "ACTIF": "Actif", "SUSPENDU": "Suspendu", "RESILIE": "Résilié" },
+    "modePaiement": { "ESPECES": "Espèces", "VIREMENT": "Virement", "CHEQUE": "Chèque", "AUTRE": "Autre" },
+    "typeActionRecouvrement": { "RELANCE": "Relance", "MISE_EN_DEMEURE": "Mise en demeure", "ECHEANCIER": "Échéancier", "CONTENTIEUX": "Contentieux", "AUTRE": "Autre" },
+    "categorieReclamation": { "PLOMBERIE": "Plomberie", "ELECTRICITE": "Électricité", "MACONNERIE": "Maçonnerie", "ASCENSEUR": "Ascenseur", "CHAUFFAGE": "Chauffage", "PROPRETE": "Propreté", "AUTRE": "Autre" },
+    "urgenceReclamation": { "FAIBLE": "Faible", "NORMALE": "Normale", "HAUTE": "Haute", "CRITIQUE": "Critique" },
+    "statutReclamation": { "NOUVELLE": "Nouvelle", "QUALIFIEE": "Qualifiée", "EN_COURS": "En cours", "RESOLUE": "Résolue", "REJETEE": "Rejetée", "DOUBLON": "Doublon" },
+    "canalReclamation": { "PORTAIL": "Portail", "GUICHET": "Guichet", "TELEPHONE": "Téléphone", "EMAIL": "E-mail", "COURRIER": "Courrier", "AUTRE": "Autre" },
+    "affectationType": { "INTERNE": "Interne", "EXTERNE": "Externe" },
+    "statutOrdreTravail": { "OUVERT": "Ouvert", "PLANIFIE": "Planifié", "EN_COURS": "En cours", "CLOTURE": "Clôturé", "ANNULE": "Annulé" },
+    "statutProjet": { "EN_PREPARATION": "En préparation", "EN_COURS": "En cours", "SUSPENDU": "Suspendu", "CLOTURE": "Clôturé" },
+    "statutMarche": { "EN_PREPARATION": "En préparation", "NOTIFIE": "Notifié", "EN_COURS": "En cours", "RECEPTIONNE": "Réceptionné", "RESILIE": "Résilié", "CLOTURE": "Clôturé" },
+    "statutSituation": { "DEPOSEE": "Déposée", "VERIFIEE": "Vérifiée", "VALIDEE": "Validée", "REJETEE": "Rejetée" },
+    "typeReception": { "PROVISOIRE": "Provisoire", "DEFINITIVE": "Définitive" },
+    "resultatAudit": { "SUCCES": "Succès", "ECHEC": "Échec" },
+    "role": { "ADMIN_PLATEFORME": "Admin plateforme", "ADMIN_OPGI": "Admin OPGI", "DIRECTION": "Direction", "AGENT_LOCATIF": "Agent locatif", "AGENT_RECOUVREMENT": "Agent de recouvrement", "CHEF_PROJET": "Chef de projet", "GESTIONNAIRE_MARCHES": "Gestionnaire des marchés", "RESP_RECLAMATIONS": "Responsable réclamations", "TECHNICIEN": "Technicien", "PRESTATAIRE": "Prestataire", "OCCUPANT": "Occupant", "AUDITEUR": "Auditeur" }
+  },
   "nav": {
     "tableauDeBord": "Tableau de bord",
     "patrimoine": "Patrimoine",

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { listMarches } from "@/lib/modules/b/service";
 import { can, type RoleName } from "@/lib/authz/permissions";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export default async function MarchesPage() {
   const { session, s, ctx } = await requirePageTenant();
   const t = await getTranslations("marches");
   const tc = await getTranslations("commun");
+  const enums = (await getMessages()).enums as DictEnums;
   const role = session.role as RoleName;
 
   if (!can(role, "B", "lire")) {
@@ -50,7 +52,7 @@ export default async function MarchesPage() {
                 <tr key={m.id}>
                   <td>{m.reference}</td>
                   <td>{m.objet}</td>
-                  <td>{m.statut}</td>
+                  <td>{libelleEnum(enums, "statutMarche", m.statut)}</td>
                   <td>
                     <Link href={`/marches/${m.id}`}>{t("voir")}</Link>
                   </td>

@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { getServerSession } from "@/lib/auth/next-session";
 import { getServices } from "@/lib/services";
 import { resolveTenant } from "@/lib/tenant/resolve";
 import { withTenant } from "@/lib/tenant/prisma";
 import { can, type RoleName } from "@/lib/authz/permissions";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import {
   indicateursPatrimoine,
   indicateursReclamations,
@@ -41,6 +42,7 @@ export default async function TableauDeBord() {
   if (!session) redirect("/connexion");
 
   const t = await getTranslations("indicateurs");
+  const enums = (await getMessages()).enums as DictEnums;
   const s = getServices();
   const ctx = resolveTenant(session, s.config);
   const role = session.role as RoleName;
@@ -59,13 +61,13 @@ export default async function TableauDeBord() {
       <Nav />
       <h1>{t("titre")}</h1>
       <p className="meta">
-        {session.organisationId} — {role}
+        {session.organisationId} — {libelleEnum(enums, "role", role)}
       </p>
 
       {!voitA && !voitC && !voitB && <p role="alert">{t("defAucuneSection")}</p>}
 
       {data.a && <SectionPatrimoine i={data.a} t={t} />}
-      {data.c && <SectionReclamations i={data.c} t={t} />}
+      {data.c && <SectionReclamations i={data.c} t={t} enums={enums} />}
       {data.b && <SectionProjets i={data.b} t={t} />}
 
       <p className="meta" style={{ marginTop: 16 }}>{t("note")}</p>
@@ -97,19 +99,19 @@ function SectionPatrimoine({ i, t }: { i: IndicateursPatrimoine; t: T }) {
   );
 }
 
-function repartition(parStatut: Record<string, number>): string {
+function repartition(parStatut: Record<string, number>, lib: (k: string) => string = (k) => k): string {
   const entries = Object.entries(parStatut);
-  return entries.length === 0 ? "—" : entries.map(([k, v]) => `${k}: ${v}`).join(" · ");
+  return entries.length === 0 ? "—" : entries.map(([k, v]) => `${lib(k)}: ${v}`).join(" · ");
 }
 
-function SectionReclamations({ i, t }: { i: IndicateursReclamations; t: T }) {
+function SectionReclamations({ i, t, enums }: { i: IndicateursReclamations; t: T; enums: DictEnums }) {
   return (
     <section className="card" aria-label={t("sectionReclamations")} style={{ marginTop: 16 }}>
       <h2>{t("sectionReclamations")}</h2>
       <Grille>
         <Stat label={t("reclamationsOuvertes")} value={i.totalOuvertes} def={t("reclamationsOuvertesDef")} />
-        <Stat label={t("reclamationsParStatut")} value={<span style={{ fontSize: "0.95rem" }}>{repartition(i.parStatut)}</span>} def={t("reclamationsParStatut")} />
-        <Stat label={t("ordresParStatut")} value={<span style={{ fontSize: "0.95rem" }}>{repartition(i.ordresParStatut)}</span>} def={t("ordresParStatut")} />
+        <Stat label={t("reclamationsParStatut")} value={<span style={{ fontSize: "0.95rem" }}>{repartition(i.parStatut, (k) => libelleEnum(enums, "statutReclamation", k))}</span>} def={t("reclamationsParStatut")} />
+        <Stat label={t("ordresParStatut")} value={<span style={{ fontSize: "0.95rem" }}>{repartition(i.ordresParStatut, (k) => libelleEnum(enums, "statutOrdreTravail", k))}</span>} def={t("ordresParStatut")} />
       </Grille>
     </section>
   );

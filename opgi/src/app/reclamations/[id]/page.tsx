@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { getReclamation, listCommentaires, listOrdres, type Acteur } from "@/lib/modules/c/service";
 import { listPieces } from "@/lib/modules/c/pieces";
 import { can, type RoleName } from "@/lib/authz/permissions";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
 import { ReclamationActions } from "@/app/reclamations/[id]/_ReclamationActions";
 import { UploadPiece } from "@/app/reclamations/[id]/_UploadPiece";
@@ -21,6 +22,7 @@ export default async function ReclamationDetail({ params }: { params: Promise<{ 
   const { session, s, ctx } = await requirePageTenant();
   const t = await getTranslations("reclamations");
   const tcom = await getTranslations("commun");
+  const enums = (await getMessages()).enums as DictEnums;
   const role = session.role as RoleName;
   const acteur: Acteur = { utilisateurId: session.utilisateurId, role: session.role };
 
@@ -57,8 +59,9 @@ export default async function ReclamationDetail({ params }: { params: Promise<{ 
         {t("detail")} — {reclamation.reference}
       </h1>
       <p className="meta">
-        {t("categorie")} : <strong>{reclamation.categorie}</strong> — {t("urgence")} :{" "}
-        <strong>{reclamation.urgence}</strong> — {t("statut")} : <strong>{reclamation.statut}</strong>
+        {t("categorie")} : <strong>{libelleEnum(enums, "categorieReclamation", reclamation.categorie)}</strong> — {t("urgence")} :{" "}
+        <strong>{libelleEnum(enums, "urgenceReclamation", reclamation.urgence)}</strong> — {t("statut")} :{" "}
+        <strong>{libelleEnum(enums, "statutReclamation", reclamation.statut)}</strong>
       </p>
       <p>
         <a href={`/api/reclamations/${reclamation.id}/pdf`}>{t("telechargerPdf")}</a>
@@ -108,8 +111,8 @@ export default async function ReclamationDetail({ params }: { params: Promise<{ 
               {ordres.map((o) => (
                 <tr key={o.id}>
                   <td>{o.reference}</td>
-                  <td>{o.statut}</td>
-                  <td>{o.affectationType ?? "—"}</td>
+                  <td>{libelleEnum(enums, "statutOrdreTravail", o.statut)}</td>
+                  <td>{libelleEnum(enums, "affectationType", o.affectationType)}</td>
                   <td>{jour(o.datePlanifiee)}</td>
                   <td>
                     <a href={`/api/ordres/${o.id}/pdf`}>{t("telechargerBonPdf")}</a>

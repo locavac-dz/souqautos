@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { listBiens } from "@/lib/modules/a/service";
 import { can, type RoleName } from "@/lib/authz/permissions";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
 import { BoutonArchiver } from "@/app/_components/BoutonArchiver";
 
@@ -13,6 +14,7 @@ export default async function PatrimoinePage() {
   const { session, s, ctx } = await requirePageTenant();
   const t = await getTranslations("patrimoine");
   const tc = await getTranslations("commun");
+  const enums = (await getMessages()).enums as DictEnums;
   const role = session.role as RoleName;
 
   if (!can(role, "A", "lire")) {
@@ -58,7 +60,7 @@ export default async function PatrimoinePage() {
                 <tr key={b.id}>
                   <td>{b.code}</td>
                   <td>{t(`type${b.type}`)}</td>
-                  <td>{b.etatOccupation}</td>
+                  <td>{libelleEnum(enums, "etatOccupation", b.etatOccupation)}</td>
                   <td>{b.adresse ?? "—"}</td>
                   {peutModifier && (
                     <td>

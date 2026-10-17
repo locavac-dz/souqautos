@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { listBiens, listOccupants } from "@/lib/modules/a/service";
 import { can, type RoleName } from "@/lib/authz/permissions";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
 import { FormContrat } from "@/app/contrats/_FormContrat";
 
@@ -13,6 +14,7 @@ export default async function NouveauContratPage() {
   const { session, s, ctx } = await requirePageTenant();
   const t = await getTranslations("contrats");
   const tc = await getTranslations("commun");
+  const enums = (await getMessages()).enums as DictEnums;
   const role = session.role as RoleName;
 
   if (!can(role, "A", "creer")) {
@@ -29,7 +31,7 @@ export default async function NouveauContratPage() {
     await listOccupants(tx, ctx.organisationId),
   ]);
 
-  const biensOpt = biens.map((b) => ({ id: b.id, label: `${b.code} — ${b.type}` }));
+  const biensOpt = biens.map((b) => ({ id: b.id, label: `${b.code} — ${libelleEnum(enums, "typeBien", b.type)}` }));
   const occupantsOpt = occupants.map((o) => ({
     id: o.id,
     label: o.prenom ? `${o.nom} ${o.prenom}` : o.nom,

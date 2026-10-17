@@ -8,6 +8,26 @@
     "francais": "Français",
     "arabe": "العربية"
   },
+  "enums": {
+    "typeBien": { "LOGEMENT": "سكن", "LOCAL_COMMERCIAL": "محل تجاري", "GARAGE": "مرآب", "AUTRE": "أخرى" },
+    "etatOccupation": { "OCCUPE": "مشغول", "VACANT": "شاغر", "INDISPONIBLE": "غير متاح" },
+    "typeOccupant": { "PHYSIQUE": "شخص طبيعي", "MORALE": "شخص معنوي" },
+    "statutContrat": { "BROUILLON": "مسودة", "ACTIF": "نشط", "SUSPENDU": "موقوف", "RESILIE": "مفسوخ" },
+    "modePaiement": { "ESPECES": "نقدًا", "VIREMENT": "تحويل", "CHEQUE": "شيك", "AUTRE": "أخرى" },
+    "typeActionRecouvrement": { "RELANCE": "تذكير", "MISE_EN_DEMEURE": "إعذار", "ECHEANCIER": "جدولة", "CONTENTIEUX": "منازعة", "AUTRE": "أخرى" },
+    "categorieReclamation": { "PLOMBERIE": "سباكة", "ELECTRICITE": "كهرباء", "MACONNERIE": "بناء", "ASCENSEUR": "مصعد", "CHAUFFAGE": "تدفئة", "PROPRETE": "نظافة", "AUTRE": "أخرى" },
+    "urgenceReclamation": { "FAIBLE": "ضعيف", "NORMALE": "عادي", "HAUTE": "مرتفع", "CRITIQUE": "حرج" },
+    "statutReclamation": { "NOUVELLE": "جديدة", "QUALIFIEE": "موصّفة", "EN_COURS": "قيد المعالجة", "RESOLUE": "مُسوّاة", "REJETEE": "مرفوضة", "DOUBLON": "مكرّرة" },
+    "canalReclamation": { "PORTAIL": "البوابة", "GUICHET": "الشباك", "TELEPHONE": "الهاتف", "EMAIL": "البريد الإلكتروني", "COURRIER": "البريد", "AUTRE": "أخرى" },
+    "affectationType": { "INTERNE": "داخلي", "EXTERNE": "خارجي" },
+    "statutOrdreTravail": { "OUVERT": "مفتوح", "PLANIFIE": "مبرمج", "EN_COURS": "قيد التنفيذ", "CLOTURE": "مُغلق", "ANNULE": "مُلغى" },
+    "statutProjet": { "EN_PREPARATION": "قيد الإعداد", "EN_COURS": "قيد التنفيذ", "SUSPENDU": "موقوف", "CLOTURE": "مُغلق" },
+    "statutMarche": { "EN_PREPARATION": "قيد الإعداد", "NOTIFIE": "مُبلَّغ", "EN_COURS": "قيد التنفيذ", "RECEPTIONNE": "مُستلَم", "RESILIE": "مفسوخ", "CLOTURE": "مُغلق" },
+    "statutSituation": { "DEPOSEE": "مودعة", "VERIFIEE": "مُتحقَّق منها", "VALIDEE": "مُصادق عليها", "REJETEE": "مرفوضة" },
+    "typeReception": { "PROVISOIRE": "مؤقت", "DEFINITIVE": "نهائي" },
+    "resultatAudit": { "SUCCES": "نجاح", "ECHEC": "فشل" },
+    "role": { "ADMIN_PLATEFORME": "مدير المنصة", "ADMIN_OPGI": "مدير الديوان", "DIRECTION": "الإدارة", "AGENT_LOCATIF": "عون الإيجار", "AGENT_RECOUVREMENT": "عون التحصيل", "CHEF_PROJET": "رئيس المشروع", "GESTIONNAIRE_MARCHES": "مسيّر الصفقات", "RESP_RECLAMATIONS": "مسؤول الشكاوى", "TECHNICIEN": "تقني", "PRESTATAIRE": "مقدّم الخدمة", "OCCUPANT": "شاغل", "AUDITEUR": "مدقّق" }
+  },
   "nav": {
     "tableauDeBord": "لوحة القيادة",
     "patrimoine": "الأملاك",

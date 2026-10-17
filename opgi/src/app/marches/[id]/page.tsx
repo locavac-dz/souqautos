@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { getMarcheDetail, listSituations, listReceptions } from "@/lib/modules/b/service";
 import { can, type RoleName } from "@/lib/authz/permissions";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
 import { MarcheActions } from "@/app/marches/[id]/_MarcheActions";
 
@@ -22,6 +23,7 @@ export default async function MarcheDetailPage({ params }: { params: Promise<{ i
   const { session, s, ctx } = await requirePageTenant();
   const t = await getTranslations("marches");
   const tcom = await getTranslations("commun");
+  const enums = (await getMessages()).enums as DictEnums;
   const role = session.role as RoleName;
 
   if (!can(role, "B", "lire")) {
@@ -56,7 +58,7 @@ export default async function MarcheDetailPage({ params }: { params: Promise<{ i
         {t("detail")} — {detail.marche.reference}
       </h1>
       <p className="meta">
-        {detail.marche.objet} — {t("statut")} : <strong>{detail.marche.statut}</strong>
+        {detail.marche.objet} — {t("statut")} : <strong>{libelleEnum(enums, "statutMarche", detail.marche.statut)}</strong>
       </p>
       <p>
         <a href={`/api/marches/${id}/pdf`}>{t("telechargerPdf")}</a>
@@ -109,7 +111,7 @@ export default async function MarcheDetailPage({ params }: { params: Promise<{ i
                   <td>{x.periode ?? "—"}</td>
                   <td>{dzd(x.montantTravauxCentimes)}</td>
                   <td>{x.avancementPhysiquePct ?? "—"}</td>
-                  <td>{x.statut}</td>
+                  <td>{libelleEnum(enums, "statutSituation", x.statut)}</td>
                 </tr>
               ))}
             </tbody>
@@ -134,7 +136,7 @@ export default async function MarcheDetailPage({ params }: { params: Promise<{ i
             <tbody>
               {receptions.map((r) => (
                 <tr key={r.id}>
-                  <td>{r.type}</td>
+                  <td>{libelleEnum(enums, "typeReception", r.type)}</td>
                   <td>{jour(r.date)}</td>
                   <td>{r.avecReserves ? "Oui" : "Non"}</td>
                   <td>{r.pvReference ?? "—"}</td>

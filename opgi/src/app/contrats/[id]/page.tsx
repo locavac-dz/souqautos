@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getMessages } from "next-intl/server";
 import { requirePageTenant } from "@/lib/auth/page-guard";
 import { withTenant } from "@/lib/tenant/prisma";
 import { getContrat } from "@/lib/modules/a/service";
 import { listAppels, listPaiements, listActionsRecouvrement } from "@/lib/modules/a/finances";
 import { can, type RoleName } from "@/lib/authz/permissions";
+import { libelleEnum, type DictEnums } from "@/i18n/enums";
 import { Nav } from "@/app/_components/Nav";
 import { ContratActions } from "@/app/contrats/[id]/_ContratActions";
 
@@ -22,6 +23,7 @@ export default async function ContratDetail({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const { session, s, ctx } = await requirePageTenant();
   const role = session.role as RoleName;
+  const enums = (await getMessages()).enums as DictEnums;
   const tc = await getTranslations("contrats");
   const tf = await getTranslations("finances");
   const tcom = await getTranslations("commun");
@@ -60,7 +62,7 @@ export default async function ContratDetail({ params }: { params: Promise<{ id: 
         {tc("detail")} — {contrat.reference}
       </h1>
       <p className="meta">
-        {tc("statut")} : <strong>{contrat.statut}</strong> — {tc("dateDebut")} :{" "}
+        {tc("statut")} : <strong>{libelleEnum(enums, "statutContrat", contrat.statut)}</strong> — {tc("dateDebut")} :{" "}
         {jour(contrat.dateDebut)}
       </p>
 
@@ -115,7 +117,7 @@ export default async function ContratDetail({ params }: { params: Promise<{ id: 
               {paiements.map((p) => (
                 <tr key={p.id}>
                   <td>{jour(p.datePaiement)}</td>
-                  <td>{p.mode}</td>
+                  <td>{libelleEnum(enums, "modePaiement", p.mode)}</td>
                   <td>{p.reference ?? "—"}</td>
                   <td>{dzd(p.montantCentimes)}</td>
                   <td>{dzd(p.resteCentimes)}</td>
@@ -144,7 +146,7 @@ export default async function ContratDetail({ params }: { params: Promise<{ id: 
               {actions.map((a) => (
                 <tr key={a.id}>
                   <td>{jour(a.date)}</td>
-                  <td>{a.type}</td>
+                  <td>{libelleEnum(enums, "typeActionRecouvrement", a.type)}</td>
                   <td>{a.note ?? "—"}</td>
                   <td>{a.pieceReference ?? "—"}</td>
                 </tr>

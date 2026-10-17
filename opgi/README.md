@@ -264,7 +264,7 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   tableau de bord, indicateurs, patrimoine, occupants, contrats, finances, réclamations, projets,
   entreprises, marchés, audit, recouvrement, import) — **parité FR↔AR vérifiée par test**.
 
-### Tests — **189 verts** (`npm test`)
+### Tests — **195 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -310,7 +310,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 189 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 195 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -351,7 +351,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 189 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 195 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via
@@ -368,7 +368,8 @@ d'audit append‑only, import CSV, tableaux de bord d'indicateurs, **exports CSV
 de réclamation, fiche marché, bon d'ordre de travail), pièces jointes médiées, **notifications
 internes + canal externe webhook (opt‑in)**, **pagination + recherche** sur toutes les listes,
 **CSP durcie par nonces** (+ HSTS/COOP/Permissions‑Policy), **interface bilingue FR/AR en RTL**
-(parité des clés vérifiée), et **CI GitHub Actions + PostgreSQL** (migrate diff, suite verte).
+(parité des clés vérifiée, **y compris les libellés des valeurs d'enum** — statuts, types,
+catégories, rôles), et **CI GitHub Actions + PostgreSQL** (migrate diff, suite verte).
 
 Ne sont **pas** encore livrés :
 
@@ -383,8 +384,6 @@ Ne sont **pas** encore livrés :
 - **Module C — compléments** : **portail public** (déclarant non authentifié avec accusé de
   réception), **compte prestataire externe** + cloisonnement associé, planification/visites
   détaillées, indicateurs par zone/délai.
-- **Libellés i18n des valeurs d'enum** (statuts, types, catégories) : affichés aujourd'hui en texte
-  brut, non traduits en arabe.
 - **Sécurité (compléments)** : rotation/révocation de session (déconnexion globale), durcissement du
   `style-src` par nonces (styles inline React), analyse antivirus des pièces jointes.
 - **Administration plateforme** (gestion des comptes/organismes/permissions via UI) + instrumentation
