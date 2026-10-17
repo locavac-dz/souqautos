@@ -19,6 +19,8 @@ export interface VerifiedSession {
   organisationId: string;
   role: string;
   perimetre?: string | null;
+  /** « Epoch » de révocation porté par le jeton (0 par défaut / jetons anciens). */
+  epoch?: number;
 }
 
 /** Contexte d'organisme résolu, prêt à filtrer les accès aux données. */

@@ -117,6 +117,7 @@ export async function authenticate(
       organisationId,
       role: user.role,
       perimetre: user.perimetre,
+      epoch: user.sessionEpoch,
     },
   };
 }

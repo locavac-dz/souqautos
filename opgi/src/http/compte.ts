@@ -7,12 +7,15 @@ import { csrfGuard, parseBody, mapError } from "@/http/helpers";
 import { json } from "@/http/respond";
 import {
   changerMotDePasse,
+  revoquerSessions,
   statutTOTP,
   debuterTOTP,
   activerTOTP,
   desactiverTOTP,
 } from "@/lib/auth/account";
 import { recordAudit } from "@/lib/audit";
+import { signSession } from "@/lib/auth/session";
+import { buildSessionCookie, buildClearCookie } from "@/lib/auth/cookies";
 
 const changeSchema = z.object({
   ancien: z.string().min(1),
@@ -56,28 +59,58 @@ export async function handleChangePassword(request: Request, s: Services): Promi
         body.ancien,
         body.nouveau,
       );
-      if (r === "ok") {
+      if (r.statut === "ok") {
         await recordAudit(tx, auth.ctx.organisationId, {
           utilisateurId: auth.session.utilisateurId,
           action: "compte.motdepasse.change",
           objetType: "Utilisateur",
           objetId: auth.session.utilisateurId,
-          resume: "Changement de mot de passe en self-service.",
+          resume: "Changement de mot de passe (autres sessions révoquées).",
         });
       }
       return r;
     });
 
-    if (resultat === "mauvais_ancien") {
+    if (resultat.statut === "mauvais_ancien") {
       return json(400, { error: "Mot de passe actuel incorrect." });
     }
-    if (resultat === "introuvable") {
+    if (resultat.statut === "introuvable") {
       return json(404, { error: "Compte introuvable." });
     }
-    return json(200, { change: true });
+    // Le changement a invalidé toutes les sessions (epoch++). On ré‑émet un cookie
+    // pour la session COURANTE avec le nouvel epoch, afin de garder l'utilisateur
+    // connecté ici tout en déconnectant ses autres sessions.
+    const token = await signSession({ ...auth.session, epoch: resultat.epoch }, s.secret);
+    const res = json(200, { change: true });
+    res.headers.append("Set-Cookie", buildSessionCookie(token, { secure: s.secure }));
+    return res;
   } catch (e) {
     return mapError(e);
   }
+}
+
+// POST /api/compte/sessions/revoquer — déconnexion de TOUTES les sessions
+// (y compris la session courante, dont le cookie est effacé).
+export async function handleRevoquerSessions(request: Request, s: Services): Promise<Response> {
+  if (request.method !== "POST") return json(405, { error: "Méthode non autorisée." });
+  const csrf = csrfGuard(request);
+  if (csrf) return csrf;
+  const auth = await authenticateSession(request, s);
+  if (auth instanceof Response) return auth;
+
+  await withTenant(s.app, auth.ctx, async (tx) => {
+    await revoquerSessions(tx, auth.ctx.organisationId, auth.session.utilisateurId);
+    await recordAudit(tx, auth.ctx.organisationId, {
+      utilisateurId: auth.session.utilisateurId,
+      action: "compte.sessions.revoquer",
+      objetType: "Utilisateur",
+      objetId: auth.session.utilisateurId,
+      resume: "Déconnexion de toutes les sessions.",
+    });
+  });
+  const res = json(200, { revoque: true });
+  res.headers.append("Set-Cookie", buildClearCookie({ secure: s.secure }));
+  return res;
 }
 
 // GET /api/compte/2fa — statut de la 2FA de l'utilisateur courant.

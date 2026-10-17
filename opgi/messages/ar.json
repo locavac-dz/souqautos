@@ -108,7 +108,10 @@
     "deuxFacteursConfirmer": "تأكيد التفعيل",
     "deuxFacteursMotDePasse": "كلمة المرور الحالية (للتعطيل)",
     "deuxFacteursActivee": "تم تفعيل المصادقة الثنائية.",
-    "deuxFacteursDesactivee": "تم تعطيل المصادقة الثنائية."
+    "deuxFacteursDesactivee": "تم تعطيل المصادقة الثنائية.",
+    "sessionsTitre": "الجلسات",
+    "sessionsAide": "تسجيل الخروج من جميع الأجهزة والمتصفحات، بما في ذلك هذا الجهاز.",
+    "revoquerTout": "تسجيل الخروج من جميع الجلسات"
   },
   "tableauDeBord": {
     "titre": "لوحة القيادة",

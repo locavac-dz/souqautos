@@ -1,6 +1,7 @@
 // Garde HTTP commune : session → organisme → autorisation. Renvoie soit le
 // contexte autorisé, soit une Response d'erreur (401/403) à retourner telle quelle.
 import { sessionFromCookieHeader } from "@/lib/auth/current-session";
+import { sessionRevoquee } from "@/lib/auth/revocation";
 import { resolveTenant } from "@/lib/tenant/resolve";
 import {
   TenantResolutionError,
@@ -34,6 +35,7 @@ export async function authenticateSession(
 ): Promise<AuthorizedContext | Response> {
   const session = await sessionFromCookieHeader(request.headers.get("cookie"), s.secret, s.secure);
   if (!session) return json(401, { error: "Non authentifié." });
+  if (await sessionRevoquee(session, s.admin)) return json(401, { error: "Session expirée." });
   try {
     const ctx = resolveTenant(session, s.config);
     return { session, ctx };
@@ -51,6 +53,7 @@ export async function authorize(
 ): Promise<AuthorizedContext | Response> {
   const session = await sessionFromCookieHeader(request.headers.get("cookie"), s.secret, s.secure);
   if (!session) return json(401, { error: "Non authentifié." });
+  if (await sessionRevoquee(session, s.admin)) return json(401, { error: "Session expirée." });
 
   let ctx: TenantContext;
   try {

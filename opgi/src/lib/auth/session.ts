@@ -25,6 +25,7 @@ export async function signSession(
     org: session.organisationId,
     role: session.role,
     perimetre: session.perimetre ?? null,
+    epoch: session.epoch ?? 0,
   })
     .setProtectedHeader({ alg: ALG })
     .setSubject(session.utilisateurId)
@@ -47,7 +48,8 @@ export async function verifySession(
       return null;
     }
     const perimetre = typeof payload.perimetre === "string" ? payload.perimetre : null;
-    return { utilisateurId: sub, organisationId: org, role, perimetre };
+    const epoch = typeof payload.epoch === "number" ? payload.epoch : 0;
+    return { utilisateurId: sub, organisationId: org, role, perimetre, epoch };
   } catch {
     return null;
   }

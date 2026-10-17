@@ -153,7 +153,10 @@
     "deuxFacteursConfirmer": "Confirmer l'activation",
     "deuxFacteursMotDePasse": "Mot de passe actuel (pour désactiver)",
     "deuxFacteursActivee": "Double authentification activée.",
-    "deuxFacteursDesactivee": "Double authentification désactivée."
+    "deuxFacteursDesactivee": "Double authentification désactivée.",
+    "sessionsTitre": "Sessions",
+    "sessionsAide": "Déconnecte tous les appareils et navigateurs, y compris celui-ci.",
+    "revoquerTout": "Déconnecter toutes les sessions"
   },
   "notifications": {
     "titre": "Mes notifications",

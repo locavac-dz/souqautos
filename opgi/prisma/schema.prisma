@@ -228,6 +228,9 @@ model Utilisateur {
   // code). 2FA active ⇔ totpActiveLe non‑null.
   totpSecret     String?
   totpActiveLe   DateTime?
+  // Révocation de session : le jeton porte cet « epoch » ; l'incrémenter invalide
+  // tous les jetons émis avant (déconnexion globale, changement de mot de passe).
+  sessionEpoch   Int       @default(0)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

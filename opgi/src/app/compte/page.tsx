@@ -5,6 +5,7 @@ import { statutTOTP } from "@/lib/auth/account";
 import { Nav } from "@/app/_components/Nav";
 import { FormMotDePasse } from "@/app/compte/_FormMotDePasse";
 import { FormDeuxFacteurs } from "@/app/compte/_FormDeuxFacteurs";
+import { RevoquerSessions } from "@/app/compte/_RevoquerSessions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function ComptePage() {
         <FormMotDePasse />
       </section>
       <FormDeuxFacteurs actifInitial={statut?.actif ?? false} />
+      <RevoquerSessions />
     </main>
   );
 }

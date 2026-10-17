@@ -278,7 +278,20 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   `PUBLIC_RL_MAX` / `PUBLIC_RL_WINDOW_MINUTES`, défaut 5/10 min ; WAF/CAPTCHA recommandés en
   production, « à valider »). Validation stricte (zod) des entrées.
 
-### Tests — **204 verts** (`npm test`)
+### Incrément 24 — Révocation de session
+
+- Chaque jeton de session porte un **epoch** ; l'incrémenter invalide tous les jetons émis avant
+  (colonne `sessionEpoch` sur l'utilisateur). Contrôle de révocation à chaque accès authentifié
+  (API et pages) : compte désactivé/absent ou epoch obsolète → session rejetée (401 / redirection).
+- **Déconnexion globale** `POST /api/compte/sessions/revoquer` (bouton sur `/compte`) : incrémente
+  l'epoch (toutes les sessions tombent, cookie courant effacé), tracée au journal d'audit.
+- **Changement de mot de passe** invalide désormais les **autres** sessions (epoch++), tout en
+  **ré‑émettant** le cookie de la session courante pour la garder active. Comble la faille où un
+  jeton volé restait valable jusqu'à expiration.
+- Rétro‑compatible : les jetons sans claim `epoch` valent 0, l'epoch par défaut est 0 → aucune
+  déconnexion de masse au déploiement.
+
+### Tests — **206 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -324,7 +337,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 204 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 206 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -365,7 +378,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 204 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 206 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via
@@ -398,7 +411,7 @@ Ne sont **pas** encore livrés :
 - **Module C — compléments** : **compte prestataire externe** + cloisonnement associé,
   planification/visites détaillées, indicateurs par zone/délai. (Le **portail public** de dépôt de
   réclamation est livré.)
-- **Sécurité (compléments)** : rotation/révocation de session (déconnexion globale), durcissement du
+- **Sécurité (compléments)** : durcissement du
   `style-src` par nonces (styles inline React), analyse antivirus des pièces jointes.
 - **Administration plateforme** (gestion des comptes/organismes/permissions via UI) + instrumentation
   de ces actions au journal d'audit ; pagination/filtres du journal d'audit ; politique de

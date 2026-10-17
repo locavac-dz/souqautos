@@ -5,13 +5,18 @@ import type { Tx } from "@/lib/modules/a/service";
 import { verifyPassword, hashPassword } from "@/lib/auth/password";
 import { genererSecret, verifierCode, otpauthUri } from "@/lib/auth/totp";
 
-export type ChangementMdpResultat = "ok" | "mauvais_ancien" | "introuvable";
+export type ChangementMdp =
+  | { statut: "ok"; epoch: number }
+  | { statut: "mauvais_ancien" }
+  | { statut: "introuvable" };
 
 /**
  * Change le mot de passe de l'utilisateur après vérification de l'ancien.
  * Réinitialise les compteurs de verrouillage (un changement réussi lève un
- * éventuel verrou). La robustesse (longueur) est validée en amont par le
- * handler selon la politique configurable.
+ * éventuel verrou) ET incrémente l'epoch de session : toutes les AUTRES sessions
+ * sont invalidées (la session courante est ré‑émise par le handler). La
+ * robustesse (longueur) est validée en amont selon la politique configurable.
+ * Renvoie le nouvel epoch pour permettre la ré‑émission du cookie courant.
  */
 export async function changerMotDePasse(
   tx: Tx,
@@ -19,22 +24,36 @@ export async function changerMotDePasse(
   utilisateurId: string,
   ancien: string,
   nouveau: string,
-): Promise<ChangementMdpResultat> {
+): Promise<ChangementMdp> {
   const user = await tx.utilisateur.findFirst({
     where: { id: utilisateurId, organisationId },
   });
-  if (!user) return "introuvable";
+  if (!user) return { statut: "introuvable" };
 
   const ok = await verifyPassword(ancien, user.passwordHash);
-  if (!ok) return "mauvais_ancien";
+  if (!ok) return { statut: "mauvais_ancien" };
 
   const passwordHash = await hashPassword(nouveau);
+  const epoch = user.sessionEpoch + 1;
   // updateMany borné par (id, organisationId) : jamais une autre ligne.
   const res = await tx.utilisateur.updateMany({
     where: { id: utilisateurId, organisationId },
-    data: { passwordHash, echecsConnexion: 0, verrouilleJusqua: null },
+    data: { passwordHash, echecsConnexion: 0, verrouilleJusqua: null, sessionEpoch: epoch },
   });
-  return res.count > 0 ? "ok" : "introuvable";
+  return res.count > 0 ? { statut: "ok", epoch } : { statut: "introuvable" };
+}
+
+/** Révoque TOUTES les sessions de l'utilisateur (incrémente l'epoch). */
+export async function revoquerSessions(
+  tx: Tx,
+  organisationId: string,
+  utilisateurId: string,
+): Promise<boolean> {
+  const res = await tx.utilisateur.updateMany({
+    where: { id: utilisateurId, organisationId },
+    data: { sessionEpoch: { increment: 1 } },
+  });
+  return res.count > 0;
 }
 
 // --- 2FA TOTP ---------------------------------------------------------------
