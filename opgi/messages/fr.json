@@ -388,7 +388,14 @@
     "resume": "Résumé",
     "aucun": "Aucune entrée d'audit.",
     "accesRefuse": "Votre rôle ne permet pas de consulter le journal d'audit.",
-    "note": "Journal en lecture seule — append-only, protégé contre la modification."
+    "note": "Journal en lecture seule — append-only, protégé contre la modification.",
+    "total": "Total",
+    "rechercheLabel": "Recherche",
+    "recherchePlaceholder": "Action, objet ou résumé",
+    "resultatTous": "Tous les résultats",
+    "filtrer": "Filtrer",
+    "precedent": "Précédent",
+    "suivant": "Suivant"
   },
   "recouvrement": {
     "titre": "Recouvrement — impayés",

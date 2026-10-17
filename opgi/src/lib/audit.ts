@@ -33,3 +33,39 @@ export const ROLES_LECTURE_AUDIT: ReadonlySet<string> = new Set([
   "DIRECTION",
   "AUDITEUR",
 ]);
+
+export interface AuditListeOpts {
+  q?: string;
+  resultat?: "SUCCES" | "ECHEC";
+  skip?: number;
+  take?: number;
+}
+
+function whereAudit(organisationId: string, o: AuditListeOpts) {
+  return {
+    organisationId,
+    ...(o.resultat ? { resultat: o.resultat } : {}),
+    ...(o.q
+      ? {
+          OR: [
+            { action: { contains: o.q, mode: "insensitive" as const } },
+            { objetType: { contains: o.q, mode: "insensitive" as const } },
+            { resume: { contains: o.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+
+export function listAudit(tx: Tx, organisationId: string, o: AuditListeOpts = {}) {
+  return tx.auditLog.findMany({
+    where: whereAudit(organisationId, o),
+    orderBy: { createdAt: "desc" },
+    skip: o.skip,
+    take: o.take ?? 200,
+  });
+}
+
+export function countAudit(tx: Tx, organisationId: string, o: AuditListeOpts = {}) {
+  return tx.auditLog.count({ where: whereAudit(organisationId, o) });
+}

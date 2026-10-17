@@ -291,7 +291,16 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - Rétro‑compatible : les jetons sans claim `epoch` valent 0, l'epoch par défaut est 0 → aucune
   déconnexion de masse au déploiement.
 
-### Tests — **206 verts** (`npm test`)
+### Incrément 25 — Journal d'audit : filtres + pagination
+
+- `GET /api/audit` et la page `/audit` acceptent un **filtre texte** `q` (action, type d'objet,
+  résumé), un **filtre `resultat`** (SUCCES/ECHEC) et la **pagination** (`page`/`perPage`), avec
+  en‑tête `X-Total-Count`. Fonctions `listAudit`/`countAudit` (filtres + comptage dans la même
+  transaction `withTenant`). Page avec formulaire de filtre et navigation précédent/suivant.
+- Au passage, le handler d'audit applique aussi le **contrôle de révocation de session** (comme les
+  autres gardes).
+
+### Tests — **210 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -337,7 +346,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 206 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 210 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -378,7 +387,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 206 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 210 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via
@@ -414,8 +423,7 @@ Ne sont **pas** encore livrés :
 - **Sécurité (compléments)** : durcissement du
   `style-src` par nonces (styles inline React), analyse antivirus des pièces jointes.
 - **Administration plateforme** (gestion des comptes/organismes/permissions via UI) + instrumentation
-  de ces actions au journal d'audit ; pagination/filtres du journal d'audit ; politique de
-  conservation (après validation métier).
+  de ces actions au journal d'audit ; politique de conservation (après validation métier).
 - **Tableaux de bord** : séries temporelles et graphiques.
 - **Exploitation/déploiement** : `docker-compose` (PostgreSQL + rôles), gestion des secrets de
   production, runbook de déploiement.
