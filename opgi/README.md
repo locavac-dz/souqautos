@@ -360,30 +360,42 @@ Les tests préparent automatiquement la base `opgi_test` (migrations + droits + 
 
 ## Ce qui reste à faire (honnêtement)
 
-Le socle d'isolation, l'authentification et le Module A (patrimoine/occupants/contrats) sont en
-place. Ne sont **pas** encore livrés :
+Socle **livré et testé** : isolation inter‑OPGI à deux niveaux (filtre applicatif + RLS, deux modes
+mutualisé/dédié), authentification (bcrypt, session JWT, CSRF, **verrouillage anti‑bruteforce**,
+**2FA TOTP**, **changement de mot de passe self‑service**), Modules A/B/C (CRUD, finances
+engagé/constaté, réclamations/ordres de travail, projets/marchés/situations/réceptions), journal
+d'audit append‑only, import CSV, tableaux de bord d'indicateurs, **exports CSV et PDF** (récépissé
+de réclamation, fiche marché, bon d'ordre de travail), pièces jointes médiées, **notifications
+internes + canal externe webhook (opt‑in)**, **pagination + recherche** sur toutes les listes,
+**CSP durcie par nonces** (+ HSTS/COOP/Permissions‑Policy), **interface bilingue FR/AR en RTL**
+(parité des clés vérifiée), et **CI GitHub Actions + PostgreSQL** (migrate diff, suite verte).
 
+Ne sont **pas** encore livrés :
+
+- **Décisions métier/juridiques (préalable, pas du code)** : barèmes, délais, pénalités, durées de
+  conservation restent configurables et **« à valider » par l'OPGI** (voir `../docs/opgi/04` et
+  `05`). Rien n'est inventé à leur place.
 - **Module A — compléments** : hiérarchie du patrimoine (sites → bâtiments → cages → niveaux),
-  génération en masse des appels par échéancier, édition via formulaires (la mise à jour est
-  exposée par l'API `PATCH` mais sans écran dédié), import initial, reçus/états de compte,
-  indicateurs (occupation, encaissements, taux de recouvrement) avec définitions visibles.
-- **Module C — compléments** : portail public (déclarant non authentifié avec accusé de réception),
-  photos/pièces jointes des réclamations, planification/visites détaillées, cloisonnement
-  **prestataire externe** (nécessite un modèle de compte prestataire), indicateurs par zone/délai.
+  génération en masse des appels par échéancier, **écrans d'édition dédiés** (le `PATCH` existe en
+  API), états de compte/reçus.
 - **Module B — compléments** : planning (jalons/tâches), ordres de service et avenants, lots,
-  pièces justificatives, écrans d'édition dédiés (le `PATCH` existe en API), exports.
-- **Audit — compléments** : instrumentation des créations de compte/permissions et des exports
-  (à venir avec ces fonctions), pagination/filtres du journal, politique de conservation (après C5).
-- **Canal de notification externe** (email/SMS) à brancher, pagination/recherche, durcissement CSP
-  (nonces), 2FA, rotation/révocation de session. Pièces jointes : extension aux autres modules et
-  analyse antivirus. Exports : états/reçus en PDF (le CSV est livré). Import : extension aux
-  marchés/projets. Tableaux de bord : séries temporelles et graphiques.
-- **Durcissement CSP** avec nonces (aujourd'hui `unsafe-inline`/`unsafe-eval` tolérés pour Next).
-- Rotation/révocation de session, 2FA (le **verrouillage anti‑bruteforce** est livré).
-- **Rôle `opgi_app` portable en CI** (aujourd'hui prérequis documenté) et workflow CI dédié.
-- **AR/RTL** réellement activé (architecture en place, Phase 7).
-- Les 4 autres tests d'isolation du plan (recherche, export, pièces jointes, admin plateforme) :
-  ils s'attacheront quand ces surfaces existeront (voir `../docs/opgi/02-ISOLATION-MULTI-OPGI.md`).
+  écrans d'édition dédiés (le `PATCH` existe en API), import des marchés/projets.
+- **Module C — compléments** : **portail public** (déclarant non authentifié avec accusé de
+  réception), **compte prestataire externe** + cloisonnement associé, planification/visites
+  détaillées, indicateurs par zone/délai.
+- **Libellés i18n des valeurs d'enum** (statuts, types, catégories) : affichés aujourd'hui en texte
+  brut, non traduits en arabe.
+- **Sécurité (compléments)** : rotation/révocation de session (déconnexion globale), durcissement du
+  `style-src` par nonces (styles inline React), analyse antivirus des pièces jointes.
+- **Administration plateforme** (gestion des comptes/organismes/permissions via UI) + instrumentation
+  de ces actions au journal d'audit ; pagination/filtres du journal d'audit ; politique de
+  conservation (après validation métier).
+- **Tableaux de bord** : séries temporelles et graphiques.
+- **Exploitation/déploiement** : `docker-compose` (PostgreSQL + rôles), gestion des secrets de
+  production, runbook de déploiement.
+- Les tests d'isolation restants du plan (admin plateforme notamment) : ils s'attacheront quand ces
+  surfaces existeront (voir `../docs/opgi/02-ISOLATION-MULTI-OPGI.md`).
 
-Aucune règle métier ou juridique n'est inventée : barèmes, délais, pénalités, durées de conservation
-restent configurables et « à valider » (voir `../docs/opgi/04` et `05`).
+En résumé : **MVP solide, testé et cohérent**, mais pas encore un produit prêt pour la production —
+il manque surtout la **validation des règles métier** par l'OPGI, de la **profondeur** sur quelques
+workflows, et le **volet exploitation/déploiement**.
