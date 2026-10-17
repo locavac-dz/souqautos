@@ -56,6 +56,18 @@ describe("messages arabes", () => {
       expect(clesFr.has(c), `clé AR absente de FR: ${c}`).toBe(true);
     }
   });
+  it("parité complète FR↔AR : chaque clé FR est traduite en AR", () => {
+    const feuilles = (o: Record<string, unknown>, prefix = ""): string[] =>
+      Object.entries(o).flatMap(([k, v]) =>
+        v && typeof v === "object"
+          ? feuilles(v as Record<string, unknown>, `${prefix}${k}.`)
+          : [`${prefix}${k}`],
+      );
+    const clesAr = new Set(feuilles(ar as Record<string, unknown>));
+    const manquantes = feuilles(fr as Record<string, unknown>).filter((c) => !clesAr.has(c));
+    expect(manquantes, `clés FR sans traduction AR: ${manquantes.join(", ")}`).toEqual([]);
+  });
+
   it("la fusion AR sur FR couvre 100% des clés FR (repli garanti)", () => {
     const merged = fusionner(fr as never, ar as never);
     // Même nombre de feuilles que FR (aucune clé perdue).

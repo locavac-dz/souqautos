@@ -260,8 +260,9 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   couverture 100 % des clés après fusion).
 - **RTL réel** : `dir="rtl"` posé par le layout quand la locale est `ar` (confirmé au runtime :
   `html dir=rtl lang=ar`). **Sélecteur de langue** FR/العربية dans la navigation et sur l'écran de
-  connexion. Traductions arabes des sections cœur (navigation, connexion, commun, compte) ; les
-  autres s'ajouteront par simple complétion de `messages/ar.json`.
+  connexion. **Traduction arabe complète** de toute l'interface (navigation, connexion, compte,
+  tableau de bord, indicateurs, patrimoine, occupants, contrats, finances, réclamations, projets,
+  entreprises, marchés, audit, recouvrement, import) — **parité FR↔AR vérifiée par test**.
 
 ### Tests — **189 verts** (`npm test`)
 
