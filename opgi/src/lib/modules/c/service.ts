@@ -92,6 +92,41 @@ function whereReclamations(organisationId: string, acteur: Acteur, opts: Reclama
   };
 }
 
+/**
+ * Dépôt PUBLIC d'une réclamation (portail, déclarant non authentifié).
+ * Aucun compte : `declarantUtilisateurId` reste null, canal PORTAIL, urgence par
+ * défaut (le triage/urgence est décidé en interne). Ne référence ni bien ni
+ * occupant (le public ne les connaît pas). L'organisme est fixé par l'appelant
+ * (résolu et validé côté handler) et appliqué par la RLS via `withTenant`.
+ */
+export async function creerReclamationPublique(
+  tx: Tx,
+  organisationId: string,
+  input: {
+    categorie: string;
+    description: string;
+    declarantNom?: string | null;
+    declarantContact?: string | null;
+    localisation?: string | null;
+  },
+) {
+  return tx.reclamation.create({
+    data: {
+      organisationId,
+      reference: genRef("REC"),
+      declarantUtilisateurId: null,
+      declarantNom: input.declarantNom ?? null,
+      declarantContact: input.declarantContact ?? null,
+      categorie: input.categorie as never,
+      urgence: "NORMALE",
+      canal: "PORTAIL",
+      statut: "NOUVELLE",
+      description: input.description,
+      localisation: input.localisation ?? null,
+    },
+  });
+}
+
 export function listReclamations(
   tx: Tx,
   organisationId: string,

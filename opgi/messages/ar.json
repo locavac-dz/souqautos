@@ -8,6 +8,24 @@
     "francais": "Français",
     "arabe": "العربية"
   },
+  "portail": {
+    "titre": "إيداع شكوى",
+    "intro": "أودِع شكواك. ستحصل على رقم وصل استلام احتفظ به.",
+    "code": "رمز الديوان",
+    "codeAide": "مثال: OPGI-ALGER",
+    "categorie": "الصنف",
+    "description": "الوصف",
+    "declarantNom": "اسمك (اختياري)",
+    "declarantContact": "الهاتف أو البريد الإلكتروني (اختياري)",
+    "localisation": "الموقع (اختياري)",
+    "envoyer": "إرسال الشكوى",
+    "enCours": "جارٍ الإرسال…",
+    "succesTitre": "تم تسجيل الشكوى",
+    "succesRef": "رقم وصل الاستلام الخاص بك:",
+    "succesNote": "احتفظ بهذا الرقم لأي متابعة لدى الديوان.",
+    "nouvelle": "إيداع شكوى أخرى",
+    "erreur": "تعذّر إرسال الشكوى."
+  },
   "enums": {
     "typeBien": { "LOGEMENT": "سكن", "LOCAL_COMMERCIAL": "محل تجاري", "GARAGE": "مرآب", "AUTRE": "أخرى" },
     "etatOccupation": { "OCCUPE": "مشغول", "VACANT": "شاغر", "INDISPONIBLE": "غير متاح" },

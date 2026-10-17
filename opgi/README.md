@@ -264,7 +264,21 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   tableau de bord, indicateurs, patrimoine, occupants, contrats, finances, réclamations, projets,
   entreprises, marchés, audit, recouvrement, import) — **parité FR↔AR vérifiée par test**.
 
-### Tests — **195 verts** (`npm test`)
+### Incrément 23 — Portail public de dépôt de réclamation
+
+- **Page publique** `/portail` accessible **sans authentification** (aucune garde de session),
+  bilingue FR/AR, avec catégories traduites. Lien depuis l'écran de connexion.
+- `POST /api/portail/reclamations` : le déclarant cible un organisme par son **code OPGI** (ou
+  l'unique organisme en mode dédié), **validé côté serveur** (organisation active) ; l'écriture est
+  confinée à ce seul organisme par la **RLS** (`withTenant`). La réclamation est créée sans compte
+  (`declarantUtilisateurId` null, canal `PORTAIL`, statut `NOUVELLE`), tracée au journal d'audit
+  (auteur système). La réponse n'expose **que la référence** d'accusé de réception — aucune autre
+  donnée, aucune lecture inter‑OPGI.
+- **Anti‑abus** : CSRF d'origine + **limiteur de débit** en mémoire par IP (configurable
+  `PUBLIC_RL_MAX` / `PUBLIC_RL_WINDOW_MINUTES`, défaut 5/10 min ; WAF/CAPTCHA recommandés en
+  production, « à valider »). Validation stricte (zod) des entrées.
+
+### Tests — **204 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -310,7 +324,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 195 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 204 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -351,7 +365,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 195 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 204 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via
@@ -381,9 +395,9 @@ Ne sont **pas** encore livrés :
   API), états de compte/reçus.
 - **Module B — compléments** : planning (jalons/tâches), ordres de service et avenants, lots,
   écrans d'édition dédiés (le `PATCH` existe en API), import des marchés/projets.
-- **Module C — compléments** : **portail public** (déclarant non authentifié avec accusé de
-  réception), **compte prestataire externe** + cloisonnement associé, planification/visites
-  détaillées, indicateurs par zone/délai.
+- **Module C — compléments** : **compte prestataire externe** + cloisonnement associé,
+  planification/visites détaillées, indicateurs par zone/délai. (Le **portail public** de dépôt de
+  réclamation est livré.)
 - **Sécurité (compléments)** : rotation/révocation de session (déconnexion globale), durcissement du
   `style-src` par nonces (styles inline React), analyse antivirus des pièces jointes.
 - **Administration plateforme** (gestion des comptes/organismes/permissions via UI) + instrumentation

@@ -13,6 +13,7 @@ import {
   type CanalExterne,
   type Journal,
 } from "@/lib/notifications/canal";
+import { createRateLimiter, type RateLimiter } from "@/lib/http/ratelimit";
 
 export interface Services {
   app: PrismaClient;
@@ -29,6 +30,8 @@ export interface Services {
   canalNotif: CanalExterne;
   /** Journal structuré des envois externes (sans donnée sensible). */
   journal: Journal;
+  /** Limiteur de débit du portail public (anti-abus). */
+  publicRateLimit: RateLimiter;
 }
 
 export function buildServices(env: Record<string, string | undefined> = process.env): Services {
@@ -60,6 +63,10 @@ export function buildServices(env: Record<string, string | undefined> = process.
     passwordMinLength: env.PASSWORD_MIN_LENGTH ? Math.max(Number(env.PASSWORD_MIN_LENGTH), 1) : 12,
     canalNotif: canalDepuisEnv(env),
     journal: journalConsole,
+    publicRateLimit: createRateLimiter(
+      env.PUBLIC_RL_MAX ? Math.max(Number(env.PUBLIC_RL_MAX), 1) : 5,
+      env.PUBLIC_RL_WINDOW_MINUTES ? Math.max(Number(env.PUBLIC_RL_WINDOW_MINUTES), 1) * 60_000 : 10 * 60_000,
+    ),
   };
 }
 

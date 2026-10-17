@@ -80,6 +80,24 @@
     "francais": "Français",
     "arabe": "العربية"
   },
+  "portail": {
+    "titre": "Dépôt de réclamation",
+    "intro": "Déposez votre réclamation. Vous recevrez un numéro d'accusé de réception à conserver.",
+    "code": "Code de l'OPGI",
+    "codeAide": "Ex. OPGI-ALGER",
+    "categorie": "Catégorie",
+    "description": "Description",
+    "declarantNom": "Votre nom (facultatif)",
+    "declarantContact": "Téléphone ou e-mail (facultatif)",
+    "localisation": "Localisation (facultatif)",
+    "envoyer": "Envoyer la réclamation",
+    "enCours": "Envoi…",
+    "succesTitre": "Réclamation enregistrée",
+    "succesRef": "Votre numéro d'accusé de réception :",
+    "succesNote": "Conservez ce numéro pour tout suivi auprès de l'OPGI.",
+    "nouvelle": "Déposer une autre réclamation",
+    "erreur": "Impossible d'envoyer la réclamation."
+  },
   "enums": {
     "typeBien": { "LOGEMENT": "Logement", "LOCAL_COMMERCIAL": "Local commercial", "GARAGE": "Garage", "AUTRE": "Autre" },
     "etatOccupation": { "OCCUPE": "Occupé", "VACANT": "Vacant", "INDISPONIBLE": "Indisponible" },

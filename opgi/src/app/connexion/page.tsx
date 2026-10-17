@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { SelecteurLangue } from "@/app/_components/SelecteurLangue";
 
 export default function ConnexionPage() {
   const t = useTranslations("connexion");
+  const tp = useTranslations("portail");
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -109,6 +111,9 @@ export default function ConnexionPage() {
           </p>
         )}
       </form>
+      <p style={{ marginTop: 16 }}>
+        <Link href="/portail">{tp("titre")}</Link>
+      </p>
     </main>
   );
 }
