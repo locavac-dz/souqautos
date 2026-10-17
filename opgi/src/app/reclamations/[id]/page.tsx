@@ -101,6 +101,7 @@ export default async function ReclamationDetail({ params }: { params: Promise<{ 
                 <th scope="col">{t("statut")}</th>
                 <th scope="col">{t("affectation")}</th>
                 <th scope="col">{t("datePlanifiee")}</th>
+                <th scope="col">{tcom("actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -110,6 +111,9 @@ export default async function ReclamationDetail({ params }: { params: Promise<{ 
                   <td>{o.statut}</td>
                   <td>{o.affectationType ?? "—"}</td>
                   <td>{jour(o.datePlanifiee)}</td>
+                  <td>
+                    <a href={`/api/ordres/${o.id}/pdf`}>{t("telechargerBonPdf")}</a>
+                  </td>
                 </tr>
               ))}
             </tbody>

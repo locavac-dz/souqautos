@@ -243,7 +243,15 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   avancement financier/physique, dépassement, retard) — explicitement « non réglementaires ». Lien
   de téléchargement sur la fiche marché.
 
-### Tests — **180 verts** (`npm test`)
+### Incrément 19 — Export PDF (bon d'ordre de travail, module C)
+
+- `GET /api/ordres/:id/pdf` (`application/pdf`, attachment) : **bon d'ordre de travail** imprimable,
+  médié par autorisation **C.lire** ET **propriété** — un technicien ne télécharge que SES ordres ;
+  cloisonnement RLS par organisme. Reprend référence, statut, affectation, prestataire, dates,
+  coûts estimé/constaté, compte rendu ; mention « non contractuel ». Lien par ligne dans le tableau
+  des ordres de la fiche de réclamation.
+
+### Tests — **181 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -289,7 +297,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 180 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 181 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -330,7 +338,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 180 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 181 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via

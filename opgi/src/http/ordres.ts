@@ -9,6 +9,7 @@ import { createOrdre, listOrdres, countOrdres, getOrdre, updateOrdre, type Acteu
 import { notifier } from "@/lib/modules/notifications";
 import { dispatcherExterne } from "@/lib/notifications/canal";
 import { parseListParams, pageHeaders } from "@/http/pagination";
+import { documentPdf } from "@/lib/pdf/simple";
 
 function acteurDe(auth: AuthorizedContext): Acteur {
   return { utilisateurId: auth.session.utilisateurId, role: auth.session.role };
@@ -64,6 +65,44 @@ export async function handleOrdres(request: Request, s: Services): Promise<Respo
     await countOrdres(tx, auth.ctx.organisationId, acteur, opts),
   ]);
   return json(200, { ordres }, { headers: pageHeaders(total, p) });
+}
+
+// GET /api/ordres/:id/pdf — bon d'ordre de travail (médié par propriété).
+export async function handleOrdrePdf(request: Request, s: Services, id: string): Promise<Response> {
+  if (request.method !== "GET") return json(405, { error: "Méthode non autorisée." });
+  const auth = await authorize(request, s, "C", "lire");
+  if (auth instanceof Response) return auth;
+  const ot = await withTenant(s.app, auth.ctx, (tx) =>
+    getOrdre(tx, auth.ctx.organisationId, acteurDe(auth), id),
+  );
+  if (!ot) return json(404, { error: "Introuvable." });
+
+  const dzd = (c: number | null) =>
+    c != null ? `${(c / 100).toLocaleString("fr-DZ", { minimumFractionDigits: 2 })} DA` : "—";
+  const jour = (dt: Date | null) => (dt ? dt.toISOString().slice(0, 10) : "—");
+  const pdf = documentPdf({
+    titre: `Bon d'ordre de travail ${ot.reference}`,
+    sousTitre: `Édité le ${new Date().toISOString().slice(0, 10)} — document de données (à valider)`,
+    lignes: [
+      { label: "Référence", valeur: ot.reference },
+      { label: "Statut", valeur: ot.statut },
+      { label: "Affectation", valeur: ot.affectationType ?? "—" },
+      { label: "Prestataire", valeur: ot.prestataireNom ?? "—" },
+      { label: "Date planifiée", valeur: jour(ot.datePlanifiee) },
+      { label: "Coût estimé", valeur: dzd(ot.coutEstimeCentimes) },
+      { label: "Coût constaté", valeur: dzd(ot.coutConstateCentimes) },
+      { label: "Compte rendu", valeur: ot.compteRendu ?? "—" },
+    ],
+    pied: "Plateforme OPGI — bon de travail non contractuel.",
+  });
+
+  return new Response(new Uint8Array(pdf), {
+    status: 200,
+    headers: {
+      "content-type": "application/pdf",
+      "content-disposition": `attachment; filename="ordre-${ot.reference}.pdf"`,
+    },
+  });
 }
 
 export async function handleOrdre(request: Request, s: Services, id: string): Promise<Response> {
