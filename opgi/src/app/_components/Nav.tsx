@@ -22,9 +22,18 @@ async function nombreNonLues(): Promise<number> {
   }
 }
 
+async function roleCourant(): Promise<string | null> {
+  try {
+    return (await getServerSession())?.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function Nav() {
   const t = await getTranslations("nav");
   const nonLues = await nombreNonLues();
+  const role = await roleCourant();
   return (
     <nav
       aria-label="Navigation principale"
@@ -47,6 +56,7 @@ export async function Nav() {
         {t("notifications")}
         {nonLues > 0 ? ` (${nonLues})` : ""}
       </Link>
+      {role === "ADMIN_OPGI" && <Link href="/admin/utilisateurs">{t("admin")}</Link>}
       <Link href="/compte">{t("compte")}</Link>
       <span style={{ marginInlineStart: "auto", display: "inline-flex", gap: 12, alignItems: "center" }}>
         <SelecteurLangue />

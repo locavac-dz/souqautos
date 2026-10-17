@@ -353,7 +353,22 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   `documentPdf`). Bloc de synthèse ajouté à la page détail du contrat avec lien de téléchargement.
 - Isolation : un contrat d'un autre organisme est introuvable (404), y compris pour le PDF.
 
-### Tests — **223 verts** (`npm test`)
+### Incrément 31 — Administration des comptes par organisme (ADMIN_OPGI)
+
+- Nouvelle administration des **comptes utilisateurs de son propre organisme**, réservée au rôle
+  **ADMIN_OPGI** (garde `authorizeAdminOpgi` ; le rôle technique ADMIN_PLATEFORME n'ouvre pas cette
+  garde — séparation technique ↔ organisme). Lister, **créer**, changer de **rôle/périmètre**,
+  **(dé)activer** et **réinitialiser le mot de passe** — le tout **isolé par RLS** (un admin n'agit
+  que sur son organisme) et **tracé au journal d'audit** (jamais de mot de passe dans la trace).
+- Garde‑fous : le rôle **ADMIN_PLATEFORME n'est pas attribuable** depuis un organisme ; un admin ne
+  peut **ni se désactiver ni changer son propre rôle** ; la **désactivation** et le **changement de
+  rôle révoquent les sessions** du compte (epoch++), de même que la réinitialisation du mot de passe ;
+  longueur minimale du mot de passe selon la politique configurée. Aucune migration.
+- `src/lib/auth/admin-users.ts` (service) + `admin-schemas.ts` (zod), `src/http/admin-users.ts`,
+  routes `/api/admin/utilisateurs[/:id[/mot-de-passe]]`, page `/admin/utilisateurs` (liste + création
+  + actions par ligne), lien de navigation visible au seul ADMIN_OPGI, i18n FR/AR.
+
+### Tests — **232 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -394,6 +409,11 @@ BROUILLON ignorés, idempotence (seconde génération → 0 créé, aucun doublo
 (la génération d'Oran n'affecte pas Alger), AUDITEUR refusé (403).
 **État de compte** : totaux consolidés (appelé/imputé/solde/paiements/avance) d'un contrat, export
 PDF (en‑tête `%PDF-`, type `application/pdf`), contrat d'un autre organisme introuvable (404).
+**Administration des comptes** : non‑admin refusé (403), création + connexion du nouveau compte,
+e‑mail dupliqué (409), mot de passe trop court (400), rôle ADMIN_PLATEFORME non attribuable (400),
+auto‑désactivation interdite (409), réinitialisation (ancien refusé / nouveau accepté), désactivation
+→ connexion refusée, changement de rôle révoquant les sessions, isolation inter‑OPGI (liste propre,
+mutation croisée 404).
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -408,7 +428,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 223 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 232 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -449,7 +469,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 223 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 232 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via
@@ -485,8 +505,9 @@ Ne sont **pas** encore livrés :
   livrés.)
 - **Sécurité (compléments)** : durcissement du
   `style-src` par nonces (styles inline React), analyse antivirus des pièces jointes.
-- **Administration plateforme** (gestion des comptes/organismes/permissions via UI) + instrumentation
-  de ces actions au journal d'audit ; politique de conservation (après validation métier).
+- **Administration plateforme** : gestion des **organismes** et des **permissions** via UI (la
+  gestion des **comptes par organisme** par l'ADMIN_OPGI, tracée au journal d'audit, est livrée) ;
+  politique de conservation (après validation métier).
 - **Tableaux de bord** : séries temporelles et graphiques.
 - **Exploitation/déploiement** : `docker-compose` (PostgreSQL + rôles), gestion des secrets de
   production, runbook de déploiement.

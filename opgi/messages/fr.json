@@ -133,6 +133,7 @@
     "marches": "Marchés",
     "audit": "Journal d'audit",
     "notifications": "Notifications",
+    "admin": "Comptes",
     "compte": "Mon compte"
   },
   "compte": {
@@ -456,5 +457,24 @@
     "resumeExistants": "{n} contrat(s) déjà pourvu(s) (ignorés)",
     "resumeSansLoyer": "{n} contrat(s) actif(s) sans loyer défini (ignorés)",
     "resumeContratsActifs": "{n} contrat(s) actif(s) au total"
+  },
+  "admin": {
+    "titre": "Comptes de l'organisme",
+    "aide": "Gestion des comptes de votre organisme uniquement. Aucune règle inventée : le mot de passe doit respecter la longueur minimale configurée.",
+    "creerTitre": "Créer un compte",
+    "email": "E-mail",
+    "role": "Rôle",
+    "perimetre": "Périmètre (facultatif)",
+    "motDePasseInitial": "Mot de passe initial",
+    "aucun": "Aucun compte.",
+    "etat": "État",
+    "actif": "Actif",
+    "inactif": "Inactif",
+    "verrouille": "verrouillé",
+    "desactiver": "Désactiver",
+    "activer": "Activer",
+    "reinitialiserMotDePasse": "Réinitialiser le mot de passe",
+    "nouveauMotDePasse": "Nouveau mot de passe",
+    "motDePasseReinitialise": "Mot de passe réinitialisé ; les sessions de ce compte sont révoquées."
   }
 }

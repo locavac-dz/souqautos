@@ -67,6 +67,7 @@ export default async function setup() {
         utilisateurs: {
           create: [
             { email: "agent@opgi-alger.demo", role: "AGENT_LOCATIF", passwordHash: pwd },
+            { email: "admin@opgi-alger.demo", role: "ADMIN_OPGI", passwordHash: pwd },
             { email: "chef@opgi-alger.demo", role: "CHEF_PROJET", passwordHash: pwd },
             { email: "auditeur@opgi-alger.demo", role: "AUDITEUR", passwordHash: pwd },
             { email: "resp@opgi-alger.demo", role: "RESP_RECLAMATIONS", passwordHash: pwd },

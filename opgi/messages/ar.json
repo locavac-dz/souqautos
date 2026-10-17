@@ -61,6 +61,7 @@
     "marches": "الصفقات",
     "audit": "سجل التدقيق",
     "notifications": "الإشعارات",
+    "admin": "الحسابات",
     "compte": "حسابي"
   },
   "connexion": {
@@ -456,5 +457,24 @@
     "resumeExistants": "{n} عقد مزوّد مسبقًا (مُتجاهَل)",
     "resumeSansLoyer": "{n} عقد نشِط دون إيجار محدَّد (مُتجاهَل)",
     "resumeContratsActifs": "{n} عقد نشِط إجمالاً"
+  },
+  "admin": {
+    "titre": "حسابات المؤسسة",
+    "aide": "إدارة حسابات مؤسستك فقط. دون أي قاعدة مُفترضة: يجب أن يحترم كلمة السر الطول الأدنى المُعَدّ.",
+    "creerTitre": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "perimetre": "النطاق (اختياري)",
+    "motDePasseInitial": "كلمة السر الأولية",
+    "aucun": "لا يوجد حساب.",
+    "etat": "الحالة",
+    "actif": "نشِط",
+    "inactif": "غير نشِط",
+    "verrouille": "مقفَل",
+    "desactiver": "تعطيل",
+    "activer": "تفعيل",
+    "reinitialiserMotDePasse": "إعادة تعيين كلمة السر",
+    "nouveauMotDePasse": "كلمة سر جديدة",
+    "motDePasseReinitialise": "أُعيد تعيين كلمة السر؛ جلسات هذا الحساب مُلغاة."
   }
 }

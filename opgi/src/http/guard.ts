@@ -45,6 +45,24 @@ export async function authenticateSession(
   }
 }
 
+/**
+ * Garde « administration d'organisme » : session valide + organisme résolu +
+ * rôle ADMIN_OPGI. Réservée à la gestion des comptes de l'organisme courant.
+ * Le rôle technique ADMIN_PLATEFORME n'ouvre PAS cette garde (séparation
+ * technique ↔ métier/organisme).
+ */
+export async function authorizeAdminOpgi(
+  request: Request,
+  s: Services,
+): Promise<AuthorizedContext | Response> {
+  const auth = await authenticateSession(request, s);
+  if (auth instanceof Response) return auth;
+  if ((auth.session.role as RoleName) !== "ADMIN_OPGI") {
+    return json(403, { error: "Accès refusé." });
+  }
+  return auth;
+}
+
 export async function authorize(
   request: Request,
   s: Services,
