@@ -22,6 +22,7 @@ import {
   type Acteur,
 } from "@/lib/modules/c/service";
 import { notifier } from "@/lib/modules/notifications";
+import { dispatcherExterne } from "@/lib/notifications/canal";
 import { parseListParams, pageHeaders } from "@/http/pagination";
 
 function acteurDe(auth: AuthorizedContext): Acteur {
@@ -76,19 +77,30 @@ export async function handleReclamation(request: Request, s: Services, id: strin
     if (auth instanceof Response) return auth;
     const body = await parseBody(request, reclamationQualifierSchema);
     if (body instanceof Response) return body;
-    const reclamation = await withTenant(s.app, auth.ctx, async (tx) => {
+    const { reclamation, notif } = await withTenant(s.app, auth.ctx, async (tx) => {
       const r = await qualifierReclamation(tx, auth.ctx.organisationId, id, body);
       // Notifie le déclarant (occupant) du changement de statut de SA réclamation.
+      let n = null;
       if (r && r.declarantUtilisateurId) {
-        await notifier(tx, auth.ctx.organisationId, {
+        n = await notifier(tx, auth.ctx.organisationId, {
           destinataireUtilisateurId: r.declarantUtilisateurId,
           type: "reclamation.statut",
           titre: `Réclamation ${r.reference} : ${r.statut}`,
           lien: `/reclamations/${r.id}`,
         });
       }
-      return r;
+      return { reclamation: r, notif: n };
     });
+    // Envoi externe best-effort APRÈS commit (jamais dans la transaction).
+    if (notif) {
+      await dispatcherExterne(s.canalNotif, s.journal, {
+        organisationId: auth.ctx.organisationId,
+        notificationId: notif.id,
+        destinataireUtilisateurId: notif.destinataireUtilisateurId,
+        type: notif.type,
+        lien: notif.lien,
+      });
+    }
     return reclamation ? json(200, { reclamation }) : json(404, { error: "Introuvable." });
   }
 

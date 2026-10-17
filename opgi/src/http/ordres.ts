@@ -7,6 +7,7 @@ import { json } from "@/http/respond";
 import { ordreCreateSchema, ordreUpdateSchema } from "@/lib/modules/c/schemas";
 import { createOrdre, listOrdres, countOrdres, getOrdre, updateOrdre, type Acteur } from "@/lib/modules/c/service";
 import { notifier } from "@/lib/modules/notifications";
+import { dispatcherExterne } from "@/lib/notifications/canal";
 import { parseListParams, pageHeaders } from "@/http/pagination";
 
 function acteurDe(auth: AuthorizedContext): Acteur {
@@ -23,19 +24,30 @@ export async function handleOrdres(request: Request, s: Services): Promise<Respo
     const body = await parseBody(request, ordreCreateSchema);
     if (body instanceof Response) return body;
     try {
-      const ordre = await withTenant(s.app, auth.ctx, async (tx) => {
+      const { ordre, notif } = await withTenant(s.app, auth.ctx, async (tx) => {
         const r = await createOrdre(tx, auth.ctx.organisationId, body);
         // Notifie le technicien interne affecté.
+        let n = null;
         if (r.technicienUtilisateurId) {
-          await notifier(tx, auth.ctx.organisationId, {
+          n = await notifier(tx, auth.ctx.organisationId, {
             destinataireUtilisateurId: r.technicienUtilisateurId,
             type: "ot.affectation",
             titre: `Ordre de travail ${r.reference} vous est affecté`,
             lien: `/reclamations/${r.reclamationId}`,
           });
         }
-        return r;
+        return { ordre: r, notif: n };
       });
+      // Envoi externe best-effort APRÈS commit (jamais dans la transaction).
+      if (notif) {
+        await dispatcherExterne(s.canalNotif, s.journal, {
+          organisationId: auth.ctx.organisationId,
+          notificationId: notif.id,
+          destinataireUtilisateurId: notif.destinataireUtilisateurId,
+          type: notif.type,
+          lien: notif.lien,
+        });
+      }
       return json(201, { ordre });
     } catch (e) {
       return mapError(e);

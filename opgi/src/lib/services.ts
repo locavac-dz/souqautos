@@ -7,6 +7,12 @@
 import { PrismaClient } from "@prisma/client";
 import { loadIsolationConfig, type IsolationConfig } from "@/lib/tenant/context";
 import { DEFAULT_LOCKOUT, type LockoutPolicy } from "@/lib/auth/authenticate";
+import {
+  canalDepuisEnv,
+  journalConsole,
+  type CanalExterne,
+  type Journal,
+} from "@/lib/notifications/canal";
 
 export interface Services {
   app: PrismaClient;
@@ -19,6 +25,10 @@ export interface Services {
   storageDir: string;
   /** Longueur minimale d'un mot de passe (configurable, « à valider »). */
   passwordMinLength: number;
+  /** Canal de notification externe (désactivé par défaut). */
+  canalNotif: CanalExterne;
+  /** Journal structuré des envois externes (sans donnée sensible). */
+  journal: Journal;
 }
 
 export function buildServices(env: Record<string, string | undefined> = process.env): Services {
@@ -48,6 +58,8 @@ export function buildServices(env: Record<string, string | undefined> = process.
     // Défaut prudent (12), SANS règle de complexité imposée — à valider selon la
     // politique de l'organisme (voir ../../docs/opgi/05).
     passwordMinLength: env.PASSWORD_MIN_LENGTH ? Math.max(Number(env.PASSWORD_MIN_LENGTH), 1) : 12,
+    canalNotif: canalDepuisEnv(env),
+    journal: journalConsole,
   };
 }
 

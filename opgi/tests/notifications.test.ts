@@ -112,4 +112,29 @@ describe("notifications internes", () => {
     const oranN = await jsonOf<NotifList>(await handleNotifications(req("GET", ck.oran), s));
     expect(oranN.notifications).toHaveLength(0);
   });
+
+  it("canal externe actif : dispatch best-effort après commit, payload minimal", async () => {
+    const recu: { notificationId: string; type: string }[] = [];
+    const canalOriginal = s.canalNotif;
+    // Injecte un canal capteur le temps du test.
+    s.canalNotif = {
+      actif: true,
+      envoyer: async (m) => {
+        recu.push({ notificationId: m.notificationId, type: m.type });
+        // Vérifie l'absence de donnée sensible dans la charge utile.
+        expect(JSON.stringify(m)).not.toMatch(/titre|corps|email/i);
+        return "envoye";
+      },
+    };
+    try {
+      const rec = await jsonOf<{ reclamation: { id: string } }>(
+        await handleReclamations(req("POST", ck.occ, { categorie: "PLOMBERIE", description: "Ext" }), s),
+      );
+      const q = await handleReclamation(req("PATCH", ck.resp, { statut: "QUALIFIEE" }), s, rec.reclamation.id);
+      expect(q.status).toBe(200);
+      expect(recu.some((r) => r.type === "reclamation.statut")).toBe(true);
+    } finally {
+      s.canalNotif = canalOriginal;
+    }
+  });
 });
