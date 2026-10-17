@@ -528,6 +528,9 @@ model OrdreTravail {
   statut         StatutOrdreTravail @default(OUVERT)
   affectationType AffectationType?
   technicienUtilisateurId String?
+  // Compte PRESTATAIRE externe affecté (cloisonnement : il ne voit que SES OT).
+  // `prestataireNom` reste pour un prestataire sans compte (saisie libre).
+  prestataireUtilisateurId String?
   prestataireNom String?
   datePlanifiee  DateTime?
   coutEstimeCentimes   Int?
@@ -544,6 +547,7 @@ model OrdreTravail {
   @@index([organisationId])
   @@index([reclamationId])
   @@index([technicienUtilisateurId])
+  @@index([prestataireUtilisateurId])
   @@map("ordre_travail")
 }
 

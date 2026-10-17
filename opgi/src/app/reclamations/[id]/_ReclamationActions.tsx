@@ -155,6 +155,7 @@ function FormOrdre({ reclamationId }: { reclamationId: string }) {
   const [affectation, setAffectation] = useState<string>("INTERNE");
   const [technicien, setTechnicien] = useState("");
   const [prestataire, setPrestataire] = useState("");
+  const [prestataireCompte, setPrestataireCompte] = useState("");
   const [datePlanifiee, setDatePlanifiee] = useState("");
   const [coutEstime, setCoutEstime] = useState("");
   async function submit(e: FormEvent) {
@@ -164,6 +165,7 @@ function FormOrdre({ reclamationId }: { reclamationId: string }) {
       affectationType: affectation,
       technicienUtilisateurId: affectation === "INTERNE" ? technicien || null : null,
       prestataireNom: affectation === "EXTERNE" ? prestataire || null : null,
+      prestataireUtilisateurId: affectation === "EXTERNE" ? prestataireCompte || null : null,
       datePlanifiee: datePlanifiee || null,
       coutEstimeCentimes: coutEstime.trim() === "" ? null : Math.round(Number(coutEstime) * 100),
     });
@@ -185,6 +187,13 @@ function FormOrdre({ reclamationId }: { reclamationId: string }) {
         <>
           <label htmlFor="o-prest">{t("prestataire")}</label>
           <input id="o-prest" value={prestataire} onChange={(e) => setPrestataire(e.target.value)} />
+          <label htmlFor="o-prest-compte">{t("prestataireCompte")}</label>
+          <input
+            id="o-prest-compte"
+            value={prestataireCompte}
+            onChange={(e) => setPrestataireCompte(e.target.value)}
+            placeholder={t("prestataireCompteAide")}
+          />
         </>
       )}
       <label htmlFor="o-date">{t("datePlanifiee")}</label>

@@ -230,8 +230,14 @@ export async function listCommentaires(
 
 // --- Ordres de travail ------------------------------------------------------
 
+// Cloisonnement par PROPRIÉTÉ des ordres de travail :
+//  - un TECHNICIEN interne ne voit/modifie que SES ordres ;
+//  - un PRESTATAIRE externe (compte) ne voit/modifie que les ordres qui LUI sont
+//    affectés (prestataireUtilisateurId). Les autres rôles ne sont pas restreints.
 function ordreOwnership(acteur: Acteur) {
-  return acteur.role === "TECHNICIEN" ? { technicienUtilisateurId: acteur.utilisateurId } : {};
+  if (acteur.role === "TECHNICIEN") return { technicienUtilisateurId: acteur.utilisateurId };
+  if (acteur.role === "PRESTATAIRE") return { prestataireUtilisateurId: acteur.utilisateurId };
+  return {};
 }
 
 export async function createOrdre(tx: Tx, organisationId: string, input: OrdreCreate) {
@@ -246,6 +252,7 @@ export async function createOrdre(tx: Tx, organisationId: string, input: OrdreCr
       reference: genRef("OT"),
       affectationType: input.affectationType ?? null,
       technicienUtilisateurId: input.technicienUtilisateurId ?? null,
+      prestataireUtilisateurId: input.prestataireUtilisateurId ?? null,
       prestataireNom: input.prestataireNom ?? null,
       datePlanifiee: input.datePlanifiee ?? null,
       coutEstimeCentimes: input.coutEstimeCentimes ?? null,

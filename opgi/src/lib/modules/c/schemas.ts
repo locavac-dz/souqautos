@@ -50,6 +50,7 @@ export const ordreCreateSchema = z.object({
   reclamationId: z.string().min(1),
   affectationType: z.enum(AFFECTATION).optional(),
   technicienUtilisateurId: z.string().trim().max(60).nullish(),
+  prestataireUtilisateurId: z.string().trim().max(60).nullish(),
   prestataireNom: z.string().trim().max(200).nullish(),
   datePlanifiee: z.coerce.date().nullish(),
   coutEstimeCentimes: z.number().int().nonnegative().nullish(),

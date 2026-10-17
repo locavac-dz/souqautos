@@ -300,7 +300,16 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
 - Au passage, le handler d'audit applique aussi le **contrôle de révocation de session** (comme les
   autres gardes).
 
-### Tests — **210 verts** (`npm test`)
+### Incrément 26 — Compte prestataire externe (cloisonnement des OT)
+
+- Un ordre de travail peut être affecté à un **compte PRESTATAIRE** externe
+  (`prestataireUtilisateurId` sur l'OT, migration dédiée ; `prestataireNom` reste pour un prestataire
+  sans compte). Notification d'affectation envoyée au prestataire comme au technicien.
+- **Cloisonnement par propriété** étendu : un PRESTATAIRE ne voit/modifie **que SES** ordres de
+  travail (comme un technicien avec les siens), sur toute la surface (liste, fiche, PATCH, PDF) — en
+  plus de l'isolation RLS par organisme. UI : champ « compte prestataire » à l'affectation externe.
+
+### Tests — **211 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -346,7 +355,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 210 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 211 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -387,7 +396,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 210 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 211 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via
@@ -417,9 +426,9 @@ Ne sont **pas** encore livrés :
   API), états de compte/reçus.
 - **Module B — compléments** : planning (jalons/tâches), ordres de service et avenants, lots,
   écrans d'édition dédiés (le `PATCH` existe en API), import des marchés/projets.
-- **Module C — compléments** : **compte prestataire externe** + cloisonnement associé,
-  planification/visites détaillées, indicateurs par zone/délai. (Le **portail public** de dépôt de
-  réclamation est livré.)
+- **Module C — compléments** : planification/visites détaillées, indicateurs par zone/délai. (Le
+  **portail public** de dépôt de réclamation et le **cloisonnement des OT par prestataire** sont
+  livrés.)
 - **Sécurité (compléments)** : durcissement du
   `style-src` par nonces (styles inline React), analyse antivirus des pièces jointes.
 - **Administration plateforme** (gestion des comptes/organismes/permissions via UI) + instrumentation

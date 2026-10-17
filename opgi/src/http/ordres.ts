@@ -27,11 +27,12 @@ export async function handleOrdres(request: Request, s: Services): Promise<Respo
     try {
       const { ordre, notif } = await withTenant(s.app, auth.ctx, async (tx) => {
         const r = await createOrdre(tx, auth.ctx.organisationId, body);
-        // Notifie le technicien interne affecté.
+        // Notifie l'intervenant affecté (technicien interne ou prestataire externe).
+        const destinataire = r.technicienUtilisateurId ?? r.prestataireUtilisateurId;
         let n = null;
-        if (r.technicienUtilisateurId) {
+        if (destinataire) {
           n = await notifier(tx, auth.ctx.organisationId, {
-            destinataireUtilisateurId: r.technicienUtilisateurId,
+            destinataireUtilisateurId: destinataire,
             type: "ot.affectation",
             titre: `Ordre de travail ${r.reference} vous est affecté`,
             lien: `/reclamations/${r.reclamationId}`,

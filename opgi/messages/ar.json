@@ -295,6 +295,8 @@
     "ajouterOrdre": "إنشاء أمر عمل",
     "technicien": "التقني (المُعرّف)",
     "prestataire": "مقدّم خدمة خارجي",
+    "prestataireCompte": "حساب مقدّم الخدمة (المُعرّف)",
+    "prestataireCompteAide": "مُعرّف حساب مقدّم الخدمة للعزل (اختياري)",
     "affectation": "التعيين",
     "datePlanifiee": "التاريخ المبرمج",
     "coutEstime": "التكلفة المقدّرة (DZD)",

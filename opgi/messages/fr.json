@@ -295,6 +295,8 @@
     "ajouterOrdre": "Créer un ordre de travail",
     "technicien": "Technicien (identifiant)",
     "prestataire": "Prestataire externe",
+    "prestataireCompte": "Compte prestataire (identifiant)",
+    "prestataireCompteAide": "Identifiant du compte prestataire pour le cloisonnement (facultatif)",
     "affectation": "Affectation",
     "datePlanifiee": "Date planifiée",
     "coutEstime": "Coût estimé (DZD)",
