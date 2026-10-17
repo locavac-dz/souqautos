@@ -55,6 +55,7 @@
     "contrats": "العقود",
     "reclamations": "الشكاوى",
     "recouvrement": "التحصيل",
+    "appels": "مطالبات الإيجار",
     "projets": "المشاريع",
     "entreprises": "المؤسسات",
     "marches": "الصفقات",
@@ -432,5 +433,20 @@
     "solde": "الرصيد المستحق",
     "joursRetard": "أيام التأخير",
     "joursRetardAide": "إرشادي — دون افتراض أي أجل تنظيمي."
+  },
+  "appels": {
+    "titre": "مطالبات الإيجار",
+    "genererTitre": "توليد مطالبات فترة",
+    "genererAide": "ينشئ مطالبة لكل عقد نشِط بمبلغ إيجاره. دون أي غرامة أو احتساب تناسبي. يمكن إعادة تشغيل العملية دون مخاطرة: تُتجاهَل العقود التي لها مطالبة للفترة أصلاً.",
+    "periode": "الفترة",
+    "periodePlaceholder": "مثال 2026-02",
+    "echeance": "تاريخ الاستحقاق",
+    "libelle": "التسمية (اختياري)",
+    "genererBouton": "توليد",
+    "resumeTitre": "الفترة {periode}",
+    "resumeCrees": "{n} مطالبة منشأة",
+    "resumeExistants": "{n} عقد مزوّد مسبقًا (مُتجاهَل)",
+    "resumeSansLoyer": "{n} عقد نشِط دون إيجار محدَّد (مُتجاهَل)",
+    "resumeContratsActifs": "{n} عقد نشِط إجمالاً"
   }
 }

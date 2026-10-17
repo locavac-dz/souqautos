@@ -127,6 +127,7 @@
     "contrats": "Contrats",
     "reclamations": "Réclamations",
     "recouvrement": "Recouvrement",
+    "appels": "Appels de loyer",
     "projets": "Projets",
     "entreprises": "Entreprises",
     "marches": "Marchés",
@@ -432,5 +433,20 @@
     "solde": "Solde dû",
     "joursRetard": "Jours de retard",
     "joursRetardAide": "Indicatif — aucune échéance réglementaire présumée."
+  },
+  "appels": {
+    "titre": "Appels de loyer",
+    "genererTitre": "Générer les appels d'une période",
+    "genererAide": "Crée un appel par contrat ACTIF au montant de son loyer. Aucune pénalité ni proratisation. L'opération peut être relancée sans risque : les contrats déjà pourvus pour la période sont ignorés.",
+    "periode": "Période",
+    "periodePlaceholder": "ex. 2026-02",
+    "echeance": "Date d'échéance",
+    "libelle": "Libellé (facultatif)",
+    "genererBouton": "Générer",
+    "resumeTitre": "Période {periode}",
+    "resumeCrees": "{n} appel(s) créé(s)",
+    "resumeExistants": "{n} contrat(s) déjà pourvu(s) (ignorés)",
+    "resumeSansLoyer": "{n} contrat(s) actif(s) sans loyer défini (ignorés)",
+    "resumeContratsActifs": "{n} contrat(s) actif(s) au total"
   }
 }

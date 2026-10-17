@@ -38,6 +38,7 @@ export async function Nav() {
       <Link href="/contrats">{t("contrats")}</Link>
       <Link href="/reclamations">{t("reclamations")}</Link>
       <Link href="/recouvrement">{t("recouvrement")}</Link>
+      <Link href="/appels">{t("appels")}</Link>
       <Link href="/projets">{t("projets")}</Link>
       <Link href="/entreprises">{t("entreprises")}</Link>
       <Link href="/marches">{t("marches")}</Link>

@@ -102,6 +102,16 @@ export const appelCreateSchema = z.object({
 });
 export type AppelCreate = z.infer<typeof appelCreateSchema>;
 
+// Génération en masse des appels pour une période : un appel par contrat
+// ACTIF au loyer du contrat (aucun calcul de pénalité ; idempotent par la
+// contrainte unique organisme+contrat+période).
+export const appelsGenererSchema = z.object({
+  periode: z.string().trim().min(1).max(20),
+  dateEcheance: z.coerce.date(),
+  libelle: z.string().trim().max(200).nullish(),
+});
+export type AppelsGenererInput = z.infer<typeof appelsGenererSchema>;
+
 export const paiementCreateSchema = z.object({
   contratId: z.string().min(1),
   montantCentimes: z.number().int().positive(),

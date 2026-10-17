@@ -6,6 +6,7 @@
 import { ReferenceInvalideError, RegleMetierError, type Tx } from "@/lib/modules/a/service";
 import type {
   AppelCreate,
+  AppelsGenererInput,
   PaiementCreate,
   ImputationCreate,
   ActionRecouvrementCreate,
@@ -57,6 +58,73 @@ export async function createAppel(tx: Tx, organisationId: string, input: AppelCr
       dateEcheance: input.dateEcheance,
     },
   });
+}
+
+export interface GenerationAppelsResume {
+  periode: string;
+  /** Contrats ACTIFS de l'organisme considérés. */
+  contratsActifs: number;
+  /** Appels créés par cette génération. */
+  crees: number;
+  /** Contrats déjà pourvus d'un appel pour cette période (ignorés). */
+  ignoresExistants: number;
+  /** Contrats actifs sans loyer défini (> 0) donc ignorés. */
+  ignoresSansLoyer: number;
+}
+
+/**
+ * Génère, pour une période donnée, un appel par contrat ACTIF au montant du
+ * loyer du contrat. Opération purement mécanique : aucun calcul de pénalité,
+ * d'intérêt ni de proratisation. Idempotente — un contrat déjà pourvu d'un
+ * appel pour la période est ignoré (contrainte unique organisme+contrat+période).
+ */
+export async function genererAppels(
+  tx: Tx,
+  organisationId: string,
+  input: AppelsGenererInput,
+): Promise<GenerationAppelsResume> {
+  const contrats = await tx.contrat.findMany({
+    where: { organisationId, statut: "ACTIF", archiveLe: null },
+    select: { id: true, montantLoyerCentimes: true },
+  });
+  const existants = await tx.appelLoyer.findMany({
+    where: { organisationId, periode: input.periode },
+    select: { contratId: true },
+  });
+  const dejaAppel = new Set(existants.map((e) => e.contratId));
+
+  let ignoresExistants = 0;
+  let ignoresSansLoyer = 0;
+  const aCreer = [];
+  for (const c of contrats) {
+    if (dejaAppel.has(c.id)) {
+      ignoresExistants++;
+      continue;
+    }
+    if (c.montantLoyerCentimes == null || c.montantLoyerCentimes <= 0) {
+      ignoresSansLoyer++;
+      continue;
+    }
+    aCreer.push({
+      organisationId,
+      contratId: c.id,
+      periode: input.periode,
+      libelle: input.libelle ?? null,
+      montantCentimes: c.montantLoyerCentimes,
+      dateEcheance: input.dateEcheance,
+    });
+  }
+  if (aCreer.length > 0) {
+    // skipDuplicates : filet contre une génération concurrente sur la même période.
+    await tx.appelLoyer.createMany({ data: aCreer, skipDuplicates: true });
+  }
+  return {
+    periode: input.periode,
+    contratsActifs: contrats.length,
+    crees: aCreer.length,
+    ignoresExistants,
+    ignoresSansLoyer,
+  };
 }
 
 export interface AppelAvecSolde {
