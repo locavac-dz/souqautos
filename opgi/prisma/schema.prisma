@@ -184,6 +184,7 @@ model Organisation {
 
   utilisateurs Utilisateur[]
   sites        Site[]
+  batiments    Batiment[]
   biens        Bien[]
   occupants    Occupant[]
   contrats     Contrat[]
@@ -253,9 +254,10 @@ model Bien {
   type           TypeBien
   etatOccupation EtatOccupation @default(VACANT)
   adresse        String?
-  // Rattachement hiérarchique optionnel à un site (même organisme). Premier
-  // niveau de la hiérarchie patrimoniale (site → … à étendre).
+  // Rattachement hiérarchique optionnel à un site puis à un bâtiment (même
+  // organisme). Niveaux de la hiérarchie patrimoniale (site → bâtiment → …).
   siteId         String?
+  batimentId     String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -264,12 +266,14 @@ model Bien {
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   site         Site?         @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  batiment     Batiment?     @relation(fields: [batimentId], references: [id], onDelete: SetNull)
   contrats     Contrat[]
   reclamations Reclamation[]
 
   @@unique([organisationId, code])
   @@index([organisationId])
   @@index([siteId])
+  @@index([batimentId])
   @@map("bien")
 }
 
@@ -286,10 +290,34 @@ model Site {
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   biens        Bien[]
+  batiments    Batiment[]
 
   @@unique([organisationId, code])
   @@index([organisationId])
   @@map("site")
+}
+
+model Batiment {
+  id             String    @id @default(cuid())
+  organisationId String
+  // Bâtiment rattaché à un site du même organisme (deuxième niveau de la
+  // hiérarchie patrimoniale).
+  siteId         String
+  // Code métier du bâtiment, unique PAR organisme (ex. « BAT-A »).
+  code           String
+  nom            String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  archiveLe      DateTime?
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  site         Site         @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  biens        Bien[]
+
+  @@unique([organisationId, code])
+  @@index([organisationId])
+  @@index([siteId])
+  @@map("batiment")
 }
 
 // --- Occupant (personne physique ou morale — Module A) ----------------------

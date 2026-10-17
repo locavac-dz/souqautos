@@ -121,6 +121,7 @@
   "nav": {
     "tableauDeBord": "Tableau de bord",
     "sites": "Sites",
+    "batiments": "Bâtiments",
     "patrimoine": "Patrimoine",
     "occupants": "Occupants",
     "contrats": "Contrats",
@@ -211,6 +212,16 @@
     "aucun": "Aucun site.",
     "aucunSite": "— (aucun site)",
     "site": "Site"
+  },
+  "batiments": {
+    "titre": "Bâtiments",
+    "titreSingulier": "Bâtiment",
+    "nouveauTitre": "Nouveau bâtiment",
+    "code": "Code du bâtiment",
+    "nom": "Nom",
+    "site": "Site",
+    "choisirSite": "— Choisir un site —",
+    "aucun": "Aucun bâtiment."
   },
   "patrimoine": {
     "titre": "Patrimoine",

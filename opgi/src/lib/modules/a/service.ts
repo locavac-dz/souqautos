@@ -13,6 +13,8 @@ import type {
   ContratUpdate,
   SiteCreate,
   SiteUpdate,
+  BatimentCreate,
+  BatimentUpdate,
 } from "@/lib/modules/a/schemas";
 
 export type Tx = Prisma.TransactionClient;
@@ -80,8 +82,15 @@ async function assertSiteDuTenant(tx: Tx, organisationId: string, siteId: string
   if (!site) throw new ReferenceInvalideError("Site introuvable dans cet organisme.");
 }
 
+/** Vérifie qu'un bâtiment appartient bien à l'organisme (sinon référence invalide). */
+async function assertBatimentDuTenant(tx: Tx, organisationId: string, batimentId: string) {
+  const bat = await tx.batiment.findFirst({ where: { id: batimentId, organisationId, archiveLe: null } });
+  if (!bat) throw new ReferenceInvalideError("Bâtiment introuvable dans cet organisme.");
+}
+
 export async function createBien(tx: Tx, organisationId: string, input: BienCreate) {
   if (input.siteId) await assertSiteDuTenant(tx, organisationId, input.siteId);
+  if (input.batimentId) await assertBatimentDuTenant(tx, organisationId, input.batimentId);
   return tx.bien.create({
     data: {
       organisationId,
@@ -90,12 +99,14 @@ export async function createBien(tx: Tx, organisationId: string, input: BienCrea
       etatOccupation: input.etatOccupation ?? "VACANT",
       adresse: input.adresse ?? null,
       siteId: input.siteId ?? null,
+      batimentId: input.batimentId ?? null,
     },
   });
 }
 
 export async function updateBien(tx: Tx, organisationId: string, id: string, input: BienUpdate) {
   if (input.siteId) await assertSiteDuTenant(tx, organisationId, input.siteId);
+  if (input.batimentId) await assertBatimentDuTenant(tx, organisationId, input.batimentId);
   // updateMany applique le filtre organisationId (une mise à jour ciblée par id
   // seul pourrait, sans RLS, toucher une autre ligne). Renvoie null si absent.
   const res = await tx.bien.updateMany({ where: { id, organisationId }, data: input });
@@ -145,6 +156,57 @@ export async function updateSite(tx: Tx, organisationId: string, id: string, inp
 }
 export async function archiveSite(tx: Tx, organisationId: string, id: string) {
   const res = await tx.site.updateMany({
+    where: { id, organisationId, archiveLe: null },
+    data: { archiveLe: new Date() },
+  });
+  return res.count > 0;
+}
+
+// --- Bâtiment (hiérarchie du patrimoine, rattaché à un site) ----------------
+
+function whereBatiments(organisationId: string, o: ListeOpts & { siteId?: string }) {
+  return {
+    organisationId,
+    ...(o.inclureArchives ? {} : { archiveLe: null }),
+    ...(o.siteId ? { siteId: o.siteId } : {}),
+    ...(o.q
+      ? {
+          OR: [
+            { code: { contains: o.q, mode: "insensitive" as const } },
+            { nom: { contains: o.q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
+export function listBatiments(tx: Tx, organisationId: string, o: ListeOpts & { siteId?: string } = {}) {
+  return tx.batiment.findMany({
+    where: whereBatiments(organisationId, o),
+    orderBy: { code: "asc" },
+    skip: o.skip,
+    take: o.take,
+  });
+}
+export function countBatiments(tx: Tx, organisationId: string, o: ListeOpts & { siteId?: string } = {}) {
+  return tx.batiment.count({ where: whereBatiments(organisationId, o) });
+}
+export function getBatiment(tx: Tx, organisationId: string, id: string) {
+  return tx.batiment.findFirst({ where: { id, organisationId } });
+}
+export async function createBatiment(tx: Tx, organisationId: string, input: BatimentCreate) {
+  await assertSiteDuTenant(tx, organisationId, input.siteId);
+  return tx.batiment.create({
+    data: { organisationId, siteId: input.siteId, code: input.code, nom: input.nom },
+  });
+}
+export async function updateBatiment(tx: Tx, organisationId: string, id: string, input: BatimentUpdate) {
+  if (input.siteId) await assertSiteDuTenant(tx, organisationId, input.siteId);
+  const res = await tx.batiment.updateMany({ where: { id, organisationId }, data: input });
+  if (res.count === 0) return null;
+  return getBatiment(tx, organisationId, id);
+}
+export async function archiveBatiment(tx: Tx, organisationId: string, id: string) {
+  const res = await tx.batiment.updateMany({
     where: { id, organisationId, archiveLe: null },
     data: { archiveLe: new Date() },
   });

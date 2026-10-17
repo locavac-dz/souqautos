@@ -49,6 +49,7 @@
   "nav": {
     "tableauDeBord": "لوحة القيادة",
     "sites": "المواقع",
+    "batiments": "المباني",
     "patrimoine": "الأملاك",
     "occupants": "الشاغلون",
     "contrats": "العقود",
@@ -211,6 +212,16 @@
     "aucun": "لا يوجد موقع.",
     "aucunSite": "— (بدون موقع)",
     "site": "الموقع"
+  },
+  "batiments": {
+    "titre": "المباني",
+    "titreSingulier": "المبنى",
+    "nouveauTitre": "مبنى جديد",
+    "code": "رمز المبنى",
+    "nom": "الاسم",
+    "site": "الموقع",
+    "choisirSite": "— اختر موقعًا —",
+    "aucun": "لا يوجد مبنى."
   },
   "patrimoine": {
     "titre": "الأملاك",

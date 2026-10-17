@@ -32,6 +32,7 @@ export async function Nav() {
     >
       <Link href="/tableau-de-bord">{t("tableauDeBord")}</Link>
       <Link href="/sites">{t("sites")}</Link>
+      <Link href="/batiments">{t("batiments")}</Link>
       <Link href="/patrimoine">{t("patrimoine")}</Link>
       <Link href="/occupants">{t("occupants")}</Link>
       <Link href="/contrats">{t("contrats")}</Link>

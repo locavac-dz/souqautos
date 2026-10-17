@@ -10,6 +10,7 @@ const ETATS = ["VACANT", "OCCUPE", "INDISPONIBLE"] as const;
 export default function NouveauBien() {
   const t = useTranslations("patrimoine");
   const ts = useTranslations("sites");
+  const tb = useTranslations("batiments");
   const tc = useTranslations("commun");
   const [code, setCode] = useState("");
   const [type, setType] = useState<string>("LOGEMENT");
@@ -17,16 +18,31 @@ export default function NouveauBien() {
   const [adresse, setAdresse] = useState("");
   const [siteId, setSiteId] = useState<string>("");
   const [sites, setSites] = useState<{ id: string; code: string; nom: string }[]>([]);
+  const [batimentId, setBatimentId] = useState<string>("");
+  const [batiments, setBatiments] = useState<{ id: string; code: string; nom: string; siteId: string }[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Charge les sites de l'organisme courant pour le rattachement (facultatif).
+  // Charge sites et bâtiments de l'organisme courant pour le rattachement (facultatif).
   useEffect(() => {
     fetch("/api/sites")
       .then((r) => (r.ok ? r.json() : { sites: [] }))
       .then((b: { sites?: { id: string; code: string; nom: string }[] }) => setSites(b.sites ?? []))
       .catch(() => setSites([]));
+    fetch("/api/batiments")
+      .then((r) => (r.ok ? r.json() : { batiments: [] }))
+      .then((b: { batiments?: { id: string; code: string; nom: string; siteId: string }[] }) =>
+        setBatiments(b.batiments ?? []),
+      )
+      .catch(() => setBatiments([]));
   }, []);
+
+  // Si un site est choisi, ne proposer que ses bâtiments ; réinitialiser le
+  // bâtiment s'il n'appartient pas au site sélectionné.
+  const batimentsVisibles = siteId ? batiments.filter((b) => b.siteId === siteId) : batiments;
+  useEffect(() => {
+    if (batimentId && !batimentsVisibles.some((b) => b.id === batimentId)) setBatimentId("");
+  }, [siteId, batimentId, batimentsVisibles]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -36,7 +52,14 @@ export default function NouveauBien() {
       const res = await fetch("/api/biens", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ code, type, etatOccupation: etat, adresse: adresse || null, siteId: siteId || null }),
+        body: JSON.stringify({
+          code,
+          type,
+          etatOccupation: etat,
+          adresse: adresse || null,
+          siteId: siteId || null,
+          batimentId: batimentId || null,
+        }),
       });
       if (res.ok) {
         window.location.assign("/patrimoine");
@@ -83,6 +106,16 @@ export default function NouveauBien() {
         <select id="site" value={siteId} onChange={(e) => setSiteId(e.target.value)}>
           <option value="">{ts("aucunSite")}</option>
           {sites.map((x) => (
+            <option key={x.id} value={x.id}>
+              {x.code} — {x.nom}
+            </option>
+          ))}
+        </select>
+
+        <label htmlFor="batiment">{tb("titreSingulier")}</label>
+        <select id="batiment" value={batimentId} onChange={(e) => setBatimentId(e.target.value)}>
+          <option value="">{tb("aucun")}</option>
+          {batimentsVisibles.map((x) => (
             <option key={x.id} value={x.id}>
               {x.code} — {x.nom}
             </option>

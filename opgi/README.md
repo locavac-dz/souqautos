@@ -318,7 +318,19 @@ projet **indépendant** du produit SOUQ AUTO (`app/`), avec lequel il partage un
   (un bien ne peut pointer un site d'un autre organisme — rejet 400). Sélecteur de site au formulaire
   de création de bien. Pagination/recherche sur les sites (`listSites`/`countSites`).
 
-### Tests — **213 verts** (`npm test`)
+### Incrément 28 — Hiérarchie du patrimoine : niveau Bâtiment
+
+- Nouvelle entité **Bâtiment** (code, nom), **rattachée à un site** du même organisme (deuxième
+  niveau de la hiérarchie patrimoniale), avec **RLS dédiée** (migration `rls_batiment`, politique
+  fail‑closed par organisme) et grants au rôle restreint. CRUD complet (`/api/batiments`, pages
+  `/batiments` + `/batiments/nouveau`, lien de navigation, filtre `?siteId=`).
+- Le site de rattachement est **validé dans le tenant** à la création/mise à jour (un bâtiment ne
+  peut pointer un site d'un autre organisme — rejet 400).
+- Un **bien** peut en outre être rattaché à un bâtiment (`batimentId`), la référence étant elle
+  aussi **validée dans le tenant** (rejet 400 sinon). Au formulaire de bien, le sélecteur de
+  bâtiment est filtré par le site choisi.
+
+### Tests — **216 verts** (`npm test`)
 
 Logique pure (résolution d'organisme, matrice, session, CSRF) **et** intégration réelle sur
 PostgreSQL : lecture croisée refusée, identifiant deviné introuvable, écriture croisée refusée
@@ -350,6 +362,10 @@ AGENT_RECOUVREMENT → 200), contenu attendu, isolation inter‑OPGI, trace d'au
 occupant et d'un autre OPGI (404), liste cloisonnée, upload tracé à l'audit.
 **Notifications** : qualification → notifie le déclarant (pas les autres), affectation d'OT →
 notifie le technicien, marquage « lu » réservé au destinataire, isolation inter‑OPGI.
+**Patrimoine (hiérarchie)** : création d'un site puis d'un bâtiment rattaché, rattachement d'un bien
+au site et au bâtiment, référence contrôlée dans le tenant (bien/bâtiment pointant une entité d'un
+autre organisme → 400), entité d'Alger invisible et introuvable pour Oran (404), AUDITEUR refusé à
+la création (403).
 
 Vérifié aussi sur le serveur en marche (`next dev`) : login pose un cookie, `/api/biens` renvoie
 uniquement les biens de l'organisme de la session, origine étrangère → 403, en‑têtes CSP présents,
@@ -364,7 +380,7 @@ Le workflow GitHub Actions `.github/workflows/opgi-ci.yml` s'exécute sur chaque
 `opgi/**` (indépendant de la CI du produit SOUQ AUTO). Il démarre un **PostgreSQL 16 jetable**, crée
 le rôle applicatif restreint `opgi_app`, puis enchaîne : `npm ci`, `prisma generate`, `npm run build`
 (inclut le typecheck), `tsc --noEmit`, **contrôle de cohérence schéma/migrations** (`prisma migrate
-diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 213 tests, dont
+diff --exit-code` → échoue en cas de migration oubliée) et `npm test` (les 216 tests, dont
 l'isolation réelle en base). Les mots de passe du workflow sont ceux d'un conteneur jetable, pas des
 secrets.
 
@@ -405,7 +421,7 @@ npm run db:seed                 # 2 OPGI de DÉMONSTRATION (données fictives si
 ```bash
 npm run dev         # http://localhost:5186  (connexion : voir comptes de démonstration ci-dessus)
 npm run build       # build de production — inclut le typecheck Next (génère .next/ + next-env.d.ts)
-npm test            # 213 tests (pur + isolation/HTTP réels sur opgi_test)
+npm test            # 216 tests (pur + isolation/HTTP réels sur opgi_test)
 ```
 
 Les tests préparent automatiquement la base `opgi_test` (migrations + droits + seed fictif) via
@@ -430,9 +446,9 @@ Ne sont **pas** encore livrés :
 - **Décisions métier/juridiques (préalable, pas du code)** : barèmes, délais, pénalités, durées de
   conservation restent configurables et **« à valider » par l'OPGI** (voir `../docs/opgi/04` et
   `05`). Rien n'est inventé à leur place.
-- **Module A — compléments** : hiérarchie du patrimoine **au-delà du site** (bâtiments → cages →
-  niveaux ; le niveau **Site** est livré), génération en masse des appels par échéancier, **écrans
-  d'édition dédiés** (le `PATCH` existe en API), états de compte/reçus.
+- **Module A — compléments** : hiérarchie du patrimoine **au-delà du bâtiment** (cages → niveaux ;
+  les niveaux **Site** et **Bâtiment** sont livrés), génération en masse des appels par échéancier,
+  **écrans d'édition dédiés** (le `PATCH` existe en API), états de compte/reçus.
 - **Module B — compléments** : planning (jalons/tâches), ordres de service et avenants, lots,
   écrans d'édition dédiés (le `PATCH` existe en API), import des marchés/projets.
 - **Module C — compléments** : planification/visites détaillées, indicateurs par zone/délai. (Le
