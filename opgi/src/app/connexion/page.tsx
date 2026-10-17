@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
+import { SelecteurLangue } from "@/app/_components/SelecteurLangue";
 
 export default function ConnexionPage() {
   const t = useTranslations("connexion");
@@ -44,6 +45,9 @@ export default function ConnexionPage() {
 
   return (
     <main>
+      <p style={{ display: "flex", justifyContent: "flex-end" }}>
+        <SelecteurLangue />
+      </p>
       <h1>{t("titre")}</h1>
       <form className="card" onSubmit={onSubmit}>
         <label htmlFor="code">{t("codeOpgi")}</label>

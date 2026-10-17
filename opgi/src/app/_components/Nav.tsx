@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { BoutonDeconnexion } from "@/app/_components/BoutonDeconnexion";
+import { SelecteurLangue } from "@/app/_components/SelecteurLangue";
 import { getServerSession } from "@/lib/auth/next-session";
 import { getServices } from "@/lib/services";
 import { resolveTenant } from "@/lib/tenant/resolve";
@@ -44,7 +45,8 @@ export async function Nav() {
         {nonLues > 0 ? ` (${nonLues})` : ""}
       </Link>
       <Link href="/compte">{t("compte")}</Link>
-      <span style={{ marginInlineStart: "auto" }}>
+      <span style={{ marginInlineStart: "auto", display: "inline-flex", gap: 12, alignItems: "center" }}>
+        <SelecteurLangue />
         <BoutonDeconnexion />
       </span>
     </nav>

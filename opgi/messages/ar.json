@@ -1,0 +1,75 @@
+{
+  "app": {
+    "titre": "منصة OPGI",
+    "sousTitre": "التسيير المدمج للأملاك والمشاريع والشكاوى"
+  },
+  "langue": {
+    "titre": "اللغة",
+    "francais": "Français",
+    "arabe": "العربية"
+  },
+  "nav": {
+    "tableauDeBord": "لوحة القيادة",
+    "patrimoine": "الأملاك",
+    "occupants": "الشاغلون",
+    "contrats": "العقود",
+    "reclamations": "الشكاوى",
+    "recouvrement": "التحصيل",
+    "projets": "المشاريع",
+    "entreprises": "المؤسسات",
+    "marches": "الصفقات",
+    "audit": "سجل التدقيق",
+    "notifications": "الإشعارات",
+    "compte": "حسابي"
+  },
+  "connexion": {
+    "titre": "تسجيل الدخول",
+    "codeOpgi": "رمز الديوان",
+    "codeAide": "مثال: OPGI-ALGER",
+    "email": "البريد الإلكتروني",
+    "motDePasse": "كلمة المرور",
+    "valider": "تسجيل الدخول",
+    "enCours": "جارٍ الاتصال…",
+    "echec": "بيانات الدخول غير صحيحة.",
+    "erreurReseau": "خطأ في الشبكة، أعد المحاولة.",
+    "code2fa": "رمز المصادقة (2FA)",
+    "code2faAide": "6 أرقام من تطبيقك",
+    "code2faRequis": "أدخل الرمز لمرة واحدة من تطبيق المصادقة.",
+    "code2faInvalide": "رمز المصادقة غير صحيح."
+  },
+  "commun": {
+    "nouveau": "جديد",
+    "creer": "إنشاء",
+    "enregistrement": "جارٍ الحفظ…",
+    "archiver": "أرشفة",
+    "retour": "العودة إلى القائمة",
+    "exporterCsv": "تصدير (CSV)",
+    "accesRefuse": "لا يسمح دوركم بالوصول إلى هذا المورد (الوحدة A).",
+    "aucun": "لا يوجد عنصر.",
+    "erreur": "حدث خطأ.",
+    "actions": "إجراءات"
+  },
+  "compte": {
+    "titre": "حسابي",
+    "motDePasseTitre": "تغيير كلمة المرور",
+    "ancien": "كلمة المرور الحالية",
+    "nouveau": "كلمة المرور الجديدة",
+    "confirmation": "تأكيد كلمة المرور الجديدة",
+    "changer": "تغيير كلمة المرور",
+    "succes": "تم تحديث كلمة المرور.",
+    "nonConcordants": "التأكيد لا يطابق كلمة المرور الجديدة.",
+    "deuxFacteursTitre": "المصادقة الثنائية (2FA)",
+    "deuxFacteursActif": "المصادقة الثنائية مفعّلة على حسابك.",
+    "deuxFacteursInactif": "المصادقة الثنائية غير مفعّلة.",
+    "deuxFacteursActiver": "تفعيل المصادقة الثنائية",
+    "deuxFacteursDesactiver": "تعطيل المصادقة الثنائية",
+    "deuxFacteursSecret": "المفتاح السري (للإدخال اليدوي عند الحاجة)",
+    "deuxFacteursUri": "رابط otpauth (للاستيراد في تطبيقك)",
+    "deuxFacteursInstructions": "أضف هذا المفتاح في تطبيق المصادقة، ثم أدخل الرمز المُوَلَّد لتأكيد التفعيل.",
+    "deuxFacteursCode": "الرمز المُوَلَّد (6 أرقام)",
+    "deuxFacteursConfirmer": "تأكيد التفعيل",
+    "deuxFacteursMotDePasse": "كلمة المرور الحالية (للتعطيل)",
+    "deuxFacteursActivee": "تم تفعيل المصادقة الثنائية.",
+    "deuxFacteursDesactivee": "تم تعطيل المصادقة الثنائية."
+  }
+}

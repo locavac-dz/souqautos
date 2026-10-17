@@ -75,6 +75,11 @@
     "nbRetardDef": "Marchés actifs dont le délai (notification + délai) est dépassé — indicatif, aucune échéance réglementaire présumée.",
     "note": "Indicateurs calculés en direct à partir des données de votre organisme. Définitions affichées sous chaque valeur."
   },
+  "langue": {
+    "titre": "Langue",
+    "francais": "Français",
+    "arabe": "العربية"
+  },
   "nav": {
     "tableauDeBord": "Tableau de bord",
     "patrimoine": "Patrimoine",
