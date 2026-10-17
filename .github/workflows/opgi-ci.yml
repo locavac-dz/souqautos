@@ -1,0 +1,118 @@
+# Intégration continue du projet `opgi/` (plateforme multi‑OPGI) — indépendante
+# de la CI du produit SOUQ AUTO (ci.yml, dossier app/). Déclenchée uniquement
+# quand `opgi/**` change. Équivalent local : `npm run build && npm test` (opgi/).
+#
+# Les mots de passe ci-dessous sont ceux d'un conteneur PostgreSQL JETABLE, créé
+# pour la durée du job : ce ne sont pas des secrets. Aucun secret du projet n'est
+# requis (l'application retombe sur ses modes par défaut, comme en local).
+#
+# Le rôle `opgi` (propriétaire) est le superutilisateur du conteneur : il exécute
+# migrations et seed (non soumis à la RLS). Le rôle restreint `opgi_app`, créé
+# ci-dessous, est SOUMIS à la RLS — c'est lui que l'application utilise. Les
+# droits sur les tables (et la révocation UPDATE/DELETE sur le journal d'audit)
+# sont posés par la préparation de la base de test (tests/global-setup.ts).
+
+name: CI OPGI
+
+on:
+  push:
+    branches: [main, master]
+    paths: ["opgi/**", ".github/workflows/opgi-ci.yml"]
+  pull_request:
+    paths: ["opgi/**", ".github/workflows/opgi-ci.yml"]
+
+concurrency:
+  group: opgi-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  PGPASSWORD_OWNER: ci-conteneur-jetable
+  PGPASSWORD_APP: ci-app-jetable
+  # Rôle applicatif restreint (soumis RLS) — utilisé à l'exécution et par les tests.
+  DATABASE_URL: postgresql://opgi_app:ci-app-jetable@localhost:5432/opgi_test
+  TEST_DATABASE_URL: postgresql://opgi_app:ci-app-jetable@localhost:5432/opgi_test
+  # Rôle propriétaire — migrations et seed.
+  DIRECT_DATABASE_URL: postgresql://opgi:ci-conteneur-jetable@localhost:5432/opgi_test
+  TEST_DIRECT_DATABASE_URL: postgresql://opgi:ci-conteneur-jetable@localhost:5432/opgi_test
+  ISOLATION_MODE: shared
+  COOKIE_SECURE: "false"
+  SESSION_SECRET: ci-session-secret-jetable-0123456789abcdef
+
+defaults:
+  run:
+    working-directory: opgi
+
+jobs:
+  checks:
+    name: Build, types et tests (isolation réelle PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          # Le propriétaire = superutilisateur du conteneur, avec CREATEDB.
+          POSTGRES_USER: opgi
+          POSTGRES_PASSWORD: ci-conteneur-jetable
+          POSTGRES_DB: opgi_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U opgi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: opgi/package-lock.json
+
+      - name: Installer les dépendances (verrou respecté à l'identique)
+        run: npm ci
+
+      - name: Créer le rôle applicatif restreint `opgi_app`
+        # Non soumis à la RLS seulement s'il n'est ni propriétaire ni superutilisateur :
+        # un simple rôle LOGIN convient. USAGE sur le schéma public ; les droits sur
+        # les tables sont accordés par tests/global-setup.ts après les migrations.
+        run: |
+          PGPASSWORD="$PGPASSWORD_OWNER" psql -h localhost -U opgi -d opgi_test -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'opgi_app') THEN
+              CREATE ROLE opgi_app LOGIN PASSWORD 'ci-app-jetable';
+            END IF;
+          END $$;
+          ALTER ROLE opgi_app NOBYPASSRLS;
+          GRANT USAGE ON SCHEMA public TO opgi_app;
+          SQL
+
+      - name: Générer le client de base de données
+        run: npx prisma generate
+
+      - name: Build de production (inclut la vérification TypeScript)
+        run: npm run build
+
+      - name: Vérification TypeScript explicite
+        run: npx tsc --noEmit
+
+      - name: Cohérence schéma / migrations (aucune migration oubliée)
+        # Rejoue les migrations dans une base témoin et compare au schéma :
+        # code de sortie 2 si le schéma contient un changement non migré.
+        run: |
+          PGPASSWORD="$PGPASSWORD_OWNER" psql -h localhost -U opgi -d opgi_test -v ON_ERROR_STOP=1 -c "CREATE DATABASE opgi_shadow"
+          npx prisma migrate diff \
+            --from-migrations prisma/migrations \
+            --to-schema-datamodel prisma/schema.prisma \
+            --shadow-database-url "postgresql://opgi:${PGPASSWORD_OWNER}@localhost:5432/opgi_shadow" \
+            --exit-code
+
+      - name: Tests (unitaires purs + intégration/isolation réelle sur PostgreSQL)
+        # tests/global-setup.ts applique les migrations, accorde les droits à
+        # opgi_app, rend le journal d'audit append-only, puis ensemence 2 OPGI fictifs.
+        run: npm test

@@ -1,0 +1,141 @@
+// Schémas de validation (zod) du Module A — patrimoine, occupants, contrats.
+import { z } from "zod";
+
+const TYPE_BIEN = ["LOGEMENT", "LOCAL_COMMERCIAL", "GARAGE", "AUTRE"] as const;
+const ETAT = ["OCCUPE", "VACANT", "INDISPONIBLE"] as const;
+const TYPE_OCCUPANT = ["PHYSIQUE", "MORALE"] as const;
+const STATUT_CONTRAT = ["BROUILLON", "ACTIF", "SUSPENDU", "RESILIE"] as const;
+
+// --- Bien -------------------------------------------------------------------
+export const bienCreateSchema = z.object({
+  code: z.string().trim().min(1).max(64),
+  type: z.enum(TYPE_BIEN),
+  etatOccupation: z.enum(ETAT).optional(),
+  adresse: z.string().trim().max(500).nullish(),
+  siteId: z.string().trim().min(1).nullish(),
+  batimentId: z.string().trim().min(1).nullish(),
+});
+export const bienUpdateSchema = bienCreateSchema.partial();
+export type BienCreate = z.infer<typeof bienCreateSchema>;
+export type BienUpdate = z.infer<typeof bienUpdateSchema>;
+
+// --- Site (hiérarchie du patrimoine) ---------------------------------------
+export const siteCreateSchema = z.object({
+  code: z.string().trim().min(1).max(64),
+  nom: z.string().trim().min(1).max(200),
+  adresse: z.string().trim().max(500).nullish(),
+});
+export const siteUpdateSchema = siteCreateSchema.partial();
+export type SiteCreate = z.infer<typeof siteCreateSchema>;
+export type SiteUpdate = z.infer<typeof siteUpdateSchema>;
+
+// --- Bâtiment (hiérarchie du patrimoine, rattaché à un site) ----------------
+export const batimentCreateSchema = z.object({
+  siteId: z.string().trim().min(1),
+  code: z.string().trim().min(1).max(64),
+  nom: z.string().trim().min(1).max(200),
+});
+export const batimentUpdateSchema = batimentCreateSchema.partial();
+export type BatimentCreate = z.infer<typeof batimentCreateSchema>;
+export type BatimentUpdate = z.infer<typeof batimentUpdateSchema>;
+
+// --- Occupant ---------------------------------------------------------------
+export const occupantCreateSchema = z.object({
+  type: z.enum(TYPE_OCCUPANT).optional(),
+  nom: z.string().trim().min(1).max(200),
+  prenom: z.string().trim().max(200).nullish(),
+  telephone: z.string().trim().max(40).nullish(),
+  email: z.string().trim().toLowerCase().email().max(200).nullish(),
+});
+export const occupantUpdateSchema = occupantCreateSchema.partial();
+export type OccupantCreate = z.infer<typeof occupantCreateSchema>;
+export type OccupantUpdate = z.infer<typeof occupantUpdateSchema>;
+
+// --- Contrat ----------------------------------------------------------------
+const dateInterval = { message: "La date de fin précède la date de début.", path: ["dateFin"] };
+
+export const contratCreateSchema = z
+  .object({
+    reference: z.string().trim().min(1).max(64),
+    bienId: z.string().min(1),
+    occupantId: z.string().min(1),
+    statut: z.enum(STATUT_CONTRAT).optional(),
+    dateDebut: z.coerce.date(),
+    dateFin: z.coerce.date().nullish(),
+    // Saisie libre (aucun calcul) — centimes DZD, paramétrable.
+    montantLoyerCentimes: z.number().int().nonnegative().nullish(),
+  })
+  .refine((c) => !c.dateFin || c.dateFin >= c.dateDebut, dateInterval);
+
+export const contratUpdateSchema = z
+  .object({
+    reference: z.string().trim().min(1).max(64).optional(),
+    statut: z.enum(STATUT_CONTRAT).optional(),
+    dateDebut: z.coerce.date().optional(),
+    dateFin: z.coerce.date().nullish(),
+    montantLoyerCentimes: z.number().int().nonnegative().nullish(),
+  })
+  .refine((c) => !c.dateDebut || !c.dateFin || c.dateFin >= c.dateDebut, dateInterval);
+
+export const statutContratSchema = z.object({ statut: z.enum(STATUT_CONTRAT) });
+
+export type ContratCreate = z.infer<typeof contratCreateSchema>;
+export type ContratUpdate = z.infer<typeof contratUpdateSchema>;
+
+// --- Finances : appels, paiements, imputations, recouvrement ----------------
+const MODE_PAIEMENT = ["ESPECES", "VIREMENT", "CHEQUE", "AUTRE"] as const;
+const TYPE_ACTION = [
+  "RELANCE",
+  "MISE_EN_DEMEURE",
+  "ECHEANCIER",
+  "CONTENTIEUX",
+  "AUTRE",
+] as const;
+
+export const appelCreateSchema = z.object({
+  contratId: z.string().min(1),
+  periode: z.string().trim().min(1).max(20),
+  libelle: z.string().trim().max(200).nullish(),
+  // Facultatif : par défaut le loyer du contrat. Aucun calcul de pénalité.
+  montantCentimes: z.number().int().positive().optional(),
+  dateEcheance: z.coerce.date(),
+});
+export type AppelCreate = z.infer<typeof appelCreateSchema>;
+
+// Génération en masse des appels pour une période : un appel par contrat
+// ACTIF au loyer du contrat (aucun calcul de pénalité ; idempotent par la
+// contrainte unique organisme+contrat+période).
+export const appelsGenererSchema = z.object({
+  periode: z.string().trim().min(1).max(20),
+  dateEcheance: z.coerce.date(),
+  libelle: z.string().trim().max(200).nullish(),
+});
+export type AppelsGenererInput = z.infer<typeof appelsGenererSchema>;
+
+export const paiementCreateSchema = z.object({
+  contratId: z.string().min(1),
+  montantCentimes: z.number().int().positive(),
+  datePaiement: z.coerce.date(),
+  mode: z.enum(MODE_PAIEMENT).optional(),
+  reference: z.string().trim().max(120).nullish(),
+  note: z.string().trim().max(500).nullish(),
+});
+export type PaiementCreate = z.infer<typeof paiementCreateSchema>;
+
+export const imputationCreateSchema = z.object({
+  paiementId: z.string().min(1),
+  appelId: z.string().min(1),
+  montantCentimes: z.number().int().positive(),
+});
+export type ImputationCreate = z.infer<typeof imputationCreateSchema>;
+
+export const actionRecouvrementCreateSchema = z.object({
+  contratId: z.string().min(1),
+  type: z.enum(TYPE_ACTION),
+  date: z.coerce.date(),
+  montantConcerneCentimes: z.number().int().nonnegative().nullish(),
+  note: z.string().trim().max(1000).nullish(),
+  pieceReference: z.string().trim().max(200).nullish(),
+  responsableUtilisateurId: z.string().trim().max(60).nullish(),
+});
+export type ActionRecouvrementCreate = z.infer<typeof actionRecouvrementCreateSchema>;
